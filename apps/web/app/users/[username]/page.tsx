@@ -3,11 +3,12 @@
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import type { ProfilePage } from '@miscellary/shared';
+import type { OwnedCard, ProfilePage } from '@miscellary/shared';
 import { SHOWCASE_SLOTS } from '@miscellary/shared';
 import BinderCover from '@/components/BinderCover';
 import coverStyles from '@/components/BinderCover.module.css';
 import Sheet, { Empty } from '@/components/Sheet';
+import { OwnedCardInspector } from '@/components/CardInspector';
 import ShowcaseCase from '@/components/ShowcaseCase';
 import ReportButton from '@/components/ReportButton';
 import { useAuth } from '@/lib/auth';
@@ -29,6 +30,7 @@ export default function ProfilePageView() {
   const { loading, user } = useAuth();
   const [profile, setProfile] = useState<ProfilePage | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [inspect, setInspect] = useState<OwnedCard | null>(null);
 
   useEffect(() => {
     if (loading) return;
@@ -140,7 +142,12 @@ export default function ProfilePageView() {
       </div>
 
       <div className={styles.section}>
-        <ShowcaseCase slots={showcase} title={profile.showcase_title} mine={profile.is_me} />
+        <ShowcaseCase
+          slots={showcase}
+          title={profile.showcase_title}
+          mine={profile.is_me}
+          onInspect={setInspect}
+        />
       </div>
 
       <div className={styles.section} id="sets">
@@ -165,6 +172,8 @@ export default function ProfilePageView() {
           )}
         </Sheet>
       </div>
+
+      {inspect ? <OwnedCardInspector owned={inspect} onClose={() => setInspect(null)} /> : null}
     </section>
   );
 }

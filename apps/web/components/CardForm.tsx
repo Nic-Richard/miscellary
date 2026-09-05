@@ -8,7 +8,14 @@ import {
   RARITY_LABELS,
   validateDescription,
 } from '@miscellary/shared';
-import type { Card, CardTemplate, ImageRef, Rarity, TemplateConfig } from '@miscellary/shared';
+import type {
+  Card,
+  CardTemplate,
+  ImageRef,
+  Rarity,
+  TemplateConfig,
+  TemplateOption,
+} from '@miscellary/shared';
 import CardPreview from './CardPreview';
 import ImagePicker from './ImagePicker';
 import { ChoiceMenu, ColourMenu, Field, Section, Segmented } from './controls';
@@ -45,6 +52,35 @@ function defaults(template: CardTemplate): TemplateConfig {
   const out: TemplateConfig = {};
   for (const [k, opt] of Object.entries(template.options)) out[k] = opt.default;
   return out;
+}
+
+// Keep stored values on downgrade; server validation surfaces invalid choices.
+function openValues(opt: TemplateOption, rarity: Rarity): string[] {
+  const unlocks = opt.unlocks;
+  if (!unlocks) return opt.values;
+  return opt.values.filter((v) => {
+    const needed = unlocks[v];
+    return !needed || RARITIES.indexOf(rarity) >= RARITIES.indexOf(needed);
+  });
+}
+
+function locked(unlocks: Rarity | undefined, rarity: Rarity): boolean {
+  return !!unlocks && RARITIES.indexOf(rarity) < RARITIES.indexOf(unlocks);
+}
+
+function nextUnlockNote(template: CardTemplate | undefined, rarity: Rarity): string {
+  if (!template) return '';
+  const byTier = new Map<Rarity, string[]>();
+  for (const opt of Object.values(template.options)) {
+    for (const v of opt.values) {
+      const needed = opt.unlocks?.[v];
+      if (needed && locked(needed, rarity)) {
+        byTier.set(needed, [...(byTier.get(needed) ?? []), v]);
+      }
+    }
+  }
+  const next = RARITIES.find((t) => byTier.has(t));
+  return next ? `${RARITY_LABELS[next]} adds ${byTier.get(next)!.join(', ')}.` : '';
 }
 
 export default function CardForm({
@@ -177,6 +213,11 @@ export default function CardForm({
         ))}
 
         <span className={ui.label}>Template</span>
+        {fields.template_key?.map((m) => (
+          <p key={m} className={styles.error}>
+            {m}
+          </p>
+        ))}
         {TEMPLATE_GROUPS.map((group) => {
           const inGroup = templates.filter((t) => group.match(t.key));
           if (inGroup.length === 0) return null;
@@ -184,52 +225,75 @@ export default function CardForm({
             <div key={group.label} className={styles.templateGroup}>
               <span className={styles.groupLabel}>{group.label}</span>
               <div className={styles.templates}>
-                {inGroup.map((t) => (
-                  <button
-                    key={t.key}
-                    type="button"
-                    aria-pressed={t.key === templateKey}
-                    className={`${styles.templateBtn} ${t.key === templateKey ? styles.templateActive : ''}`}
-                    onClick={() => pickTemplate(t.key)}
-                  >
-                    <strong>{t.name}</strong>
-                    <small>{t.description}</small>
-                  </button>
-                ))}
+                {inGroup.map((t) => {
+                  // A locked template stays selectable while it is the card's
+                  // own, so a downgrade shows the problem instead of hiding it.
+                  const shut = locked(t.unlocks, rarity) && t.key !== templateKey;
+                  return (
+                    <button
+                      key={t.key}
+                      type="button"
+                      aria-pressed={t.key === templateKey}
+                      disabled={shut}
+                      className={`${styles.templateBtn} ${t.key === templateKey ? styles.templateActive : ''}`}
+                      onClick={() => pickTemplate(t.key)}
+                    >
+                      <strong>
+                        {t.name}
+                        {t.unlocks && locked(t.unlocks, rarity) ? (
+                          <span className={styles.lockTag}>{RARITY_LABELS[t.unlocks]}</span>
+                        ) : null}
+                      </strong>
+                      <small>{t.description}</small>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           );
         })}
 
         {template && Object.keys(template.options).length > 0 ? (
-          <Section title="Look" note="Every option applies to this card alone.">
+          <Section
+            title="Look"
+            note={`Every option applies to this card alone. ${nextUnlockNote(template, rarity)}`.trim()}
+          >
             {Object.entries(template.options).map(([name, opt]) => {
+              if (name === 'treatment' && rarity !== 'legendary') return null;
               const value = config[name] ?? opt.default;
               const set = (v: string) => setConfig({ ...config, [name]: v });
+              const values =
+                name === 'treatment'
+                  ? opt.values.filter((v) => v !== 'none')
+                  : openValues(opt, rarity);
+              const unset = name === 'treatment' && !values.includes(value);
               return (
                 <Field key={name} label={opt.label}>
                   {opt.type === 'swatch' ? (
                     <ColourMenu
                       value={value}
-                      values={opt.values}
+                      values={values}
                       palette={name === 'frame' ? 'stock' : 'ink'}
                       onChange={set}
                     />
                   ) : opt.type === 'font' ? (
-                    <ChoiceMenu
-                      value={value}
-                      values={opt.values}
-                      labels={FONT_LABELS}
-                      onChange={set}
-                    />
-                  ) : opt.values.length <= 3 ? (
-                    <Segmented value={value} values={opt.values} onChange={set} />
+                    <ChoiceMenu value={value} values={values} labels={FONT_LABELS} onChange={set} />
+                  ) : values.length <= 3 ? (
+                    <Segmented value={value} values={values} onChange={set} />
                   ) : (
-                    <ChoiceMenu value={value} values={opt.values} onChange={set} />
+                    <ChoiceMenu value={value} values={values} onChange={set} />
                   )}
+                  {unset ? (
+                    <span className={styles.hint}>Pick one. A legendary card needs it.</span>
+                  ) : null}
                 </Field>
               );
             })}
+            {fields.template_config?.map((m) => (
+              <p key={m} className={styles.error}>
+                {m}
+              </p>
+            ))}
           </Section>
         ) : null}
 

@@ -1,4 +1,3 @@
-import { RARITY_LABELS } from '@miscellary/shared';
 import type { Rarity, TemplateConfig } from '@miscellary/shared';
 import Description from './Description';
 import SetMark from './SetMark';
@@ -16,6 +15,7 @@ export interface CardPreviewProps {
   number?: number;
   caption?: string;
   mark?: string | undefined;
+  lit?: boolean;
 }
 
 const TEXT_TEMPLATES = new Set(['fieldnote', 'dossier']);
@@ -41,7 +41,18 @@ function restOf(description: string): string {
         .trim();
 }
 
-// Template snapshot values map directly to CSS data attributes.
+/* Sibling layers blend against the card; pseudo-elements inside a blended
+   stacking context would blend against that context instead. */
+function chaseLayers(css: Record<string, string>, framed: boolean) {
+  const frame = framed ? ` ${css.chaseFrame}` : '';
+  return (
+    <>
+      <i className={`${css.chase} ${css.chaseField}${frame}`} aria-hidden="true" />
+      <i className={`${css.chase} ${css.chaseBand}${frame}`} aria-hidden="true" />
+    </>
+  );
+}
+
 export default function CardPreview({
   title,
   rarity,
@@ -53,18 +64,22 @@ export default function CardPreview({
   number,
   caption,
   mark,
+  lit,
 }: CardPreviewProps) {
   const data: Record<string, string> = {};
   for (const [k, v] of Object.entries(templateConfig)) data[`data-${k}`] = v;
   const shownTitle = title || 'Untitled';
   const isText = TEXT_TEMPLATES.has(templateKey);
   const line = templateKey === 'polaroid' ? shownTitle : (caption ?? captionFrom(description));
+  const chase = templateConfig.treatment === 'foil' || templateConfig.treatment === 'holo';
+  const coverage = templateConfig.coverage ?? 'art';
   const body = caption === undefined ? restOf(description) : description;
 
   return (
     <div
       className={`${styles.card} ${styles[templateKey] ?? styles.classic} ${size === 'small' ? styles.small : styles.large}`}
       data-rarity={rarity}
+      data-lit={lit ? '' : undefined}
       {...data}
     >
       <div className={styles.stock}>
@@ -79,6 +94,7 @@ export default function CardPreview({
           ) : (
             <div className={styles.placeholder}>No photo yet</div>
           )}
+          {chase && coverage === 'art' ? chaseLayers(styles, false) : null}
         </div>
 
         {isText ? (
@@ -91,11 +107,14 @@ export default function CardPreview({
           </div>
         ) : null}
 
-        <footer className={styles.foot}>
-          {templateKey === 'bold' ? <span className={styles.bigTitle}>{shownTitle}</span> : null}
-          {!isText && line ? <span className={styles.caption}>{line}</span> : null}
-          <span className={styles.pill}>{RARITY_LABELS[rarity]}</span>
-        </footer>
+        {templateKey === 'bold' || (!isText && line) ? (
+          <footer className={styles.foot}>
+            {templateKey === 'bold' ? <span className={styles.bigTitle}>{shownTitle}</span> : null}
+            {!isText && line ? <span className={styles.caption}>{line}</span> : null}
+          </footer>
+        ) : null}
+
+        {chase && coverage !== 'art' ? chaseLayers(styles, coverage === 'frame') : null}
 
         {!isText && size === 'large' && body ? (
           <Description text={body} className={styles.desc} />

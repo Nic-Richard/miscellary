@@ -12,14 +12,11 @@ render the template from the key + config; the API only validates.
 from typing import Any
 
 from .identity import FONTS
+from .rarity import RARITIES
 
-# --- shared palettes -------------------------------------------------------
-#
-# Shared palettes include legacy snapshot tokens so published cards remain valid
-# and keep their original rendering.
+# Keep legacy snapshot tokens so published cards continue to render.
 
-# "rarity" keeps accents tied to the card's rarity for snapshots without a
-# creator-selected ink.
+# `rarity` preserves rarity-driven accents in older snapshots.
 INKS = [
     "rarity",
     "ink",
@@ -45,27 +42,40 @@ INKS = [
     "white",
 ]
 
-# Stock: the board the face is printed on. Every template that offers a stock
-# uses the same option name, so one block of CSS serves all of them.
 STOCKS_LIGHT = ["cream", "bone", "white", "sand", "linen", "ash", "light"]
 STOCKS_DARK = ["slate", "charcoal", "ink", "dark", "forest", "oxblood", "navy", "plum"]
 STOCKS_ALL = STOCKS_LIGHT + STOCKS_DARK
 
-# Surface: a seamless tile from scripts/make-card-textures.ps1, laid over the
-# stock colour so it works on cream and on ink alike.
+# Brushed is gated because it reads as a specialty metal surface.
 TEXTURES = ["linen", "canvas", "grain", "felt", "brushed", "smooth"]
+TEXTURE_UNLOCKS = {"brushed": "rare"}
 
 CORNERS = ["round", "soft", "sharp"]
 
-# The card's display face: its title, number and rarity pill. The body copy stays
-# on the platform's own text face so a description is always readable.
+FINISHES = ["matte", "satin", "gloss", "pearl", "metallic"]
+FINISH_UNLOCKS = {"pearl": "rare", "metallic": "rare"}
+
+# Chase treatment is independent of finish and reserved for legendary cards.
+TREATMENTS = ["none", "foil", "holo"]
+TREATMENT_UNLOCKS = {"foil": "legendary", "holo": "legendary"}
+
+COVERAGES = ["art", "frame", "full"]
+
 TYPEFACES = FONTS
 
 
-def _opt(label: str, values: list[str], default: str, kind: str = "choice") -> dict[str, Any]:
-    """One option. `type` tells a client which control to draw; the API only
-    ever validates against `values`."""
-    return {"label": label, "values": values, "default": default, "type": kind}
+def _opt(
+    label: str,
+    values: list[str],
+    default: str,
+    kind: str = "choice",
+    unlocks: dict[str, str] | None = None,
+) -> dict[str, Any]:
+    """Build a template option and its optional rarity unlock map."""
+    option: dict[str, Any] = {"label": label, "values": values, "default": default, "type": kind}
+    if unlocks:
+        option["unlocks"] = unlocks
+    return option
 
 
 def _stock(values: list[str], default: str) -> dict[str, Any]:
@@ -73,7 +83,7 @@ def _stock(values: list[str], default: str) -> dict[str, Any]:
 
 
 def _texture(default: str) -> dict[str, Any]:
-    return _opt("Surface", TEXTURES, default)
+    return _opt("Surface", TEXTURES, default, unlocks=TEXTURE_UNLOCKS)
 
 
 def _corners() -> dict[str, Any]:
@@ -88,8 +98,16 @@ def _accent(default: str) -> dict[str, Any]:
     return _opt("Accent", INKS, default, "swatch")
 
 
+def _specialty() -> dict[str, dict[str, Any]]:
+    """Specialty options shared by every template."""
+    return {
+        "finish": _opt("Finish", FINISHES, "matte", unlocks=FINISH_UNLOCKS),
+        "treatment": _opt("Legendary treatment", TREATMENTS, "none", unlocks=TREATMENT_UNLOCKS),
+        "coverage": _opt("Treatment covers", COVERAGES, "art"),
+    }
+
+
 TEMPLATES: list[dict[str, Any]] = [
-    # --- photo-forward templates: the picture is the card ---
     {
         "key": "classic",
         "version": 1,
@@ -101,6 +119,7 @@ TEMPLATES: list[dict[str, Any]] = [
             "font": _font(),
             "texture": _texture("linen"),
             "corners": _corners(),
+            **_specialty(),
         },
     },
     {
@@ -114,19 +133,23 @@ TEMPLATES: list[dict[str, Any]] = [
             "font": _font(),
             "texture": _texture("grain"),
             "corners": _corners(),
+            **_specialty(),
         },
     },
     {
         "key": "minimal",
+        # Keep the key for snapshot and CSS compatibility.
         "version": 1,
-        "name": "Minimal",
+        "name": "Full Art",
         "description": "Edge-to-edge photo with a subtle gradient and small type.",
+        "unlocks": "epic",
         "options": {
             "gradient": _opt("Gradient", ["bottom", "top", "none", "full"], "bottom"),
             "accent": _accent("blue"),
             "font": _font(),
             "texture": _texture("smooth"),
             "corners": _corners(),
+            **_specialty(),
         },
     },
     {
@@ -141,10 +164,9 @@ TEMPLATES: list[dict[str, Any]] = [
             "font": _font(),
             "texture": _texture("canvas"),
             "corners": _corners(),
+            **_specialty(),
         },
     },
-    # --- text templates: a smaller photo above a panel carrying the whole
-    # description, the way a trading card carries its rules text ---
     {
         "key": "fieldnote",
         "version": 1,
@@ -157,6 +179,7 @@ TEMPLATES: list[dict[str, Any]] = [
             "font": _font(),
             "texture": _texture("grain"),
             "corners": _corners(),
+            **_specialty(),
         },
     },
     {
@@ -170,6 +193,7 @@ TEMPLATES: list[dict[str, Any]] = [
             "font": _font(),
             "texture": _texture("felt"),
             "corners": _corners(),
+            **_specialty(),
         },
     },
 ]
@@ -182,7 +206,25 @@ def default_config(key: str) -> dict[str, str]:
     return {name: opt["default"] for name, opt in template["options"].items()}
 
 
-def config_problems(key: str, config: dict[str, Any]) -> list[str]:
+def template_problems(key: str, rarity: str | None = None) -> list[str]:
+    """Whether this rarity may use this template at all. Write path only, for
+    the same reason as config_problems below."""
+    template = TEMPLATES_BY_KEY.get(key)
+    if template is None:
+        return ["Unknown template."]
+    needed = template.get("unlocks")
+    if rarity is None or not needed or RARITIES.index(rarity) >= RARITIES.index(needed):
+        return []
+    return [f"The {template['name']} template needs a {needed} card. This card is {rarity}."]
+
+
+def config_problems(key: str, config: dict[str, Any], rarity: str | None = None) -> list[str]:
+    """Validate a config a creator is trying to save.
+
+    Only ever called on the write path. Rendering reads a stored snapshot
+    straight through, so published cards keep their look even if the unlock
+    rules below change later. Passing rarity=None skips the rarity checks.
+    """
     template = TEMPLATES_BY_KEY.get(key)
     if template is None:
         return ["Unknown template."]
@@ -193,4 +235,12 @@ def config_problems(key: str, config: dict[str, Any]) -> list[str]:
             problems.append(f"Unknown option '{name}'.")
         elif value not in option["values"]:
             problems.append(f"'{value}' isn't a valid {option['label'].lower()}.")
+        elif rarity is not None:
+            needed = option.get("unlocks", {}).get(value)
+            if needed and RARITIES.index(rarity) < RARITIES.index(needed):
+                problems.append(
+                    f"{option['label']} '{value}' needs a {needed} card. This card is {rarity}."
+                )
+    if rarity == "legendary" and config.get("treatment", "none") == "none":
+        problems.append("A legendary card needs a legendary treatment.")
     return problems

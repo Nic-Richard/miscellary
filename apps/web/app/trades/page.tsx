@@ -4,12 +4,13 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
-import type { TradeOffer } from '@miscellary/shared';
+import type { OwnedCard, TradeOffer } from '@miscellary/shared';
 import OfferCard from '@/components/OfferCard';
 import Sheet, { Empty } from '@/components/Sheet';
 import { Segmented } from '@/components/controls';
 import { useAuth } from '@/lib/auth';
 import { actOnOffer, listOffers } from '@/lib/trades';
+import { OwnedCardInspector } from '@/components/CardInspector';
 import ui from '@/components/ui.module.css';
 import styles from './page.module.css';
 
@@ -23,6 +24,7 @@ export default function TradesPage() {
   const [partner, setPartner] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [inspect, setInspect] = useState<OwnedCard | null>(null);
 
   const reload = useCallback(async () => setOffers(await listOffers(box)), [box]);
 
@@ -126,11 +128,14 @@ export default function TradesPage() {
                 me={user.profile.username}
                 busy={busy}
                 onAction={(a) => void act(o.id, a)}
+                onInspect={setInspect}
               />
             ))}
           </div>
         )}
       </Sheet>
+
+      {inspect ? <OwnedCardInspector owned={inspect} onClose={() => setInspect(null)} /> : null}
     </section>
   );
 }

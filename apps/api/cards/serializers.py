@@ -67,9 +67,13 @@ class CardWriteSerializer(serializers.ModelSerializer):
         config = attrs.get("template_config")
         if config is None:
             config = self.instance.template_config if self.instance else {}
+        rarity = attrs.get("rarity") or (self.instance.rarity if self.instance else None)
+        gated = templates.template_problems(key, rarity)
+        if gated:
+            raise serializers.ValidationError({"template_key": gated})
         # Fill in defaults so the snapshot is complete even if the client sent a partial config.
         full = {**templates.default_config(key), **config}
-        problems = templates.config_problems(key, full)
+        problems = templates.config_problems(key, full, rarity)
         if problems:
             raise serializers.ValidationError({"template_config": problems})
         attrs["template_config"] = full
@@ -222,4 +226,5 @@ class TemplateSerializer(serializers.Serializer):
     version = serializers.IntegerField()
     name = serializers.CharField()
     description = serializers.CharField()
+    unlocks = serializers.CharField(required=False)
     options = serializers.DictField()

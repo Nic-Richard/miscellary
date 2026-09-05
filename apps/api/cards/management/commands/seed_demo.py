@@ -27,7 +27,7 @@ from django.db import transaction
 from accounts.models import User
 from cards.models import CardDefinition, CardSet
 from cards.publishing import publish_set
-from cards.templates import TEMPLATES_BY_KEY, default_config
+from cards.templates import TEMPLATES_BY_KEY, default_config, template_problems
 from packs.actions import open_free_pack
 from packs.models import OwnedCard
 from social.models import Comment, Follow, Reaction, ShowcaseSlot
@@ -49,6 +49,23 @@ DEMO_EMAILS = [
 ]
 COMMONS = "https://commons.wikimedia.org/wiki/Special:FilePath/"
 COMMONS_API = "https://commons.wikimedia.org/w/api.php"
+# What each rarity spends its unlocks on in the demo data, so the seed shows
+# the range rather than leaving every card on the plain defaults.
+SPECIALTY_BY_RARITY: dict[str, list[dict[str, str]]] = {
+    "rare": [
+        {"finish": "pearl"},
+        {"finish": "metallic", "texture": "brushed"},
+        {"finish": "gloss"},
+    ],
+    "epic": [{"finish": "metallic"}, {"finish": "pearl"}, {"finish": "gloss"}],
+    "legendary": [
+        {"treatment": "foil", "finish": "matte", "coverage": "frame"},
+        {"treatment": "holo", "finish": "gloss", "coverage": "full"},
+        {"treatment": "holo", "finish": "satin", "coverage": "art"},
+        {"treatment": "foil", "finish": "gloss", "coverage": "art"},
+    ],
+}
+
 CACHE_DIR = Path("/tmp/miscellary-seed-photos")
 PNG_MAGIC = bytes([0x89]) + b"PNG"
 AGENT = {"User-Agent": "miscellary-dev/1.0 (seed_demo; local development)"}
@@ -1334,12 +1351,18 @@ class Command(BaseCommand):
             card_top = tuple(_jitter(c) for c in top)
             card_bottom = tuple(_jitter(c) for c in bottom)
             image = self._upload_art(creator, photo, card_top, card_bottom)
+            if template_problems(template_key, rarity):
+                template_key = "classic"
             template = TEMPLATES_BY_KEY[template_key]
             full_config = {**default_config(template_key), **config}
-            # One stock surface across a set, unless a card asks for its own, so
-            # the three demo sets read as three different materials.
             if surface and "texture" in full_config and "texture" not in config:
                 full_config["texture"] = surface
+            spend = SPECIALTY_BY_RARITY.get(rarity)
+            if spend:
+                # Name hashing keeps treatment choices varied but deterministic.
+                for option, value in spend[zlib.crc32(name.encode()) % len(spend)].items():
+                    if option not in config and option in template["options"]:
+                        full_config[option] = value
             CardDefinition.objects.create(
                 card_set=card_set,
                 image=image,

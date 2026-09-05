@@ -130,3 +130,9 @@ button.empty:hover {
   background: rgba(20, 28, 24, 0.3);
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
+
+.inspect {
+  border: 0;
+  background: none;
+  cursor: zoom-in;
+}

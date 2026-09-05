@@ -7,6 +7,7 @@ import type { Card, CardSetDetail, OwnedCard } from '@miscellary/shared';
 import Binder from '@/components/binder/Binder';
 import CardGrid, { CardCell } from '@/components/CardGrid';
 import FolderTabs from '@/components/binder/FolderTabs';
+import CardInspector from '@/components/CardInspector';
 import CardPreview from '@/components/CardPreview';
 import Comments from '@/components/Comments';
 import Description from '@/components/Description';
@@ -54,6 +55,7 @@ export default function BinderPage() {
   const [spread, setSpread] = useState(0);
   const [owned, setOwned] = useState<OwnedCard[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [inspect, setInspect] = useState<Card | null>(null);
 
   // Wait for auth so a creator can view their own draft binder.
   useEffect(() => {
@@ -111,17 +113,24 @@ export default function BinderPage() {
   function renderCard(card: Card, number: number) {
     return (
       <div className={styles.cardCell}>
-        <CardPreview
-          size="small"
-          title={card.title}
-          rarity={card.rarity}
-          number={number}
-          description={card.description}
-          imageUrl={card.image.url}
-          templateKey={card.template_key}
-          templateConfig={card.template_config}
-          mark={detail.mark}
-        />
+        <button
+          type="button"
+          className={styles.inspect}
+          onClick={() => setInspect(card)}
+          aria-label={`Inspect ${card.title}`}
+        >
+          <CardPreview
+            size="small"
+            title={card.title}
+            rarity={card.rarity}
+            number={number}
+            description={card.description}
+            imageUrl={card.image.url}
+            templateKey={card.template_key}
+            templateConfig={card.template_config}
+            mark={detail.mark}
+          />
+        </button>
         {isPublished ? (
           <div className={styles.cardSocial}>
             <LikeButton
@@ -410,6 +419,18 @@ export default function BinderPage() {
           </section>
         </aside>
       </div>
+
+      {inspect ? (
+        <CardInspector
+          card={inspect}
+          setTitle={set.title}
+          setSlug={set.slug}
+          mark={set.mark}
+          packColour={set.pack_colour}
+          creator={set.creator}
+          onClose={() => setInspect(null)}
+        />
+      ) : null}
     </section>
   );
 }

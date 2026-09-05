@@ -74,6 +74,8 @@
   fill: rgba(232, 212, 160, 0.82);
   font-family: var(--display);
   text-anchor: middle;
+  /* Avoid glyph-position jitter while the SVG rotates in 3D. */
+  text-rendering: geometricPrecision;
 }
 .title {
   font-size: 7px;

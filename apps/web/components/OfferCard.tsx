@@ -6,7 +6,15 @@ import CardPreview from './CardPreview';
 import ui from './ui.module.css';
 import styles from './OfferCard.module.css';
 
-function Side({ label, cards }: { label: string; cards: OwnedCard[] }) {
+function Side({
+  label,
+  cards,
+  onInspect,
+}: {
+  label: string;
+  cards: OwnedCard[];
+  onInspect?: ((owned: OwnedCard) => void) | undefined;
+}) {
   return (
     <div className={styles.side}>
       <span className={styles.sideLabel}>
@@ -16,8 +24,8 @@ function Side({ label, cards }: { label: string; cards: OwnedCard[] }) {
         {cards.length === 0 ? (
           <span className={styles.nothing}>nothing</span>
         ) : (
-          cards.map((c) => (
-            <span key={c.id} className={styles.card}>
+          cards.map((c) => {
+            const card = (
               <CardPreview
                 size="small"
                 title={c.card.title}
@@ -28,8 +36,26 @@ function Side({ label, cards }: { label: string; cards: OwnedCard[] }) {
                 templateConfig={c.card.template_config}
                 mark={c.set_mark}
               />
-            </span>
-          ))
+            );
+            if (!onInspect) {
+              return (
+                <span key={c.id} className={styles.card}>
+                  {card}
+                </span>
+              );
+            }
+            return (
+              <button
+                key={c.id}
+                type="button"
+                className={`${styles.card} ${styles.inspect}`}
+                onClick={() => onInspect(c)}
+                aria-label={`Inspect ${c.card.title}`}
+              >
+                {card}
+              </button>
+            );
+          })
         )}
       </div>
     </div>
@@ -40,6 +66,7 @@ interface OfferCardProps {
   offer: TradeOffer;
   me: string;
   onAction: (action: 'accept' | 'reject' | 'cancel') => void;
+  onInspect?: (owned: OwnedCard) => void;
   busy?: boolean;
 }
 
@@ -51,7 +78,7 @@ const STATUS_WORD: Record<string, string> = {
   countered: 'Countered',
 };
 
-export default function OfferCard({ offer, me, onAction, busy }: OfferCardProps) {
+export default function OfferCard({ offer, me, onAction, onInspect, busy }: OfferCardProps) {
   const incoming = offer.recipient.username === me;
   const other = incoming ? offer.sender : offer.recipient;
   // The offer is always written from the reader's point of view: the sender's
@@ -77,13 +104,13 @@ export default function OfferCard({ offer, me, onAction, busy }: OfferCardProps)
       {offer.message ? <p className={styles.message}>&ldquo;{offer.message}&rdquo;</p> : null}
 
       <div className={styles.deal}>
-        <Side label="You get" cards={youGet} />
+        <Side label="You get" cards={youGet} onInspect={onInspect} />
         <span className={styles.swap} aria-hidden="true">
           <svg viewBox="0 0 24 24">
             <path d="M4 9h14l-4-4M20 15H6l4 4" />
           </svg>
         </span>
-        <Side label="You give" cards={youGive} />
+        <Side label="You give" cards={youGive} onInspect={onInspect} />
       </div>
 
       {offer.status === 'pending' ? (

@@ -58,8 +58,9 @@ export interface TemplateOption {
   label: string;
   values: string[];
   default: string;
-  /** Which control to draw: a colour swatch grid, or a plain list of choices. */
   type?: 'choice' | 'swatch' | 'font';
+  /** Minimum rarity for gated values. */
+  unlocks?: Record<string, Rarity>;
 }
 
 export interface CardTemplate {
@@ -67,6 +68,8 @@ export interface CardTemplate {
   version: number;
   name: string;
   description: string;
+  /** Minimum rarity for the template. */
+  unlocks?: Rarity;
   options: Record<string, TemplateOption>;
 }
 

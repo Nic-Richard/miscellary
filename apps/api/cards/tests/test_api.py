@@ -54,6 +54,9 @@ def test_create_set_and_card(auth_client, user):
         "font": "display",
         "texture": "linen",
         "corners": "round",
+        "finish": "matte",
+        "treatment": "none",
+        "coverage": "art",
     }
     assert card["template_version"] == 1
 

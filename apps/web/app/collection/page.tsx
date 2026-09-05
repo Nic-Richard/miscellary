@@ -6,6 +6,7 @@ import { Suspense, useCallback, useEffect, useState } from 'react';
 import type { OwnedCard, SetPointsBalance } from '@miscellary/shared';
 import CardGrid, { CardCell } from '@/components/CardGrid';
 import Sheet, { Empty } from '@/components/Sheet';
+import { OwnedCardInspector } from '@/components/CardInspector';
 import CardPreview from '@/components/CardPreview';
 import { useAuth } from '@/lib/auth';
 import { listMyCards, listMyPoints, recycleCard } from '@/lib/packs';
@@ -26,6 +27,7 @@ function Collection() {
   const [cards, setCards] = useState<OwnedCard[] | null>(null);
   const [points, setPoints] = useState<SetPointsBalance[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [inspect, setInspect] = useState<OwnedCard | null>(null);
 
   const reload = useCallback(async () => {
     const [page, pts] = await Promise.all([listMyCards(setSlug), listMyPoints()]);
@@ -128,23 +130,32 @@ function Collection() {
                     )
                   }
                 >
-                  <CardPreview
-                    size="small"
-                    title={owned.card.title}
-                    rarity={owned.card.rarity}
-                    number={owned.card.position + 1}
-                    description={owned.card.description}
-                    imageUrl={owned.card.image.url}
-                    templateKey={owned.card.template_key}
-                    templateConfig={owned.card.template_config}
-                    mark={owned.set_mark}
-                  />
+                  <button
+                    type="button"
+                    className={styles.inspect}
+                    onClick={() => setInspect(owned)}
+                    aria-label={`Inspect ${owned.card.title}`}
+                  >
+                    <CardPreview
+                      size="small"
+                      title={owned.card.title}
+                      rarity={owned.card.rarity}
+                      number={owned.card.position + 1}
+                      description={owned.card.description}
+                      imageUrl={owned.card.image.url}
+                      templateKey={owned.card.template_key}
+                      templateConfig={owned.card.template_config}
+                      mark={owned.set_mark}
+                    />
+                  </button>
                 </CardCell>
               ))}
             </CardGrid>
           </Sheet>
         );
       })}
+
+      {inspect ? <OwnedCardInspector owned={inspect} onClose={() => setInspect(null)} /> : null}
     </section>
   );
 }

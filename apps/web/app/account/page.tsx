@@ -7,6 +7,7 @@ import type { CurrentUser, OwnedCard, ShowcaseSlot } from '@miscellary/shared';
 import { SHOWCASE_SLOTS } from '@miscellary/shared';
 import CardPreview from '@/components/CardPreview';
 import ShowcaseCase from '@/components/ShowcaseCase';
+import { OwnedCardInspector } from '@/components/CardInspector';
 import ui from '@/components/ui.module.css';
 import { apiFetch } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
@@ -21,6 +22,7 @@ export default function AccountPage() {
   const [showcaseTitle, setShowcaseTitle] = useState('');
   const [saved, setSaved] = useState(false);
   const [cards, setCards] = useState<OwnedCard[]>([]);
+  const [inspect, setInspect] = useState<OwnedCard | null>(null);
   const [slots, setSlots] = useState<(string | null)[]>(Array(SHOWCASE_SLOTS).fill(null));
   const [picking, setPicking] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -138,6 +140,7 @@ export default function AccountPage() {
         <ShowcaseCase
           title={showcaseTitle}
           mine
+          onInspect={setInspect}
           onPick={(i) => setPicking(picking === i ? null : i)}
           slots={slots.map((id, position) => {
             const owned = id ? byId.get(id) : undefined;
@@ -184,6 +187,8 @@ export default function AccountPage() {
           </div>
         </div>
       ) : null}
+
+      {inspect ? <OwnedCardInspector owned={inspect} onClose={() => setInspect(null)} /> : null}
     </section>
   );
 }

@@ -359,3 +359,18 @@
   opacity: 0.5;
   cursor: default;
 }
+
+/* The binder slot sizes the card, so the trigger has to pass that size through
+   rather than shrink to its content. */
+.inspect {
+  all: unset;
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: zoom-in;
+}
+.inspect:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}

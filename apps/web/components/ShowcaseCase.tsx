@@ -1,20 +1,61 @@
 import type { ReactNode } from 'react';
 import CardPreview from './CardPreview';
 import { SHOWCASE_SLOTS } from '@miscellary/shared';
-import type { ShowcaseSlot } from '@miscellary/shared';
+import type { OwnedCard, ShowcaseSlot } from '@miscellary/shared';
 import styles from './ShowcaseCase.module.css';
 
 interface ShowcaseCaseProps {
   slots: (ShowcaseSlot | null)[];
   title?: string;
   onPick?: (position: number) => void;
+  onInspect?: (owned: OwnedCard) => void;
   mine?: boolean;
   footer?: ReactNode;
 }
 
 const DEFAULT_TITLE = 'The pride of the collection';
 
-export default function ShowcaseCase({ slots, title, onPick, mine, footer }: ShowcaseCaseProps) {
+function Mounted({
+  owned,
+  onInspect,
+}: {
+  owned: OwnedCard;
+  onInspect?: ((owned: OwnedCard) => void) | undefined;
+}) {
+  const card = (
+    <CardPreview
+      size="small"
+      title={owned.card.title}
+      rarity={owned.card.rarity}
+      number={owned.card.position + 1}
+      description={owned.card.description}
+      imageUrl={owned.card.image.url}
+      templateKey={owned.card.template_key}
+      templateConfig={owned.card.template_config}
+      mark={owned.set_mark}
+    />
+  );
+  if (!onInspect) return <span className={styles.sleeve}>{card}</span>;
+  return (
+    <button
+      type="button"
+      className={`${styles.sleeve} ${styles.inspect}`}
+      onClick={() => onInspect(owned)}
+      aria-label={`Inspect ${owned.card.title}`}
+    >
+      {card}
+    </button>
+  );
+}
+
+export default function ShowcaseCase({
+  slots,
+  title,
+  onPick,
+  onInspect,
+  mine,
+  footer,
+}: ShowcaseCaseProps) {
   const filled = slots.filter(Boolean).length;
   return (
     <div className={styles.case}>
@@ -31,19 +72,7 @@ export default function ShowcaseCase({ slots, title, onPick, mine, footer }: Sho
             <li key={slot ? slot.position : `empty-${i}`} className={styles.mount}>
               {slot ? (
                 <>
-                  <span className={styles.sleeve}>
-                    <CardPreview
-                      size="small"
-                      title={slot.owned_card.card.title}
-                      rarity={slot.owned_card.card.rarity}
-                      number={slot.owned_card.card.position + 1}
-                      description={slot.owned_card.card.description}
-                      imageUrl={slot.owned_card.card.image.url}
-                      templateKey={slot.owned_card.card.template_key}
-                      templateConfig={slot.owned_card.card.template_config}
-                      mark={slot.owned_card.set_mark}
-                    />
-                  </span>
+                  <Mounted owned={slot.owned_card} onInspect={onInspect} />
                   <span className={styles.label}>{slot.owned_card.set_title}</span>
                 </>
               ) : onPick ? (

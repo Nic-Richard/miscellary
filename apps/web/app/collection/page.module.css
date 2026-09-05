@@ -36,3 +36,15 @@
 .sheet {
   margin-top: 20px;
 }
+
+.inspect {
+  all: unset;
+  display: block;
+  width: 100%;
+  cursor: zoom-in;
+}
+.inspect:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}

@@ -78,14 +78,14 @@ when given an `onChange` handler.
 ## Cards
 
 `components/CardPreview.tsx` uses container-relative units so the same card markup works at every
-display size. Cards use a 5:7 trading-card ratio and combine a header, photo, description, rarity
-label, set mark, dimensional stock, and a recessed image window.
+display size. Cards use a 5:7 trading-card ratio and combine a header, photo, description, set
+mark, dimensional stock, and a recessed image window. The card face carries no rarity label.
 
 The available templates are:
 
 - Classic: framed photo on a configurable card stock
 - Polaroid: open photo with a wide caption margin
-- Minimal: full-bleed photo with text on scrims
+- Full Art: full-bleed photo with text on scrims (Epic and above)
 - Bold: strong border, large title, and configurable image shape
 - Field Note: warm note stock with a larger description panel
 - Dossier: dark or oxblood stock with a structured description panel
@@ -93,8 +93,28 @@ The available templates are:
 Template configuration controls stock, accent, border, display font, texture, corners, and
 template-specific treatments. Each published card stores its template snapshot.
 
-Rarity is shown through both color and material. Common and uncommon use a restrained edge, rare
-uses violet, epic uses terracotta with a warm glow, and legendary uses gold foil and a slow sheen.
+Every card carries the same physical treatment: a pale die-cut rim, a contact shadow over two
+ambient steps, a print grain above the face, and one press curve across the photo so uneven
+uploads still sit in the same print. The clear coat uses the same 104deg light angle as the pack
+wrapper.
+
+Every card is printed to the same standard; rarity never lowers material quality. A card's coat
+is whatever its creator chose - matte, satin, gloss, pearl or metallic - and grain and sheen are
+properties of that coat, so a matte card shows more tooth than a gloss one at any rarity.
+
+Rarity gates which specialty values a creator may pick, not how much treatment is applied. Relief
+and cut-edge colour follow the tier rather than a control, since they are too small to be worth
+choosing. The legendary chase treatment is a separate axis layered over the chosen coat, so a
+foiled legendary can still be matte linen underneath. Each treatment is two sibling layers, a
+field and a travelling band, kept as siblings because a blended layer that owns a stacking
+context would make its children blend against that instead of against the card. Coverage decides
+where they mount: over the picture, in a struck band round the rim, or across the whole face.
+Foil struck on bare board is opaque metal; over a photo it keys off the backdrop so the picture
+survives. Holo carries its spectrum in the band rather than painted flat, because a static
+full-surface lattice reads as tartan and buries the artwork. Snapshots saved before the finish option
+existed fall back to a per-rarity coat, which is why the `:not([data-finish])` rules exist.
+
+The exact rarity is not printed on the card face.
 
 ## Pack and set identity
 
@@ -132,7 +152,8 @@ for profile display and showcase editing.
 - Releasing after the tear threshold completes the rip; an earlier release returns the wrapper.
 - Cards flip into the reveal area one at a time.
 - Rare pulls receive a burst, while legendary pulls receive a gold bloom and ring.
-- Legendary cards use a slow diagonal sheen.
+- Legendary cards carry a travelling pass: foil a narrow specular every 6.5s, holo a wider
+  spectral band every 4.8s. Both rest off-card for most of the cycle.
 - Shelves, controls, and pickers use short, restrained transitions.
 
 Pointer events provide one interaction path for touch, pen, and mouse. Keyboard users can focus

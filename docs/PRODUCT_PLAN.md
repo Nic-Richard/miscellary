@@ -60,7 +60,18 @@ Miscellary uses five rarity tiers:
 - Legendary
 
 Rarity affects pull odds and visual treatment but does not represent a finite supply or monetary
-value. Publishing enforces a balanced rarity distribution so a set remains suitable for packs.
+value. Rarity is also a design capability: it widens the catalogue a creator may pick from
+rather than dictating how a card looks. Common and uncommon have the full ordinary catalogue of
+layout, stock, colour, typography, imagery, framing and surface, so a common can be as
+well-designed as anything else. Higher tiers additionally unlock specialty production treatments -
+pearlescent and metallic finishes and a brushed surface at rare, the Full Art template at epic -
+and none of them are compulsory. Relief and cut edge are not creator choices: they are small
+enough that the renderer applies whatever suits the tier. Legendary is the one tier with a required choice: it must carry a chase treatment,
+picked by the creator, on an axis separate from its ordinary finish.
+
+Gating applies only when a card is saved. A published card renders from its stored snapshot and is
+never re-validated, so changing the unlock rules later cannot alter a card a collector already
+owns. Publishing enforces a balanced rarity distribution so a set remains suitable for packs.
 The current caps, pull odds, and recycle values live in the shared and API rarity modules and must
 stay synchronized.
 

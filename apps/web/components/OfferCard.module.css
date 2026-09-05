@@ -180,3 +180,10 @@
     justify-self: center;
   }
 }
+
+.inspect {
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: zoom-in;
+}
