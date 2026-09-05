@@ -1,0 +1,75 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.drop {
+  display: block;
+  padding: 6px;
+  background: var(--sur);
+  border: 1px dashed var(--bdr2);
+  border-radius: var(--radius-sm, 7px);
+  cursor: pointer;
+}
+.drop:hover {
+  border-color: var(--accent);
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 16px 8px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.empty small {
+  color: var(--faint);
+  font-size: 11px;
+}
+
+/* Checkerboard distinguishes opaque white from transparency. */
+.mesh {
+  display: block;
+  background-color: #fbf8f1;
+  background-image:
+    linear-gradient(45deg, #ddd4c2 25%, transparent 25%, transparent 75%, #ddd4c2 75%),
+    linear-gradient(45deg, #ddd4c2 25%, transparent 25%, transparent 75%, #ddd4c2 75%);
+  background-position:
+    0 0,
+    8px 8px;
+  background-size: 16px 16px;
+  border-radius: 4px;
+}
+.thumb {
+  display: block;
+  width: 100%;
+  max-height: 132px;
+  object-fit: contain;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+}
+.link {
+  padding: 0;
+  background: none;
+  border: 0;
+  color: var(--accent);
+  font-family: var(--body);
+  font-size: 12px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.link:hover {
+  color: var(--accent-deep);
+}
+
+.error {
+  margin: 0;
+  color: var(--danger);
+  font-size: 12px;
+}

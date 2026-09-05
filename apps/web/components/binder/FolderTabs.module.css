@@ -1,0 +1,99 @@
+/* Slice the SVG shoulders so only the flat centre stretches. */
+.tabs {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-end;
+  width: 100%;
+  /* Keep the outer shoulders inside the binder's rounded corners. */
+  padding: 0 2%;
+  margin-bottom: -7px;
+}
+.tab {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  height: 48px;
+  margin-right: -34px;
+  padding: 8px 10px 0;
+  appearance: none;
+  background: none;
+  border-style: solid;
+  border-width: 0 34px;
+  border-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='48'><path d='M0.5 48 L17 8 Q20 1 28 1 H172 Q180 1 183 8 L199.5 48' fill='%23ece4d5' stroke='%23c9bda5'/></svg>")
+    0 34 0 34 fill / 0 34px 0 34px stretch;
+  color: #5f5548;
+  font: 400 15px / 1 var(--display);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color var(--dur-fast);
+}
+.tab:last-child {
+  margin-right: 0;
+}
+.tab:hover {
+  color: var(--accent);
+}
+.tab svg {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.tab > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tab b {
+  flex: none;
+  padding: 5px 9px 3px;
+  border: 1px solid currentColor;
+  border-radius: 3px;
+  font-weight: 400;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  opacity: 0.85;
+}
+.active {
+  z-index: 2;
+  height: 56px;
+  padding-top: 10px;
+  border-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='48'><path d='M0.5 48 L17 8 Q20 1 28 1 H172 Q180 1 183 8 L199.5 48' fill='%23f9f4ea' stroke='%2364b0a8'/></svg>")
+    0 34 0 34 fill / 0 34px 0 34px stretch;
+  color: var(--accent);
+  filter: drop-shadow(0 -2px 2px rgba(58, 42, 20, 0.08));
+}
+.active b {
+  border-color: #7ab8b1;
+  opacity: 1;
+}
+
+@media (max-width: 700px) {
+  .tab {
+    height: 42px;
+    margin-right: -30px;
+    padding: 6px 2px 0;
+    border-width: 0 30px;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    gap: 6px;
+  }
+  .active {
+    height: 48px;
+  }
+  .tab svg,
+  .tab b {
+    display: none;
+  }
+}

@@ -1,0 +1,33 @@
+.create {
+  max-width: 640px;
+  margin: 22px 0 34px;
+}
+.createRow {
+  display: flex;
+  gap: 10px;
+}
+.item {
+  position: relative;
+}
+.viewLink,
+.statusTag {
+  position: absolute;
+  top: -8px;
+  right: 8px;
+  z-index: 2;
+  padding: 4px 10px;
+  border-radius: 3px;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+.viewLink {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+.statusTag {
+  background: #f4eee1;
+  border: 1px solid var(--bdr2);
+  color: var(--muted);
+}

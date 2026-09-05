@@ -1,0 +1,155 @@
+.pouch {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 545 / 908;
+  /* cqw keeps printed layers proportional at every rendered pack size. */
+  container-type: inline-size;
+}
+.pouch > img,
+.emblem,
+.finish,
+.printed {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.foil {
+  user-select: none;
+  filter: hue-rotate(var(--pack-hue, 0deg)) saturate(var(--pack-saturation, 1))
+    brightness(var(--pack-brightness, 1));
+}
+
+/* Centre-origin transforms keep placed layers anchored. */
+.art {
+  position: absolute;
+  display: block;
+  width: 70%;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 3px rgba(13, 43, 40, 0.32));
+}
+
+.emblemLayer {
+  position: absolute;
+  display: block;
+  width: 100%;
+  aspect-ratio: 545 / 908;
+}
+/* Overlay restores foil lighting without tinting the artwork. */
+.shading {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  mix-blend-mode: overlay;
+  opacity: 0.92;
+  pointer-events: none;
+}
+
+/* The image mask clips all placed layers to the wrapper silhouette. */
+.printed {
+  z-index: 2;
+  overflow: hidden;
+  pointer-events: none;
+  -webkit-mask-image: url('/materials/pack-blank.png');
+  mask-image: url('/materials/pack-blank.png');
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+.textLayer {
+  position: absolute;
+  z-index: 2;
+  line-height: 1.05;
+  white-space: nowrap;
+  text-shadow: 0 0.15cqw 0.4cqw rgba(12, 30, 28, 0.34);
+  pointer-events: none;
+}
+
+.finish {
+  z-index: 3;
+  pointer-events: none;
+  -webkit-mask-image: url('/materials/pack-blank.png');
+  mask-image: url('/materials/pack-blank.png');
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+.pouch[data-finish='gloss'] .finish {
+  background: linear-gradient(
+    104deg,
+    rgba(255, 255, 255, 0) 4%,
+    rgba(255, 255, 255, 0.07) 24%,
+    rgba(255, 255, 255, 0.19) 40%,
+    rgba(255, 255, 255, 0.1) 52%,
+    rgba(255, 255, 255, 0.04) 68%,
+    rgba(255, 255, 255, 0.12) 84%,
+    rgba(255, 255, 255, 0) 97%
+  );
+  mix-blend-mode: screen;
+}
+.pouch[data-finish='satin'] .finish {
+  background: linear-gradient(
+    104deg,
+    rgba(255, 255, 255, 0) 18%,
+    rgba(255, 255, 255, 0.14) 45%,
+    rgba(255, 255, 255, 0) 78%
+  );
+  mix-blend-mode: screen;
+}
+/* Inverted shading suppresses highlights without dimming the wrapper colour. */
+.flatten {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  filter: invert(1) contrast(1.15);
+  mix-blend-mode: overlay;
+  opacity: 0.5;
+  pointer-events: none;
+}
+.pouch[data-finish='matte'] .foil {
+  filter: hue-rotate(var(--pack-hue, 0deg)) saturate(calc(var(--pack-saturation, 1) * 0.96))
+    brightness(calc(var(--pack-brightness, 1) * 1.01)) contrast(0.96);
+}
+.pouch[data-finish='matte'] .finish {
+  background: rgba(236, 230, 214, 0.07);
+  mix-blend-mode: soft-light;
+}
+.pouch[data-finish='matte'] .shading {
+  opacity: 0.34;
+}
+.pouch[data-finish='holo'] .finish {
+  background: linear-gradient(
+    104deg,
+    rgba(255, 90, 140, 0.28) 6%,
+    rgba(255, 214, 92, 0.26) 22%,
+    rgba(104, 232, 168, 0.26) 38%,
+    rgba(96, 190, 255, 0.28) 55%,
+    rgba(178, 130, 255, 0.28) 72%,
+    rgba(255, 120, 170, 0.24) 90%
+  );
+  mix-blend-mode: overlay;
+  opacity: 0.42;
+}
+.pouch[data-finish='holo'] .foil {
+  filter: hue-rotate(var(--pack-hue, 0deg)) saturate(var(--pack-saturation, 1))
+    brightness(calc(var(--pack-brightness, 1) * 1.04)) contrast(1.06);
+}
+
+.emblemMark {
+  width: 24px;
+  height: 24px;
+  overflow: visible;
+  fill: none;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}

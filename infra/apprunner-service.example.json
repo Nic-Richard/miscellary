@@ -1,0 +1,54 @@
+{
+  "ServiceName": "miscellary-api",
+  "SourceConfiguration": {
+    "AuthenticationConfiguration": {
+      "AccessRoleArn": "arn:aws:iam::123456789012:role/AppRunnerECRAccessRole"
+    },
+    "AutoDeploymentsEnabled": false,
+    "ImageRepository": {
+      "ImageIdentifier": "123456789012.dkr.ecr.us-east-1.amazonaws.com/miscellary-api:latest",
+      "ImageRepositoryType": "ECR",
+      "ImageConfiguration": {
+        "Port": "8000",
+        "RuntimeEnvironmentVariables": {
+          "DJANGO_SETTINGS_MODULE": "config.settings.prod",
+          "ALLOWED_HOSTS": "api.example.com,abc123.us-east-1.awsapprunner.com",
+          "CORS_ALLOWED_ORIGINS": "https://app.example.com",
+          "CSRF_TRUSTED_ORIGINS": "https://api.example.com",
+          "WEB_URL": "https://app.example.com",
+          "EMAIL_FROM": "Miscellary <no-reply@example.com>",
+          "COOKIE_SECURE": "true",
+          "COOKIE_SAMESITE": "Lax",
+          "AWS_S3_REGION": "us-east-1",
+          "AWS_STORAGE_BUCKET_NAME": "miscellary-media-prod",
+          "MEDIA_PUBLIC_URL": "https://miscellary-media-prod.s3.us-east-1.amazonaws.com"
+        },
+        "RuntimeEnvironmentSecrets": {
+          "SECRET_KEY": "arn:aws:secretsmanager:us-east-1:123456789012:secret:miscellary/secret-key",
+          "DATABASE_URL": "arn:aws:secretsmanager:us-east-1:123456789012:secret:miscellary/database-url",
+          "EMAIL_HOST_USER": "arn:aws:secretsmanager:us-east-1:123456789012:secret:miscellary/ses-user",
+          "EMAIL_HOST_PASSWORD": "arn:aws:secretsmanager:us-east-1:123456789012:secret:miscellary/ses-password"
+        }
+      }
+    }
+  },
+  "InstanceConfiguration": {
+    "Cpu": "0.25 vCPU",
+    "Memory": "0.5 GB",
+    "InstanceRoleArn": "arn:aws:iam::123456789012:role/MiscellaryApiInstanceRole"
+  },
+  "HealthCheckConfiguration": {
+    "Protocol": "HTTP",
+    "Path": "/api/v1/health/",
+    "Interval": 10,
+    "Timeout": 5,
+    "HealthyThreshold": 1,
+    "UnhealthyThreshold": 5
+  },
+  "NetworkConfiguration": {
+    "EgressConfiguration": {
+      "EgressType": "VPC",
+      "VpcConnectorArn": "arn:aws:apprunner:us-east-1:123456789012:vpcconnector/miscellary/1/abc123"
+    }
+  }
+}

@@ -1,0 +1,18 @@
+.start {
+  display: flex;
+  gap: 10px;
+  max-width: 620px;
+  margin: 24px 0 26px;
+}
+.start button {
+  white-space: nowrap;
+}
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sheet {
+  margin-top: 4px;
+}

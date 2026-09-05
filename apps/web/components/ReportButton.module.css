@@ -1,0 +1,42 @@
+.link {
+  background: none;
+  border: none;
+  color: var(--faint);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0;
+}
+.link:hover {
+  color: var(--danger);
+}
+.form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  font-size: 12px;
+}
+.input {
+  background: var(--sur);
+  border: 1px solid var(--bdr2);
+  border-radius: 4px;
+  color: var(--text);
+  padding: 6px 8px;
+  font-size: 12px;
+}
+.send {
+  background: var(--danger);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.done {
+  font-size: 12px;
+  color: var(--faint);
+}
+.error {
+  color: var(--danger);
+}

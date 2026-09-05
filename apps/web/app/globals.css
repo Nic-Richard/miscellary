@@ -1,0 +1,94 @@
+:root {
+  --bg: #f4eee1;
+  --sur: #f9f4ea;
+  --sur2: #ebe3d1;
+  --bdr: #ddd3bf;
+  --bdr2: #c7bba3;
+
+  --text: #372e25;
+  --muted: #6f6355;
+  --faint: #9a8e7c;
+
+  --cloth: #93b8b2;
+  --cloth-deep: #6c948e;
+  --cloth-ink: #f6f0e4;
+  --spine: #9c9184;
+  --sleeve: rgba(255, 255, 255, 0.55);
+
+  --accent: #278b82;
+  --accent-deep: #1e6e67;
+  --accent-text: #f6f0e4;
+  --foil: #7ccdbf;
+  --gold: #b8903a;
+  --danger: #ae4a3a;
+
+  --rarity-common: #3f8f88;
+  --rarity-uncommon: #b48a2c;
+  --rarity-rare: #7b5fa3;
+  --rarity-epic: #c66a3c;
+  --rarity-legendary: #c9a24a;
+
+  --display: var(--font-display), 'Arial Narrow', 'Impact', sans-serif;
+  --body: var(--font-body), 'Arial Narrow', system-ui, sans-serif;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 14px;
+  --radius-pill: 999px;
+
+  --shadow-sm: 0 1px 2px rgba(58, 42, 20, 0.12);
+  --shadow-md: 0 4px 14px rgba(58, 42, 20, 0.14);
+  --shadow-lg: 0 18px 40px rgba(40, 28, 12, 0.24);
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 150ms;
+  --dur-med: 300ms;
+  --dur-slow: 550ms;
+
+  /* Prop colours. Both are photographs, tinted by rotating their hue, so a
+     surface can override these to recolour the binder cover or the pack. */
+  --binder-hue: 0deg;
+  --binder-saturation: 1;
+  --pack-hue: 0deg;
+  --pack-saturation: 1;
+
+  --paper: url('/materials/paper.jpg');
+  --cloth-tex: url('/materials/cloth.jpg');
+}
+
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+body {
+  background:
+    linear-gradient(rgba(244, 238, 225, 0.55), rgba(244, 238, 225, 0.55)),
+    var(--paper) center top / 768px,
+    var(--bg);
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+a {
+  color: var(--accent);
+}
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+h1,
+h2,
+h3 {
+  font-weight: 400;
+}
+::selection {
+  background: rgba(39, 139, 130, 0.25);
+}

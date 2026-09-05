@@ -1,0 +1,38 @@
+.crumbs {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+.groupTitle {
+  color: #3a2f26;
+  font: 400 26px / 1 var(--display);
+  letter-spacing: 0.06em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+.groupTitle:hover {
+  color: var(--accent);
+}
+.recycle {
+  padding: 5px 10px;
+  background: none;
+  border: 1px solid var(--bdr2);
+  border-radius: 4px;
+  color: var(--muted);
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+}
+.recycle:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.recycle:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.sheet {
+  margin-top: 20px;
+}

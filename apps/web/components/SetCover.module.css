@@ -1,0 +1,77 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 208px;
+}
+
+.sleeve {
+  width: 208px;
+  padding: 9px;
+  border-radius: 8px;
+  background: linear-gradient(140deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.3));
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  box-shadow:
+    0 0 0 1px rgba(120, 105, 80, 0.18),
+    0 10px 24px rgba(58, 42, 20, 0.16);
+  transform: rotate(-1.5deg);
+  transform-origin: 50% 90%;
+}
+
+.card {
+  aspect-ratio: 5 / 7;
+  padding: 7px;
+  background:
+    var(--paper) center / 256px,
+    #f8f2e6;
+  border: 1px solid #cdbfa6;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(58, 42, 20, 0.18);
+}
+.card img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border: 1px solid #bfb29a;
+  border-radius: 3px;
+}
+.card span {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  background: #1f3a36;
+  color: #f3ecdd;
+  font: 400 72px / 1 var(--display);
+  border-radius: 3px;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+}
+.link {
+  padding: 0;
+  background: none;
+  border: 0;
+  color: var(--accent);
+  font-family: var(--body);
+  font-size: 12px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.link:hover {
+  color: var(--accent-deep);
+}
+
+/* Let the cropper take the width it needs instead of being squeezed by the header grid. */
+.editor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 280px;
+}
+.editor > .link {
+  align-self: flex-start;
+}

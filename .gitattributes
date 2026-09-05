@@ -1,0 +1,14 @@
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+
+/apps/api/manage.py text eol=lf
+/docker/*.sh text eol=lf
+/scripts/*.sh text eol=lf

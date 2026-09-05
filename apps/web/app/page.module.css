@@ -1,0 +1,211 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 64px;
+  padding-bottom: 40px;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(420px, 1fr);
+  gap: 48px;
+  align-items: center;
+  min-height: 70vh;
+  padding: 20px 10px 0;
+}
+.copy {
+  max-width: 600px;
+}
+.title {
+  margin: 8px 0 0;
+  font: 400 clamp(54px, 7vw, 96px) / 0.92 var(--display);
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  color: #3a2f26;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 26px;
+}
+
+.stats {
+  margin: 26px 0 0;
+  color: var(--faint);
+  font-family: var(--body);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.stats b {
+  color: var(--accent);
+}
+
+.art {
+  position: relative;
+  min-height: 520px;
+  display: grid;
+  place-items: center;
+}
+.glow {
+  position: absolute;
+  width: 620px;
+  height: 620px;
+  max-width: 110%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(39, 139, 130, 0.13), transparent 62%);
+  pointer-events: none;
+}
+.fan {
+  position: relative;
+  display: flex;
+  transform: translateX(-20px);
+  justify-content: center;
+  align-items: flex-end;
+  padding-bottom: 40px;
+}
+.fanCard {
+  --card-max: 178px;
+  width: 178px;
+  margin: 0 -26px;
+  transform-origin: 50% 140%;
+  transform: rotate(calc((var(--i) - 1.5) * 7deg)) translateY(calc(var(--i) * -3px));
+  filter: drop-shadow(0 18px 22px rgba(52, 38, 18, 0.26));
+  transition: transform var(--dur-med) var(--ease-out);
+}
+.fanCard:hover {
+  transform: rotate(calc((var(--i) - 1.5) * 7deg)) translateY(-22px);
+  z-index: 4;
+}
+.pouch {
+  position: absolute;
+  right: -2%;
+  bottom: -4%;
+  z-index: 3;
+  width: 148px;
+  transform: rotate(9deg);
+  filter: drop-shadow(0 16px 18px rgba(20, 60, 54, 0.3));
+}
+
+.sectionHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 18px;
+  margin-bottom: 20px;
+}
+.h2 {
+  margin: 0;
+  font: 400 26px / 1 var(--display);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.more {
+  color: var(--muted);
+  font-family: var(--body);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.more:hover {
+  color: var(--accent);
+}
+
+.shelfSection {
+  padding: 0 10px;
+}
+
+.beats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 34px 28px;
+  padding: 34px 10px 0;
+  border-top: 1px solid var(--bdr);
+}
+.beat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+.beatArt {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  width: 100%;
+  height: 190px;
+  margin-bottom: 6px;
+}
+.beatArt > :global(.pouch),
+.beatArt > div {
+  width: 116px;
+}
+.beatCard {
+  display: block;
+  width: 108px;
+  filter: drop-shadow(0 10px 14px rgba(52, 38, 18, 0.22));
+}
+.beatSleeves .beatCard:nth-child(2) {
+  margin-left: -46px;
+  transform: rotate(7deg) translateY(-8px);
+}
+.beatSwap {
+  gap: 42px;
+}
+.beatSwap .beatCard[data-side='1'] {
+  transform: rotate(5deg);
+}
+.beatArrow {
+  position: absolute;
+  left: 129px;
+  bottom: 40%;
+  width: 30px;
+  height: 30px;
+  transform: translateX(-50%);
+  fill: none;
+  stroke: var(--faint);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.beatTitle {
+  margin: 0;
+  font: 400 21px / 1 var(--display);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.beatText {
+  margin: 0;
+  max-width: 34ch;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+@media (max-width: 1080px) {
+  .hero {
+    grid-template-columns: 1fr;
+    min-height: 0;
+    gap: 24px;
+  }
+  .art {
+    min-height: 440px;
+  }
+}
+@media (max-width: 620px) {
+  .page {
+    gap: 44px;
+  }
+  .fanCard {
+    --card-max: 128px;
+    width: 128px;
+    margin: 0 -22px;
+  }
+  .pouch {
+    width: 112px;
+  }
+}

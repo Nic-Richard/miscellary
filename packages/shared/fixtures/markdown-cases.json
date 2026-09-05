@@ -1,0 +1,14 @@
+[
+  { "input": "Plain text", "issues": [] },
+  { "input": "**Bold** and *italic*\n- one\n- two", "issues": [] },
+  { "input": "line one\nline two\n\nparagraph two", "issues": [] },
+  { "input": "# Heading", "issues": ["heading"] },
+  { "input": "text\n   ## indented heading", "issues": ["heading"] },
+  { "input": "#hashtag is fine", "issues": [] },
+  { "input": "[link](http://example.com)", "issues": ["link"] },
+  { "input": "![img](http://example.com/x.png)", "issues": ["link"] },
+  { "input": "<b>bold</b>", "issues": ["html"] },
+  { "input": "1 < 2 and 3 > 2", "issues": [] },
+  { "input": "`code`", "issues": ["code"] },
+  { "input": "# H\n[l](u)\n<i>x</i>\n`c`", "issues": ["heading", "link", "html", "code"] }
+]

@@ -1,0 +1,78 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  max-width: 520px;
+  margin-top: 24px;
+  padding: 22px 26px 24px;
+}
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  margin-top: 16px;
+}
+.badge {
+  margin-left: 6px;
+  padding: 2px 6px;
+  border: 1px solid var(--gold);
+  border-radius: 3px;
+  color: var(--gold);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.h2 {
+  margin: 40px 0 4px;
+  font: 400 26px / 1 var(--display);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #3a2f26;
+}
+.slotsWrap {
+  margin-top: 16px;
+}
+.picker {
+  margin-top: 22px;
+  padding: 18px 20px 20px;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+.pick {
+  padding: 4px;
+  background: none;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  transition:
+    border-color var(--dur-fast),
+    transform var(--dur-fast);
+}
+.pick:hover {
+  border-color: var(--accent);
+  transform: translateY(-3px);
+}
+.link {
+  padding: 0;
+  background: none;
+  border: 0;
+  color: var(--accent);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.muted {
+  color: var(--muted);
+  font-size: 14px;
+}
+.error {
+  margin: 8px 0 0;
+  color: var(--danger);
+  font-size: 13px;
+}

@@ -1,0 +1,46 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.list li {
+  padding: 12px 4px;
+  border-bottom: 1px solid var(--bdr);
+}
+.list a {
+  color: #3a2f26;
+  font-weight: 600;
+  text-decoration: none;
+}
+.list a:hover {
+  color: var(--accent);
+}
+.meta {
+  margin-left: 8px;
+  color: var(--faint);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 16px;
+}
+.cardLink {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  transition: transform var(--dur-fast);
+}
+.cardLink:hover {
+  transform: translateY(-3px);
+}
+.sheet {
+  margin-top: 20px;
+}
