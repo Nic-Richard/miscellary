@@ -11,7 +11,7 @@ Interactive docs: `/api/v1/docs/` (OpenAPI at `/api/v1/schema/`).
 | POST   | `/auth/refresh/`                | cookie / `{refresh}` | rotates; → `{access}` (+ cookie or `refresh`)                                |
 | POST   | `/auth/logout/`                 | cookie / `{refresh}` | blacklists, clears cookie → 204                                              |
 | GET    | `/auth/me/`                     | bearer               | current user + profile                                                       |
-| PATCH  | `/auth/me/`                     | bearer               | `{display_name?, bio?, showcase_title?}`                                     |
+| PATCH  | `/auth/me/`                     | bearer               | `{display_name?, bio?, showcase_title?, binder_colour?}`                     |
 | POST   | `/auth/password/change/`        | bearer               | `{current_password, new_password}` → 204                                     |
 | POST   | `/auth/verify-email/request/`   | bearer               | resend verification → 204                                                    |
 | POST   | `/auth/verify-email/confirm/`   | –                    | `{token}` → 204                                                              |
@@ -42,12 +42,17 @@ Send `X-Client-Platform: mobile` to receive refresh tokens in the body instead o
 | POST             | `/me/sets/{id}/cards/`           | bearer   | `{image_id, title, rarity, description, template_key, template_config}`                             |
 | PATCH/DELETE     | `/me/sets/{id}/cards/{card_id}/` | bearer   | draft only                                                                                          |
 
+Each template option is `{label, values, default, type, group, unlocks?}`. `type` is how the value
+is picked (`choice`, `swatch`, `font`), `group` is the editor section it belongs to (`board`,
+`print`, `type`, `press`), and `unlocks` maps individual values to the rarity that opens them.
+Clients render the option set they are given; the API is the only place the catalogue is defined.
+
 Published cards are frozen at the model layer (`CardDefinition.save()` refuses changes to
 image, title, rarity, description, and the template snapshot).
 
 Set identity remains editable after publishing. Identity fields are `mark`, `pack_colour`,
-`pack_finish`, `pack_layers`, `emblem_layout`, `emblem_shape`, `emblem_style`, `emblem_text`,
-`emblem_type_scale`, `mark_scale`, `pack_subtitle`, `pack_text`, and `pack_size`. Other set fields,
+`pack_finish`, `pack_layers`, `binder_colour`, `emblem_layout`, `emblem_shape`, `emblem_style`,
+`emblem_text`, `emblem_type_scale`, `mark_scale`, `pack_subtitle`, `pack_text`, and `pack_size`. Other set fields,
 including the cover, remain draft-only. Pack artwork must be uploaded with `kind: pack` before its
 image ID can be used in `pack_layers`.
 

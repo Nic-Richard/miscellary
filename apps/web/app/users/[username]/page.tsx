@@ -9,7 +9,7 @@ import BinderCover from '@/components/BinderCover';
 import coverStyles from '@/components/BinderCover.module.css';
 import Sheet, { Empty } from '@/components/Sheet';
 import { OwnedCardInspector } from '@/components/CardInspector';
-import ShowcaseCase from '@/components/ShowcaseCase';
+import ProfileBinder from '@/components/ProfileBinder';
 import ReportButton from '@/components/ReportButton';
 import { useAuth } from '@/lib/auth';
 import { getProfile, setFollow } from '@/lib/social';
@@ -54,7 +54,7 @@ export default function ProfilePageView() {
 
   const name = profile.display_name || profile.username;
   const joined = new Date(profile.created_at).getFullYear();
-  const showcase = Array.from(
+  const binder = Array.from(
     { length: SHOWCASE_SLOTS },
     (_, i) => profile.showcase.find((s) => s.position === i) ?? null,
   );
@@ -142,11 +142,13 @@ export default function ProfilePageView() {
       </div>
 
       <div className={styles.section}>
-        <ShowcaseCase
-          slots={showcase}
+        <ProfileBinder
+          slots={binder}
           title={profile.showcase_title}
+          colour={profile.binder_colour}
           mine={profile.is_me}
           onInspect={setInspect}
+          open={false}
         />
       </div>
 

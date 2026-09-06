@@ -71,10 +71,52 @@ def test_specialty_values_need_the_rarity_that_unlocks_them():
 
 def test_ordinary_catalogue_is_open_at_every_rarity():
     ordinary = _config(
-        frame="ink", accent="crimson", font="caveat", texture="felt", corners="sharp"
+        frame="ink",
+        accent="crimson",
+        font="caveat",
+        texture="felt",
+        corners="sharp",
+        tint="mono",
+        window="mat",
     )
     for tier in ["common", "uncommon", "rare", "epic"]:
         assert templates.config_problems("classic", ordinary, tier) == []
+
+
+def test_specialty_press_work_climbs_one_tier_at_a_time():
+    # Every tier below legendary opens something, so none of them is a dead rung.
+    assert templates.config_problems("classic", _config(relief="spot"), "common")
+    assert templates.config_problems("classic", _config(relief="spot"), "uncommon") == []
+    assert templates.config_problems("classic", _config(relief="emboss"), "uncommon")
+    assert templates.config_problems("classic", _config(relief="emboss"), "rare") == []
+    assert templates.config_problems("classic", _config(relief="deboss"), "rare") == []
+
+
+def test_photo_treatment_reaches_every_template():
+    for template in templates.TEMPLATES:
+        assert "tint" in template["options"]
+
+
+def test_full_art_carries_no_board_options():
+    # A full-bleed photo hides the stock, so choosing one would do nothing.
+    options = templates.TEMPLATES_BY_KEY["minimal"]["options"]
+    assert "frame" not in options
+    assert "texture" not in options
+
+
+def test_every_option_is_placed_in_an_editor_group():
+    for template in templates.TEMPLATES:
+        for option in template["options"].values():
+            assert option["group"] in templates.GROUPS
+
+
+def test_every_default_is_open_to_a_common_card():
+    # Rarity gates values, never a template's starting point, so dropping a
+    # card to Common can always fall back on its own defaults.
+    for key, template in templates.TEMPLATES_BY_KEY.items():
+        if template.get("unlocks"):
+            continue
+        assert templates.config_problems(key, templates.default_config(key), "common") == []
 
 
 def test_specialty_surface_sits_above_the_ordinary_ones():

@@ -25,6 +25,79 @@
   letter-spacing: 0;
   text-transform: none;
 }
+
+.tiers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.tier {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px 7px 11px;
+  background: rgba(255, 255, 255, 0.45);
+  border: 1px solid var(--bdr2);
+  border-radius: var(--radius-pill, 999px);
+  color: var(--muted);
+  font-family: var(--display);
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+/* The dot is the tier colour a card actually prints with, so the ladder in the
+   editor and the cut edge on the card agree. */
+.tier::before {
+  content: '';
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--tier);
+  box-shadow: inset 0 0 0 1px rgba(40, 33, 24, 0.25);
+}
+.tier[data-rarity='common'] {
+  --tier: var(--rarity-common);
+}
+.tier[data-rarity='uncommon'] {
+  --tier: var(--rarity-uncommon);
+}
+.tier[data-rarity='rare'] {
+  --tier: var(--rarity-rare);
+}
+.tier[data-rarity='epic'] {
+  --tier: var(--rarity-epic);
+}
+.tier[data-rarity='legendary'] {
+  --tier: var(--rarity-legendary);
+}
+.tier:hover {
+  border-color: var(--tier);
+}
+.tierOn {
+  border-color: var(--tier);
+  background: color-mix(in srgb, var(--tier) 14%, transparent);
+  color: #3a2f26;
+  box-shadow: inset 0 0 0 1px var(--tier);
+}
+.tierNote {
+  margin: 0 0 6px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.note {
+  margin: 0 0 8px;
+  padding: 7px 10px;
+  background: rgba(39, 139, 130, 0.09);
+  border-left: 2px solid var(--accent);
+  border-radius: 0 var(--radius-sm, 4px) var(--radius-sm, 4px) 0;
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
 .templateGroup {
   margin: 4px 0 12px;
 }
@@ -95,6 +168,13 @@
   vertical-align: 1px;
 }
 
+.groups {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
 .actions {
   display: flex;
   gap: 10px;
@@ -107,14 +187,37 @@
   flex-direction: column;
   align-items: stretch;
   gap: 10px;
-  --card-max: none;
 }
-.previewLabel {
-  text-align: center;
+.proof {
+  display: flex;
+  justify-content: center;
+}
+.scales {
+  display: flex;
+  align-self: center;
+  padding: 2px;
+  background: var(--sur2, #ebe3d1);
+  border: 1px solid var(--bdr2);
+  border-radius: var(--radius-pill, 999px);
+}
+.scale {
+  padding: 5px 13px;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-pill, 999px);
   color: var(--muted);
-  font-size: 10px;
-  letter-spacing: 0.2em;
+  font-family: var(--display);
+  font-size: 12px;
+  letter-spacing: 0.09em;
   text-transform: uppercase;
+  cursor: pointer;
+}
+.scale:not(.scaleOn):hover {
+  color: var(--accent);
+}
+.scaleOn {
+  background: var(--accent);
+  color: #fff;
 }
 .error {
   margin: 4px 0 0;

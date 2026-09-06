@@ -19,6 +19,7 @@ class ProfilePageSerializer(serializers.Serializer):
     display_name = serializers.CharField()
     bio = serializers.CharField()
     showcase_title = serializers.CharField()
+    binder_colour = serializers.CharField(allow_blank=True)
     avatar_url = serializers.CharField(allow_null=True)
     created_at = serializers.DateTimeField()
     follower_count = serializers.IntegerField()
@@ -32,7 +33,7 @@ class ProfilePageSerializer(serializers.Serializer):
 
 
 class ShowcaseWriteSerializer(serializers.Serializer):
-    # Full replacement: positions 0..5, each with an owned card id.
+    # Replaces the complete ordered binder slot list.
     slots = serializers.ListField(
         child=serializers.DictField(child=serializers.CharField()), max_length=SHOWCASE_SLOTS
     )

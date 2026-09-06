@@ -71,7 +71,7 @@ class CardWriteSerializer(serializers.ModelSerializer):
         gated = templates.template_problems(key, rarity)
         if gated:
             raise serializers.ValidationError({"template_key": gated})
-        # Fill in defaults so the snapshot is complete even if the client sent a partial config.
+        # Freeze a complete config even when the client sends partial values.
         full = {**templates.default_config(key), **config}
         problems = templates.config_problems(key, full, rarity)
         if problems:
@@ -127,6 +127,7 @@ class CardSetSerializer(serializers.ModelSerializer):
             "pack_colour",
             "pack_finish",
             "pack_layers",
+            "binder_colour",
             "emblem_layout",
             "emblem_shape",
             "emblem_style",
@@ -168,6 +169,7 @@ class CardSetWriteSerializer(serializers.ModelSerializer):
             "pack_colour",
             "pack_finish",
             "pack_layers",
+            "binder_colour",
             "emblem_layout",
             "emblem_shape",
             "emblem_style",

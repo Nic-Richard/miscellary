@@ -151,6 +151,7 @@ class MySetDetailView(APIView):
         "pack_colour",
         "pack_finish",
         "pack_layers",
+        "binder_colour",
         "emblem_layout",
         "pack_subtitle",
         "pack_text",

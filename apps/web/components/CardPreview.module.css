@@ -1,5 +1,4 @@
-/* Template data attributes come from apps/api/cards/templates.py.
-   cqw keeps card geometry proportional at every rendered size. */
+/* Template attributes come from apps/api/cards/templates.py. */
 
 .card {
   --rc: var(--rarity-common);
@@ -15,9 +14,10 @@
   /* Exposed board stays pale even on dark stock. */
   --core: #efe7d6;
   --grain: 0.4;
-  --sheen: 0.5;
+  --sheen: 0.62;
   --finish: var(--coat-matte);
   --finish-blend: soft-light;
+  /* Display contexts supply the scene-light variables. */
   --coat-matte: linear-gradient(
     var(--lit-angle, 104deg),
     rgba(255, 255, 255, 0) 26%,
@@ -114,23 +114,14 @@
   border: var(--edge-w) solid transparent;
   border-radius: var(--corner);
   background:
-    linear-gradient(
-        128deg,
-        rgba(255, 255, 255, 0.55),
-        rgba(255, 255, 255, 0.06) 30%,
-        rgba(40, 28, 10, 0.05) 62%,
-        rgba(40, 28, 10, 0.13)
-      )
-      padding-box,
     linear-gradient(var(--stock), var(--stock)) padding-box,
     var(--edge) border-box;
   color: var(--ink);
   box-shadow:
     inset 0 0 0 0.2cqw color-mix(in srgb, var(--core) 55%, transparent),
-    var(--emboss, 0 0 rgba(0, 0, 0, 0)),
-    inset 0 0.5cqw 0 rgba(255, 255, 255, 0.42),
-    inset 0 0 2.2cqw rgba(46, 33, 14, 0.1),
-    inset 0 -0.9cqw 1.4cqw rgba(60, 44, 20, 0.14),
+    var(--relief, 0 0 rgba(0, 0, 0, 0)),
+    inset 0 0 2.2cqw rgba(46, 33, 14, 0.08),
+    inset 0 0.4cqw 0 rgba(255, 252, 244, 0.3),
     0 0 0 0.14cqw color-mix(in srgb, var(--core) 80%, transparent),
     0 0.3cqw 0.5cqw rgba(46, 33, 14, 0.26),
     0 1.4cqw 2.6cqw rgba(46, 33, 14, 0.18),
@@ -138,7 +129,7 @@
   overflow: hidden;
 }
 
-/* Compatibility fallback for snapshots without texture data. */
+/* Published snapshot compatibility. */
 .stock::before {
   content: '';
   position: absolute;
@@ -149,7 +140,6 @@
   pointer-events: none;
 }
 
-/* Inspector rotation overrides the default light angle. */
 .stock::after {
   content: '';
   position: absolute;
@@ -157,7 +147,7 @@
   z-index: 3;
   background: var(--finish);
   mix-blend-mode: var(--finish-blend);
-  opacity: var(--sheen);
+  opacity: calc(var(--sheen) * var(--lit-strength, 1));
   pointer-events: none;
 }
 
@@ -200,19 +190,34 @@
   flex: 1;
   min-height: 0;
   background: #d9d0be;
-  border: 0.6cqw solid #bfb29a;
+  border: var(--window-w, 0.6cqw) solid var(--window-c, #bfb29a);
   border-radius: 1.5cqw;
   overflow: hidden;
+}
+/* Spot varnish stays below the recessed window edge. */
+.varnish {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  border-radius: inherit;
+  background: linear-gradient(
+    var(--lit-angle, 104deg),
+    rgba(255, 255, 255, 0) 22%,
+    rgba(255, 255, 255, 0.26) 44%,
+    rgba(255, 255, 255, 0.06) 58%,
+    rgba(255, 255, 255, 0) 82%
+  );
+  mix-blend-mode: screen;
+  opacity: calc(0.8 * var(--lit-strength, 1));
 }
 .art img {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  /* One press curve over every photo so uneven uploads share a print. */
   filter: var(--img-print, saturate(0.95) contrast(1.05) brightness(1.01));
 }
-/* Ink bleed at the window edge. */
 .art::before {
   content: '';
   position: absolute;
@@ -304,7 +309,6 @@
   flex: 1 1 52%;
 }
 
-/* Rarity rules follow these shared stock rules so rarity can own the edge. */
 .card[data-frame='cream'] {
   --stock: #f4ecda;
   --edge: #d8cdb4;
@@ -332,6 +336,38 @@
 .card[data-frame='ash'] {
   --stock: #d9d3c6;
   --edge: #b8b0a0;
+}
+.card[data-frame='blush'] {
+  --stock: #f2e2dd;
+  --edge: #d5bdb6;
+}
+.card[data-frame='sky'] {
+  --stock: #e4ecf3;
+  --edge: #c1cedb;
+}
+.card[data-frame='mint'] {
+  --stock: #e3eee6;
+  --edge: #bed3c5;
+}
+.card[data-frame='butter'] {
+  --stock: #f5edd1;
+  --edge: #dacfa6;
+}
+.card[data-frame='moss'] {
+  --stock: #2c3a22;
+  --edge: #1d2915;
+}
+.card[data-frame='teal'] {
+  --stock: #17434a;
+  --edge: #0e2f34;
+}
+.card[data-frame='wine'] {
+  --stock: #4a2036;
+  --edge: #331523;
+}
+.card[data-frame='bronze'] {
+  --stock: #46341f;
+  --edge: #302213;
 }
 .card[data-frame='slate'] {
   --stock: #4a565c;
@@ -373,13 +409,16 @@
 .card[data-frame='forest'],
 .card[data-frame='oxblood'],
 .card[data-frame='navy'],
-.card[data-frame='plum'] {
+.card[data-frame='plum'],
+.card[data-frame='moss'],
+.card[data-frame='teal'],
+.card[data-frame='wine'],
+.card[data-frame='bronze'] {
   --ink: #f3ecdd;
   --ink-muted: #b9c9c4;
   --art-bg: rgba(0, 0, 0, 0.24);
 }
-/* On dark board the mid-tier coats read as cold metal rather than pearl.
-   Minimal and dossier carry their own dark stock without a frame token. */
+/* Dark stock uses a colder pearl/metallic response. */
 .minimal,
 .dossier,
 .card[data-frame='slate'],
@@ -389,7 +428,11 @@
 .card[data-frame='forest'],
 .card[data-frame='oxblood'],
 .card[data-frame='navy'],
-.card[data-frame='plum'] {
+.card[data-frame='plum'],
+.card[data-frame='moss'],
+.card[data-frame='teal'],
+.card[data-frame='wine'],
+.card[data-frame='bronze'] {
   --coat-pearl: linear-gradient(
     var(--lit-angle, 104deg),
     rgba(206, 226, 255, 0.16) 8%,
@@ -415,11 +458,14 @@
 .card[data-frame='forest'] .mark,
 .card[data-frame='oxblood'] .mark,
 .card[data-frame='navy'] .mark,
-.card[data-frame='plum'] .mark {
+.card[data-frame='plum'] .mark,
+.card[data-frame='moss'] .mark,
+.card[data-frame='teal'] .mark,
+.card[data-frame='wine'] .mark,
+.card[data-frame='bronze'] .mark {
   stroke: color-mix(in srgb, var(--ac) 55%, #e9f0ec);
 }
 
-/* The dark paper-grain fallback must be screened on deep stock. */
 .card:not([data-texture])[data-frame='slate'],
 .card:not([data-texture])[data-frame='charcoal'],
 .card:not([data-texture])[data-frame='ink'],
@@ -427,12 +473,15 @@
 .card:not([data-texture])[data-frame='forest'],
 .card:not([data-texture])[data-frame='oxblood'],
 .card:not([data-texture])[data-frame='navy'],
-.card:not([data-texture])[data-frame='plum'] {
+.card:not([data-texture])[data-frame='plum'],
+.card:not([data-texture])[data-frame='moss'],
+.card:not([data-texture])[data-frame='teal'],
+.card:not([data-texture])[data-frame='wine'],
+.card:not([data-texture])[data-frame='bronze'] {
   --tex-opacity: 0.2;
   --tex-blend: screen;
 }
 
-/* Neutral-grey texture tiles work on both light and dark stock with overlay. */
 .card[data-texture='linen'] {
   --tex: url('/materials/tex-linen.png');
   --tex-size: 96px;
@@ -472,6 +521,50 @@
 }
 .card[data-corners='sharp'] {
   --corner: 0.4cqw;
+}
+
+.card[data-window='none'],
+.card[data-window='inset'] {
+  --window-w: 0;
+}
+.card[data-window='mat'] {
+  --window-w: 2.8cqw;
+  --window-c: var(--core);
+}
+.card[data-window='inset'] .art::after {
+  box-shadow:
+    inset 0 0 0 0.9px rgba(30, 20, 8, 0.34),
+    inset 0 0 1cqw rgba(20, 14, 6, 0.3),
+    inset 0 2.6cqw 3.6cqw rgba(20, 14, 6, 0.3),
+    inset 0 -0.8cqw 1.4cqw rgba(255, 255, 255, 0.14);
+}
+
+/* Photo treatments replace, rather than stack with, the base press curve. */
+.card[data-tint='warm'] {
+  --img-print: sepia(0.26) saturate(1.22) contrast(1.04);
+}
+.card[data-tint='cool'] {
+  --img-print: saturate(0.9) contrast(1.06) hue-rotate(-12deg) brightness(1.02);
+}
+.card[data-tint='punch'] {
+  --img-print: saturate(1.22) contrast(1.16);
+}
+.card[data-tint='faded'] {
+  --img-print: saturate(0.68) contrast(0.9) brightness(1.07);
+}
+.card[data-tint='sepia'] {
+  --img-print: sepia(0.62) saturate(0.9) contrast(1.05);
+}
+.card[data-tint='mono'] {
+  --img-print: grayscale(1) contrast(1.09);
+}
+
+/* Emboss and deboss invert the same rim-shadow pair. */
+.card[data-relief='emboss'] {
+  --relief: inset 0 0 0 0.5cqw rgba(255, 248, 226, 0.24), inset 0 0 1.4cqw rgba(40, 24, 8, 0.28);
+}
+.card[data-relief='deboss'] {
+  --relief: inset 0 0 0 0.5cqw rgba(40, 24, 8, 0.26), inset 0 0 1.4cqw rgba(255, 248, 226, 0.2);
 }
 
 .card[data-accent='ink'] {
@@ -538,7 +631,9 @@
   --ac: #fbf7ef;
 }
 
-/* The rarity token keeps the border tied to the card rarity. */
+.card[data-accent='rarity'] {
+  --ac: var(--rc);
+}
 .card[data-border='rarity'] {
   --bc: var(--rc);
 }
@@ -606,7 +701,6 @@
   --bc: #fbf7ef;
 }
 
-/* Missing font data retains each template's fallback face. */
 .card[data-font='display'] {
   --face: var(--font-display), Impact, sans-serif;
 }
@@ -636,44 +730,49 @@
   --finish: var(--coat-matte);
   --finish-blend: soft-light;
   --grain: 0.4;
-  --sheen: 0.5;
+  --sheen: 0.62;
 }
 .card[data-finish='satin'] {
   --finish: var(--coat-satin);
   --grain: 0.3;
-  --sheen: 0.58;
+  --sheen: 0.74;
 }
 .card[data-finish='gloss'] {
   --finish: var(--coat-gloss);
   --grain: 0.22;
-  --sheen: 0.68;
+  --sheen: 0.86;
 }
 .card[data-finish='pearl'] {
   --finish: var(--coat-pearl);
   --grain: 0.24;
-  --sheen: 0.72;
+  --sheen: 0.9;
 }
 .card[data-finish='metallic'] {
   --finish: var(--coat-metal);
   --grain: 0.18;
-  --sheen: 0.82;
+  --sheen: 1;
 }
 
-.card[data-rarity='epic'],
-.card[data-rarity='legendary'] {
-  --emboss: inset 0 0 0 0.5cqw rgba(255, 248, 226, 0.2), inset 0 0 1.3cqw rgba(40, 24, 8, 0.26);
+/* Preserve relief for older published snapshots without a stored choice. */
+.card:not([data-relief])[data-rarity='epic'],
+.card:not([data-relief])[data-rarity='legendary'] {
+  --relief: inset 0 0 0 0.5cqw rgba(255, 248, 226, 0.2), inset 0 0 1.3cqw rgba(40, 24, 8, 0.26);
 }
 
-/* Chase layers stay separate so both blend against the card rather than an
-   intermediate stacking context. */
+/* Separate chase layers must blend directly against the card. */
 .chase {
   position: absolute;
   inset: 0;
   z-index: 4;
   pointer-events: none;
 }
+/* The specular does not travel on its own. Where it falls is the environment's
+   business: the inspector feeds the slab's rotation in through --rx/--ry, and
+   a still context leaves the band parked slightly off centre. */
 .chaseBand {
   z-index: 5;
+  background-position: calc(50% + (var(--ry, 0) + var(--lit-shift-x, 22)) * 1.5%)
+    calc(50% + (var(--rx, 0) + var(--lit-shift-y, -14)) * 1.5%);
 }
 .card[data-treatment='foil'] .head,
 .card[data-treatment='foil'] .foot,
@@ -688,7 +787,6 @@
   border-radius: inherit;
 }
 
-/* Mask the foil rim without shrinking the layer's drawing area. */
 .chaseFrame {
   -webkit-mask-image: linear-gradient(#000, #000), linear-gradient(#000, #000);
   mask-image: linear-gradient(#000, #000), linear-gradient(#000, #000);
@@ -706,7 +804,6 @@
   mask-composite: exclude;
 }
 
-/* Frame foil is opaque metal; photo foil preserves the image underneath. */
 .card[data-treatment='foil'] .chaseField {
   background:
     repeating-linear-gradient(
@@ -750,12 +847,11 @@
   );
   background-size: 260% 260%;
   mix-blend-mode: hard-light;
-  opacity: 0.7;
-  animation: chase-sweep 6.5s cubic-bezier(0.5, 0, 0.4, 1) infinite;
+  opacity: calc(0.7 * var(--lit-strength, 1));
 }
 .card[data-treatment='foil'] .chaseBand.chaseFrame {
   mix-blend-mode: screen;
-  opacity: 0.85;
+  opacity: calc(0.85 * var(--lit-strength, 1));
 }
 
 .card[data-treatment='holo'] .chaseField {
@@ -776,7 +872,6 @@
     );
   mix-blend-mode: overlay;
   opacity: 0.34;
-  animation: holo-drift 9s ease-in-out infinite;
 }
 .card[data-treatment='holo'] .chaseBand {
   background: linear-gradient(
@@ -797,13 +892,10 @@
     transparent 79%
   );
   background-size: 250% 250%;
-  /* Hard-light keeps spectral contrast on pale stock where screen washes out. */
   mix-blend-mode: hard-light;
-  opacity: 0.62;
-  animation: chase-sweep 4.8s cubic-bezier(0.45, 0, 0.35, 1) infinite;
+  opacity: calc(0.62 * var(--lit-strength, 1));
 }
 
-/* Full Art is excluded because its photo brightness varies independently of stock. */
 .dossier[data-treatment='holo'] .chaseBand,
 .card[data-frame='slate'][data-treatment='holo'] .chaseBand,
 .card[data-frame='charcoal'][data-treatment='holo'] .chaseBand,
@@ -826,39 +918,18 @@
     transparent 78%
   );
   background-size: 250% 250%;
-  opacity: 0.72;
+  opacity: calc(0.72 * var(--lit-strength, 1));
 }
 
-/* Keep full-face holo as a moving ribbon rather than lighting the whole card. */
+/* Full-face holo remains a narrow light ribbon. */
 .card[data-treatment][data-coverage='full'] .chaseBand {
   background-size:
     540% 540%,
     540% 540%;
-  opacity: 0.52;
+  opacity: calc(0.52 * var(--lit-strength, 1));
 }
 
-@keyframes chase-sweep {
-  0% {
-    background-position: -40% -40%;
-  }
-  38% {
-    background-position: 150% 150%;
-  }
-  100% {
-    background-position: 150% 150%;
-  }
-}
-@keyframes holo-drift {
-  0%,
-  100% {
-    filter: hue-rotate(-12deg);
-  }
-  50% {
-    filter: hue-rotate(14deg);
-  }
-}
-
-/* Fallback for snapshots with no finish stored. */
+/* Published snapshot compatibility. */
 .card:not([data-finish])[data-rarity='rare'] {
   --finish: var(--coat-pearl);
   --grain: 0.24;
@@ -876,10 +947,13 @@
     300% 300%,
     100% 100%,
     100% 100%;
+  background-position:
+    calc(50% + (var(--ry, 0) + var(--lit-shift-x, 22)) * 1.5%)
+      calc(50% + (var(--rx, 0) + var(--lit-shift-y, -14)) * 1.5%),
+    center,
+    center;
   mix-blend-mode: screen;
-  animation: foil-sweep 5s ease-in-out infinite;
 }
-/* Rarity colour still drives ink that names the tier, such as the bold title. */
 .card[data-rarity='common'] {
   --rc: var(--rarity-common);
 }
@@ -914,45 +988,12 @@
   );
   --edge-w: 2.2cqw;
 }
-@keyframes foil-sweep {
-  0% {
-    background-position:
-      -60% -60%,
-      center;
-  }
-  24% {
-    background-position:
-      160% 160%,
-      center;
-  }
-  100% {
-    background-position:
-      160% 160%,
-      center;
-  }
-}
-
-.card[data-accent='gold'] {
-  --ac: var(--gold);
-}
-.card[data-accent='blue'] {
-  --ac: #4f6f9e;
-}
-.card[data-accent='green'] {
-  --ac: #4c7a5a;
-}
-.card[data-accent='purple'] {
-  --ac: #7b5fa3;
-}
-.card[data-accent='red'] {
-  --ac: #b04c3c;
-}
 
 .classic .head {
   border-bottom: 1px solid color-mix(in srgb, var(--ink) 18%, transparent);
 }
-.classic .art {
-  border-color: var(--ac);
+.classic {
+  --window-c: var(--ac);
 }
 .classic .art {
   background: var(--art-bg);
@@ -973,8 +1014,10 @@
   font-size: 7cqw;
   color: var(--ink-muted);
 }
+.polaroid {
+  --window-w: 0;
+}
 .polaroid .art {
-  border: 0;
   border-radius: 0.6cqw;
   box-shadow: inset 0 0 0 1px rgba(58, 42, 20, 0.12);
 }
@@ -999,21 +1042,6 @@
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
-.polaroid[data-tint='warm'] .art::after,
-.polaroid[data-tint='cool'] .art::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  mix-blend-mode: multiply;
-}
-.polaroid[data-tint='warm'] .art::after {
-  background: rgba(198, 140, 74, 0.24);
-}
-.polaroid[data-tint='cool'] .art::after {
-  background: rgba(100, 140, 160, 0.22);
-}
-
 .minimal {
   --stock: #14201f;
   --ink: #fdf9ee;
@@ -1029,7 +1057,6 @@
 .minimal .art {
   position: absolute;
   inset: 0;
-  border: 0;
   border-radius: 0;
 }
 .minimal .head,
@@ -1087,18 +1114,16 @@
   color: var(--bc);
 }
 .bold .art {
-  border-color: var(--bc);
-  border-width: 0.8cqw;
   border-radius: 2cqw;
 }
-.bold[data-shape='circle'] .art {
+.card[data-shape='circle'] .art {
   flex: none;
   width: 74%;
   margin: 1cqw auto 0;
   aspect-ratio: 1;
   border-radius: 50%;
 }
-.bold[data-shape='arch'] .art {
+.card[data-shape='arch'] .art {
   border-radius: 50% 50% 2cqw 2cqw / 46% 46% 2cqw 2cqw;
 }
 .bold .foot {
@@ -1153,46 +1178,42 @@
 .fieldnote {
   --stock: #fbf6ea;
   --edge: #cdbfa6;
+  --rule: rgba(96, 132, 146, 0.28);
 }
-.fieldnote .art {
-  border-color: var(--ac);
-}
+
 .fieldnote .panel {
   background: #fffdf6;
   box-shadow:
     inset 0 0 0 1px rgba(120, 104, 74, 0.22),
     inset 0 0.5cqw 1cqw rgba(90, 72, 40, 0.09);
 }
-.fieldnote[data-paper='ruled'] .panel {
-  background-image: repeating-linear-gradient(
-    rgba(120, 150, 160, 0) 0 6.4cqw,
-    rgba(96, 132, 146, 0.28) 6.4cqw 6.9cqw
-  );
+
+.card[data-paper='ruled'] .panel {
+  background-image: repeating-linear-gradient(transparent 0 6.4cqw, var(--rule) 6.4cqw 6.9cqw);
   background-position: 0 2.2cqw;
 }
-.fieldnote[data-paper='grid'] .panel {
+.card[data-paper='grid'] .panel {
   background-image:
-    repeating-linear-gradient(rgba(120, 150, 160, 0) 0 5cqw, rgba(96, 132, 146, 0.2) 5cqw 5.4cqw),
-    repeating-linear-gradient(
-      90deg,
-      rgba(120, 150, 160, 0) 0 5cqw,
-      rgba(96, 132, 146, 0.2) 5cqw 5.4cqw
-    );
+    repeating-linear-gradient(transparent 0 5cqw, var(--rule) 5cqw 5.4cqw),
+    repeating-linear-gradient(90deg, transparent 0 5cqw, var(--rule) 5cqw 5.4cqw);
+}
+.card[data-paper='dot'] .panel {
+  background-image: radial-gradient(var(--rule) 0.55cqw, transparent 0.55cqw);
+  background-size: 5cqw 5cqw;
+  background-position: 1.5cqw 2.4cqw;
 }
 .dossier {
   --stock: #23292b;
   --ink: #ece5d6;
   --ink-muted: #a9b2ad;
   --edge: #12181a;
+  --rule: rgba(178, 206, 214, 0.26);
 }
 .dossier:not([data-texture]) {
   --tex-opacity: 0.16;
   --tex-blend: screen;
 }
-.dossier .art {
-  border-color: var(--ac);
-  border-width: 0.8cqw;
-}
+
 .dossier .panel {
   background: rgba(0, 0, 0, 0.26);
   box-shadow:
@@ -1201,17 +1222,6 @@
 }
 .dossier .name {
   color: var(--ink);
-}
-
-/* Tints replace the press curve rather than stacking with it. */
-.polaroid[data-tint='mono'] {
-  --img-print: grayscale(1) contrast(1.09);
-}
-.polaroid[data-tint='sepia'] {
-  --img-print: sepia(0.62) saturate(0.9) contrast(1.05);
-}
-.polaroid[data-tint='faded'] {
-  --img-print: saturate(0.68) contrast(0.9) brightness(1.07);
 }
 
 .minimal[data-gradient='full'] .stock {
@@ -1226,7 +1236,7 @@
   background: none;
 }
 
-.bold[data-shape='diamond'] .art {
+.card[data-shape='diamond'] .art {
   flex: none;
   width: 74%;
   margin: 2cqw auto 0;
@@ -1234,19 +1244,27 @@
   border-radius: 2cqw;
   transform: rotate(45deg) scale(0.76);
 }
-.bold[data-shape='diamond'] .art img {
+.card[data-shape='diamond'] .art img {
   transform: rotate(-45deg) scale(1.42);
 }
-.bold[data-shape='hex'] .art {
+.card[data-shape='hex'] .art {
   border-radius: 1cqw;
   clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
 }
 
-.fieldnote[data-paper='dot'] .panel {
-  background-image: radial-gradient(rgba(96, 132, 146, 0.34) 0.55cqw, transparent 0.55cqw);
-  background-size: 5cqw 5cqw;
-  background-position: 1.5cqw 2.4cqw;
+.card[data-weight='fine'] {
+  --edge-w: 1.2cqw;
 }
+.card[data-weight='standard'] {
+  --edge-w: 2.1cqw;
+}
+.card[data-weight='bold'] {
+  --edge-w: 3cqw;
+}
+.card[data-weight='heavy'] {
+  --edge-w: 4.4cqw;
+}
+
 .fieldnote[data-paper='aged'] .panel {
   background-color: #f8efd9;
   background-image:
@@ -1256,16 +1274,17 @@
     inset 0 0 0 1px rgba(140, 112, 62, 0.3),
     inset 0 0.5cqw 1.4cqw rgba(110, 84, 40, 0.14);
 }
+.dossier[data-paper='aged'] .panel {
+  background-color: rgba(0, 0, 0, 0.38);
+  background-image:
+    radial-gradient(ellipse at 20% 14%, rgba(198, 168, 108, 0.14), transparent 56%),
+    radial-gradient(ellipse at 80% 86%, rgba(120, 148, 150, 0.12), transparent 58%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1),
+    inset 0 0.6cqw 1.6cqw rgba(0, 0, 0, 0.45);
+}
 
-/* Inspector angles move the material response under a fixed light. */
-.card[data-lit] .chaseBand,
-.card[data-lit] .chaseField,
-.card[data-lit] .stock::after {
-  animation: none;
-}
-.card[data-lit] .chaseBand {
-  background-position: calc(50% + (var(--ry, 0) + 22) * 1.5%) calc(50% + (var(--rx, 0) - 14) * 1.5%);
-}
+/* Inspector rotation offsets the fixed scene-light response. */
 .card[data-lit][data-treatment='holo'] .chaseField {
   filter: hue-rotate(calc(var(--ry, 0) * 0.3deg));
 }

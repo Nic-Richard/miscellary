@@ -5,9 +5,7 @@
   max-width: 420px;
   margin: 50px auto;
   padding: 30px 32px 28px;
-  background:
-    var(--paper) center / 512px,
-    #f7f1e5;
+  background: #f8f3e8;
   border: 1px solid #cfc3ad;
   border-radius: 6px;
   box-shadow:

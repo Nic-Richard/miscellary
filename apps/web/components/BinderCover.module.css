@@ -5,16 +5,22 @@
   gap: 12px;
   padding: 16px 14px 14px 20px;
   border-radius: 3px 6px 6px 3px;
-  background:
-    linear-gradient(rgba(150, 187, 181, 0.9), rgba(122, 165, 158, 0.92)),
-    var(--cloth-tex) center / 220px;
+  isolation: isolate;
   box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, 0.3),
-    inset 6px 0 0 rgba(40, 70, 66, 0.28),
+    inset 6px 0 0 rgba(40, 70, 66, 0.34),
+    inset 9px 0 5px -6px rgba(255, 255, 255, 0.4),
     0 10px 14px rgba(52, 38, 18, 0.24);
   color: #3a2f26;
   text-decoration: none;
   transition: transform var(--dur-med) var(--ease-out);
+}
+/* The bound cover itself, under everything the card carries. */
+.cloth {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
 }
 .cover::before {
   content: '';

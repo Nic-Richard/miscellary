@@ -5,6 +5,8 @@ from django.contrib.auth.models import PermissionsMixin
 from django.core.validators import RegexValidator
 from django.db import models
 
+from cards.identity import BINDER_COLOUR_CHOICES
+
 USERNAME_VALIDATOR = RegexValidator(
     r"^[a-z0-9_]{3,20}$",
     "Usernames are 3-20 characters of lowercase letters, numbers, and underscores.",
@@ -56,6 +58,7 @@ class Profile(models.Model):
     display_name = models.CharField(max_length=40, blank=True)
     bio = models.TextField(max_length=280, blank=True)
     showcase_title = models.CharField(max_length=60, blank=True)
+    binder_colour = models.CharField(max_length=20, choices=BINDER_COLOUR_CHOICES, blank=True)
     avatar_key = models.CharField(max_length=255, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
 

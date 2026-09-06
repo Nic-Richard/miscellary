@@ -6,7 +6,7 @@ from django.db import models
 from cards.models import CardDefinition, CardSet
 from packs.models import OwnedCard
 
-SHOWCASE_SLOTS = 6
+SHOWCASE_SLOTS = 8
 COMMENT_MAX = 1000
 
 
@@ -63,7 +63,8 @@ class Reaction(models.Model):
 
 
 class ShowcaseSlot(models.Model):
-    """Cards a user pins to their profile. Only counts while they still own the card."""
+    """Cards a user pins to the personal binder on their profile. A slot only
+    counts while they still own the card."""
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="showcase"

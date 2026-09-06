@@ -4,9 +4,7 @@
   max-width: 856px;
   margin: 0 auto;
   padding: 22px 26px 30px;
-  background:
-    var(--paper) center / 320px,
-    linear-gradient(178deg, #f2ecdd, #eae2cf);
+  background: linear-gradient(178deg, #f3eddf, #ebe3d1);
   border: 1px solid var(--bdr2);
   border-radius: var(--radius-lg);
   box-shadow:

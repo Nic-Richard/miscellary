@@ -25,18 +25,18 @@ from django.core.management.base import BaseCommand
 from django.db import transaction
 
 from accounts.models import User
+from cards.identity import BINDER_COLOURS
 from cards.models import CardDefinition, CardSet
 from cards.publishing import publish_set
 from cards.templates import TEMPLATES_BY_KEY, default_config, template_problems
 from packs.actions import open_free_pack
 from packs.models import OwnedCard
-from social.models import Comment, Follow, Reaction, ShowcaseSlot
+from social.models import SHOWCASE_SLOTS, Comment, Follow, Reaction, ShowcaseSlot
 from trades.models import TradeOffer, TradeOfferItem
 from uploads import storage
 from uploads.models import Image
 
-# The three original demo accounts carry the hand-picked sets; the rest exist to
-# give browse, likes and trading something to work with.
+# Core demo accounts carry hand-picked sets; extras populate social surfaces.
 DEMO_EMAILS = [
     "fieldnote@example.com",
     "waverly@example.com",
@@ -49,20 +49,24 @@ DEMO_EMAILS = [
 ]
 COMMONS = "https://commons.wikimedia.org/wiki/Special:FilePath/"
 COMMONS_API = "https://commons.wikimedia.org/w/api.php"
-# What each rarity spends its unlocks on in the demo data, so the seed shows
-# the range rather than leaving every card on the plain defaults.
+# Deterministic rarity-specific option coverage for demo cards.
 SPECIALTY_BY_RARITY: dict[str, list[dict[str, str]]] = {
+    "uncommon": [{"relief": "spot"}, {}, {"relief": "spot", "tint": "punch"}],
     "rare": [
-        {"finish": "pearl"},
+        {"finish": "pearl", "relief": "emboss"},
         {"finish": "metallic", "texture": "brushed"},
-        {"finish": "gloss"},
+        {"finish": "gloss", "relief": "deboss", "window": "mat"},
     ],
-    "epic": [{"finish": "metallic"}, {"finish": "pearl"}, {"finish": "gloss"}],
+    "epic": [
+        {"finish": "metallic", "relief": "emboss"},
+        {"finish": "pearl", "relief": "spot"},
+        {"finish": "gloss", "relief": "deboss"},
+    ],
     "legendary": [
-        {"treatment": "foil", "finish": "matte", "coverage": "frame"},
+        {"treatment": "foil", "finish": "matte", "coverage": "frame", "relief": "emboss"},
         {"treatment": "holo", "finish": "gloss", "coverage": "full"},
-        {"treatment": "holo", "finish": "satin", "coverage": "art"},
-        {"treatment": "foil", "finish": "gloss", "coverage": "art"},
+        {"treatment": "holo", "finish": "satin", "coverage": "art", "relief": "spot"},
+        {"treatment": "foil", "finish": "gloss", "coverage": "art", "relief": "emboss"},
     ],
 }
 
@@ -122,9 +126,7 @@ def jpeg_size(data: bytes) -> tuple[int, int]:
     return 900, 900
 
 
-# Commons throttles a burst, and this command asks it for dozens of photos in a
-# row, so requests are paced and a 429 is waited out rather than silently
-# becoming a gradient.
+# Pace Commons requests and retry throttled responses.
 _last_request = 0.0
 MIN_GAP = 0.4
 
@@ -187,7 +189,7 @@ def search_commons(term: str) -> bytes | None:
     except (OSError, ValueError):
         return None
     pages = (payload.get("query") or {}).get("pages") or {}
-    # Sorted for a stable pick, so a reseed produces the same art.
+    # Stable ordering keeps reseeds deterministic.
     for page in sorted(pages.values(), key=lambda p: p.get("index", 0)):
         info = (page.get("imageinfo") or [{}])[0]
         if not str(info.get("mime", "")).startswith("image/"):
@@ -227,8 +229,7 @@ class Command(BaseCommand):
         self.use_photos = not options["no_photos"]
         self.fallbacks = 0
 
-        # Delete in dependency order: OwnedCard.card and CardDefinition.image are
-        # PROTECT, so cascading straight from User would raise ProtectedError.
+        # Delete protected dependencies before users.
         demo_users = User.objects.filter(email__in=DEMO_EMAILS)
         OwnedCard.objects.filter(owner__in=demo_users).delete()
         CardSet.objects.filter(creator__in=demo_users).delete()
@@ -276,7 +277,7 @@ class Command(BaseCommand):
                     "Broadleaf Plantain",
                     "common",
                     "classic",
-                    {"frame": "light", "accent": "green"},
+                    {"frame": "bone", "accent": "green"},
                     "Roadside verge, Kent",
                     "Plantago major subsp. major sl5.jpg",
                 ),
@@ -284,7 +285,7 @@ class Command(BaseCommand):
                     "Wild Clover",
                     "common",
                     "classic",
-                    {"frame": "light", "accent": "green"},
+                    {"frame": "bone", "accent": "green"},
                     "Meadow edge, Peak District",
                     "Trifolium repens (inflorescense) Edit.jpg",
                 ),
@@ -316,7 +317,7 @@ class Command(BaseCommand):
                     "Chicory Bloom",
                     "uncommon",
                     "classic",
-                    {"frame": "light", "accent": "blue"},
+                    {"frame": "bone", "accent": "blue"},
                     "Railway cutting, July",
                     "Cichorium intybus-alvesgaspar1.jpg",
                 ),
@@ -420,7 +421,7 @@ class Command(BaseCommand):
                     "Rose Quartz",
                     "uncommon",
                     "classic",
-                    {"frame": "light", "accent": "purple"},
+                    {"frame": "bone", "accent": "purple"},
                     "Flea market find",
                     "Rose Quartz Macro 1.JPG",
                 ),
@@ -482,7 +483,7 @@ class Command(BaseCommand):
                     "First Cut",
                     "common",
                     "fieldnote",
-                    {"paper": "plain", "accent": "purple"},
+                    {"paper": "ruled", "accent": "purple"},
                     "Lead-in groove, 12 inch",
                     "12in-LP-Vinyl-Record-Macro-Grooves.jpg",
                 ),
@@ -507,7 +508,7 @@ class Command(BaseCommand):
                     "Sunday Matinee",
                     "uncommon",
                     "classic",
-                    {"frame": "light", "accent": "blue"},
+                    {"frame": "bone", "accent": "blue"},
                     "Sleeve notes, read twice",
                     "Man reading vinyl record (Unsplash).jpg",
                 ),
@@ -546,8 +547,6 @@ class Command(BaseCommand):
             ],
         )
 
-        # Left as a draft (not published) so the editor/publish-checklist screen
-        # has something real to show.
         draft = self._make_set(
             fieldnote,
             title="Lantern Festivals (draft)",
@@ -583,9 +582,6 @@ class Command(BaseCommand):
             publish=False,
         )
 
-        # Everything past this point exists to give browse, likes and trading
-        # enough to work with: more collectors, more shelves, and offers in every
-        # state the inbox can show.
         extras = self._make_collectors()
         more = self._make_more_sets(fieldnote, waverly, mabel, extras)
         published = [plants, rocks, vinyl, *more]
@@ -614,7 +610,7 @@ class Command(BaseCommand):
         self.stdout.write(f"  /users/{mabel.username}")
         self.stdout.write(f"  /studio/{draft.id}  (draft editor)")
 
-    # ---- volume: collectors, shelves, likes, follows and offers ----------
+    # ---- collectors, shelves, likes, follows and offers -----------------
 
     COLLECTORS = [
         ("orla", "Orla Finch", "Garden birds, mostly from the kitchen window."),
@@ -924,7 +920,7 @@ class Command(BaseCommand):
                         "Turkey Tail",
                         "common",
                         "fieldnote",
-                        {"paper": "plain"},
+                        {"paper": "ruled", "window": "mat"},
                         "Dead beech, October",
                         "search:trametes versicolor turkey tail",
                     ),
@@ -956,7 +952,7 @@ class Command(BaseCommand):
                         "Earthstar",
                         "rare",
                         "fieldnote",
-                        {"paper": "dot"},
+                        {"paper": "dot", "window": "inset"},
                         "Opened after rain",
                         "search:geastrum earthstar fungus",
                     ),
@@ -1219,14 +1215,19 @@ class Command(BaseCommand):
         Follow.objects.bulk_create(follows, ignore_conflicts=True)
 
     def _make_showcases(self, users) -> None:
+        """Fill each collector's profile binder, and bind it in a cover of its own."""
         slots: list[ShowcaseSlot] = []
         for user in users:
-            owned = list(user.owned_cards.select_related("card").order_by("?")[:6])
-            # Some profiles are left part-filled on purpose, to show empty slots.
-            keep = owned if random.random() < 0.6 else owned[:3]
+            owned = list(user.owned_cards.select_related("card").order_by("?")[:SHOWCASE_SLOTS])
+            keep = owned if random.random() < 0.6 else owned[:4]
             slots.extend(
                 ShowcaseSlot(user=user, position=i, owned_card=o) for i, o in enumerate(keep)
             )
+            profile = user.profile
+            profile.binder_colour = BINDER_COLOURS[
+                zlib.crc32(user.username.encode()) % len(BINDER_COLOURS)
+            ]
+            profile.save(update_fields=["binder_colour"])
         ShowcaseSlot.objects.bulk_create(slots, ignore_conflicts=True)
 
     def _add_comments(self, users, sets) -> None:
@@ -1339,6 +1340,7 @@ class Command(BaseCommand):
             title=title,
             description=description,
             mark=mark,
+            binder_colour=BINDER_COLOURS[zlib.crc32(title.encode()) % len(BINDER_COLOURS)],
             pack_colour=pack_colour,
             pack_finish=pack_finish,
             emblem_layout=emblem_layout,
@@ -1359,7 +1361,6 @@ class Command(BaseCommand):
                 full_config["texture"] = surface
             spend = SPECIALTY_BY_RARITY.get(rarity)
             if spend:
-                # Name hashing keeps treatment choices varied but deterministic.
                 for option, value in spend[zlib.crc32(name.encode()) % len(spend)].items():
                     if option not in config and option in template["options"]:
                         full_config[option] = value
@@ -1383,17 +1384,14 @@ class Command(BaseCommand):
         problems = publish_set(card_set)
         if problems:
             raise RuntimeError(f"Could not publish {title}: {problems}")
-        # publish_set() commits through its own re-fetched instance; refresh so
-        # the object we return doesn't still read status="draft" in memory.
+        # Refresh after publish_set() commits through a re-fetched instance.
         card_set.refresh_from_db()
         return card_set
 
     def _upload_art(self, owner, photo, top, bottom) -> Image:
         data = fetch_commons(photo) if self.use_photos else None
         if data and data[:4] == PNG_MAGIC:
-            # A searched photo can come back as a PNG thumbnail, so the format is
-            # sniffed rather than assumed; storing one under image/jpeg would
-            # leave the browser to guess.
+            # Sniff image type because Commons thumbnails are not always JPEGs.
             width, height = struct.unpack(">II", data[16:24])
             content_type, ext = "image/png", "png"
         elif data:

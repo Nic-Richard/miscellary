@@ -45,15 +45,18 @@
   --dur-med: 300ms;
   --dur-slow: 550ms;
 
-  /* Prop colours. Both are photographs, tinted by rotating their hue, so a
-     surface can override these to recolour the binder cover or the pack. */
+  /* Shared tint variables for photographed props. */
   --binder-hue: 0deg;
   --binder-saturation: 1;
   --pack-hue: 0deg;
   --pack-saturation: 1;
 
-  --paper: url('/materials/paper.jpg');
+  /* Shared material tokens. */
+  --paper: url('/materials/tex-paper.png');
   --cloth-tex: url('/materials/cloth.jpg');
+
+  --rail: linear-gradient(90deg, #efe8da, #e9e1d1);
+  --rail-edge: #d5cab5;
 }
 
 * {
@@ -64,11 +67,13 @@ body {
   margin: 0;
   padding: 0;
 }
+/* Non-repeating desk lighting and surface variation. */
 body {
   background:
-    linear-gradient(rgba(244, 238, 225, 0.55), rgba(244, 238, 225, 0.55)),
-    var(--paper) center top / 768px,
-    var(--bg);
+    radial-gradient(128% 96% at 26% 2%, rgba(255, 252, 242, 0.82), rgba(255, 252, 242, 0) 58%),
+    radial-gradient(58% 46% at 79% 26%, rgba(122, 104, 76, 0.04), transparent 70%),
+    radial-gradient(66% 52% at 11% 78%, rgba(122, 104, 76, 0.045), transparent 72%), var(--bg);
+  background-attachment: fixed;
   color: var(--text);
   font-family: var(--body);
   font-size: 15px;

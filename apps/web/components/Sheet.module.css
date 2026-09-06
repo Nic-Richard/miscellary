@@ -3,8 +3,9 @@
   z-index: 2;
   padding: 22px 26px 28px;
   background:
-    var(--paper) center / 320px,
+    var(--paper) center / 220px,
     linear-gradient(178deg, #fbf7ee, #f4eee0);
+  background-blend-mode: multiply;
   border: 1px solid var(--bdr);
   border-radius: 14px;
   box-shadow:

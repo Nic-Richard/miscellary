@@ -70,6 +70,7 @@ class ProfileView(APIView):
             "display_name": user.profile.display_name,
             "bio": user.profile.bio,
             "showcase_title": user.profile.showcase_title,
+            "binder_colour": user.profile.binder_colour,
             "avatar_url": user.profile.avatar_url,
             "created_at": user.created_at,
             "follower_count": user.followers.count(),

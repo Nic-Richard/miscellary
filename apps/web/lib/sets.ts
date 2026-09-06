@@ -26,6 +26,7 @@ export interface SetWrite {
   pack_colour: string;
   pack_finish: string;
   pack_layers: PackLayer[];
+  binder_colour: string;
   emblem_layout: string;
   emblem_shape: string;
   emblem_style: string;

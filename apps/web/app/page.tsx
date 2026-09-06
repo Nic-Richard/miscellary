@@ -2,10 +2,13 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import type { Card, CardSetSummary } from '@miscellary/shared';
+import { PACK_SIZE, RARITIES } from '@miscellary/shared';
+import type { Card, CardSetDetail, CardSetSummary } from '@miscellary/shared';
+import Binder from '@/components/binder/Binder';
 import BinderCover from '@/components/BinderCover';
 import CardPreview from '@/components/CardPreview';
 import PackPouch from '@/components/PackPouch';
+import { slotLight } from '@/lib/lighting';
 import { getPublicSet, listPublicSets } from '@/lib/sets';
 import coverStyles from '@/components/BinderCover.module.css';
 import ui from '@/components/ui.module.css';
@@ -16,9 +19,18 @@ interface Pick {
   set: CardSetSummary;
 }
 
+// Hero object positions are percentages of the stage.
+const DESK = [
+  { left: 0, top: 15, rotate: -11 },
+  { left: 21, top: 3, rotate: -2 },
+  { left: 42, top: 11, rotate: 8 },
+];
+
 export default function HomePage() {
   const [sets, setSets] = useState<CardSetSummary[]>([]);
+  const [total, setTotal] = useState(0);
   const [picks, setPicks] = useState<Pick[]>([]);
+  const [featured, setFeatured] = useState<CardSetDetail | null>(null);
 
   useEffect(() => {
     let live = true;
@@ -26,13 +38,18 @@ export default function HomePage() {
       .then(async (page) => {
         if (!live) return;
         setSets(page.results);
+        setTotal(page.count);
         const chosen = page.results.slice(0, 4);
+        const whole = page.results.find((s) => s.card_count >= 8) ?? page.results[0];
         const details = await Promise.all(
-          chosen.map((s) => getPublicSet(s.slug).catch(() => null)),
+          [...chosen, ...(whole && !chosen.includes(whole) ? [whole] : [])].map((s) =>
+            getPublicSet(s.slug).catch(() => null),
+          ),
         );
         if (!live) return;
+        setFeatured(details.find((d) => d?.slug === whole?.slug) ?? null);
         setPicks(
-          details.flatMap((detail, i) => {
+          details.slice(0, chosen.length).flatMap((detail, i) => {
             const set = chosen[i];
             const best = detail?.cards.slice().sort((a, b) => rank(b) - rank(a))[0];
             return best && set ? [{ card: best, set }] : [];
@@ -46,8 +63,24 @@ export default function HomePage() {
   }, []);
 
   const hero = sets[0];
-  const cardCount = sets.reduce((n, s) => n + s.card_count, 0);
-  const creators = new Set(sets.map((s) => s.creator.username)).size;
+  const deck = picks.slice(0, 3);
+  const steps = [
+    {
+      n: '001',
+      title: 'Pick something',
+      text: 'Fungi, manhole covers, tape decks, garden birds. If someone catalogued it, there is a set.',
+    },
+    {
+      n: '002',
+      title: 'Open a pack',
+      text: `Every set gives you one free pack a day. ${PACK_SIZE} cards, torn open, one at a time.`,
+    },
+    {
+      n: '003',
+      title: 'Fill it in',
+      text: 'Pulls drop into the binder in order. Trade your doubles for the gaps that are left.',
+    },
+  ];
 
   return (
     <div className={styles.page}>
@@ -59,8 +92,8 @@ export default function HomePage() {
             <br />a collection.
           </h1>
           <p className={ui.lead}>
-            Fungi, manhole covers, tape decks, garden birds. Turn anything into a trading-card set,
-            open a free pack every day, and trade with the people collecting the rest.
+            Turn anything you know too much about into a trading-card set. Publish it, open a free
+            pack from every set every day, and trade with the people collecting the rest.
           </p>
           <div className={styles.actions}>
             <Link href="/sets" className={ui.btnPrimary}>
@@ -73,22 +106,31 @@ export default function HomePage() {
               Start a set
             </Link>
           </div>
-          {sets.length ? (
+          {total ? (
             <p className={styles.stats}>
-              <b>{sets.length}</b> sets · <b>{cardCount}</b> cards · <b>{creators}</b> creators
+              <b>{total}</b> {total === 1 ? 'set' : 'sets'} published · one free pack from every one
+              of them, every day
             </p>
           ) : null}
         </div>
 
-        <div className={styles.art}>
-          <div className={styles.glow} aria-hidden="true" />
-          <div className={styles.fan}>
-            {picks.map((pick, i) => (
+        <div className={styles.desk}>
+          <span className={styles.lamp} aria-hidden="true" />
+          {deck.map((pick, i) => {
+            const at = DESK[i]!;
+            return (
               <Link
                 key={pick.card.id}
                 href={`/sets/${pick.set.slug}`}
-                className={styles.fanCard}
-                style={{ '--i': i } as React.CSSProperties}
+                className={styles.deskCard}
+                style={
+                  {
+                    left: `${at.left}%`,
+                    top: `${at.top}%`,
+                    '--tilt': `${at.rotate}deg`,
+                    ...slotLight(at.left + 15, at.top + 35),
+                  } as React.CSSProperties
+                }
                 title={`${pick.card.title} · ${pick.set.title}`}
               >
                 <CardPreview
@@ -103,20 +145,79 @@ export default function HomePage() {
                   mark={pick.set.mark}
                 />
               </Link>
-            ))}
-          </div>
+            );
+          })}
           {hero ? (
-            <div className={styles.pouch}>
+            <Link href={`/sets/${hero.slug}`} className={styles.deskPack} title={hero.title}>
               <PackPouch title={hero.title} identity={hero} />
-            </div>
+            </Link>
           ) : null}
         </div>
+      </section>
+
+      {featured ? (
+        <section className={styles.binderBand}>
+          <div className={styles.sectionHead}>
+            <div>
+              <h2 className={styles.h2}>Every set is a binder</h2>
+              <p className={styles.sectionNote}>
+                Cards sit in sleeves in the order they were published, and the gaps stay visible
+                until you pull them.
+              </p>
+            </div>
+            <Link href={`/sets/${featured.slug}`} className={styles.more}>
+              Open {featured.title} →
+            </Link>
+          </div>
+          <Link
+            href={`/sets/${featured.slug}`}
+            className={styles.binderLink}
+            aria-label={`Open the ${featured.title} binder`}
+          >
+            <Binder
+              mark={featured.mark}
+              colour={featured.binder_colour}
+              slots={Array.from({ length: 8 }, (_, i) => {
+                const card = featured.cards[i];
+                if (!card) return null;
+                return (
+                  <CardPreview
+                    size="small"
+                    title={card.title}
+                    rarity={card.rarity}
+                    number={i + 1}
+                    description={card.description}
+                    imageUrl={card.image.url}
+                    templateKey={card.template_key}
+                    templateConfig={card.template_config}
+                    mark={featured.mark}
+                  />
+                );
+              })}
+            />
+          </Link>
+        </section>
+      ) : null}
+
+      <section className={styles.steps}>
+        {steps.map((step) => (
+          <div key={step.n} className={styles.step}>
+            <b className={styles.stepNo}>{step.n}</b>
+            <h3 className={styles.stepTitle}>{step.title}</h3>
+            <p className={styles.stepText}>{step.text}</p>
+          </div>
+        ))}
       </section>
 
       {sets.length ? (
         <section className={styles.shelfSection}>
           <div className={styles.sectionHead}>
-            <h2 className={styles.h2}>What people are collecting</h2>
+            <div>
+              <h2 className={styles.h2}>What people are collecting</h2>
+              <p className={styles.sectionNote}>
+                Published sets, newest pulls first. Anyone can open a pack from any of them.
+              </p>
+            </div>
             <Link href="/sets" className={styles.more}>
               Every set →
             </Link>
@@ -131,70 +232,27 @@ export default function HomePage() {
         </section>
       ) : null}
 
-      <section className={styles.beats}>
-        <div className={styles.beat}>
-          <span className={styles.beatArt}>
-            {hero ? <PackPouch title={hero.title} identity={hero} /> : null}
-          </span>
-          <h3 className={styles.beatTitle}>A pack a day</h3>
-          <p className={styles.beatText}>
-            Every set gives you one free pack every day. Tear it open and see what you pulled.
+      <section className={`${ui.ticket} ${styles.make}`}>
+        <div>
+          <h2 className={styles.h2}>Make one of your own</h2>
+          <p className={styles.makeText}>
+            Photograph what you have, write the notes, choose the stock and the ink, and set the
+            rarities. Publish it and it becomes a binder anyone can collect.
           </p>
         </div>
-        <div className={styles.beat}>
-          <span className={`${styles.beatArt} ${styles.beatSleeves}`}>
-            {picks.slice(0, 2).map((pick) => (
-              <span key={pick.card.id} className={styles.beatCard}>
-                <CardPreview
-                  size="small"
-                  title={pick.card.title}
-                  rarity={pick.card.rarity}
-                  description=""
-                  imageUrl={pick.card.image.url}
-                  templateKey={pick.card.template_key}
-                  templateConfig={pick.card.template_config}
-                  mark={pick.set.mark}
-                />
-              </span>
-            ))}
-          </span>
-          <h3 className={styles.beatTitle}>Fills a binder</h3>
-          <p className={styles.beatText}>
-            Pulls go straight into the set&rsquo;s binder, in sleeves, in order, with the gaps
-            showing.
-          </p>
-        </div>
-        <div className={styles.beat}>
-          <span className={`${styles.beatArt} ${styles.beatSwap}`}>
-            {picks.slice(2, 4).map((pick, i) => (
-              <span key={pick.card.id} className={styles.beatCard} data-side={i}>
-                <CardPreview
-                  size="small"
-                  title={pick.card.title}
-                  rarity={pick.card.rarity}
-                  description=""
-                  imageUrl={pick.card.image.url}
-                  templateKey={pick.card.template_key}
-                  templateConfig={pick.card.template_config}
-                  mark={pick.set.mark}
-                />
-              </span>
-            ))}
-            <svg viewBox="0 0 24 24" aria-hidden="true" className={styles.beatArrow}>
-              <path d="M4 9h14l-4-4M20 15H6l4 4" />
-            </svg>
-          </span>
-          <h3 className={styles.beatTitle}>Trade the doubles</h3>
-          <p className={styles.beatText}>
-            Offer your spares for the ones you are missing, and counter until it is a deal.
-          </p>
+        <div className={styles.makeActions}>
+          <Link href="/register" className={ui.btnPrimary}>
+            Start a set
+          </Link>
+          <Link href="/studio" className={ui.btnOutline}>
+            Open the studio
+          </Link>
         </div>
       </section>
     </div>
   );
 }
 
-const ORDER = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
 function rank(card: Card): number {
-  return ORDER.indexOf(card.rarity);
+  return RARITIES.indexOf(card.rarity);
 }

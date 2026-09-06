@@ -10,6 +10,8 @@ export interface PublicProfile {
   display_name: string;
   bio: string;
   showcase_title: string;
+  /** Cover of the personal binder on this profile. Empty means the default. */
+  binder_colour: string;
   avatar_url: string | null;
   created_at: string;
 }
@@ -54,11 +56,16 @@ export interface CreateUploadResponse {
   max_size: number;
 }
 
+/** Editor grouping, in the order a creator works through a card. */
+export const OPTION_GROUPS = ['board', 'print', 'type', 'press'] as const;
+export type OptionGroup = (typeof OPTION_GROUPS)[number];
+
 export interface TemplateOption {
   label: string;
   values: string[];
   default: string;
   type?: 'choice' | 'swatch' | 'font';
+  group?: OptionGroup;
   /** Minimum rarity for gated values. */
   unlocks?: Record<string, Rarity>;
 }
@@ -135,6 +142,8 @@ export interface CardSetSummary {
   mark: string;
   pack_colour: string;
   pack_finish: string;
+  /** Cover of the binder this set's public page is bound in. */
+  binder_colour: string;
   /** What is printed on the pack front, bottom of the stack first. */
   pack_layers: PackLayer[];
   emblem_layout: string;

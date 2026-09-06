@@ -11,6 +11,7 @@ from django.utils.text import slugify
 from uploads.models import Image
 
 from .identity import (
+    BINDER_COLOUR_CHOICES,
     EMBLEM_LAYOUT_CHOICES,
     EMBLEM_SHAPE_CHOICES,
     EMBLEM_STYLE_CHOICES,
@@ -50,20 +51,18 @@ class CardSet(models.Model):
     cover = models.ForeignKey(
         Image, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
     )
-    # Blank marks derive from the slug for a stable default.
     mark = models.CharField(max_length=20, choices=MARK_CHOICES, blank=True)
     pack_colour = models.CharField(max_length=20, choices=PACK_COLOUR_CHOICES, blank=True)
+    binder_colour = models.CharField(max_length=20, choices=BINDER_COLOUR_CHOICES, blank=True)
     pack_finish = models.CharField(max_length=20, choices=PACK_FINISH_CHOICES, blank=True)
-    # Ordered pack-front layers; serializers enforce image ownership.
+    # Serializers enforce ownership for referenced pack images.
     pack_layers = models.JSONField(default=default_stack, blank=True)
     emblem_layout = models.CharField(max_length=20, choices=EMBLEM_LAYOUT_CHOICES, blank=True)
     pack_subtitle = models.CharField(max_length=PACK_SUBTITLE_MAX_LENGTH, blank=True)
-    # Free text layer shape is validated in cards/packtext.py.
     pack_text = models.JSONField(default=list, blank=True)
     emblem_shape = models.CharField(max_length=20, choices=EMBLEM_SHAPE_CHOICES, blank=True)
     emblem_style = models.CharField(max_length=20, choices=EMBLEM_STYLE_CHOICES, blank=True)
     emblem_text = models.CharField(max_length=20, choices=EMBLEM_TEXT_CHOICES, blank=True)
-    # Type scale is independent of the layer's overall emblem scale.
     emblem_type_scale = models.PositiveSmallIntegerField(
         default=100, validators=[MinValueValidator(SCALE_MIN), MaxValueValidator(SCALE_MAX)]
     )
@@ -127,7 +126,7 @@ class CardDefinition(models.Model):
     title = models.CharField(max_length=60)
     rarity = models.CharField(max_length=10, choices=RARITY_CHOICES)
     description = models.TextField(max_length=600, blank=True)
-    # Snapshot of the template this card was designed with. Never updated after publish.
+    # Frozen template snapshot for published cards.
     template_key = models.CharField(max_length=30)
     template_version = models.PositiveSmallIntegerField()
     template_config = models.JSONField(default=dict, blank=True)

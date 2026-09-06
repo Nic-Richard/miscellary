@@ -23,8 +23,9 @@
   aspect-ratio: 5 / 7;
   padding: 7px;
   background:
-    var(--paper) center / 256px,
+    var(--paper) center / 190px,
     #f8f2e6;
+  background-blend-mode: multiply;
   border: 1px solid #cdbfa6;
   border-radius: 6px;
   box-shadow: 0 2px 4px rgba(58, 42, 20, 0.18);
@@ -65,7 +66,6 @@
   color: var(--accent-deep);
 }
 
-/* Let the cropper take the width it needs instead of being squeezed by the header grid. */
 .editor {
   display: flex;
   flex-direction: column;

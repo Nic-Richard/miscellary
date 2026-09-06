@@ -4,6 +4,7 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 import {
   DESCRIPTION_MAX_LENGTH,
+  OPTION_GROUPS,
   RARITIES,
   RARITY_LABELS,
   validateDescription,
@@ -12,14 +13,17 @@ import type {
   Card,
   CardTemplate,
   ImageRef,
+  OptionGroup,
   Rarity,
   TemplateConfig,
   TemplateOption,
 } from '@miscellary/shared';
 import CardPreview from './CardPreview';
 import ImagePicker from './ImagePicker';
-import { ChoiceMenu, ColourMenu, Field, Section, Segmented } from './controls';
+import { ChoiceMenu, ColourMenu, Field, Section, Segmented, TileGrid } from './controls';
 import { FONT_LABELS } from '@/lib/fonts';
+import { coatTile, textureTile } from '@/lib/palette';
+import { GROUP_LABELS, GROUP_NOTES, valueLabel, valueLabels } from '@/lib/templateLabels';
 import ui from './ui.module.css';
 import { ApiRequestError } from '@/lib/api';
 import { createCard, updateCard } from '@/lib/sets';
@@ -54,33 +58,53 @@ function defaults(template: CardTemplate): TemplateConfig {
   return out;
 }
 
-// Keep stored values on downgrade; server validation surfaces invalid choices.
-function openValues(opt: TemplateOption, rarity: Rarity): string[] {
-  const unlocks = opt.unlocks;
-  if (!unlocks) return opt.values;
-  return opt.values.filter((v) => {
-    const needed = unlocks[v];
-    return !needed || RARITIES.indexOf(rarity) >= RARITIES.indexOf(needed);
-  });
+function reached(needed: Rarity | undefined, rarity: Rarity): boolean {
+  return !needed || RARITIES.indexOf(rarity) >= RARITIES.indexOf(needed);
 }
 
-function locked(unlocks: Rarity | undefined, rarity: Rarity): boolean {
-  return !!unlocks && RARITIES.indexOf(rarity) < RARITIES.indexOf(unlocks);
+/** Values this tier cannot print yet, mapped to the tier that opens them. */
+function locksFor(opt: TemplateOption, rarity: Rarity): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const v of opt.values) {
+    const needed = opt.unlocks?.[v];
+    if (needed && !reached(needed, rarity)) out[v] = RARITY_LABELS[needed];
+  }
+  return out;
 }
 
-function nextUnlockNote(template: CardTemplate | undefined, rarity: Rarity): string {
-  if (!template) return '';
+/** What each tier adds on top of the one below it, for this template. */
+function ladder(template: CardTemplate | undefined): Map<Rarity, string[]> {
   const byTier = new Map<Rarity, string[]>();
-  for (const opt of Object.values(template.options)) {
+  const add = (tier: Rarity, what: string) => byTier.set(tier, [...(byTier.get(tier) ?? []), what]);
+  if (template?.unlocks) add(template.unlocks, `the ${template.name} template`);
+  for (const [name, opt] of Object.entries(template?.options ?? {})) {
     for (const v of opt.values) {
       const needed = opt.unlocks?.[v];
-      if (needed && locked(needed, rarity)) {
-        byTier.set(needed, [...(byTier.get(needed) ?? []), v]);
-      }
+      if (needed) add(needed, valueLabel(name, v).toLowerCase());
     }
   }
-  const next = RARITIES.find((t) => byTier.has(t));
-  return next ? `${RARITY_LABELS[next]} adds ${byTier.get(next)!.join(', ')}.` : '';
+  return byTier;
+}
+
+/** Bring a config back inside what a rarity may print, and say what moved. */
+function settle(
+  template: CardTemplate,
+  config: TemplateConfig,
+  rarity: Rarity,
+): { config: TemplateConfig; moved: string[] } {
+  const next: TemplateConfig = { ...config };
+  const moved: string[] = [];
+  for (const [name, opt] of Object.entries(template.options)) {
+    const value = next[name] ?? opt.default;
+    if (!reached(opt.unlocks?.[value], rarity)) {
+      next[name] = opt.default;
+      moved.push(valueLabel(name, value).toLowerCase());
+    }
+  }
+  // A legendary card must carry a chase, and nothing below it may.
+  const chase = next.treatment ?? 'none';
+  if (rarity === 'legendary' && chase === 'none') next.treatment = 'foil';
+  return { config: next, moved };
 }
 
 export default function CardForm({
@@ -99,23 +123,49 @@ export default function CardForm({
   const [templateKey, setTemplateKey] = useState(
     card?.template_key ?? firstTemplate?.key ?? 'classic',
   );
-  // Fill absent snapshot options so the controls and preview stay synchronized.
   const [config, setConfig] = useState<TemplateConfig>(() => {
     const start = card ? templates.find((t) => t.key === card.template_key) : firstTemplate;
     return { ...(start ? defaults(start) : {}), ...(card?.template_config ?? {}) };
   });
+  const [note, setNote] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [fields, setFields] = useState<Record<string, string[]>>({});
   const [busy, setBusy] = useState(false);
 
   const template = templates.find((t) => t.key === templateKey);
   const issues = validateDescription(description);
+  const opens = ladder(template);
+  const nextTier = RARITIES.find((t) => opens.has(t) && !reached(t, rarity));
 
   function pickTemplate(key: string) {
     const next = templates.find((t) => t.key === key);
     if (!next) return;
     setTemplateKey(key);
-    setConfig(defaults(next));
+    setConfig(settle(next, defaults(next), rarity).config);
+    setNote(null);
+  }
+
+  // Keep existing config valid when rarity changes.
+  function pickRarity(next: Rarity) {
+    setRarity(next);
+    if (!template) return;
+    const said: string[] = [];
+    let chosen = template;
+    let base = config;
+    if (!reached(chosen.unlocks, next)) {
+      const open = templates.find((t) => reached(t.unlocks, next));
+      if (!open) return;
+      said.push(
+        `${chosen.name} needs ${RARITY_LABELS[chosen.unlocks!]}, so this is now ${open.name}`,
+      );
+      chosen = open;
+      base = defaults(open);
+      setTemplateKey(open.key);
+    }
+    const { config: fixed, moved } = settle(chosen, base, next);
+    setConfig(fixed);
+    if (moved.length) said.push(`${moved.join(', ')} moved back to the standard choice`);
+    setNote(said.length ? `${RARITY_LABELS[next]}: ${said.join('; ')}.` : null);
   }
 
   async function onSubmit(e: FormEvent) {
@@ -149,6 +199,73 @@ export default function CardForm({
     }
   }
 
+  function control(name: string, opt: TemplateOption) {
+    const value = config[name] ?? opt.default;
+    const set = (v: string) => setConfig({ ...config, [name]: v });
+    // Legendary cards cannot be saved without a chase treatment.
+    const values =
+      name === 'treatment' && rarity === 'legendary'
+        ? opt.values.filter((v) => v !== 'none')
+        : opt.values;
+    const locks = locksFor(opt, rarity);
+    const labels = opt.type === 'font' ? FONT_LABELS : valueLabels(name, values);
+
+    if (name === 'texture' || name === 'finish') {
+      const tileFor = name === 'texture' ? textureTile : coatTile;
+      return (
+        <TileGrid
+          value={value}
+          values={values}
+          labels={labels}
+          locks={locks}
+          tileFor={tileFor}
+          onChange={set}
+        />
+      );
+    }
+    if (opt.type === 'swatch') {
+      return (
+        <ColourMenu
+          value={value}
+          values={values}
+          labels={labels}
+          locks={locks}
+          palette={name === 'frame' ? 'stock' : 'ink'}
+          onChange={set}
+        />
+      );
+    }
+    const inline =
+      Object.keys(locks).length === 0 &&
+      values.length <= 3 &&
+      values.every((v) => (labels[v] ?? v).length <= 9);
+    if (inline) {
+      return <Segmented value={value} values={values} labels={labels} onChange={set} />;
+    }
+    return (
+      <ChoiceMenu value={value} values={values} labels={labels} locks={locks} onChange={set} />
+    );
+  }
+
+  function group(name: OptionGroup) {
+    const options = Object.entries(template?.options ?? {}).filter(
+      ([, opt]) => (opt.group ?? 'board') === name,
+    );
+    const shown = options.filter(
+      ([key]) => key !== 'coverage' || (config.treatment ?? 'none') !== 'none',
+    );
+    if (shown.length === 0) return null;
+    return (
+      <Section key={name} title={GROUP_LABELS[name]} note={GROUP_NOTES[name]}>
+        {shown.map(([key, opt]) => (
+          <Field key={key} label={opt.label}>
+            {control(key, opt)}
+          </Field>
+        ))}
+      </Section>
+    );
+  }
+
   return (
     <form className={`${ui.panel} ${styles.root}`} onSubmit={onSubmit}>
       <div className={styles.fields}>
@@ -175,21 +292,29 @@ export default function CardForm({
           required
         />
 
-        <label className={ui.label} htmlFor="card-rarity">
-          Rarity
-        </label>
-        <select
-          id="card-rarity"
-          className={ui.input}
-          value={rarity}
-          onChange={(e) => setRarity(e.target.value as Rarity)}
-        >
+        <span className={ui.label}>Rarity</span>
+        <div className={styles.tiers} role="group" aria-label="Rarity">
           {RARITIES.map((r) => (
-            <option key={r} value={r}>
+            <button
+              key={r}
+              type="button"
+              data-rarity={r}
+              aria-pressed={r === rarity}
+              className={`${styles.tier} ${r === rarity ? styles.tierOn : ''}`}
+              onClick={() => pickRarity(r)}
+            >
               {RARITY_LABELS[r]}
-            </option>
+            </button>
           ))}
-        </select>
+        </div>
+        <p className={styles.tierNote}>
+          {rarity === 'legendary'
+            ? 'A legendary card is struck with a foil or holographic chase.'
+            : nextTier
+              ? `${RARITY_LABELS[nextTier]} adds ${opens.get(nextTier)!.join(', ')}.`
+              : 'Every option on this template is open at this tier.'}
+        </p>
+        {note ? <p className={styles.note}>{note}</p> : null}
 
         <label className={ui.label} htmlFor="card-desc">
           Description <span className={styles.hint}>**bold**, *italic*, - bullets</span>
@@ -218,17 +343,15 @@ export default function CardForm({
             {m}
           </p>
         ))}
-        {TEMPLATE_GROUPS.map((group) => {
-          const inGroup = templates.filter((t) => group.match(t.key));
+        {TEMPLATE_GROUPS.map((tgroup) => {
+          const inGroup = templates.filter((t) => tgroup.match(t.key));
           if (inGroup.length === 0) return null;
           return (
-            <div key={group.label} className={styles.templateGroup}>
-              <span className={styles.groupLabel}>{group.label}</span>
+            <div key={tgroup.label} className={styles.templateGroup}>
+              <span className={styles.groupLabel}>{tgroup.label}</span>
               <div className={styles.templates}>
                 {inGroup.map((t) => {
-                  // A locked template stays selectable while it is the card's
-                  // own, so a downgrade shows the problem instead of hiding it.
-                  const shut = locked(t.unlocks, rarity) && t.key !== templateKey;
+                  const shut = !reached(t.unlocks, rarity);
                   return (
                     <button
                       key={t.key}
@@ -240,8 +363,8 @@ export default function CardForm({
                     >
                       <strong>
                         {t.name}
-                        {t.unlocks && locked(t.unlocks, rarity) ? (
-                          <span className={styles.lockTag}>{RARITY_LABELS[t.unlocks]}</span>
+                        {shut ? (
+                          <span className={styles.lockTag}>{RARITY_LABELS[t.unlocks!]}</span>
                         ) : null}
                       </strong>
                       <small>{t.description}</small>
@@ -253,49 +376,12 @@ export default function CardForm({
           );
         })}
 
-        {template && Object.keys(template.options).length > 0 ? (
-          <Section
-            title="Look"
-            note={`Every option applies to this card alone. ${nextUnlockNote(template, rarity)}`.trim()}
-          >
-            {Object.entries(template.options).map(([name, opt]) => {
-              if (name === 'treatment' && rarity !== 'legendary') return null;
-              const value = config[name] ?? opt.default;
-              const set = (v: string) => setConfig({ ...config, [name]: v });
-              const values =
-                name === 'treatment'
-                  ? opt.values.filter((v) => v !== 'none')
-                  : openValues(opt, rarity);
-              const unset = name === 'treatment' && !values.includes(value);
-              return (
-                <Field key={name} label={opt.label}>
-                  {opt.type === 'swatch' ? (
-                    <ColourMenu
-                      value={value}
-                      values={values}
-                      palette={name === 'frame' ? 'stock' : 'ink'}
-                      onChange={set}
-                    />
-                  ) : opt.type === 'font' ? (
-                    <ChoiceMenu value={value} values={values} labels={FONT_LABELS} onChange={set} />
-                  ) : values.length <= 3 ? (
-                    <Segmented value={value} values={values} onChange={set} />
-                  ) : (
-                    <ChoiceMenu value={value} values={values} onChange={set} />
-                  )}
-                  {unset ? (
-                    <span className={styles.hint}>Pick one. A legendary card needs it.</span>
-                  ) : null}
-                </Field>
-              );
-            })}
-            {fields.template_config?.map((m) => (
-              <p key={m} className={styles.error}>
-                {m}
-              </p>
-            ))}
-          </Section>
-        ) : null}
+        <div className={styles.groups}>{OPTION_GROUPS.map(group)}</div>
+        {fields.template_config?.map((m) => (
+          <p key={m} className={styles.error}>
+            {m}
+          </p>
+        ))}
 
         <div className={styles.actions}>
           <button className={ui.btnPrimary} type="submit" disabled={busy || issues.length > 0}>
@@ -308,16 +394,17 @@ export default function CardForm({
       </div>
 
       <div className={styles.preview}>
-        <CardPreview
-          title={title}
-          rarity={rarity}
-          description={description}
-          imageUrl={image?.url ?? null}
-          templateKey={templateKey}
-          templateConfig={config}
-          mark={mark}
-        />
-        <span className={styles.previewLabel}>Live card preview</span>
+        <div className={styles.proof}>
+          <CardPreview
+            title={title}
+            rarity={rarity}
+            description={description}
+            imageUrl={image?.url ?? null}
+            templateKey={templateKey}
+            templateConfig={config}
+            mark={mark}
+          />
+        </div>
       </div>
     </form>
   );

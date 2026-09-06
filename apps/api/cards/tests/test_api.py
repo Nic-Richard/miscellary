@@ -50,15 +50,19 @@ def test_create_set_and_card(auth_client, user):
     # Partial config is filled with the template's defaults and versioned.
     assert card["template_config"] == {
         "frame": "dark",
-        "accent": "blue",
-        "font": "display",
         "texture": "linen",
         "corners": "round",
+        "tint": "none",
+        "window": "line",
+        "shape": "square",
+        "font": "display",
+        "accent": "blue",
         "finish": "matte",
+        "relief": "none",
         "treatment": "none",
         "coverage": "art",
     }
-    assert card["template_version"] == 1
+    assert card["template_version"] == 2
 
 
 def test_card_validation(auth_client, user):
@@ -114,7 +118,6 @@ def test_publish_flow(auth_client, user):
     assert response.status_code == 200
     assert response.json()["status"] == "published"
 
-    # Now every edit path is closed.
     card = card_set.cards.first()
     assert (
         auth_client.patch(
@@ -203,6 +206,5 @@ def test_delete_draft_hard_and_published_soft(auth_client, user):
     assert auth_client.delete(reverse("cards:my-set", args=[published.id])).status_code == 204
     published.refresh_from_db()
     assert published.status == CardSet.Status.DELETED
-    # Gone from discovery, cards untouched.
     assert auth_client.get(reverse("cards:public-sets")).json()["results"] == []
     assert published.cards.count() == 5

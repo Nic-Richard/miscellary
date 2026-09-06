@@ -1,0 +1,28 @@
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.swatch {
+  width: 26px;
+  height: 40px;
+  padding: 0;
+  background: none;
+  border: 1px solid rgba(40, 33, 24, 0.3);
+  border-radius: 2px 5px 5px 2px;
+  box-shadow: 0 2px 4px rgba(52, 38, 18, 0.22);
+  cursor: pointer;
+  overflow: hidden;
+}
+.swatch:hover {
+  transform: translateY(-2px);
+}
+.on {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.cloth {
+  display: block;
+  width: 100%;
+  height: 100%;
+}

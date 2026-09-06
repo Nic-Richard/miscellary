@@ -9,12 +9,11 @@
   height: 100vh;
   padding: 30px 18px 22px;
   overflow-y: auto;
-  background:
-    linear-gradient(rgba(244, 238, 226, 0.5), rgba(244, 238, 226, 0.5)),
-    var(--paper) center / 768px,
-    #f4eee2;
-  border-right: 1px solid #d9cfbc;
-  box-shadow: 6px 0 18px rgba(58, 42, 20, 0.04);
+  background: var(--rail);
+  border-right: 1px solid var(--rail-edge);
+  box-shadow:
+    inset -1px 0 0 rgba(255, 255, 255, 0.45),
+    6px 0 18px rgba(58, 42, 20, 0.05);
   color: #3d342b;
 }
 

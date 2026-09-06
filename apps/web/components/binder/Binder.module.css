@@ -1,8 +1,6 @@
-/* The image supplies the binder cover, rings, and sleeves; card slots are
-   positioned over its printed pockets. */
-
 .binder {
   position: relative;
+  container-type: inline-size;
   width: 100%;
   aspect-ratio: 1028 / 625;
   filter: drop-shadow(0 16px 20px rgba(52, 38, 18, 0.22));
@@ -17,19 +15,35 @@
   user-select: none;
   pointer-events: none;
 }
-/* Cover colour: the cloth is a separate layer of the same photograph, so
-   rotating its hue recolours the binder without touching the cream pages. */
+/* Recolour only the cloth layer. */
 .cloth {
-  filter: hue-rotate(var(--binder-hue, 0deg)) saturate(var(--binder-saturation, 1));
+  filter: hue-rotate(var(--binder-hue, 0deg)) saturate(var(--binder-saturation, 1))
+    brightness(var(--binder-brightness, 1));
+}
+
+/* Binder-page light matches the slot lighting model. */
+.lamp {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    radial-gradient(74% 92% at 26% 8%, rgba(255, 249, 232, 0.78), transparent 70%),
+    radial-gradient(118% 132% at 80% 108%, rgba(44, 30, 10, 0.52), transparent 62%);
+  mix-blend-mode: soft-light;
+  pointer-events: none;
 }
 
 .slot {
   position: absolute;
+  z-index: 2;
   --card-ratio: 5 / 7;
-  /* the slot defines the size; ignore the per-size max-width */
   --card-max: none;
-  filter: drop-shadow(0 2px 3px rgba(50, 36, 18, 0.3));
+  filter: drop-shadow(
+      calc(var(--cast-x, 0.1) * 1cqw) calc(var(--cast-y, 0.28) * 1cqw) 0.4cqw rgba(50, 36, 18, 0.32)
+    )
+    brightness(min(1.06, calc(0.74 + var(--lit-strength, 1) * 0.28)));
 }
+/* Sleeve highlight is offset from the card coat. */
 .slot::after {
   content: '';
   position: absolute;
@@ -37,7 +51,7 @@
   z-index: 3;
   border-radius: 5px;
   background: linear-gradient(
-    118deg,
+    calc(var(--lit-angle, 104deg) + 14deg),
     rgba(255, 255, 255, 0.3),
     rgba(255, 255, 255, 0.07) 26%,
     transparent 44%,
@@ -45,11 +59,12 @@
     transparent 92%
   );
   mix-blend-mode: screen;
+  opacity: var(--lit-strength, 1);
   pointer-events: none;
 }
 
-/* Empty slots must be opaque: they cover the card printed on the binder. */
 .empty {
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -65,6 +80,24 @@
     inset 0 0 0 5px rgba(255, 255, 255, 0.45);
   color: #a3967f;
   text-align: center;
+}
+.pick {
+  border: 0;
+  cursor: pointer;
+  transition: box-shadow var(--dur-fast);
+}
+.pick:hover,
+.pick:focus-visible {
+  box-shadow:
+    0 0 0 3px #efe8da,
+    inset 0 0 0 1px var(--accent),
+    inset 0 0 0 5px rgba(255, 255, 255, 0.45);
+  color: var(--accent);
+  outline: none;
+}
+.pick:hover .emptyMark,
+.pick:focus-visible .emptyMark {
+  stroke: var(--accent);
 }
 .empty b {
   align-self: flex-start;
@@ -85,4 +118,98 @@
   font-size: clamp(7px, 0.85vw, 11px);
   letter-spacing: 0.12em;
   text-transform: uppercase;
+}
+
+/* Decorative outgoing leaf over the already-updated spread. */
+.turnStage {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  perspective: 1800px;
+  pointer-events: none;
+}
+.leaf {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transform-origin: 50% 50%;
+  will-change: transform;
+}
+.leafNext {
+  animation: leaf-next 380ms cubic-bezier(0.38, 0, 0.26, 1) forwards;
+}
+.leafPrev {
+  animation: leaf-prev 380ms cubic-bezier(0.38, 0, 0.26, 1) forwards;
+}
+@keyframes leaf-next {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(-179deg);
+  }
+}
+@keyframes leaf-prev {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(179deg);
+  }
+}
+
+.face,
+.back {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+}
+.back {
+  transform: rotateY(180deg);
+}
+
+.paper {
+  position: absolute;
+  top: 1.6%;
+  bottom: 1.6%;
+  border-radius: 3px;
+  background: linear-gradient(105deg, #f7f2e6, #efe8da 55%, #e6ddca);
+  box-shadow:
+    0 0 0 1px rgba(150, 134, 104, 0.32),
+    0 1.4cqw 2.6cqw rgba(40, 28, 12, 0.3);
+}
+.shade {
+  position: absolute;
+  top: 1.6%;
+  bottom: 1.6%;
+  border-radius: 3px;
+  background: linear-gradient(100deg, rgba(28, 18, 6, 0) 42%, rgba(28, 18, 6, 0.42));
+  opacity: 0;
+  animation: leaf-shade 380ms ease-in-out forwards;
+}
+/* Back-face geometry is authored on the opposite half before rotation. */
+.leafNext .face .paper,
+.leafNext .face .shade,
+.leafPrev .back .paper,
+.leafPrev .back .shade {
+  left: 50%;
+  right: 2.2%;
+}
+.leafPrev .face .paper,
+.leafPrev .face .shade,
+.leafNext .back .paper,
+.leafNext .back .shade {
+  left: 2.2%;
+  right: 50%;
+}
+@keyframes leaf-shade {
+  0% {
+    opacity: 0;
+  }
+  48% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.3;
+  }
 }

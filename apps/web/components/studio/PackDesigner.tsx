@@ -4,6 +4,7 @@ import type { CardSetDetail } from '@miscellary/shared';
 import PackLayerEditor from './PackLayerEditor';
 import PackPouch from '../PackPouch';
 import PackTextEditor from './PackTextEditor';
+import BinderColourPicker from '../BinderColourPicker';
 import SetMark from '../SetMark';
 import { ChoiceMenu, ColourMenu, Field, Section, Slider } from '../controls';
 import ui from '../ui.module.css';
@@ -196,6 +197,18 @@ export default function PackDesigner({ set, onDraft, onSave }: PackDesignerProps
                 </button>
               ))}
             </div>
+          </Field>
+        </Section>
+
+        <Section
+          title="Binder"
+          note="The cover this set's public page is bound in. Collectors see it behind every card."
+        >
+          <Field label="Cover">
+            <BinderColourPicker
+              value={set.binder_colour || 'teal'}
+              onChange={(v) => onSave({ binder_colour: v })}
+            />
           </Field>
         </Section>
 

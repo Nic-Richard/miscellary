@@ -54,6 +54,23 @@ PACK_COLOURS = [
 ]
 PACK_COLOUR_CHOICES = [(c, c.title()) for c in PACK_COLOURS]
 
+# Mirrored in apps/web/lib/setIdentity.ts for client-side rendering.
+BINDER_COLOURS = [
+    "teal",
+    "moss",
+    "forest",
+    "ocean",
+    "indigo",
+    "plum",
+    "oxblood",
+    "rust",
+    "tan",
+    "sand",
+    "slate",
+    "charcoal",
+]
+BINDER_COLOUR_CHOICES = [(c, c.title()) for c in BINDER_COLOURS]
+
 PACK_LAYER_KINDS = ["image", "emblem"]
 
 PACK_FINISHES = ["gloss", "satin", "matte", "holo"]
@@ -89,11 +106,9 @@ EMBLEM_TEXT_COLOURS = [
 ]
 EMBLEM_TEXT_CHOICES = [(c, c.title()) for c in EMBLEM_TEXT_COLOURS]
 
-# Percentage scales use 100 as the designed size.
 SCALE_MIN = 60
 SCALE_MAX = 140
 
-# Artwork size and offsets are percentages of the pack.
 ART_SCALE_MIN = 20
 ART_SCALE_MAX = 300
 ART_SCALE_DEFAULT = 70
@@ -104,7 +119,6 @@ ART_ROTATE_MAX = 180
 ART_OPACITY_MIN = 10
 ART_OPACITY_MAX = 100
 
-# Layers are stored bottom-first.
 PACK_LAYER_MAX = 5
 
 PACK_SIZE_MIN = 1

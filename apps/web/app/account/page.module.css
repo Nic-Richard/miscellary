@@ -30,6 +30,13 @@
   text-transform: uppercase;
   color: #3a2f26;
 }
+.cover {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin-top: 14px;
+}
 .slotsWrap {
   margin-top: 16px;
 }

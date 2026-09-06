@@ -78,6 +78,10 @@ function useDismiss(open: boolean, close: () => void) {
   return ref;
 }
 
+function named(labels: Record<string, string> | undefined, token: string): string {
+  return labels?.[token] ?? token.charAt(0).toUpperCase() + token.slice(1);
+}
+
 function Swatch({ token, swatchFor }: { token: string; swatchFor: SwatchFor }) {
   if (token === 'rarity') return <span className={`${styles.chip} ${styles.chipRarity}`} />;
   return <span className={styles.chip} style={swatchFor(token)} />;
@@ -95,6 +99,9 @@ export interface MenuProps {
   families?: Family[];
   swatchFor?: SwatchFor;
   labels?: Record<string, string>;
+  /** Values this card cannot use yet, mapped to the tier that opens them.
+      Locked values stay visible so the ladder is legible from any tier. */
+  locks?: Record<string, string>;
   align?: 'left' | 'right';
 }
 
@@ -105,6 +112,8 @@ export function ColourMenu({
   palette = 'ink',
   families: given,
   swatchFor = hexSwatch,
+  labels,
+  locks,
   align = 'left',
 }: MenuProps) {
   const fieldLabel = useContext(FieldLabelContext);
@@ -113,6 +122,7 @@ export function ColourMenu({
   const base: Family[] = given ?? (palette === 'stock' ? STOCK_FAMILIES : INK_FAMILIES);
   const families = groupValues(values, base);
   const hasRarity = values.includes('rarity');
+  const name = (v: string) => named(labels, v);
 
   function pick(v: string) {
     onChange(v);
@@ -130,7 +140,7 @@ export function ColourMenu({
         onClick={() => setOpen(!open)}
       >
         <Swatch token={value} swatchFor={swatchFor} />
-        <span className={styles.triggerName}>{value === 'rarity' ? 'Rarity colour' : value}</span>
+        <span className={styles.triggerName}>{name(value)}</span>
         <span className={styles.triggerCaret}>▼</span>
       </button>
       {open ? (
@@ -149,18 +159,25 @@ export function ColourMenu({
               <div key={family.label} className={styles.family}>
                 <span className={styles.familyLabel}>{family.label}</span>
                 <div className={styles.swatches}>
-                  {family.values.map((v) => (
-                    <button
-                      key={v}
-                      type="button"
-                      title={v}
-                      aria-label={v}
-                      aria-pressed={value === v}
-                      className={`${styles.swatch} ${value === v ? styles.swatchOn : ''}`}
-                      style={swatchFor(v)}
-                      onClick={() => pick(v)}
-                    />
-                  ))}
+                  {family.values.map((v) => {
+                    const shut = locks?.[v];
+                    const title = shut ? `${name(v)} - needs ${shut}` : name(v);
+                    return (
+                      <button
+                        key={v}
+                        type="button"
+                        title={title}
+                        aria-label={title}
+                        aria-pressed={value === v}
+                        disabled={!!shut}
+                        className={`${styles.swatch} ${value === v ? styles.swatchOn : ''} ${
+                          shut ? styles.swatchShut : ''
+                        }`}
+                        style={swatchFor(v)}
+                        onClick={() => pick(v)}
+                      />
+                    );
+                  })}
                 </div>
               </div>
             ))}
@@ -171,11 +188,11 @@ export function ColourMenu({
   );
 }
 
-export function ChoiceMenu({ value, values, onChange, labels, align = 'left' }: MenuProps) {
+export function ChoiceMenu({ value, values, onChange, labels, locks, align = 'left' }: MenuProps) {
   const fieldLabel = useContext(FieldLabelContext);
   const [open, setOpen] = useState(false);
   const ref = useDismiss(open, () => setOpen(false));
-  const name = (v: string) => labels?.[v] ?? v;
+  const name = (v: string) => named(labels, v);
 
   return (
     <div className={styles.anchor} ref={ref}>
@@ -193,20 +210,25 @@ export function ChoiceMenu({ value, values, onChange, labels, align = 'left' }: 
       {open ? (
         <div className={`${styles.popover} ${align === 'right' ? styles.popoverRight : ''}`}>
           <div className={styles.choices}>
-            {values.map((v) => (
-              <button
-                key={v}
-                type="button"
-                aria-pressed={value === v}
-                className={`${styles.choice} ${value === v ? styles.choiceOn : ''}`}
-                onClick={() => {
-                  onChange(v);
-                  setOpen(false);
-                }}
-              >
-                {name(v)}
-              </button>
-            ))}
+            {values.map((v) => {
+              const shut = locks?.[v];
+              return (
+                <button
+                  key={v}
+                  type="button"
+                  aria-pressed={value === v}
+                  disabled={!!shut}
+                  className={`${styles.choice} ${value === v ? styles.choiceOn : ''}`}
+                  onClick={() => {
+                    onChange(v);
+                    setOpen(false);
+                  }}
+                >
+                  {name(v)}
+                  {shut ? <span className={styles.lock}>{shut}</span> : null}
+                </button>
+              );
+            })}
           </div>
         </div>
       ) : null}
@@ -236,9 +258,57 @@ export function Segmented({
           className={`${styles.segment} ${value === v ? styles.segmentOn : ''}`}
           onClick={() => onChange(v)}
         >
-          {labels?.[v] ?? v}
+          {named(labels, v)}
         </button>
       ))}
+    </div>
+  );
+}
+
+/** A grid of rendered samples, for options whose names mean nothing on their
+    own: choosing a surface or a coat should show the material, not the word. */
+export function TileGrid({
+  value,
+  values,
+  onChange,
+  labels,
+  locks,
+  tileFor,
+}: {
+  value: string;
+  values: string[];
+  onChange: (value: string) => void;
+  labels?: Record<string, string>;
+  locks?: Record<string, string>;
+  tileFor: (value: string) => CSSProperties;
+}) {
+  const fieldLabel = useContext(FieldLabelContext);
+  return (
+    <div className={styles.tiles} role="group" aria-label={fieldLabel}>
+      {values.map((v) => {
+        const shut = locks?.[v];
+        const name = named(labels, v);
+        return (
+          <button
+            key={v}
+            type="button"
+            aria-pressed={value === v}
+            aria-label={shut ? `${name}, needs ${shut}` : name}
+            disabled={!!shut}
+            className={`${styles.tile} ${value === v ? styles.tileOn : ''}`}
+            onClick={() => onChange(v)}
+          >
+            <span
+              className={`${styles.tileFace} ${shut ? styles.tileShut : ''}`}
+              style={tileFor(v)}
+            />
+            <span className={styles.tileName}>
+              {name}
+              {shut ? <em className={styles.tileLock}>{shut}</em> : null}
+            </span>
+          </button>
+        );
+      })}
     </div>
   );
 }

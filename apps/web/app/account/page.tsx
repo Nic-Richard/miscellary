@@ -5,8 +5,9 @@ import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import type { CurrentUser, OwnedCard, ShowcaseSlot } from '@miscellary/shared';
 import { SHOWCASE_SLOTS } from '@miscellary/shared';
+import BinderColourPicker from '@/components/BinderColourPicker';
 import CardPreview from '@/components/CardPreview';
-import ShowcaseCase from '@/components/ShowcaseCase';
+import ProfileBinder from '@/components/ProfileBinder';
 import { OwnedCardInspector } from '@/components/CardInspector';
 import ui from '@/components/ui.module.css';
 import { apiFetch } from '@/lib/api';
@@ -20,10 +21,13 @@ export default function AccountPage() {
   const [displayName, setDisplayName] = useState('');
   const [bio, setBio] = useState('');
   const [showcaseTitle, setShowcaseTitle] = useState('');
+  const [binderColour, setBinderColour] = useState('teal');
   const [saved, setSaved] = useState(false);
   const [cards, setCards] = useState<OwnedCard[]>([]);
   const [inspect, setInspect] = useState<OwnedCard | null>(null);
   const [slots, setSlots] = useState<(string | null)[]>(Array(SHOWCASE_SLOTS).fill(null));
+  // Use binder payload cards so pinned copies beyond page one stay resolvable.
+  const [pinned, setPinned] = useState<Map<string, OwnedCard>>(new Map());
   const [picking, setPicking] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,11 +36,17 @@ export default function AccountPage() {
     setDisplayName(user.profile.display_name);
     setBio(user.profile.bio);
     setShowcaseTitle(user.profile.showcase_title);
+    setBinderColour(user.profile.binder_colour || 'teal');
     Promise.all([listMyCards(), getShowcase()])
       .then(([page, showcase]) => {
         setCards(page.results);
         const next: (string | null)[] = Array(SHOWCASE_SLOTS).fill(null);
-        for (const s of showcase as ShowcaseSlot[]) next[s.position] = s.owned_card.id;
+        const held = new Map<string, OwnedCard>();
+        for (const s of showcase as ShowcaseSlot[]) {
+          next[s.position] = s.owned_card.id;
+          held.set(s.owned_card.id, s.owned_card);
+        }
+        setPinned(held);
         setSlots(next);
       })
       .catch((e: Error) => setError(e.message));
@@ -48,7 +58,12 @@ export default function AccountPage() {
     try {
       await apiFetch<CurrentUser>('/api/v1/auth/me/', {
         method: 'PATCH',
-        body: { display_name: displayName, bio, showcase_title: showcaseTitle },
+        body: {
+          display_name: displayName,
+          bio,
+          showcase_title: showcaseTitle,
+          binder_colour: binderColour,
+        },
       });
       await refreshUser();
       setSaved(true);
@@ -65,7 +80,20 @@ export default function AccountPage() {
         next.flatMap((id, position) => (id ? [{ position, owned_card_id: id }] : [])),
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not save the showcase.');
+      setError(err instanceof Error ? err.message : 'Could not save the binder.');
+    }
+  }
+
+  async function pickCover(colour: string) {
+    setBinderColour(colour);
+    try {
+      await apiFetch<CurrentUser>('/api/v1/auth/me/', {
+        method: 'PATCH',
+        body: { binder_colour: colour },
+      });
+      await refreshUser();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not change the cover.');
     }
   }
 
@@ -77,13 +105,13 @@ export default function AccountPage() {
       </p>
     );
 
-  const byId = new Map(cards.map((c) => [c.id, c]));
+  const byId = new Map([...pinned, ...cards.map((c) => [c.id, c] as const)]);
 
   return (
     <section>
       <p className={ui.eyebrow}>Account</p>
       <h1 className={ui.title}>@{user.profile.username}</h1>
-      <p className={ui.subtitle}>Profile details and showcase</p>
+      <p className={ui.subtitle}>Profile details and your binder</p>
       {error ? <p className={styles.error}>{error}</p> : null}
 
       <form className={`${ui.panel} ${styles.form}`} onSubmit={saveProfile}>
@@ -109,7 +137,7 @@ export default function AccountPage() {
           maxLength={280}
         />
         <label className={ui.label} htmlFor="case">
-          Showcase caption
+          Binder caption
         </label>
         <input
           id="case"
@@ -131,14 +159,19 @@ export default function AccountPage() {
         </div>
       </form>
 
-      <h2 className={styles.h2}>Showcase</h2>
+      <h2 className={styles.h2}>Your binder</h2>
       <p className={styles.muted}>
-        Your case sits at the top of your profile. Pin up to {SHOWCASE_SLOTS} cards and say what
-        they are.
+        A page of {SHOWCASE_SLOTS} sleeves at the top of your profile, for anyone who visits. Pin
+        the cards you want shown; a card you trade away leaves its sleeve on its own.
       </p>
+      <div className={styles.cover}>
+        <span className={ui.label}>Cover</span>
+        <BinderColourPicker value={binderColour} onChange={(c) => void pickCover(c)} />
+      </div>
       <div className={styles.slotsWrap}>
-        <ShowcaseCase
+        <ProfileBinder
           title={showcaseTitle}
+          colour={binderColour}
           mine
           onInspect={setInspect}
           onPick={(i) => setPicking(picking === i ? null : i)}
@@ -152,14 +185,14 @@ export default function AccountPage() {
       {picking !== null ? (
         <div className={`${ui.panel} ${styles.picker}`}>
           <div className={styles.row}>
-            <strong>Pick a card for slot {picking + 1}</strong>
+            <strong>Pick a card for sleeve {picking + 1}</strong>
             {slots[picking] ? (
               <button
                 type="button"
                 className={styles.link}
                 onClick={() => void persistSlots(slots.map((s, i) => (i === picking ? null : s)))}
               >
-                Clear slot
+                Empty this sleeve
               </button>
             ) : null}
           </div>

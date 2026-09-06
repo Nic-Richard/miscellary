@@ -103,7 +103,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  text-transform: capitalize;
 }
 .triggerCaret {
   color: var(--faint);
@@ -178,6 +177,107 @@
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
+/* Locked choices remain visible with a hatch overlay. */
+.swatchShut {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+.swatchShut::after {
+  content: '';
+  display: block;
+  height: 100%;
+  background: repeating-linear-gradient(-45deg, transparent 0 3px, rgba(40, 33, 24, 0.45) 3px 4px);
+  border-radius: inherit;
+}
+.swatchShut:hover {
+  transform: none;
+}
+
+.lock {
+  margin-left: auto;
+  padding-left: 8px;
+  color: var(--faint);
+  font-family: var(--body);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.choice:disabled,
+.segment:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.choice:disabled:hover {
+  background: none;
+}
+.segment:disabled:hover {
+  color: var(--muted);
+}
+
+.tiles {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 6px;
+}
+.tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  width: 44px;
+  padding: 3px 2px 4px;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm, 7px);
+  color: var(--muted);
+  cursor: pointer;
+}
+.tile:not(.tileOn):hover {
+  border-color: var(--bdr2);
+}
+.tileOn {
+  border-color: var(--accent);
+  background: rgba(39, 139, 130, 0.1);
+  color: var(--accent);
+}
+.tile:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+.tile:disabled:hover {
+  border-color: transparent;
+}
+.tileFace {
+  width: 100%;
+  height: 30px;
+  border: 1px solid rgba(40, 33, 24, 0.28);
+  border-radius: 4px;
+  background-color: #efe7d6;
+}
+.tileShut::after {
+  content: '';
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: repeating-linear-gradient(-45deg, transparent 0 3px, rgba(40, 33, 24, 0.35) 3px 4px);
+}
+.tileName {
+  display: block;
+  font-family: var(--body);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+.tileLock {
+  display: block;
+  color: var(--faint);
+  font-size: 8px;
+  font-style: normal;
+}
 
 .special {
   display: block;
@@ -219,11 +319,10 @@
   font-family: var(--body);
   font-size: 13px;
   text-align: left;
-  text-transform: capitalize;
   white-space: nowrap;
   cursor: pointer;
 }
-.choice:hover {
+.choice:not(.choiceOn):hover {
   background: rgba(255, 255, 255, 0.6);
 }
 .choiceOn {
@@ -294,7 +393,7 @@
   text-transform: uppercase;
   cursor: pointer;
 }
-.segment:hover {
+.segment:not(.segmentOn):hover {
   color: var(--accent);
 }
 .segmentOn {

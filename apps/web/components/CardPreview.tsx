@@ -41,8 +41,7 @@ function restOf(description: string): string {
         .trim();
 }
 
-/* Sibling layers blend against the card; pseudo-elements inside a blended
-   stacking context would blend against that context instead. */
+/* Sibling layers keep blend modes against the card itself. */
 function chaseLayers(css: Record<string, string>, framed: boolean) {
   const frame = framed ? ` ${css.chaseFrame}` : '';
   return (
@@ -73,6 +72,7 @@ export default function CardPreview({
   const line = templateKey === 'polaroid' ? shownTitle : (caption ?? captionFrom(description));
   const chase = templateConfig.treatment === 'foil' || templateConfig.treatment === 'holo';
   const coverage = templateConfig.coverage ?? 'art';
+  const varnish = templateConfig.relief === 'spot';
   const body = caption === undefined ? restOf(description) : description;
 
   return (
@@ -94,6 +94,7 @@ export default function CardPreview({
           ) : (
             <div className={styles.placeholder}>No photo yet</div>
           )}
+          {varnish ? <i className={styles.varnish} aria-hidden="true" /> : null}
           {chase && coverage === 'art' ? chaseLayers(styles, false) : null}
         </div>
 

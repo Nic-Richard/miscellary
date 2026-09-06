@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 
-// Lists mirror apps/api/cards/identity.py. Empty values select platform defaults.
+// Lists mirror apps/api/cards/identity.py.
 
 export const SET_MARKS = [
   'waves',
@@ -93,8 +93,7 @@ export const PACK_FINISHES = ['gloss', 'satin', 'matte', 'holo'] as const;
 
 export const PACK_LAYER_KINDS = ['image', 'emblem'] as const;
 
-// Free text layers dropped on the pack. Coordinates are percentages of the
-// pack's box measured from its centre, so a layer holds its place at any size.
+// Pack text coordinates are percentages from the pack centre.
 export interface PackTextLayer {
   text: string;
   hidden: boolean;
@@ -141,7 +140,6 @@ export const ART_OPACITY_MIN = 10;
 export const ART_OPACITY_MAX = 100;
 export const PACK_LAYER_MAX = 5;
 
-// The pack front, bottom of the stack first.
 export interface PackLayer {
   kind: string;
   image_id: string;
@@ -170,11 +168,9 @@ export const LAYER_DEFAULT: Omit<PackLayer, 'image_id' | 'url' | 'width' | 'heig
   opacity: 100,
 };
 
-// The pack image's own proportions, for working out whether a layer is drawn
-// large enough to cover the wrapper.
 export const PACK_ASPECT = 886 / 530;
 
-// Coverage is derived from rendered geometry because layers scale by width.
+// Coverage uses rendered geometry because layers scale by width.
 export function coversPack(layer: PackLayer): boolean {
   if (layer.kind !== 'image' || layer.hidden || !layer.width || !layer.height) return false;
   if (layer.opacity < 100 || layer.rotate !== 0) return false;
@@ -248,6 +244,60 @@ export function packSwatchStyle(token: string): CSSProperties {
   const c = PACK_COLOURS[token] ?? PACK_COLOURS['mint']!;
   return {
     background: 'var(--foil)',
+    filter: `hue-rotate(${c.hue}deg) saturate(${c.saturation}) brightness(${c.brightness})`,
+  };
+}
+
+// Binder cover tokens mirror BINDER_COLOURS in apps/api/cards/identity.py.
+export const BINDER_COLOURS: Record<
+  string,
+  { hue: number; saturation: number; brightness: number }
+> = {
+  teal: { hue: 0, saturation: 1.15, brightness: 1 },
+  moss: { hue: -40, saturation: 1.6, brightness: 0.95 },
+  forest: { hue: -22, saturation: 2, brightness: 0.7 },
+  ocean: { hue: 46, saturation: 1.7, brightness: 0.9 },
+  indigo: { hue: 80, saturation: 1.9, brightness: 0.74 },
+  plum: { hue: 124, saturation: 1.8, brightness: 0.8 },
+  oxblood: { hue: 160, saturation: 2.2, brightness: 0.62 },
+  rust: { hue: -150, saturation: 3, brightness: 0.84 },
+  tan: { hue: -128, saturation: 2, brightness: 1.06 },
+  sand: { hue: -112, saturation: 1.1, brightness: 1.22 },
+  slate: { hue: 30, saturation: 0.5, brightness: 0.84 },
+  charcoal: { hue: 0, saturation: 0.12, brightness: 0.5 },
+};
+export const BINDER_COLOUR_NAMES = Object.keys(BINDER_COLOURS);
+
+export function binderStyle(stored: string | undefined): CSSProperties {
+  const c = BINDER_COLOURS[stored || 'teal'] ?? BINDER_COLOURS['teal']!;
+  return {
+    '--binder-hue': `${c.hue}deg`,
+    '--binder-saturation': `${c.saturation}`,
+    '--binder-brightness': `${c.brightness}`,
+  } as CSSProperties;
+}
+
+// Scale the shelf texture so one cover token matches the open-binder cloth.
+const SHELF_SATURATION = 20.9 / 67;
+const SHELF_BRIGHTNESS = 43.1 / 17.8;
+
+export function binderClothStyle(token: string): CSSProperties {
+  const c = BINDER_COLOURS[token] ?? BINDER_COLOURS['teal']!;
+  const saturation = (c.saturation * SHELF_SATURATION).toFixed(3);
+  const brightness = (c.brightness * SHELF_BRIGHTNESS).toFixed(3);
+  return {
+    backgroundImage: 'var(--cloth-tex)',
+    backgroundSize: '220px',
+    filter: `hue-rotate(${c.hue}deg) saturate(${saturation}) brightness(${brightness})`,
+  };
+}
+
+const CLOTH_MEAN = '#708f8b';
+
+export function binderSwatchStyle(token: string): CSSProperties {
+  const c = BINDER_COLOURS[token] ?? BINDER_COLOURS['teal']!;
+  return {
+    background: CLOTH_MEAN,
     filter: `hue-rotate(${c.hue}deg) saturate(${c.saturation}) brightness(${c.brightness})`,
   };
 }

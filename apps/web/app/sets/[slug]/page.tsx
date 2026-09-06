@@ -248,6 +248,8 @@ export default function BinderPage() {
             <div className={styles.spread} id="cards">
               <Binder
                 mark={set.mark}
+                colour={set.binder_colour}
+                page={spread}
                 startIndex={spread * 8}
                 slots={Array.from({ length: 8 }, (_, slotIndex) => {
                   const card = spreads[spread]?.[slotIndex];

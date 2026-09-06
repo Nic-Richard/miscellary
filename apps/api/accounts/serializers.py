@@ -13,7 +13,15 @@ class ProfileSerializer(serializers.ModelSerializer[Profile]):
 
     class Meta:
         model = Profile
-        fields = ["username", "display_name", "bio", "showcase_title", "avatar_url", "created_at"]
+        fields = [
+            "username",
+            "display_name",
+            "bio",
+            "showcase_title",
+            "binder_colour",
+            "avatar_url",
+            "created_at",
+        ]
 
 
 class CurrentUserSerializer(serializers.ModelSerializer[User]):
@@ -105,4 +113,4 @@ class ChangePasswordSerializer(serializers.Serializer[None]):
 class ProfileUpdateSerializer(serializers.ModelSerializer[Profile]):
     class Meta:
         model = Profile
-        fields = ["display_name", "bio", "showcase_title"]
+        fields = ["display_name", "bio", "showcase_title", "binder_colour"]
