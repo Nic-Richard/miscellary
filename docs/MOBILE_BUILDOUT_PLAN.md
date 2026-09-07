@@ -1,8 +1,6 @@
 # Android build-out plan
 
-Status: first batch loaded successfully on the physical Android phone; broader device review remains
-open. The second batch added the shared web surfaces described below. The current work is the
-native card renderer, phase 1 complete.
+Status: native drawing primitives and all six card previews are implemented and have received an initial phone review. They are not yet connected to product screens. The WebView remains the active renderer.
 
 ## Native card renderer
 
@@ -46,8 +44,8 @@ port to `react-native-svg` closely. The binder uses image assets with transforms
 1. **Shared tokens.** Extract palette and print geometry into `@miscellary/shared` and move the web
    renderer onto it, so neither platform holds its own copy. Complete.
 2. **Native primitives.** Stock, edge, window shapes, texture, finish coat, relief, and chase, built
-   from tokens rather than from screenshots.
-3. **Native `CardPreview`.** All six templates, proven at 100, 150, and 300 px before use.
+   from tokens rather than from screenshots. Complete.
+3. **Native `CardPreview`.** All six templates at 100, 150, and 300 px. Implemented and initially reviewed on the phone; further parity and integration QA remains.
 4. **Card back and set marks.** SVG ports of the existing geometry.
 5. **Binder.** Existing binder assets, native layout, page turn through transforms.
 6. **Inspector.** Touch rotation, and lighting driven by translation and opacity on prepared
@@ -56,7 +54,7 @@ port to `react-native-svg` closely. The binder uses image assets with transforms
 8. **Editor controls.** `CardForm` already iterates the API's `template.options` with `unlocks`
    gating, so the rules stay on the server and native supplies the control widgets.
 
-Phase 2 builds primitives without changing call sites. Later phases replace one `SharedSurface` call site at a time, leaving the rest on the WebView.
+Phases 2 and 3 leave all `SharedSurface` call sites unchanged. Later phases replace one call site at a time after the native replacement is proven, leaving the rest on the WebView.
 
 ### Verifying parity
 
@@ -83,13 +81,23 @@ inset and outset; `grayscale`, `sepia`/`saturate`, and `brightness` filters;
 blending across an SVG and a view. Nothing in the phase list needs a fallback, and no graphics
 dependency beyond `react-native-svg` and `expo-linear-gradient` is required.
 
+### Phases 2 and 3
+
+`packages/shared/src/cardMaterial.ts` resolves coats, grain, sheen, relief, varnish, and foil/holo chase layers. The native primitives use those values for stock, edges, window geometry, textures, and material layers. The web renderer still owns its material values in CSS, with a drift-guard test until those values are shared.
+
+`components/card/CardPreview.tsx` assembles all six templates. It reuses the existing set mark and description components, and shares caption splitting with the web through `cardText.ts`. The dev gallery includes 18 fixtures at 100, 150, and 300 px, plus live cards loaded through the existing API. Photos use the existing mobile media URL handling. No upload backend or `SharedSurface` call site changed.
+
+The primitives and card previews received an initial phone review and were accepted as close enough for now. A complete upload/save/reopen round-trip and product-screen integration have not been established by that review. Remaining differences include the Polaroid serif fallback, description clipping, long-title layout, Minimal scrim sizing, and very non-square arch geometry. Window and panel measurement, gradient-stop cost, and card-grid performance still need review.
+
+Keep the PRIMITIVES screen until the native rendering path has been integrated and verified. `SetMark.tsx` is now used by the native renderer; the other legacy drawing components remain available during migration.
+
 ## Current implementation and remaining work
 
 The shared WebView surfaces provide the current card, binder, pack, inspector, and editor presentation. The earlier native renderer remains in the tree but is not the active rendering path. Its assets and approved dependencies are retained for the native replacement.
 
 The demo database contains eight collectors, eleven published sets, and one draft. Other Worlds and Shutter Shelf use curated, credited photos. Thirteen legacy photo downloads still fall back to gradients. See `DEMO_PHOTOGRAPHY.md`. Do not reset demo data without approval.
 
-The native renderer is the current priority. Keep the PRIMITIVES screen through Phases 2 and 3. Before replacing card-list call sites, measure WebView memory and scrolling on the phone. Remaining work includes native parity, Android visual and gesture QA, remaining demo photography, and launch content.
+The next priority is proving and integrating the native renderer. Before replacing card-list call sites, measure WebView memory and scrolling on the phone. Remaining work includes native parity, Android visual and gesture QA, remaining demo photography, and launch content.
 
 The current code and `MISCELLARY_ROADMAP.md` take precedence over older product descriptions. This document is the detailed Android plan; the roadmap remains the overall source of truth.
 

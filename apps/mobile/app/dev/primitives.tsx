@@ -2,7 +2,148 @@ import { Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Stack } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle, Defs, RadialGradient, Rect, Stop, Mask } from 'react-native-svg';
+import { useCallback, useEffect, useState } from 'react';
+import { CARD_FIXTURES } from '@miscellary/shared';
+import type { Card, CardFixture } from '@miscellary/shared';
+import CardPreview from '@/components/card/CardPreview';
+import { Button, ErrorText, Loading, Muted } from '@/components/ui';
+import { getMySet, getPublicSet, listMySets, listPublicSets } from '@/lib/endpoints';
 import { colors, fonts } from '@/lib/theme';
+
+function copyFor(fixture: CardFixture) {
+  return {
+    title: fixture.name.split('-').slice(1).join(' ') || fixture.templateKey,
+    description: 'Found on the long walk back.\nStill the best one in the box, and not close.',
+  };
+}
+
+function Row({ fixture }: { fixture: CardFixture }) {
+  const { title, description } = copyFor(fixture);
+  const shared = {
+    title,
+    description,
+    imageUrl: null,
+    rarity: fixture.rarity,
+    templateKey: fixture.templateKey,
+    templateConfig: fixture.config,
+    number: 7,
+    mark: 'waves',
+  };
+  return (
+    <View style={{ gap: 6 }}>
+      <Text style={styles.label}>
+        {fixture.name} · {fixture.templateKey} · {fixture.rarity}
+      </Text>
+      <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
+        <CardPreview {...shared} width={100} />
+        <CardPreview {...shared} width={150} />
+      </View>
+      <CardPreview {...shared} width={300} />
+    </View>
+  );
+}
+
+function RealCards() {
+  const [cards, setCards] = useState<{ card: Card; mark?: string }[]>([]);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const found: { card: Card; mark?: string }[] = [];
+      try {
+        const mine = await listMySets();
+        const details = await Promise.all(mine.slice(0, 4).map((set) => getMySet(set.id)));
+        for (const detail of details)
+          for (const card of detail.cards) found.push({ card, mark: detail.mark });
+      } catch {
+        // Signed out or no sets of your own; fall back to a published set.
+      }
+      if (!found.length) {
+        const page = await listPublicSets('new', null);
+        const first = page.results[0];
+        if (first) {
+          const detail = await getPublicSet(first.slug);
+          for (const card of detail.cards) found.push({ card, mark: detail.mark });
+        }
+      }
+      setCards(found.filter((entry) => entry.card.image?.url).slice(0, 8));
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Could not load cards.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  return (
+    <>
+      <Text style={styles.title}>Real cards</Text>
+      <Text style={styles.note}>
+        Live cards with their uploaded photos. Add or edit a card in Studio, then reload to check it
+        renders after saving and reopening.
+      </Text>
+      <Button title="Reload" kind="secondary" onPress={() => void load()} />
+      {loading ? <Loading /> : null}
+      {error ? <ErrorText>{error}</ErrorText> : null}
+      {!loading && !error && !cards.length ? <Muted>No cards with photos yet.</Muted> : null}
+      {cards.map(({ card, mark }) => (
+        <View key={card.id} style={{ gap: 6 }}>
+          <Text style={styles.label}>
+            {card.title} · {card.template_key} · {card.rarity}
+          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
+            {[100, 150].map((w) => (
+              <CardPreview
+                key={w}
+                width={w}
+                title={card.title}
+                rarity={card.rarity}
+                description={card.description}
+                imageUrl={card.image.url}
+                templateKey={card.template_key}
+                templateConfig={card.template_config}
+                number={card.position + 1}
+                mark={mark}
+              />
+            ))}
+          </View>
+          <CardPreview
+            width={300}
+            title={card.title}
+            rarity={card.rarity}
+            description={card.description}
+            imageUrl={card.image.url}
+            templateKey={card.template_key}
+            templateConfig={card.template_config}
+            number={card.position + 1}
+            mark={mark}
+          />
+        </View>
+      ))}
+    </>
+  );
+}
+
+function FixtureGallery() {
+  return (
+    <>
+      <Text style={styles.title}>Native card previews</Text>
+      <Text style={styles.note}>
+        Every fixture at 100, 150 and 300 px, drawn by the native renderer. Compare against the same
+        card on the web.
+      </Text>
+      {CARD_FIXTURES.map((fixture) => (
+        <Row key={fixture.name} fixture={fixture} />
+      ))}
+    </>
+  );
+}
 
 function Probe({
   label,
@@ -45,7 +186,10 @@ function Blend({
 export default function PrimitivesScreen() {
   return (
     <ScrollView style={{ backgroundColor: colors.bg }} contentContainerStyle={styles.page}>
-      <Stack.Screen options={{ title: 'Primitives' }} />
+      <Stack.Screen options={{ title: 'Native cards' }} />
+      <RealCards />
+      <FixtureGallery />
+
       <Text style={styles.title}>Renderer primitives</Text>
       <Text style={styles.note}>
         {Platform.OS} {String(Platform.Version)} · new architecture required for blend, filter and

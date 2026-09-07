@@ -4,5 +4,7 @@ export * from './markdown';
 export * from './api';
 export * from './cardDesign';
 export * from './cardFixtures';
+export * from './cardMaterial';
+export * from './cardText';
 export * from './cardTokens';
 export * from './setMarks';
