@@ -1,6 +1,7 @@
 import pytest
 from django.urls import reverse
 
+from cards import templates
 from cards.models import CardSet
 from cards.publishing import publish_set
 from cards.tests.helpers import fill_publishable, make_card, make_image, make_set
@@ -47,11 +48,12 @@ def test_create_set_and_card(auth_client, user):
     assert response.status_code == 201
     card = response.json()
     assert card["image"]["url"].endswith(image.key)
-    # Partial config is filled with the template's defaults and versioned.
     assert card["template_config"] == {
         "frame": "dark",
         "texture": "linen",
         "corners": "round",
+        "border": "auto",
+        "weight": "auto",
         "tint": "none",
         "window": "line",
         "shape": "square",
@@ -87,6 +89,47 @@ def test_card_validation(auth_client, user):
 
     response = auth_client.post(url, card_payload(image, rarity="mythic"), format="json")
     assert "rarity" in response.json()["fields"]
+
+
+@pytest.mark.parametrize("key", ["classic", "polaroid", "bold", "fieldnote", "dossier"])
+def test_card_editor_options_survive_save_and_publish(auth_client, api_client, user, key):
+    card_set = make_set(user)
+    config = {
+        "frame": "cocoa" if key == "dossier" else "lavender",
+        "shape": "arch",
+        "border": "copper",
+        "weight": "heavy",
+    }
+    response = auth_client.post(
+        reverse("cards:my-cards", args=[card_set.id]),
+        card_payload(make_image(user), template_key=key, template_config=config),
+        format="json",
+    )
+    assert response.status_code == 201
+    saved = response.json()
+    assert saved["template_version"] == 2
+    assert saved["template_config"] == {**templates.default_config(key), **config}
+    fill_publishable(card_set)
+    assert publish_set(card_set) == []
+    published = api_client.get(reverse("cards:public-set", args=[card_set.slug])).json()
+    card = next(c for c in published["cards"] if c["id"] == saved["id"])
+    assert card["template_config"] == saved["template_config"]
+    assert card["template_version"] == 2
+
+
+def test_published_snapshot_ignores_current_editor_defaults(api_client, user, monkeypatch):
+    card_set = make_set(user)
+    config = {"frame": "light", "border": "red", "weight": "heavy"}
+    card = make_card(card_set, template_key="bold", template_version=2, template_config=config)
+    fill_publishable(card_set)
+    assert publish_set(card_set) == []
+    monkeypatch.setitem(templates.TEMPLATES_BY_KEY["bold"]["options"]["border"], "values", ["gold"])
+    monkeypatch.setitem(templates.TEMPLATES_BY_KEY["bold"]["options"]["weight"], "default", "fine")
+    response = api_client.get(reverse("cards:public-set", args=[card_set.slug]))
+    assert response.status_code == 200
+    snapshot = next(c for c in response.json()["cards"] if c["id"] == str(card.id))
+    assert snapshot["template_config"] == config
+    assert snapshot["template_version"] == 2
 
 
 def test_edit_and_delete_draft_card(auth_client, user):

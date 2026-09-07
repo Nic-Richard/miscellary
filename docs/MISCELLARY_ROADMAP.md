@@ -2,196 +2,160 @@
 
 This document is the source of truth for remaining Miscellary product, UI, mobile, launch, and polish work.
 
-The current GitHub baseline is commit `eb78aa3`, which includes the Miscellary rename, rarity/editor model, physical card materials, foil/holo treatments, and the 3D card inspector.
+The repository on `main` is the implementation source of truth. This roadmap tracks what is complete, what still needs follow-up, and what remains before launch.
+
+Status:
+
+- **Complete**: implemented in the current web product; only normal QA/polish may remain.
+- **In progress**: substantial work is done, but known product work remains.
+- **Not started / remaining**: still needs dedicated implementation work.
 
 Items are ordered roughly by current priority. The order can change as dependencies or product decisions become clearer.
 
-## 1. Card editor overhaul
+## 1. Card editor overhaul — In progress
 
-The card editor is still the highest-priority UI problem.
+The main overhaul was implemented. Phone review reopened the creative-control follow-up:
+Full Art borders, better description panels, automatic technical production choices, and restored
+demo variety are being addressed alongside Android batch 2. These changes still need visual review.
 
-### Main goals
+### Completed in the follow-up
 
-- Revisit the editor as a whole rather than continuing to bolt options onto the existing controls.
-- Remove options that are legacy, redundant, confusing, or no longer fit the current card/material system.
-- Add enough meaningful design control that cards from the same template can still feel genuinely different.
-- Keep lower rarities creatively useful. Rarity should gate specialty production treatments, not basic design freedom.
-- Keep the editor understandable rather than exposing every tiny manufacturing detail as a separate control.
+- Added peach, lavender, sage, lilac, cocoa, and aubergine stock colors.
+- Corrected stock swatches to match the rendered board colors.
+- Exposed **Window shape** as visual choices on all five framed templates, including Polaroid.
+- Added copper, ochre, silver, and sage inks.
+- Extended border ink and four curated thickness choices to all framed templates, with a template-default option.
+- Grouped border controls with the board and displayed thickness choices as visual samples.
+- Fixed stock and rarity edges overriding selected border ink, including on existing seeded cards.
+- Kept Full Art edge-to-edge, light stocks on Polaroid/Field Note, and dark stocks on Dossier.
+- Kept template versions unchanged; published reads still returned stored configurations without applying editor defaults.
+- Verified the controls in the web editor, shared renderer, binder, and inspector in desktop Chromium.
 
-### Areas to review
+Remaining responsive, cross-browser, and real-device QA belongs to the later QA passes.
 
-- Template selection and whether the current set of templates is still the right set.
-- Stock / board choices.
-- Surface and texture choices.
-- Typography choices and which templates should expose them.
-- Accent, border, framing, corners, image treatment, tint, note paper, and other existing options.
-- Rare+ specialty materials and whether more useful options should exist.
-- Epic+ Full Art behavior.
-- Legendary foil / holo treatment choices and coverage.
-- Preview behavior while editing.
-- Option naming and grouping.
-- Locked rarity options and how they are communicated without making lower tiers feel restricted.
-- Whether any controls can be made more visual instead of dropdown-heavy.
+### Completed in the overhaul
 
-### Important cleanup
+- Reorganized the editor around more intentional card-design controls.
+- Expanded stocks, photo treatments, borders, relief, and material choices.
+- Kept ordinary creative freedom available across rarities.
+- Made rarity unlock specialty production treatments rather than base card quality.
+- Kept Epic Full Art and Legendary chase-treatment rules.
+- Removed the printed rarity badge from the card face.
+- Removed the old baked-in top-left card shine.
+- Removed automatic foil/holo travelling animation from normal card rendering.
+- Moved card lighting responsibility to the surrounding scene.
 
-- Remove the old baked-in top-left card shine from the card renderer.
-- Remove the automatic foil / holo travelling reflection animation from normal card rendering.
-- Card lighting should come from the environment instead:
-  - binder lighting in binder views
-  - fixed scene lighting in the 3D inspector
-  - other context-specific lighting where appropriate
+## 2. Binder lighting and card presentation — Complete
 
-The card itself should not carry fake baked lighting that conflicts with the newer physical material model.
+Binder views now provide the environmental lighting for cards rather than relying on baked card shine or canned chase animations.
 
-## 2. Binder lighting and card presentation
+Completed:
 
-Once the old baked shine is gone, binder views need deliberate environmental lighting so cards still feel physical and premium.
+- Added shared stationary binder lighting.
+- Let pearl, metallic, foil, holo, clear coat, sleeves, and other card materials react to the same scene.
+- Kept Common cards readable as printed objects rather than glossy UI tiles.
+- Connected the binder material language more closely to the 3D inspector.
 
-### Goals
+Remaining work belongs under final responsive, browser, performance, and real-device QA rather than this feature.
 
-- Add believable stationary binder lighting that reacts consistently across cards.
-- Let pearl, metallic, foil, holo, clear coat, and other materials read naturally without canned animation.
-- Keep lighting subtle enough that Common cards still look like printed cards rather than glossy UI tiles.
-- Make sure light and dark templates both hold up.
-- Preserve readability of photos and text.
+## 3. Homepage redesign — Complete
 
-This should visually connect the binder experience to the 3D card inspector.
+The homepage was redesigned around the actual Miscellary product rather than generic marketing panels.
 
-## 3. Homepage redesign
+Completed:
 
-The homepage was broken somewhere during the recent work and already needed a stronger rethink.
+- Re-established the tactile Miscellary visual identity.
+- Centered real cards, packs, binders, and seeded product content.
+- Improved hierarchy and product communication.
+- Kept the physical-product language of print, paper, leather, packs, and cards.
 
-The homepage needs both regression repair and a broader product/design rethink.
+Remaining responsive and mobile QA is tracked later in the roadmap.
 
-### Goals
+## 4. Personal profile binder and set binder customization — Complete
 
-- Re-establish the visual identity immediately.
-- Make the product understandable without turning the page into generic SaaS marketing.
-- Show the strongest parts of Miscellary:
-  - making sets
-  - collecting
-  - binders
-  - packs
-  - trading
-  - card inspection
-  - creator identity
-- Use real seeded product content rather than placeholder marketing panels where possible.
-- Give the page a more intentional graphic composition and stronger hierarchy.
-- Preserve the tactile physical-product world established by packs, binders, cards, paper, leather, and print materials.
-- Make sure the homepage is responsive and remains strong on mobile.
+The old Showcase concept was replaced with a user's public binder.
 
-Separate regressions introduced in recent work from intentional redesign work.
+Completed:
 
-## 4. Replace profile Showcase with a personal binder
+- Added a public personal binder for favorite owned cards.
+- Added binder cover/leather color customization for profiles.
+- Added binder color customization for sets.
+- Preserved card inspection from binder contexts.
+- Fixed incomplete profile binders caused by paginated owned-card lookup.
+- Allowed cards in a full profile binder to be replaced.
 
-The current Showcase concept should become a user's own public binder.
+Any future binder-material expansion is optional polish, not required core work.
 
-### Product direction
+## 5. Binder page-turn interaction — Complete
 
-Each user should have a personal binder containing favorite cards they choose to display publicly.
+A quick physical page-turn animation is implemented.
 
-Possible behavior:
+Completed:
 
-- A dedicated binder on the user's profile.
-- User chooses which owned cards appear.
-- Binder is visible publicly.
-- Existing showcase-slot rules can be adapted rather than discarded if useful.
-- Binder should feel like an actual collection object rather than a generic grid.
+- Added a restrained page-flip illusion.
+- Kept navigation responsive rather than turning it into a full book simulation.
+- Added reduced-motion handling for the page turn.
 
-### Customization
+Touch and narrow-viewport behavior still need final real-device/responsive QA.
 
-- Let the owner choose the leather / cover color of their personal binder.
-- Consider a small curated set of materials or finishes later, but avoid turning it into a generic theme editor.
-- Keep customization cosmetic and tasteful.
+## 6. Background and panel material pass — Complete
 
-### Related set customization
+The old repeated texture treatment was replaced with a clearer material hierarchy.
 
-The set editor should also allow the set creator to choose the binder color used on that set's public binder page.
+Completed:
 
-This should be stored as part of the set's published identity / snapshot behavior where appropriate so published sets remain stable.
+- Reworked the main background and panels into distinct desk, board, paper, cloth, and card-like surfaces.
+- Reduced the feeling that unrelated surfaces are made from the same texture.
+- Kept the materials visually related without flattening them into one repeated noise treatment.
 
-## 5. Binder page-turn interaction
+Further changes should be driven by specific visual problems rather than another broad material rewrite.
 
-The binder should feel more physical when moving between pages.
+## 7. Mark / emblem cleanup — Complete
 
-### Goal
+The built-in set marks received a geometry cleanup.
 
-Add a quick, restrained page-flip animation that gives the illusion of an actual binder page turning.
+Completed:
 
-Important:
+- Fixed alignment and join problems across the mark set.
+- Corrected known issues such as the key geometry.
+- Improved consistency at normal and small display sizes.
 
-- It should be short and responsive.
-- Do not make navigation feel slower.
-- Avoid a full 3D book simulation unless necessary.
-- The animation should support the physical illusion without becoming the focus.
-- Respect reduced motion.
-- Check touch behavior on mobile/tablet layouts.
+Only revisit individual marks if a concrete rendering problem appears.
 
-## 6. Background and panel material pass
+## 8. Pack tear interaction — Complete
 
-The global background and several panels still carry an older texture treatment that no longer fits the newer material direction.
+The pack tear was reworked to feel less rigid and more physical.
 
-### Review
+Completed:
 
-- Global page background.
-- Main content surfaces.
-- Sidebar / navigation surfaces.
-- Studio panels.
-- Modals / sheets.
-- Binder surroundings.
-- Any repeated texture that makes unrelated surfaces look like the same material.
+- Added flexible pull deformation.
+- Added a more natural tear edge.
+- Added visible inner foil.
+- Preserved the existing physical pack material direction.
 
-### Goal
+Final touch behavior and performance still need real-device QA.
 
-Build a clearer material hierarchy.
-
-Not every surface should use the same texture. The page background, paper/card surfaces, leather binder, and UI panels should feel related but physically distinct.
-
-The goal is a clearer material hierarchy, not simply replacing one repeated noise texture with another.
-
-## 7. Mark / emblem cleanup
-
-Some set marks need geometry cleanup.
-
-Known example:
-
-- Key mark: the teeth do not line up correctly with the back / shaft.
-
-### Pass goals
-
-- Review every current mark at normal and small sizes.
-- Fix alignment, joins, symmetry, stroke consistency, and optical balance.
-- Make sure marks survive use on:
-  - cards
-  - pack fronts
-  - card backs
-  - navigation / identity areas
-  - small thumbnails
-- Preserve their existing character rather than redesigning all marks.
-
-## 8. Pack tear interaction
-
-The pack rip currently feels too rigid.
-
-### Main issue
-
-The tear has essentially no flexibility, so it reads like a predefined cut rather than foil/paper being pulled apart.
-
-### Goals
-
-- Give the tear line some flex and response to the user's drag.
-- Make the ripped section deform naturally as it is pulled.
-- Preserve the current physical pack material work.
-- Keep the interaction responsive and not overly simulated.
-- Make sure mouse and touch both work well.
-- Avoid adding a physics dependency unless there is a real need.
-
-The target is a convincing tactile illusion, not a full cloth/foil simulation.
-
-## 9. Android / React Native product build-out
+## 9. Android / React Native product build-out — In progress
 
 The Android app still needs substantial work and should eventually become a real first-class client rather than a secondary approximation of the web app.
+
+The detailed implementation plan is [MOBILE_BUILDOUT_PLAN.md](MOBILE_BUILDOUT_PLAN.md).
+Android was confirmed as the next priority ahead of production launch content.
+
+First batch implemented, pending actual-phone review:
+
+- Current cream/teal app shell, bundled typography, navigation icons, status bar, and shared controls.
+- Phone-sized Browse binder shelf with sorting, pagination, refresh, and loading/error/retry states.
+- Wi-Fi API/media connectivity and documented Expo Go SDK 53 phone/emulator preview paths.
+- Existing routes and five main destinations preserved.
+
+The physical phone loaded successfully. Batch 2 added template-aware rendering, paged binders,
+landscape supporting panels, front/back inspection, bundled editor fonts, directional material
+lighting, editor follow-up, and trade-offer styling. Two shared demo collections received curated
+photography and richer styling, applied in an approved demo reset. Thirteen legacy photo downloads
+fell back to gradients and still need replacement. Device review and
+remaining rendering fidelity are still open. Pack opening and broader Studio/trade workflow
+redesigns remain later work.
 
 ### Product / design work
 
@@ -227,7 +191,7 @@ It does not need identical CSS effects, but it should preserve the same visual l
 - Verify touch interactions and scrolling.
 - Verify performance on a normal mid-range device.
 
-## 10. Production-quality seed / launch content
+## 10. Production-quality seed / launch content — Remaining
 
 The current demo seed is useful for development, but launch should not feel like an empty database or an obviously fake demo.
 
@@ -257,7 +221,7 @@ Create a clear distinction between:
 
 Production startup should not automatically recreate seed users.
 
-## 11. Production deployment and live URL
+## 11. Production deployment and live URL — Remaining
 
 Miscellary still needs to go live.
 
@@ -283,7 +247,7 @@ Miscellary still needs to go live.
 
 The deployed site should be tested from a clean browser session rather than assumed correct because local Docker works.
 
-## 12. Smoothness, responsiveness, and performance pass
+## 12. Smoothness, responsiveness, and performance pass — Remaining
 
 After the main product/UI work settles, do a focused performance and interaction pass.
 
@@ -450,22 +414,15 @@ Keep this lightweight, but before launch there should be a way to answer:
 
 Observability should stay lightweight and proportional to a portfolio project.
 
-# Suggested order of work
+# Suggested remaining order of work
 
-1. Card editor overhaul.
-2. Remove baked card lighting / animation and establish binder lighting.
-3. Homepage redesign.
-4. Personal profile binder and set binder customization.
-5. Binder page-turn interaction.
-6. Background / panel material pass.
-7. Mark cleanup.
-8. Pack tear improvement.
-9. Responsive / accessibility / empty-state polish alongside the UI work.
-10. Production-quality launch content.
-11. Android design and implementation.
-12. Performance / responsiveness pass.
-13. Deployment and production configuration.
-14. Cross-browser, real-device, auth, upload, moderation, and launch QA.
-15. Go live.
+1. Android design and implementation.
+2. Production-quality launch content.
+3. Responsive, accessibility, empty-state, and inspector QA.
+4. Smoothness and performance pass.
+5. Image/upload, auth, moderation, browser, and real-device QA.
+6. SEO/sharing and lightweight production observability.
+7. Deployment and production configuration.
+8. Go live.
 
-The exact order can move as the product develops. A coherent surface should generally be finished before work spreads across many unrelated areas.
+The order can move as dependencies become clearer, but completed sections 2-8 should not be reopened without a specific reason.

@@ -3,9 +3,22 @@ import type { DescriptionNode } from '@miscellary/shared';
 import { StyleSheet, Text, View } from 'react-native';
 import { colors } from '@/lib/theme';
 
-function Inline({ nodes, color }: { nodes: DescriptionNode[]; color: string }) {
+function Inline({
+  nodes,
+  color,
+  fontSize,
+  fixedScale,
+}: {
+  nodes: DescriptionNode[];
+  color: string;
+  fontSize: number;
+  fixedScale: boolean;
+}) {
   return (
-    <Text style={{ color, fontSize: 13, lineHeight: 18 }}>
+    <Text
+      allowFontScaling={!fixedScale}
+      style={{ color, fontSize, lineHeight: fontSize * 1.4, flexShrink: 1 }}
+    >
       {nodes.map((n, i) => {
         if (n.type === 'bold')
           return (
@@ -29,9 +42,13 @@ function Inline({ nodes, color }: { nodes: DescriptionNode[]; color: string }) {
 export default function Description({
   text,
   color = colors.muted,
+  fontSize = 13,
+  fixedScale = false,
 }: {
   text: string;
   color?: string;
+  fontSize?: number;
+  fixedScale?: boolean;
 }) {
   return (
     <View style={styles.root}>
@@ -40,13 +57,24 @@ export default function Description({
           <View key={i}>
             {block.items.map((item, j) => (
               <View key={j} style={styles.bullet}>
-                <Text style={{ color }}>• </Text>
-                <Inline nodes={item} color={color} />
+                <Text
+                  allowFontScaling={!fixedScale}
+                  style={{ color, fontSize, lineHeight: fontSize * 1.4 }}
+                >
+                  •{' '}
+                </Text>
+                <Inline nodes={item} color={color} fontSize={fontSize} fixedScale={fixedScale} />
               </View>
             ))}
           </View>
         ) : (
-          <Inline key={i} nodes={block.children} color={color} />
+          <Inline
+            key={i}
+            nodes={block.children}
+            color={color}
+            fontSize={fontSize}
+            fixedScale={fixedScale}
+          />
         ),
       )}
     </View>

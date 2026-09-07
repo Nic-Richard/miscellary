@@ -37,6 +37,10 @@ INKS = [
     "ember",
     "gold",
     "bronze",
+    "copper",
+    "ochre",
+    "silver",
+    "sage",
     "cream",
     "white",
 ]
@@ -52,6 +56,10 @@ STOCKS_LIGHT = [
     "sky",
     "mint",
     "butter",
+    "peach",
+    "lavender",
+    "sage",
+    "lilac",
 ]
 STOCKS_DARK = [
     "slate",
@@ -66,6 +74,8 @@ STOCKS_DARK = [
     "teal",
     "wine",
     "bronze",
+    "cocoa",
+    "aubergine",
 ]
 STOCKS_ALL = STOCKS_LIGHT + STOCKS_DARK
 
@@ -82,7 +92,7 @@ WINDOWS = ["line", "none", "mat", "inset"]
 
 SHAPES = ["square", "arch", "circle", "diamond", "hex"]
 
-PAPERS = ["ruled", "plain", "grid", "dot", "aged"]
+PAPERS = ["plain", "label", "inset", "tinted", "transparent", "aged", "ruled", "grid", "dot"]
 
 FINISHES = ["matte", "satin", "gloss", "pearl", "metallic"]
 FINISH_UNLOCKS = {"pearl": "rare", "metallic": "rare"}
@@ -143,7 +153,14 @@ def _window() -> dict[str, Any]:
 
 
 def _shape() -> dict[str, Any]:
-    return _opt("Photo shape", SHAPES, "square", "print")
+    return _opt("Window shape", SHAPES, "square", "print")
+
+
+def _border(colour: str = "auto", weight: str = "auto") -> dict[str, dict[str, Any]]:
+    return {
+        "border": _opt("Border ink", ["auto", *INKS], colour, "board", "swatch"),
+        "weight": _opt("Border thickness", ["auto", *BORDER_WEIGHTS], weight, "board"),
+    }
 
 
 def _font(default: str = "display") -> dict[str, Any]:
@@ -172,6 +189,7 @@ TEMPLATES: list[dict[str, Any]] = [
         "description": "Framed photo, title bar, caption below.",
         "options": {
             **_board(STOCKS_ALL, "dark"),
+            **_border(),
             "tint": _photo(),
             "window": _window(),
             "shape": _shape(),
@@ -187,20 +205,22 @@ TEMPLATES: list[dict[str, Any]] = [
         "description": "Photo-first with a handwritten-style caption.",
         "options": {
             **_board(STOCKS_LIGHT, "white", "grain"),
+            **_border(),
             "tint": _photo(),
+            "shape": _shape(),
             "font": _font(),
             **_press(),
         },
     },
     {
         "key": "minimal",
-        # Preserve the key for published snapshot compatibility.
         "version": 2,
         "name": "Full Art",
         "description": "Edge-to-edge photo with a subtle gradient and small type.",
         "unlocks": "epic",
         "options": {
             "corners": _cut(),
+            **_border(),
             "tint": _photo(),
             "gradient": _opt("Scrim", ["bottom", "top", "none", "full"], "bottom", "print"),
             "font": _font(),
@@ -215,11 +235,10 @@ TEMPLATES: list[dict[str, Any]] = [
         "description": "Big title, thick border, rarity colour everywhere.",
         "options": {
             **_board(STOCKS_ALL, "cream", "canvas"),
+            **_border("rarity", "bold"),
             "tint": _photo(),
             "shape": _shape(),
             "font": _font(),
-            "border": _opt("Border ink", INKS, "rarity", "type", "swatch"),
-            "weight": _opt("Border weight", BORDER_WEIGHTS, "bold", "type"),
             **_press(),
         },
     },
@@ -230,10 +249,11 @@ TEMPLATES: list[dict[str, Any]] = [
         "description": "Photo above a ruled note panel holding the full description.",
         "options": {
             **_board(STOCKS_LIGHT, "cream", "grain"),
+            **_border(),
             "tint": _photo(),
             "window": _window(),
             "shape": _shape(),
-            "paper": _opt("Note paper", PAPERS, "ruled", "print"),
+            "paper": _opt("Description panel", PAPERS, "plain", "print"),
             "font": _font(),
             "accent": _accent("green"),
             **_press(),
@@ -246,10 +266,11 @@ TEMPLATES: list[dict[str, Any]] = [
         "description": "Dark card, framed photo and a boxed description panel.",
         "options": {
             **_board(STOCKS_DARK, "ink", "felt"),
+            **_border(),
             "tint": _photo(),
             "window": _window(),
             "shape": _shape(),
-            "paper": _opt("Panel", PAPERS, "plain", "print"),
+            "paper": _opt("Description panel", PAPERS, "plain", "print"),
             "font": _font(),
             "accent": _accent("gold"),
             **_press(),

@@ -1,7 +1,13 @@
 import type { ApiError } from '@miscellary/shared';
 import * as SecureStore from 'expo-secure-store';
+import Constants from 'expo-constants';
+import { localMediaUrl, resolveApiUrl } from './connection';
 
-export const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://10.0.2.2:8000';
+export const API_URL = resolveApiUrl(
+  process.env.EXPO_PUBLIC_API_URL,
+  Constants.expoConfig?.hostUri,
+  __DEV__,
+);
 const REFRESH_KEY = 'miscellary.refresh';
 
 let accessToken: string | null = null;
@@ -26,7 +32,6 @@ export async function saveRefreshToken(token: string | null) {
   else await SecureStore.deleteItemAsync(REFRESH_KEY);
 }
 
-// Mobile keeps the refresh token in SecureStore and sends it in the body.
 export async function refreshAccessToken(): Promise<boolean> {
   const refresh = await SecureStore.getItemAsync(REFRESH_KEY);
   if (!refresh) return false;
@@ -78,7 +83,10 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
   }
   if (res.status === 204) return undefined as T;
 
-  const data = (await res.json().catch(() => null)) as (Partial<ApiError> & T) | null;
+  const data = (await res
+    .text()
+    .then((text) => JSON.parse(text, (key, value) => localMediaUrl(key, value, API_URL, __DEV__)))
+    .catch(() => null)) as (Partial<ApiError> & T) | null;
   if (!res.ok) {
     throw new ApiRequestError(
       res.status,

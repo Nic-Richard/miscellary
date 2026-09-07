@@ -84,7 +84,6 @@ def test_ordinary_catalogue_is_open_at_every_rarity():
 
 
 def test_specialty_press_work_climbs_one_tier_at_a_time():
-    # Every tier below legendary opens something, so none of them is a dead rung.
     assert templates.config_problems("classic", _config(relief="spot"), "common")
     assert templates.config_problems("classic", _config(relief="spot"), "uncommon") == []
     assert templates.config_problems("classic", _config(relief="emboss"), "uncommon")
@@ -98,10 +97,22 @@ def test_photo_treatment_reaches_every_template():
 
 
 def test_full_art_carries_no_board_options():
-    # A full-bleed photo hides the stock, so choosing one would do nothing.
     options = templates.TEMPLATES_BY_KEY["minimal"]["options"]
     assert "frame" not in options
     assert "texture" not in options
+    assert "border" in options
+    assert "weight" in options
+    assert "shape" not in options
+
+
+@pytest.mark.parametrize("key", ["classic", "polaroid", "bold", "fieldnote", "dossier"])
+def test_framed_templates_allow_shapes_and_borders_at_common(key):
+    options = templates.TEMPLATES_BY_KEY[key]["options"]
+    for name in ["frame", "shape", "border", "weight"]:
+        for value in options[name]["values"]:
+            config = {**templates.default_config(key), name: value}
+            assert templates.config_problems(key, config, "common") == []
+    assert templates.config_problems(key, {"weight": "huge"}, "common")
 
 
 def test_every_option_is_placed_in_an_editor_group():
@@ -111,8 +122,6 @@ def test_every_option_is_placed_in_an_editor_group():
 
 
 def test_every_default_is_open_to_a_common_card():
-    # Rarity gates values, never a template's starting point, so dropping a
-    # card to Common can always fall back on its own defaults.
     for key, template in templates.TEMPLATES_BY_KEY.items():
         if template.get("unlocks"):
             continue
@@ -125,7 +134,6 @@ def test_specialty_surface_sits_above_the_ordinary_ones():
 
 
 def test_full_art_is_reached_one_way_only():
-    # One control, not a gated template plus a switch that duplicates it.
     for template in templates.TEMPLATES:
         assert "art" not in template["options"]
     for tier in ["common", "uncommon", "rare"]:
@@ -158,6 +166,5 @@ def test_treatment_is_refused_below_legendary():
 
 def test_rarity_is_not_checked_when_it_is_not_given():
     # Rendering a stored snapshot never re-validates, so gating rules can change
-    # without invalidating published cards.
     locked = _config(finish="metallic", treatment="holo")
     assert templates.config_problems("classic", locked) == []

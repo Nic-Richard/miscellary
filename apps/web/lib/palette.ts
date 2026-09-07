@@ -26,17 +26,21 @@ export const INK_COLOURS: Record<string, string> = {
   ember: '#c4622c',
   gold: '#b8903a',
   bronze: '#84603a',
+  copper: '#b56c49',
+  ochre: '#b49736',
+  silver: '#aab2b6',
+  sage: '#7f9977',
   cream: '#f0e6d2',
   white: '#fbf7ef',
 };
 
 export const INK_FAMILIES: Family[] = [
-  { label: 'Neutral', values: ['ink', 'charcoal', 'slate'] },
-  { label: 'Green', values: ['teal', 'green', 'forest'] },
+  { label: 'Neutral', values: ['ink', 'charcoal', 'slate', 'silver'] },
+  { label: 'Green', values: ['teal', 'green', 'forest', 'sage'] },
   { label: 'Blue', values: ['blue', 'ocean', 'indigo'] },
   { label: 'Purple', values: ['purple', 'violet', 'plum'] },
   { label: 'Red', values: ['rose', 'red', 'crimson'] },
-  { label: 'Warm', values: ['rust', 'ember', 'gold', 'bronze'] },
+  { label: 'Warm', values: ['rust', 'ember', 'gold', 'bronze', 'copper', 'ochre'] },
   { label: 'Pale', values: ['cream', 'white'] },
 ];
 
@@ -51,11 +55,15 @@ export const STOCK_COLOURS: Record<string, string> = {
   sky: '#e4ecf3',
   mint: '#e3eee6',
   butter: '#f5edd1',
+  peach: '#f1d6bf',
+  lavender: '#e1ddec',
+  sage: '#d4dfc8',
+  lilac: '#ead5e5',
   light: '#f7f2e6',
   slate: '#4a565c',
   charcoal: '#3a3733',
   ink: '#22201c',
-  dark: '#1c3b38',
+  dark: '#1f3a36',
   forest: '#22402f',
   oxblood: '#3f2223',
   navy: '#232f4a',
@@ -64,15 +72,17 @@ export const STOCK_COLOURS: Record<string, string> = {
   teal: '#17434a',
   wine: '#4a2036',
   bronze: '#46341f',
+  cocoa: '#49332d',
+  aubergine: '#30243f',
 };
 
 export const STOCK_FAMILIES: Family[] = [
   { label: 'Pale', values: ['white', 'bone', 'light', 'cream', 'linen'] },
-  { label: 'Warm', values: ['sand', 'ash', 'butter', 'blush'] },
-  { label: 'Cool', values: ['sky', 'mint'] },
+  { label: 'Warm', values: ['sand', 'ash', 'butter', 'blush', 'peach'] },
+  { label: 'Cool', values: ['sky', 'mint', 'sage', 'lavender', 'lilac'] },
   { label: 'Deep', values: ['slate', 'charcoal', 'ink', 'dark'] },
   { label: 'Colour', values: ['forest', 'moss', 'teal', 'navy'] },
-  { label: 'Rich', values: ['oxblood', 'wine', 'plum', 'bronze'] },
+  { label: 'Rich', values: ['oxblood', 'wine', 'plum', 'bronze', 'cocoa', 'aubergine'] },
 ];
 
 export function groupValues(values: string[], families: Family[]): Family[] {
@@ -92,7 +102,6 @@ export function swatchColour(token: string): string {
   return INK_COLOURS[token] ?? STOCK_COLOURS[token] ?? '#b9b0a0';
 }
 
-// Swatches exaggerate subtle material differences at picker size.
 const BOARD = '#cabb9f';
 
 const TEXTURE_FILES: Record<string, string> = {
@@ -129,4 +138,28 @@ const COATS: Record<string, string> = {
 
 export function coatTile(token: string): CSSProperties {
   return { backgroundColor: '#efe7d6', backgroundImage: COATS[token] ?? 'none' };
+}
+
+export function shapeTile(token: string): CSSProperties {
+  const clips: Record<string, string> = {
+    circle: 'circle(42%)',
+    diamond: 'polygon(50% 0, 100% 50%, 50% 100%, 0 50%)',
+    hex: 'polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%)',
+  };
+  return {
+    background: '#7b9183',
+    width: 36,
+    height: 36,
+    margin: '0 auto',
+    borderRadius: token === 'arch' ? '50% 50% 2px 2px' : 2,
+    clipPath: clips[token],
+  };
+}
+
+export function borderTile(token: string): CSSProperties {
+  const widths: Record<string, number> = { auto: 1, fine: 1.2, standard: 2.1, bold: 3, heavy: 4.4 };
+  return {
+    background: '#f4ecda',
+    border: `${widths[token] ?? 1}px ${token === 'auto' ? 'dashed' : 'solid'} #84603a`,
+  };
 }

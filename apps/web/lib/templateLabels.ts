@@ -1,5 +1,3 @@
-// Client labels for server-defined option tokens.
-
 import type { OptionGroup } from '@miscellary/shared';
 
 export const GROUP_LABELS: Record<OptionGroup, string> = {
@@ -23,6 +21,7 @@ const VALUE_LABELS: Record<string, Record<string, string>> = {
     light: 'Bone',
   },
   weight: {
+    auto: 'Template',
     fine: 'Fine',
     standard: 'Standard',
     bold: 'Bold',
@@ -40,6 +39,7 @@ const VALUE_LABELS: Record<string, Record<string, string>> = {
     ink: 'Ink black',
   },
   border: {
+    auto: 'Template edge',
     rarity: 'Rarity colour',
     ink: 'Ink black',
   },
@@ -64,6 +64,11 @@ const VALUE_LABELS: Record<string, Record<string, string>> = {
   },
   paper: {
     dot: 'Dotted',
+    label: 'Paper label',
+    inset: 'Inset panel',
+    tinted: 'Color wash',
+    transparent: 'On the stock',
+    plain: 'Clean panel',
   },
   gradient: {
     none: 'No scrim',

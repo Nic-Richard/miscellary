@@ -1,104 +1,304 @@
+import { useRef, useState } from 'react';
 import type { CardSetSummary } from '@miscellary/shared';
-import { Link, router } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
-import { FlatList, Image, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
-import { listPublicSets } from '@/lib/endpoints';
-import { colors } from '@/lib/theme';
-import { Chip, ErrorText, Input, Screen } from '@/components/ui';
+import { router } from 'expo-router';
+import Feather from '@expo/vector-icons/Feather';
+import {
+  ActivityIndicator,
+  FlatList,
+  Keyboard,
+  Pressable,
+  RefreshControl,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import BinderCover from '@/components/BinderCover';
+import { Button, Chip, ErrorText, Input } from '@/components/ui';
+import { useDiscovery } from '@/lib/discovery';
+import type { DiscoverySort } from '@/lib/discovery';
+import { colors, fonts } from '@/lib/theme';
 
 export default function BrowseScreen() {
-  const [sort, setSort] = useState<'new' | 'popular'>('new');
-  const [sets, setSets] = useState<CardSetSummary[]>([]);
-  const [q, setQ] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [refreshing, setRefreshing] = useState(false);
+  const [sort, setSort] = useState<DiscoverySort>('new');
+  const [query, setQuery] = useState('');
+  const shelf = useDiscovery(sort);
+  const list = useRef<FlatList<CardSetSummary>>(null);
+  const { width, fontScale } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const contentWidth = Math.min(width - insets.left - insets.right, 640);
+  const columns = contentWidth < 350 || fontScale > 1.3 ? 1 : 2;
+  const itemWidth = (contentWidth - 40 - (columns - 1) * 20) / columns;
 
-  const load = useCallback(async () => {
-    try {
-      setSets((await listPublicSets(sort)).results);
-      setError(null);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not load sets.');
-    }
-  }, [sort]);
+  function search() {
+    const q = query.trim();
+    if (q.length < 2) return;
+    Keyboard.dismiss();
+    router.push({ pathname: '/search', params: { q } });
+  }
 
-  useEffect(() => {
-    void load();
-  }, [load]);
+  function pickSort(next: DiscoverySort) {
+    if (next === sort) return;
+    list.current?.scrollToOffset({ offset: 0, animated: false });
+    setSort(next);
+  }
 
   return (
-    <Screen>
-      <Input
-        placeholder="Search sets, cards, people"
-        value={q}
-        onChangeText={setQ}
-        returnKeyType="search"
-        onSubmitEditing={() =>
-          q.trim().length >= 2 && router.push({ pathname: '/search', params: { q: q.trim() } })
-        }
-      />
-      <View style={styles.chips}>
-        <Chip label="Newest" active={sort === 'new'} onPress={() => setSort('new')} />
-        <Chip label="Popular" active={sort === 'popular'} onPress={() => setSort('popular')} />
-      </View>
-      <ErrorText>{error}</ErrorText>
+    <SafeAreaView edges={['top', 'left', 'right']} style={styles.screen}>
       <FlatList
-        data={sets}
-        keyExtractor={(s) => s.id}
-        numColumns={2}
-        columnWrapperStyle={{ gap: 12 }}
-        contentContainerStyle={{ gap: 12, paddingBottom: 24 }}
+        ref={list}
+        key={columns}
+        data={shelf.sets}
+        keyExtractor={(set) => set.id}
+        numColumns={columns}
+        style={[styles.list, { width: contentWidth }]}
+        contentContainerStyle={styles.content}
+        columnWrapperStyle={columns === 2 ? styles.row : undefined}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        showsVerticalScrollIndicator={false}
+        onEndReached={() => {
+          if (!shelf.moreError && !shelf.error) shelf.loadMore();
+        }}
+        onEndReachedThreshold={0.35}
         refreshControl={
           <RefreshControl
-            refreshing={refreshing}
+            refreshing={shelf.refreshing}
+            onRefresh={shelf.refresh}
+            colors={[colors.accent]}
             tintColor={colors.accent}
-            onRefresh={async () => {
-              setRefreshing(true);
-              await load();
-              setRefreshing(false);
-            }}
+            progressBackgroundColor={colors.sur}
           />
         }
-        ListEmptyComponent={<Text style={{ color: colors.muted }}>Nothing published yet.</Text>}
-        renderItem={({ item }) => (
-          <Link href={{ pathname: '/sets/[slug]', params: { slug: item.slug } }} asChild>
-            <Pressable style={styles.set}>
-              <View style={styles.cover}>
-                {item.cover ? (
-                  <Image source={{ uri: item.cover.url }} style={StyleSheet.absoluteFill} />
-                ) : null}
+        ListHeaderComponent={
+          <View>
+            <View style={styles.masthead}>
+              <View style={styles.brand}>
+                <Feather name="book-open" size={25} color={colors.accent} />
+                <Text style={styles.wordmark}>MISCELLARY</Text>
               </View>
-              <Text style={styles.setTitle} numberOfLines={1}>
-                {item.title}
+              <Text style={styles.edition}>THE PUBLIC{'\n'}SHELF</Text>
+            </View>
+            <Text accessibilityRole="header" style={styles.heading}>
+              Everything can{'\n'}be a collection.
+            </Text>
+            <Text style={styles.intro}>
+              Small obsessions, carefully collected. Find a binder worth opening.
+            </Text>
+            <View style={styles.search}>
+              <Feather name="search" size={18} color={colors.muted} />
+              <Input
+                accessibilityLabel="Search sets, cards, and people"
+                placeholder="Sets, cards, people…"
+                value={query}
+                onChangeText={setQuery}
+                returnKeyType="search"
+                autoCorrect={false}
+                autoCapitalize="none"
+                onSubmitEditing={search}
+                style={styles.searchInput}
+              />
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Search"
+                accessibilityState={{ disabled: query.trim().length < 2 }}
+                disabled={query.trim().length < 2}
+                onPress={search}
+                style={({ pressed }) => [
+                  styles.searchButton,
+                  { opacity: query.trim().length < 2 ? 0.4 : pressed ? 0.7 : 1 },
+                ]}
+              >
+                <Feather name="arrow-right" size={20} color={colors.accent} />
+              </Pressable>
+            </View>
+            <View style={styles.shelfHeader}>
+              <View>
+                <Text accessibilityRole="header" style={styles.shelfTitle}>
+                  On the shelf
+                </Text>
+                <Text style={styles.total}>
+                  {shelf.loading
+                    ? 'Finding your next curiosity'
+                    : `${shelf.count} ${shelf.count === 1 ? 'binder' : 'binders'} to explore`}
+                </Text>
+              </View>
+              <Feather name="bookmark" size={21} color={colors.gold} />
+            </View>
+            <View style={styles.filters}>
+              <Chip label="Just added" active={sort === 'new'} onPress={() => pickSort('new')} />
+              <Chip
+                label="Collector favourites"
+                active={sort === 'popular'}
+                onPress={() => pickSort('popular')}
+              />
+            </View>
+            {shelf.error && shelf.sets.length > 0 ? (
+              <View style={styles.notice}>
+                <ErrorText>{shelf.error}</ErrorText>
+                <Button title="Try again" kind="secondary" onPress={shelf.refresh} />
+              </View>
+            ) : null}
+          </View>
+        }
+        ListEmptyComponent={
+          shelf.loading ? (
+            <View accessibilityLabel="Loading binders" style={styles.loading}>
+              <ActivityIndicator color={colors.accent} />
+              <Text style={styles.stateText}>Looking along the shelf…</Text>
+            </View>
+          ) : shelf.error ? (
+            <View style={styles.empty}>
+              <Feather name="wifi-off" size={28} color={colors.muted} />
+              <Text style={styles.stateTitle}>The shelf is out of reach</Text>
+              <ErrorText>{shelf.error}</ErrorText>
+              <Button title="Try again" onPress={shelf.retry} />
+            </View>
+          ) : (
+            <View style={styles.empty}>
+              <Feather name="book-open" size={32} color={colors.cloth} />
+              <Text style={styles.stateTitle}>Room for the first collection</Text>
+              <Text style={styles.stateText}>
+                Published binders will appear here. Have a collection in mind?
               </Text>
-              <Text style={styles.setMeta}>
-                {item.card_count} cards · ♥ {item.like_count} · @{item.creator.username}
-              </Text>
-            </Pressable>
-          </Link>
+              <Button
+                title="Visit Studio"
+                kind="secondary"
+                onPress={() => router.push('/(tabs)/studio')}
+              />
+            </View>
+          )
+        }
+        renderItem={({ item }) => (
+          <View style={[styles.item, { width: itemWidth }]}>
+            <BinderCover set={item} />
+          </View>
         )}
+        ListFooterComponent={
+          shelf.sets.length > 0 ? (
+            <View style={styles.footer}>
+              {shelf.loadingMore ? (
+                <ActivityIndicator
+                  accessibilityLabel="Loading more binders"
+                  color={colors.accent}
+                />
+              ) : shelf.moreError ? (
+                <>
+                  <ErrorText>{shelf.moreError}</ErrorText>
+                  <Button title="Retry more binders" kind="secondary" onPress={shelf.loadMore} />
+                </>
+              ) : shelf.hasMore ? (
+                <Button title="More binders" kind="secondary" onPress={shelf.loadMore} />
+              ) : (
+                <>
+                  <Feather name="book-open" size={20} color={colors.cloth} />
+                  <Text style={styles.stateText}>You’ve reached the end of this shelf.</Text>
+                </>
+              )}
+              <Text style={styles.progress}>
+                {shelf.sets.length} of {shelf.count} binders
+              </Text>
+            </View>
+          ) : null
+        }
       />
-    </Screen>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  chips: { flexDirection: 'row', gap: 8, marginVertical: 12 },
-  set: {
-    flex: 1,
-    backgroundColor: colors.sur,
+  screen: { flex: 1, backgroundColor: colors.bg },
+  list: { alignSelf: 'center' },
+  content: { paddingHorizontal: 20, paddingBottom: 24 },
+  masthead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: 14,
+    paddingBottom: 19,
+    borderBottomWidth: 1,
     borderColor: colors.bdr2,
+  },
+  brand: { flexDirection: 'row', alignItems: 'center', gap: 9 },
+  wordmark: { fontFamily: fonts.display, fontSize: 28, letterSpacing: 1.7, color: colors.text },
+  edition: {
+    fontFamily: fonts.medium,
+    fontSize: 9,
+    lineHeight: 13,
+    letterSpacing: 1.6,
+    textAlign: 'right',
+    color: colors.muted,
+  },
+  heading: {
+    fontFamily: fonts.display,
+    fontSize: 44,
+    lineHeight: 46,
+    color: colors.text,
+    marginTop: 23,
+  },
+  intro: {
+    fontFamily: fonts.body,
+    fontSize: 16,
+    lineHeight: 22,
+    color: colors.muted,
+    marginTop: 8,
+    maxWidth: 320,
+  },
+  search: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingLeft: 13,
+    marginTop: 20,
+    backgroundColor: colors.sur,
     borderWidth: 1,
-    borderRadius: 8,
-    overflow: 'hidden',
+    borderColor: colors.bdr2,
+    borderRadius: 7,
   },
-  cover: { aspectRatio: 4 / 3, backgroundColor: colors.sur2 },
-  setTitle: { color: colors.text, fontWeight: '600', paddingHorizontal: 10, paddingTop: 8 },
-  setMeta: {
-    color: colors.faint,
-    fontSize: 11,
+  searchInput: {
+    flex: 1,
+    minWidth: 0,
+    backgroundColor: 'transparent',
+    borderWidth: 0,
     paddingHorizontal: 10,
-    paddingBottom: 10,
-    paddingTop: 2,
   },
+  searchButton: { width: 48, minHeight: 48, alignItems: 'center', justifyContent: 'center' },
+  shelfHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 26,
+  },
+  shelfTitle: { fontFamily: fonts.display, fontSize: 29, color: colors.text },
+  total: { fontFamily: fonts.body, fontSize: 13, color: colors.muted, marginTop: 2 },
+  filters: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 14, marginBottom: 23 },
+  row: { gap: 20 },
+  item: {
+    paddingBottom: 20,
+    marginBottom: 21,
+    borderBottomWidth: 2,
+    borderBottomColor: colors.bdr2,
+  },
+  loading: { paddingVertical: 56, alignItems: 'center', gap: 14 },
+  empty: {
+    padding: 24,
+    gap: 15,
+    marginBottom: 24,
+    backgroundColor: colors.sur,
+    borderWidth: 1,
+    borderColor: colors.bdr,
+    borderRadius: 8,
+  },
+  stateTitle: { fontFamily: fonts.display, fontSize: 28, color: colors.text },
+  stateText: { fontFamily: fonts.body, fontSize: 15, lineHeight: 22, color: colors.muted },
+  notice: {
+    padding: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: colors.bdr2,
+    borderRadius: 6,
+    gap: 6,
+  },
+  footer: { alignItems: 'center', gap: 12, paddingBottom: 16 },
+  progress: { fontFamily: fonts.body, fontSize: 12, color: colors.muted },
 });

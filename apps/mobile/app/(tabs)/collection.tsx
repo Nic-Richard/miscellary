@@ -74,6 +74,8 @@ function Collection() {
                 <CardPreview
                   width={150}
                   title={owned.card.title}
+                  description={owned.card.description}
+                  mark={owned.set_mark}
                   rarity={owned.card.rarity}
                   imageUrl={owned.card.image.url}
                   templateKey={owned.card.template_key}

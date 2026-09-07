@@ -1,6 +1,6 @@
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import type { PressableProps, TextInputProps, ViewProps } from 'react-native';
-import { colors } from '@/lib/theme';
+import { colors, fonts } from '@/lib/theme';
 
 export function Screen({ style, ...rest }: ViewProps) {
   return <View style={[styles.screen, style]} {...rest} />;
@@ -19,7 +19,11 @@ export function Muted({ children, style }: { children: React.ReactNode; style?: 
 }
 
 export function ErrorText({ children }: { children: string | null }) {
-  return children ? <Text style={styles.error}>{children}</Text> : null;
+  return children ? (
+    <Text accessibilityRole="alert" style={styles.error}>
+      {children}
+    </Text>
+  ) : null;
 }
 
 export function Loading() {
@@ -28,7 +32,12 @@ export function Loading() {
 
 export function Input(props: TextInputProps) {
   return (
-    <TextInput placeholderTextColor={colors.faint} {...props} style={[styles.input, props.style]} />
+    <TextInput
+      placeholderTextColor={colors.faint}
+      selectionColor={colors.accent}
+      {...props}
+      style={[styles.input, props.style]}
+    />
   );
 }
 
@@ -44,11 +53,17 @@ export function Button({ title, kind = 'primary', disabled, style, ...rest }: Bu
     kind === 'primary' ? colors.accentText : kind === 'danger' ? colors.danger : colors.muted;
   return (
     <Pressable
+      accessibilityRole="button"
+      accessibilityState={{ disabled: !!disabled }}
       disabled={disabled}
-      style={[
+      style={(state) => [
         styles.button,
-        { backgroundColor: bg, borderColor: border, opacity: disabled ? 0.5 : 1 },
-        style as object,
+        {
+          backgroundColor: bg,
+          borderColor: border,
+          opacity: disabled ? 0.5 : state.pressed ? 0.75 : 1,
+        },
+        typeof style === 'function' ? style(state) : style,
       ]}
       {...rest}
     >
@@ -67,8 +82,25 @@ export function Chip({
   onPress: () => void;
 }) {
   return (
-    <Pressable onPress={onPress} style={[styles.chip, active && styles.chipActive]}>
-      <Text style={{ color: active ? colors.text : colors.muted, fontSize: 13 }}>{label}</Text>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityState={{ selected: active }}
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.chip,
+        active && styles.chipActive,
+        pressed && { opacity: 0.75 },
+      ]}
+    >
+      <Text
+        style={{
+          color: active ? colors.accentText : colors.muted,
+          fontFamily: fonts.medium,
+          fontSize: 14,
+        }}
+      >
+        {label}
+      </Text>
     </Pressable>
   );
 }
@@ -77,37 +109,44 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg, padding: 16 },
   tag: {
     color: colors.gold,
+    fontFamily: fonts.medium,
     fontSize: 11,
     fontWeight: '700',
     letterSpacing: 1.5,
     textTransform: 'uppercase',
   },
-  title: { color: colors.text, fontSize: 26, fontWeight: '700', marginBottom: 12 },
-  muted: { color: colors.muted, fontSize: 14 },
-  error: { color: colors.danger, fontSize: 13, marginVertical: 6 },
+  title: { color: colors.text, fontFamily: fonts.display, fontSize: 34, marginBottom: 12 },
+  muted: { color: colors.muted, fontFamily: fonts.body, fontSize: 15 },
+  error: { color: colors.danger, fontFamily: fonts.body, fontSize: 15, marginVertical: 6 },
   input: {
     backgroundColor: colors.sur,
     borderColor: colors.bdr2,
     borderWidth: 1,
     borderRadius: 6,
     color: colors.text,
+    fontFamily: fonts.body,
+    minHeight: 48,
     padding: 12,
-    fontSize: 15,
+    fontSize: 16,
   },
   button: {
+    minHeight: 48,
+    justifyContent: 'center',
     borderWidth: 1,
     borderRadius: 6,
     paddingVertical: 11,
     paddingHorizontal: 16,
     alignItems: 'center',
   },
-  buttonText: { fontWeight: '700', fontSize: 15 },
+  buttonText: { fontFamily: fonts.display, fontSize: 20, letterSpacing: 0.6 },
   chip: {
     borderWidth: 1,
     borderColor: colors.bdr2,
     borderRadius: 999,
-    paddingVertical: 5,
+    minHeight: 44,
+    justifyContent: 'center',
+    paddingVertical: 8,
     paddingHorizontal: 12,
   },
-  chipActive: { borderColor: colors.accent },
+  chipActive: { borderColor: colors.accent, backgroundColor: colors.accent },
 });

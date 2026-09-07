@@ -1,10 +1,12 @@
 import type { CardSetDetail, PackOpening, PackStatus } from '@miscellary/shared';
 import { Link, useLocalSearchParams } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCallback, useEffect, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import CardPreview from '@/components/CardPreview';
+import BinderPages from '@/components/BinderPages';
 import Description from '@/components/Description';
 import PackReveal from '@/components/PackReveal';
+import SharedSurface from '@/components/SharedSurface';
 import { useAuth } from '@/lib/auth';
 import {
   getPackStatus,
@@ -19,6 +21,7 @@ import { Button, ErrorText, Loading, Muted, Tag, Title } from '@/components/ui';
 
 export default function BinderScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
+  const insets = useSafeAreaInsets();
   const { user, loading } = useAuth();
   const [set, setSet] = useState<CardSetDetail | null>(null);
   const [status, setStatus] = useState<PackStatus | null>(null);
@@ -99,7 +102,12 @@ export default function BinderScreen() {
   return (
     <ScrollView
       style={{ backgroundColor: colors.bg }}
-      contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
+      contentContainerStyle={{
+        padding: 16,
+        paddingLeft: 16 + insets.left,
+        paddingRight: 16 + insets.right,
+        paddingBottom: 40 + insets.bottom,
+      }}
     >
       <Tag>{set.status === 'draft' ? 'Draft preview' : 'Binder'}</Tag>
       <Title>{set.title}</Title>
@@ -159,38 +167,24 @@ export default function BinderScreen() {
         </View>
       ) : null}
 
-      <View style={styles.grid}>
-        {set.cards.map((c) => (
-          <View key={c.id} style={{ alignItems: 'center', gap: 6 }}>
-            <CardPreview
-              width={165}
-              title={c.title}
-              rarity={c.rarity}
-              imageUrl={c.image.url}
-              templateKey={c.template_key}
-              templateConfig={c.template_config}
-            />
-            {set.status === 'published' ? (
-              <Pressable
-                onPress={() => void toggleCardLike(c.id)}
-                style={[
-                  styles.like,
-                  set.liked_card_ids.includes(c.id) && { borderColor: colors.danger },
-                ]}
-              >
-                <Text
-                  style={{
-                    color: set.liked_card_ids.includes(c.id) ? colors.danger : colors.muted,
-                    fontSize: 12,
-                  }}
-                >
-                  ♥ {c.like_count}
-                </Text>
-              </Pressable>
-            ) : null}
-          </View>
-        ))}
+      <View style={{ alignItems: 'center', marginBottom: 16 }}>
+        <SharedSurface mode="pack" data={{ set }} width={180} height={301} passive />
       </View>
+      <BinderPages
+        key={set.id}
+        set={set}
+        cards={set.cards}
+        colour={set.binder_colour}
+        mark={set.mark}
+        likedIds={set.liked_card_ids}
+        onLike={
+          user && set.status === 'published'
+            ? (id) => {
+                void toggleCardLike(id).catch((e: Error) => setError(e.message));
+              }
+            : undefined
+        }
+      />
 
       {opening ? <PackReveal opening={opening} onClose={() => setOpening(null)} /> : null}
     </ScrollView>

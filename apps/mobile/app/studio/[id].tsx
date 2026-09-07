@@ -1,7 +1,9 @@
 import type { CardSetDetail } from '@miscellary/shared';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import SharedSurface from '@/components/SharedSurface';
 import CardPreview from '@/components/CardPreview';
 import {
   deleteCard,
@@ -21,6 +23,8 @@ export default function SetEditorScreen() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [designingPack, setDesigningPack] = useState(false);
+  const insets = useSafeAreaInsets();
 
   const load = useCallback(async () => {
     try {
@@ -127,6 +131,35 @@ export default function SetEditorScreen() {
         </>
       )}
       <ErrorText>{error}</ErrorText>
+      <View style={{ alignItems: 'center', gap: 12 }}>
+        <SharedSurface mode="pack" data={{ set }} width={180} height={301} passive />
+        <Button title="Design pack and binder" onPress={() => setDesigningPack(true)} />
+      </View>
+      <Modal
+        visible={designingPack}
+        onRequestClose={() => setDesigningPack(false)}
+        supportedOrientations={['portrait', 'landscape']}
+      >
+        <View
+          style={{
+            flex: 1,
+            paddingTop: insets.top,
+            paddingBottom: insets.bottom,
+            backgroundColor: colors.bg,
+          }}
+        >
+          <Button title="Back to set" kind="secondary" onPress={() => setDesigningPack(false)} />
+          {designingPack ? (
+            <SharedSurface
+              mode="pack-editor"
+              data={{ set }}
+              onEvent={(type, value) => {
+                if (type === 'updated') setSet(value as CardSetDetail);
+              }}
+            />
+          ) : null}
+        </View>
+      </Modal>
 
       {isDraft ? (
         <View style={styles.publish}>
@@ -158,6 +191,8 @@ export default function SetEditorScreen() {
               width={150}
               title={c.title}
               rarity={c.rarity}
+              description={c.description}
+              mark={set.mark}
               imageUrl={c.image.url}
               templateKey={c.template_key}
               templateConfig={c.template_config}

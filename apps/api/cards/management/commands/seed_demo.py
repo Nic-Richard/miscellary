@@ -1,11 +1,8 @@
 """Seed comprehensive demo data for local visual and multi-user QA.
 
-The command is safe to run repeatedly because it recreates its demo users.
-
-Card art is fetched from Wikimedia Commons (public, freely licensed photos of
-the actual subjects) so the UI is judged against real photography. Pass
---no-photos, or lose the network, and each card falls back to a generated
-gradient PNG instead.
+This command deletes and recreates demo users and their collections.
+Use --prepare-photos to cache curated photography without changing the database.
+Curated downloads must succeed before reseeding; --no-photos uses placeholders.
 """
 
 import json
@@ -21,7 +18,7 @@ from pathlib import Path
 from typing import Any, cast
 
 from django.conf import settings
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
 from accounts.models import User
@@ -36,7 +33,6 @@ from trades.models import TradeOffer, TradeOfferItem
 from uploads import storage
 from uploads.models import Image
 
-# Core demo accounts carry hand-picked sets; extras populate social surfaces.
 DEMO_EMAILS = [
     "fieldnote@example.com",
     "waverly@example.com",
@@ -49,7 +45,6 @@ DEMO_EMAILS = [
 ]
 COMMONS = "https://commons.wikimedia.org/wiki/Special:FilePath/"
 COMMONS_API = "https://commons.wikimedia.org/w/api.php"
-# Deterministic rarity-specific option coverage for demo cards.
 SPECIALTY_BY_RARITY: dict[str, list[dict[str, str]]] = {
     "uncommon": [{"relief": "spot"}, {}, {"relief": "spot", "tint": "punch"}],
     "rare": [
@@ -70,7 +65,9 @@ SPECIALTY_BY_RARITY: dict[str, list[dict[str, str]]] = {
     ],
 }
 
-CACHE_DIR = Path("/tmp/miscellary-seed-photos")
+CACHE_DIR = Path(__file__).resolve().parents[5] / "tmp" / "seed-photos"
+PHOTO_MANIFEST = Path(__file__).resolve().parents[1] / "seed_photos.json"
+CURATED_PHOTOS = json.loads(PHOTO_MANIFEST.read_text(encoding="utf-8"))
 PNG_MAGIC = bytes([0x89]) + b"PNG"
 AGENT = {"User-Agent": "miscellary-dev/1.0 (seed_demo; local development)"}
 
@@ -126,7 +123,6 @@ def jpeg_size(data: bytes) -> tuple[int, int]:
     return 900, 900
 
 
-# Pace Commons requests and retry throttled responses.
 _last_request = 0.0
 MIN_GAP = 0.4
 
@@ -189,7 +185,6 @@ def search_commons(term: str) -> bytes | None:
     except (OSError, ValueError):
         return None
     pages = (payload.get("query") or {}).get("pages") or {}
-    # Stable ordering keeps reseeds deterministic.
     for page in sorted(pages.values(), key=lambda p: p.get("index", 0)):
         info = (page.get("imageinfo") or [{}])[0]
         if not str(info.get("mime", "")).startswith("image/"):
@@ -200,13 +195,15 @@ def search_commons(term: str) -> bytes | None:
     return None
 
 
-def fetch_commons(spec: str) -> bytes | None:
-    """A photo for one card, by exact filename or by `search:` term."""
+def fetch_photo(spec: str) -> bytes | None:
+    """Resolve curated assets first, retaining legacy Commons seed references."""
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
     cached = CACHE_DIR / (uuid.uuid5(uuid.NAMESPACE_URL, spec).hex + ".jpg")
     if cached.exists():
         return cached.read_bytes()
-    if spec.startswith("search:"):
+    if spec in CURATED_PHOTOS:
+        data = _get(CURATED_PHOTOS[spec]["url"])
+    elif spec.startswith("search:"):
         data = search_commons(spec[len("search:") :])
     else:
         data = _get(COMMONS + urllib.parse.quote(spec) + "?width=900")
@@ -215,19 +212,42 @@ def fetch_commons(spec: str) -> bytes | None:
     return data
 
 
+def photo_description(caption: str, spec: str) -> str:
+    photo = CURATED_PHOTOS.get(spec)
+    if not photo:
+        return caption
+    return (
+        f"{caption}\n\nPhoto: {photo['credit']}. {photo['rights']}. "
+        f"Displayed cropped to the card window.\n{photo['source']}\n{photo['rights_url']}"
+    )
+
+
 class Command(BaseCommand):
     help = "Seed demo sets, cards, and users for local product review."
 
     def add_arguments(self, parser):
         parser.add_argument(
+            "--prepare-photos",
+            action="store_true",
+            help="Cache curated image downloads without touching the database.",
+        )
+        parser.add_argument(
             "--no-photos",
             action="store_true",
-            help="Skip Wikimedia Commons downloads and use gradient placeholders.",
+            help="Skip photo downloads and use gradient placeholders.",
         )
 
     def handle(self, *args, **options):
         self.use_photos = not options["no_photos"]
         self.fallbacks = 0
+
+        if self.use_photos or options["prepare_photos"]:
+            missing = [spec for spec in CURATED_PHOTOS if not fetch_photo(spec)]
+            if missing:
+                raise CommandError(f"Curated photos unavailable; database unchanged: {missing}")
+        if options["prepare_photos"]:
+            self.stdout.write(f"Prepared {len(CURATED_PHOTOS)} curated photos; database unchanged.")
+            return
 
         # Delete protected dependencies before users.
         demo_users = User.objects.filter(email__in=DEMO_EMAILS)
@@ -258,7 +278,6 @@ class Command(BaseCommand):
             [Follow(follower=mabel, following=fieldnote), Follow(follower=mabel, following=waverly)]
         )
 
-        # (title, rarity, template, config, caption, Commons filename)
         plants = self._make_set(
             fieldnote,
             title="Trailside Botanicals",
@@ -340,8 +359,8 @@ class Command(BaseCommand):
                 (
                     "Marsh Orchid",
                     "epic",
-                    "bold",
-                    {"shape": "circle"},
+                    "minimal",
+                    {"gradient": "full", "border": "copper", "weight": "fine"},
                     "Wet meadow, June",
                     "Melitaea sp. and Dactylorhiza fuchsii.jpg",
                 ),
@@ -610,8 +629,6 @@ class Command(BaseCommand):
         self.stdout.write(f"  /users/{mabel.username}")
         self.stdout.write(f"  /studio/{draft.id}  (draft editor)")
 
-    # ---- collectors, shelves, likes, follows and offers -----------------
-
     COLLECTORS = [
         ("orla", "Orla Finch", "Garden birds, mostly from the kitchen window."),
         ("kit", "Kit Marlow", "Long exposures and colder nights."),
@@ -706,11 +723,14 @@ class Command(BaseCommand):
             ),
             (
                 extras["kit"],
-                "Night Sky",
-                "Long exposures from the back garden and colder places.",
-                ((30, 30, 70), (10, 10, 25)),
+                "Other Worlds",
+                (
+                    "Planetary portraits from Voyager, Cassini, Galileo and Magellan. Mission "
+                    "images, not backyard photographs."
+                ),
+                ((35, 45, 70), (10, 15, 30)),
                 {
-                    "mark": "moon",
+                    "mark": "orbit",
                     "pack_colour": "indigo",
                     "pack_finish": "satin",
                     "emblem_layout": "wordmark",
@@ -719,118 +739,207 @@ class Command(BaseCommand):
                 },
                 [
                     (
-                        "Waxing Crescent",
-                        "common",
-                        "minimal",
-                        {"gradient": "full"},
-                        "Four days old",
-                        "search:waxing crescent moon",
-                    ),
-                    (
-                        "Orion",
+                        "Jupiter",
                         "common",
                         "classic",
-                        {"frame": "ink"},
-                        "Winter, due south",
-                        "search:Orion constellation",
+                        {
+                            "frame": "navy",
+                            "border": "copper",
+                            "weight": "fine",
+                            "font": "spacemono",
+                        },
+                        (
+                            "Cassini's four-frame globe, December 2000. Europa casts a small "
+                            "shadow on the cloud tops."
+                        ),
+                        "nasa:PIA02873",
                     ),
                     (
-                        "Milky Way Core",
+                        "Neptune",
                         "common",
-                        "minimal",
-                        {"gradient": "none"},
-                        "August, no moon",
-                        "search:milky way galactic core",
-                    ),
-                    (
-                        "Noctilucent Cloud",
-                        "uncommon",
                         "polaroid",
-                        {"tint": "cool"},
-                        "Late June, north",
-                        "search:noctilucent clouds",
+                        {"frame": "sky", "tint": "none", "font": "body"},
+                        (
+                            "Voyager 2, August 1989. The Great Dark Spot and bright methane-ice "
+                            "clouds."
+                        ),
+                        "nasa:PIA01492",
                     ),
                     (
-                        "Aurora",
+                        "Uranus",
+                        "common",
+                        "classic",
+                        {
+                            "frame": "mint",
+                            "border": "silver",
+                            "shape": "circle",
+                            "font": "spacemono",
+                        },
+                        (
+                            "Voyager 2, 1986. A pale atmosphere seen during the spacecraft's only "
+                            "Uranus encounter."
+                        ),
+                        "nasa:PIA18182",
+                    ),
+                    (
+                        "Venus: Beneath the Clouds",
+                        "uncommon",
+                        "fieldnote",
+                        {"frame": "sand", "paper": "label", "accent": "copper", "font": "cinzel"},
+                        (
+                            "A simulated northern-hemisphere globe assembled from Magellan radar "
+                            "mapping. This is the surface, not a visible-light photograph."
+                        ),
+                        "nasa:PIA00271",
+                    ),
+                    (
+                        "Europa's Fractured Ice",
                         "rare",
-                        "bold",
-                        {"shape": "arch", "border": "teal"},
-                        "The night it came south",
-                        "search:aurora borealis",
+                        "dossier",
+                        {
+                            "frame": "ink",
+                            "paper": "inset",
+                            "accent": "silver",
+                            "font": "spacemono",
+                            "finish": "pearl",
+                        },
+                        (
+                            "Galileo's 1995 and 1998 images, reprocessed into a global color "
+                            "mosaic. Dark ridges cross a water-ice crust."
+                        ),
+                        "nasa:PIA19048",
                     ),
                     (
-                        "Total Eclipse",
+                        "Titan in Transit",
                         "legendary",
-                        "dossier",
-                        {"frame": "ink"},
-                        "Two minutes of it",
-                        "search:total solar eclipse corona",
+                        "minimal",
+                        {
+                            "gradient": "full",
+                            "border": "gold",
+                            "weight": "fine",
+                            "font": "cinzel",
+                            "treatment": "foil",
+                            "coverage": "frame",
+                        },
+                        (
+                            "Titan passes in front of Saturn. Cassini's natural-color view puts a "
+                            "moon and its planet in the same frame."
+                        ),
+                        "nasa:PIA14922",
                     ),
                 ],
             ),
             (
                 extras["bex"],
-                "Market Saturday",
-                "The good stuff, before it goes.",
-                ((200, 120, 60), (90, 40, 30)),
+                "Shutter Shelf",
+                (
+                    "Five film cameras worth keeping on the shelf: black enamel, silver metal, "
+                    "leather and folding bellows."
+                ),
+                ((145, 110, 75), (35, 30, 25)),
                 {
-                    "mark": "bloom",
-                    "pack_colour": "ember",
-                    "pack_finish": "gloss",
+                    "mark": "orbit",
+                    "pack_colour": "charcoal",
+                    "pack_finish": "satin",
                     "emblem_layout": "badge",
-                    "emblem_shape": "banner",
-                    "emblem_style": "filled",
-                    "emblem_text": "crimson",
-                    "surface": "grain",
+                    "emblem_shape": "tablet",
+                    "emblem_style": "outline",
+                    "emblem_text": "cream",
+                    "surface": "linen",
                 },
                 [
                     (
-                        "Heritage Tomatoes",
+                        "Canon AE-1",
                         "common",
-                        "polaroid",
-                        {"tint": "warm"},
-                        "Six kinds, one crate",
-                        "search:heirloom tomatoes market",
+                        "bold",
+                        {
+                            "frame": "charcoal",
+                            "shape": "square",
+                            "border": "copper",
+                            "weight": "bold",
+                            "font": "display",
+                            "tint": "none",
+                        },
+                        (
+                            "Black enamel and a 50mm f/1.8 lens. A front-on portrait of a familiar "
+                            "film SLR."
+                        ),
+                        "camera:canon-ae1",
                     ),
                     (
-                        "Bunched Radish",
-                        "common",
-                        "classic",
-                        {"frame": "cream"},
-                        "Still muddy",
-                        "search:radish bunch market",
-                    ),
-                    (
-                        "Sourdough",
+                        "Pentax K1000",
                         "common",
                         "fieldnote",
-                        {"paper": "aged"},
-                        "Sold out by ten",
-                        "search:sourdough bread loaf",
+                        {
+                            "frame": "sand",
+                            "paper": "label",
+                            "accent": "rust",
+                            "font": "spacemono",
+                            "tint": "none",
+                        },
+                        (
+                            "The knurled dials, silver prism and oversized zoom make this one a "
+                            "study in mechanical detail."
+                        ),
+                        "camera:pentax-k1000",
                     ),
                     (
-                        "Cut Flowers",
+                        "Nikon F",
                         "uncommon",
-                        "minimal",
-                        {"gradient": "bottom"},
-                        "Buckets by the door",
-                        "search:cut flowers market stall",
+                        "dossier",
+                        {
+                            "frame": "navy",
+                            "paper": "inset",
+                            "accent": "slate",
+                            "font": "spacemono",
+                            "tint": "none",
+                            "relief": "spot",
+                        },
+                        (
+                            "A silver Nikon F with a 35mm f/2.8 lens. The triangular prism "
+                            "gives it an unmistakable silhouette."
+                        ),
+                        "camera:nikon-f",
                     ),
                     (
-                        "Wheel of Cheese",
+                        "Leica M3",
                         "rare",
-                        "bold",
-                        {"shape": "circle", "border": "gold"},
-                        "Cut to order",
-                        "search:cheese wheel market",
+                        "classic",
+                        {
+                            "frame": "forest",
+                            "border": "silver",
+                            "weight": "fine",
+                            "font": "cinzel",
+                            "finish": "metallic",
+                            "relief": "deboss",
+                            "tint": "none",
+                        },
+                        (
+                            "A 1963 M3 at the German Museum of Technology in Berlin. Three front "
+                            "windows and a compact metal body."
+                        ),
+                        "camera:leica-m3",
                     ),
                     (
-                        "First Cherries",
+                        "Polaroid SX-70",
                         "legendary",
-                        "classic",
-                        {"frame": "oxblood"},
-                        "Two weeks a year",
-                        "search:fresh cherries bowl",
+                        "minimal",
+                        {
+                            "gradient": "bottom",
+                            "border": "copper",
+                            "weight": "bold",
+                            "font": "cinzel",
+                            "finish": "satin",
+                            "treatment": "foil",
+                            "coverage": "frame",
+                            "relief": "emboss",
+                            "tint": "none",
+                        },
+                        (
+                            "Brown leather, bright metal and folding bellows. Opened up, the SX-70 "
+                            "looks like a small piece of architecture."
+                        ),
+                        "camera:sx70",
                     ),
                 ],
             ),
@@ -1308,12 +1417,9 @@ class Command(BaseCommand):
             return made
 
         orla, kit = extras["orla"], extras["kit"]
-        # Waiting on fieldnote
         offer(mabel, fieldnote, 2, 1, "pending", "Two of mine for the robin?")
         offer(orla, fieldnote, 1, 2, "pending", "Long shot, but worth asking.")
-        # Sent by fieldnote
         offer(fieldnote, kit, 1, 1, "pending", "Straight swap if you are up for it.")
-        # Settled, for the history tab
         offer(kit, fieldnote, 1, 1, "accepted", "Good trade.")
         offer(fieldnote, orla, 2, 2, "rejected")
 
@@ -1354,9 +1460,38 @@ class Command(BaseCommand):
             card_bottom = tuple(_jitter(c) for c in bottom)
             image = self._upload_art(creator, photo, card_top, card_bottom)
             if template_problems(template_key, rarity):
+                self.stdout.write(
+                    f"{name}: used Classic because Full Art requires Epic or Legendary."
+                )
                 template_key = "classic"
             template = TEMPLATES_BY_KEY[template_key]
+            config = {key: value for key, value in config.items() if key in template["options"]}
             full_config = {**default_config(template_key), **config}
+            variety = zlib.crc32(f"{title}:{name}".encode())
+            for option, choices in {
+                "frame": [
+                    "cream",
+                    "sage",
+                    "peach",
+                    "sky",
+                    "lavender",
+                    "dark",
+                    "navy",
+                    "cocoa",
+                    "plum",
+                ],
+                "texture": ["linen", "grain", "canvas", "felt", "smooth"],
+                "border": ["auto", "sage", "copper", "teal", "gold", "silver"],
+                "weight": ["fine", "standard", "bold"],
+                "paper": ["plain", "label", "inset", "tinted", "transparent", "aged"],
+            }.items():
+                definition = template["options"].get(option)
+                if option in config or definition is None:
+                    continue
+                allowed = [value for value in choices if value in definition["values"]]
+                if allowed:
+                    full_config[option] = allowed[variety % len(allowed)]
+                    variety //= len(allowed)
             if surface and "texture" in full_config and "texture" not in config:
                 full_config["texture"] = surface
             spend = SPECIALTY_BY_RARITY.get(rarity)
@@ -1369,7 +1504,7 @@ class Command(BaseCommand):
                 image=image,
                 title=name,
                 rarity=rarity,
-                description=f"{caption}\n\nOne of the {title.lower()} - card {i + 1}.",
+                description=photo_description(caption, photo) if self.use_photos else caption,
                 template_key=template_key,
                 template_version=template["version"],
                 template_config=full_config,
@@ -1384,12 +1519,11 @@ class Command(BaseCommand):
         problems = publish_set(card_set)
         if problems:
             raise RuntimeError(f"Could not publish {title}: {problems}")
-        # Refresh after publish_set() commits through a re-fetched instance.
         card_set.refresh_from_db()
         return card_set
 
     def _upload_art(self, owner, photo, top, bottom) -> Image:
-        data = fetch_commons(photo) if self.use_photos else None
+        data = fetch_photo(photo) if self.use_photos else None
         if data and data[:4] == PNG_MAGIC:
             # Sniff image type because Commons thumbnails are not always JPEGs.
             width, height = struct.unpack(">II", data[16:24])

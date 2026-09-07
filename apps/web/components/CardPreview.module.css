@@ -1,5 +1,3 @@
-/* Template attributes come from apps/api/cards/templates.py. */
-
 .card {
   --rc: var(--rarity-common);
   --ac: var(--gold);
@@ -11,13 +9,11 @@
   --bc: var(--rc);
   --corner: 3cqw;
   --art-bg: rgba(0, 0, 0, 0.06);
-  /* Exposed board stays pale even on dark stock. */
   --core: #efe7d6;
   --grain: 0.4;
   --sheen: 0.62;
   --finish: var(--coat-matte);
   --finish-blend: soft-light;
-  /* Display contexts supply the scene-light variables. */
   --coat-matte: linear-gradient(
     var(--lit-angle, 104deg),
     rgba(255, 255, 255, 0) 26%,
@@ -129,7 +125,6 @@
   overflow: hidden;
 }
 
-/* Published snapshot compatibility. */
 .stock::before {
   content: '';
   position: absolute;
@@ -194,7 +189,6 @@
   border-radius: 1.5cqw;
   overflow: hidden;
 }
-/* Spot varnish stays below the recessed window edge. */
 .varnish {
   position: absolute;
   inset: 0;
@@ -308,117 +302,6 @@
 .large .art {
   flex: 1 1 52%;
 }
-
-.card[data-frame='cream'] {
-  --stock: #f4ecda;
-  --edge: #d8cdb4;
-}
-.card[data-frame='bone'] {
-  --stock: #f7f2e6;
-  --edge: #ddd3bf;
-}
-.card[data-frame='white'] {
-  --stock: #fdfbf6;
-  --edge: #ded6c6;
-}
-.card[data-frame='light'] {
-  --stock: #f7f2e6;
-  --edge: #ddd3bf;
-}
-.card[data-frame='sand'] {
-  --stock: #e8dcc2;
-  --edge: #c8b898;
-}
-.card[data-frame='linen'] {
-  --stock: #efe7d5;
-  --edge: #d3c8ac;
-}
-.card[data-frame='ash'] {
-  --stock: #d9d3c6;
-  --edge: #b8b0a0;
-}
-.card[data-frame='blush'] {
-  --stock: #f2e2dd;
-  --edge: #d5bdb6;
-}
-.card[data-frame='sky'] {
-  --stock: #e4ecf3;
-  --edge: #c1cedb;
-}
-.card[data-frame='mint'] {
-  --stock: #e3eee6;
-  --edge: #bed3c5;
-}
-.card[data-frame='butter'] {
-  --stock: #f5edd1;
-  --edge: #dacfa6;
-}
-.card[data-frame='moss'] {
-  --stock: #2c3a22;
-  --edge: #1d2915;
-}
-.card[data-frame='teal'] {
-  --stock: #17434a;
-  --edge: #0e2f34;
-}
-.card[data-frame='wine'] {
-  --stock: #4a2036;
-  --edge: #331523;
-}
-.card[data-frame='bronze'] {
-  --stock: #46341f;
-  --edge: #302213;
-}
-.card[data-frame='slate'] {
-  --stock: #4a565c;
-  --edge: #333d42;
-}
-.card[data-frame='charcoal'] {
-  --stock: #3a3733;
-  --edge: #272522;
-}
-.card[data-frame='ink'] {
-  --stock: #22201c;
-  --edge: #14120f;
-}
-.card[data-frame='dark'] {
-  --stock: #1f3a36;
-  --edge: #163029;
-}
-.card[data-frame='forest'] {
-  --stock: #22402f;
-  --edge: #16301f;
-}
-.card[data-frame='oxblood'] {
-  --stock: #3f2223;
-  --edge: #2b1516;
-}
-.card[data-frame='navy'] {
-  --stock: #232f4a;
-  --edge: #172038;
-}
-.card[data-frame='plum'] {
-  --stock: #3b2438;
-  --edge: #281727;
-}
-
-.card[data-frame='slate'],
-.card[data-frame='charcoal'],
-.card[data-frame='ink'],
-.card[data-frame='dark'],
-.card[data-frame='forest'],
-.card[data-frame='oxblood'],
-.card[data-frame='navy'],
-.card[data-frame='plum'],
-.card[data-frame='moss'],
-.card[data-frame='teal'],
-.card[data-frame='wine'],
-.card[data-frame='bronze'] {
-  --ink: #f3ecdd;
-  --ink-muted: #b9c9c4;
-  --art-bg: rgba(0, 0, 0, 0.24);
-}
-/* Dark stock uses a colder pearl/metallic response. */
 .minimal,
 .dossier,
 .card[data-frame='slate'],
@@ -432,7 +315,9 @@
 .card[data-frame='moss'],
 .card[data-frame='teal'],
 .card[data-frame='wine'],
-.card[data-frame='bronze'] {
+.card[data-frame='bronze'],
+.card[data-frame='cocoa'],
+.card[data-frame='aubergine'] {
   --coat-pearl: linear-gradient(
     var(--lit-angle, 104deg),
     rgba(206, 226, 255, 0.16) 8%,
@@ -462,65 +347,10 @@
 .card[data-frame='moss'] .mark,
 .card[data-frame='teal'] .mark,
 .card[data-frame='wine'] .mark,
-.card[data-frame='bronze'] .mark {
+.card[data-frame='bronze'] .mark,
+.card[data-frame='cocoa'] .mark,
+.card[data-frame='aubergine'] .mark {
   stroke: color-mix(in srgb, var(--ac) 55%, #e9f0ec);
-}
-
-.card:not([data-texture])[data-frame='slate'],
-.card:not([data-texture])[data-frame='charcoal'],
-.card:not([data-texture])[data-frame='ink'],
-.card:not([data-texture])[data-frame='dark'],
-.card:not([data-texture])[data-frame='forest'],
-.card:not([data-texture])[data-frame='oxblood'],
-.card:not([data-texture])[data-frame='navy'],
-.card:not([data-texture])[data-frame='plum'],
-.card:not([data-texture])[data-frame='moss'],
-.card:not([data-texture])[data-frame='teal'],
-.card:not([data-texture])[data-frame='wine'],
-.card:not([data-texture])[data-frame='bronze'] {
-  --tex-opacity: 0.2;
-  --tex-blend: screen;
-}
-
-.card[data-texture='linen'] {
-  --tex: url('/materials/tex-linen.png');
-  --tex-size: 96px;
-  --tex-opacity: 0.6;
-  --tex-blend: overlay;
-}
-.card[data-texture='canvas'] {
-  --tex: url('/materials/tex-canvas.png');
-  --tex-size: 128px;
-  --tex-opacity: 0.6;
-  --tex-blend: overlay;
-}
-.card[data-texture='grain'] {
-  --tex: url('/materials/tex-grain.png');
-  --tex-size: 112px;
-  --tex-opacity: 0.6;
-  --tex-blend: overlay;
-}
-.card[data-texture='felt'] {
-  --tex: url('/materials/tex-felt.png');
-  --tex-size: 150px;
-  --tex-opacity: 0.6;
-  --tex-blend: overlay;
-}
-.card[data-texture='brushed'] {
-  --tex: url('/materials/tex-brushed.png');
-  --tex-size: 140px;
-  --tex-opacity: 0.6;
-  --tex-blend: overlay;
-}
-.card[data-texture='smooth'] {
-  --tex: none;
-}
-
-.card[data-corners='soft'] {
-  --corner: 1.6cqw;
-}
-.card[data-corners='sharp'] {
-  --corner: 0.4cqw;
 }
 
 .card[data-window='none'],
@@ -559,146 +389,11 @@
   --img-print: grayscale(1) contrast(1.09);
 }
 
-/* Emboss and deboss invert the same rim-shadow pair. */
 .card[data-relief='emboss'] {
   --relief: inset 0 0 0 0.5cqw rgba(255, 248, 226, 0.24), inset 0 0 1.4cqw rgba(40, 24, 8, 0.28);
 }
 .card[data-relief='deboss'] {
   --relief: inset 0 0 0 0.5cqw rgba(40, 24, 8, 0.26), inset 0 0 1.4cqw rgba(255, 248, 226, 0.2);
-}
-
-.card[data-accent='ink'] {
-  --ac: #241f1a;
-}
-.card[data-accent='charcoal'] {
-  --ac: #43413c;
-}
-.card[data-accent='slate'] {
-  --ac: #5d6b70;
-}
-.card[data-accent='teal'] {
-  --ac: #2f8078;
-}
-.card[data-accent='green'] {
-  --ac: #4c7a5a;
-}
-.card[data-accent='forest'] {
-  --ac: #2b5b3c;
-}
-.card[data-accent='blue'] {
-  --ac: #4f6f9e;
-}
-.card[data-accent='ocean'] {
-  --ac: #2f6690;
-}
-.card[data-accent='indigo'] {
-  --ac: #3a4482;
-}
-.card[data-accent='purple'] {
-  --ac: #7b5fa3;
-}
-.card[data-accent='violet'] {
-  --ac: #6a4b93;
-}
-.card[data-accent='plum'] {
-  --ac: #7c3f63;
-}
-.card[data-accent='rose'] {
-  --ac: #b1587a;
-}
-.card[data-accent='red'] {
-  --ac: #b04c3c;
-}
-.card[data-accent='crimson'] {
-  --ac: #9d2f3f;
-}
-.card[data-accent='rust'] {
-  --ac: #a8503a;
-}
-.card[data-accent='ember'] {
-  --ac: #c4622c;
-}
-.card[data-accent='gold'] {
-  --ac: #b8903a;
-}
-.card[data-accent='bronze'] {
-  --ac: #84603a;
-}
-.card[data-accent='cream'] {
-  --ac: #f0e6d2;
-}
-.card[data-accent='white'] {
-  --ac: #fbf7ef;
-}
-
-.card[data-accent='rarity'] {
-  --ac: var(--rc);
-}
-.card[data-border='rarity'] {
-  --bc: var(--rc);
-}
-.card[data-border='ink'] {
-  --bc: #241f1a;
-}
-.card[data-border='charcoal'] {
-  --bc: #43413c;
-}
-.card[data-border='slate'] {
-  --bc: #5d6b70;
-}
-.card[data-border='teal'] {
-  --bc: #2f8078;
-}
-.card[data-border='green'] {
-  --bc: #4c7a5a;
-}
-.card[data-border='forest'] {
-  --bc: #2b5b3c;
-}
-.card[data-border='blue'] {
-  --bc: #4f6f9e;
-}
-.card[data-border='ocean'] {
-  --bc: #2f6690;
-}
-.card[data-border='indigo'] {
-  --bc: #3a4482;
-}
-.card[data-border='purple'] {
-  --bc: #7b5fa3;
-}
-.card[data-border='violet'] {
-  --bc: #6a4b93;
-}
-.card[data-border='plum'] {
-  --bc: #7c3f63;
-}
-.card[data-border='rose'] {
-  --bc: #b1587a;
-}
-.card[data-border='red'] {
-  --bc: #b04c3c;
-}
-.card[data-border='crimson'] {
-  --bc: #9d2f3f;
-}
-.card[data-border='rust'] {
-  --bc: #a8503a;
-}
-.card[data-border='ember'] {
-  --bc: #c4622c;
-}
-.card[data-border='gold'] {
-  --bc: #b8903a;
-}
-.card[data-border='bronze'] {
-  --bc: #84603a;
-}
-.card[data-border='cream'] {
-  --bc: #f0e6d2;
-}
-.card[data-border='white'] {
-  --bc: #fbf7ef;
 }
 
 .card[data-font='display'] {
@@ -921,7 +616,6 @@
   opacity: calc(0.72 * var(--lit-strength, 1));
 }
 
-/* Full-face holo remains a narrow light ribbon. */
 .card[data-treatment][data-coverage='full'] .chaseBand {
   background-size:
     540% 540%,
@@ -929,7 +623,6 @@
   opacity: calc(0.52 * var(--lit-strength, 1));
 }
 
-/* Published snapshot compatibility. */
 .card:not([data-finish])[data-rarity='rare'] {
   --finish: var(--coat-pearl);
   --grain: 0.24;
@@ -939,7 +632,6 @@
   --finish: var(--coat-metal);
   --grain: 0.18;
   --sheen: 0.82;
-  --glow: rgba(198, 106, 60, 0.3);
 }
 .card:not([data-treatment])[data-rarity='legendary'] .stock::after {
   background: var(--coat-sweep), var(--coat-holo), var(--finish);
@@ -954,40 +646,6 @@
     center;
   mix-blend-mode: screen;
 }
-.card[data-rarity='common'] {
-  --rc: var(--rarity-common);
-}
-.card[data-rarity='uncommon'] {
-  --rc: var(--rarity-uncommon);
-  --edge: linear-gradient(160deg, #dcc078, #b48a2c 46%, #e2cd91 72%, #9a7420);
-  --edge-w: 0.9cqw;
-}
-.card[data-rarity='rare'] {
-  --rc: var(--rarity-rare);
-  --edge: linear-gradient(160deg, #b7a4d6, #7b5fa3 45%, #c6b6e0 70%, #5f4488);
-  --edge-w: 1.1cqw;
-}
-.card[data-rarity='epic'] {
-  --rc: var(--rarity-epic);
-  --glow: rgba(198, 106, 60, 0.3);
-  --edge: linear-gradient(160deg, #f0b28c, #c66a3c 40%, #f7cbab 65%, #a04c26);
-  --edge-w: 1.4cqw;
-}
-.card[data-rarity='legendary'] {
-  --rc: var(--rarity-legendary);
-  --core: #f4e7c4;
-  --glow: rgba(184, 144, 58, 0.38);
-  --edge: linear-gradient(
-    135deg,
-    #f7ecc2 0%,
-    #b8903a 22%,
-    #fff4cf 42%,
-    #a67c2c 60%,
-    #f2dfa2 78%,
-    #b8903a 100%
-  );
-  --edge-w: 2.2cqw;
-}
 
 .classic .head {
   border-bottom: 1px solid color-mix(in srgb, var(--ink) 18%, transparent);
@@ -997,11 +655,6 @@
 }
 .classic .art {
   background: var(--art-bg);
-}
-
-.polaroid {
-  --stock: #fcfaf4;
-  --edge: #d8cfbd;
 }
 .polaroid .head {
   min-height: 8cqw;
@@ -1041,12 +694,6 @@
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
-}
-.minimal {
-  --stock: #14201f;
-  --ink: #fdf9ee;
-  --ink-muted: rgba(253, 249, 238, 0.8);
-  --edge: #2b3c39;
 }
 .minimal .stock {
   padding: 0;
@@ -1096,13 +743,6 @@
   z-index: 1;
   padding: 0 5cqw 4cqw;
   background: rgba(12, 14, 12, 0.85);
-}
-
-.bold {
-  --stock: #f6efe2;
-  --edge: var(--bc);
-  --edge-w: 3cqw;
-  --corner: 5cqw;
 }
 .bold .head .name {
   display: none;
@@ -1169,6 +809,28 @@
   font-style: italic;
   color: var(--ink-muted);
 }
+
+.card[data-paper='label'] .panel {
+  background: #f7f0df;
+  --ink: #3a2f26;
+  border: 0.6cqw solid #c8baa0;
+  border-radius: 0;
+}
+.card[data-paper='inset'] .panel {
+  background: color-mix(in srgb, var(--stock) 90%, #000);
+  box-shadow: inset 0 0.8cqw 1.8cqw #0003;
+  border: 0.3cqw solid color-mix(in srgb, var(--ink) 25%, transparent);
+}
+.card[data-paper='tinted'] .panel {
+  background: color-mix(in srgb, var(--stock) 85%, var(--ac));
+  border-left: 1cqw solid var(--ac);
+}
+.card[data-paper='transparent'] .panel {
+  background: none;
+  box-shadow: none;
+  padding-left: 0;
+  padding-right: 0;
+}
 .fieldnote .foot,
 .dossier .foot {
   padding-top: 2.6cqw;
@@ -1176,8 +838,6 @@
 }
 
 .fieldnote {
-  --stock: #fbf6ea;
-  --edge: #cdbfa6;
   --rule: rgba(96, 132, 146, 0.28);
 }
 
@@ -1203,15 +863,7 @@
   background-position: 1.5cqw 2.4cqw;
 }
 .dossier {
-  --stock: #23292b;
-  --ink: #ece5d6;
-  --ink-muted: #a9b2ad;
-  --edge: #12181a;
   --rule: rgba(178, 206, 214, 0.26);
-}
-.dossier:not([data-texture]) {
-  --tex-opacity: 0.16;
-  --tex-blend: screen;
 }
 
 .dossier .panel {
@@ -1252,19 +904,6 @@
   clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
 }
 
-.card[data-weight='fine'] {
-  --edge-w: 1.2cqw;
-}
-.card[data-weight='standard'] {
-  --edge-w: 2.1cqw;
-}
-.card[data-weight='bold'] {
-  --edge-w: 3cqw;
-}
-.card[data-weight='heavy'] {
-  --edge-w: 4.4cqw;
-}
-
 .fieldnote[data-paper='aged'] .panel {
   background-color: #f8efd9;
   background-image:
@@ -1284,7 +923,6 @@
     inset 0 0.6cqw 1.6cqw rgba(0, 0, 0, 0.45);
 }
 
-/* Inspector rotation offsets the fixed scene-light response. */
 .card[data-lit][data-treatment='holo'] .chaseField {
   filter: hue-rotate(calc(var(--ry, 0) * 0.3deg));
 }

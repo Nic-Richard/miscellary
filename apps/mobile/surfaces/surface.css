@@ -1,0 +1,61 @@
+:root {
+  --font-display: 'Bebas Neue';
+  --font-body: 'Roboto Condensed';
+  --font-playfair: 'Playfair Display';
+  --font-cinzel: 'Cinzel';
+  --font-archivo: 'Archivo Black';
+  --font-spacemono: 'Space Mono';
+  --font-caveat: 'Caveat';
+  --font-alfa: 'Alfa Slab One';
+}
+html,
+body {
+  margin: 0;
+  min-height: 0;
+  background: transparent;
+}
+body {
+  overflow-x: hidden;
+}
+#content {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+body[data-surface='card'] {
+  overflow: hidden;
+}
+body[data-surface='card'] #content {
+  --card-max: none;
+  width: 100vw;
+  height: 140vw;
+}
+.card-slot {
+  display: block;
+  width: 100%;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  --card-max: none;
+}
+.binder-viewport {
+  width: 100%;
+  overflow: hidden;
+}
+.binder-viewport[data-half='true'] > div {
+  width: 200%;
+  max-width: none;
+}
+.binder-viewport[data-half='true'][data-right='true'] > div {
+  margin-left: -100%;
+}
+body[data-surface='pack'] #content > div {
+  width: 100%;
+  max-width: none;
+}
+body[data-surface$='editor'] #content {
+  padding: 12px;
+}
+body[data-surface='inspect'] {
+  background: #241d16;
+}

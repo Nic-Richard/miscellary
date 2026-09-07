@@ -2,7 +2,13 @@
 
 import { createContext, useContext, useEffect, useId, useRef, useState } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
-import { INK_FAMILIES, STOCK_FAMILIES, groupValues, swatchColour } from '@/lib/palette';
+import {
+  INK_FAMILIES,
+  STOCK_COLOURS,
+  STOCK_FAMILIES,
+  groupValues,
+  swatchColour,
+} from '@/lib/palette';
 import type { Family } from '@/lib/palette';
 import styles from './Controls.module.css';
 
@@ -57,7 +63,6 @@ export function Section({
   );
 }
 
-// Close on outside click or Escape so menus cannot stack open.
 function useDismiss(open: boolean, close: () => void) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -90,6 +95,9 @@ function Swatch({ token, swatchFor }: { token: string; swatchFor: SwatchFor }) {
 export type SwatchFor = (token: string) => CSSProperties;
 
 const hexSwatch: SwatchFor = (token) => ({ background: swatchColour(token) });
+const stockSwatch: SwatchFor = (token) => ({
+  background: STOCK_COLOURS[token] ?? swatchColour(token),
+});
 
 export interface MenuProps {
   value: string;
@@ -99,8 +107,6 @@ export interface MenuProps {
   families?: Family[];
   swatchFor?: SwatchFor;
   labels?: Record<string, string>;
-  /** Values this card cannot use yet, mapped to the tier that opens them.
-      Locked values stay visible so the ladder is legible from any tier. */
   locks?: Record<string, string>;
   align?: 'left' | 'right';
 }
@@ -111,7 +117,7 @@ export function ColourMenu({
   onChange,
   palette = 'ink',
   families: given,
-  swatchFor = hexSwatch,
+  swatchFor: givenSwatch,
   labels,
   locks,
   align = 'left',
@@ -119,8 +125,12 @@ export function ColourMenu({
   const fieldLabel = useContext(FieldLabelContext);
   const [open, setOpen] = useState(false);
   const ref = useDismiss(open, () => setOpen(false));
+  const swatchFor = givenSwatch ?? (palette === 'stock' ? stockSwatch : hexSwatch);
   const base: Family[] = given ?? (palette === 'stock' ? STOCK_FAMILIES : INK_FAMILIES);
-  const families = groupValues(values, base);
+  const families = groupValues(
+    values.filter((v) => v !== 'auto'),
+    base,
+  );
   const hasRarity = values.includes('rarity');
   const name = (v: string) => named(labels, v);
 
@@ -145,6 +155,15 @@ export function ColourMenu({
       </button>
       {open ? (
         <div className={`${styles.popover} ${align === 'right' ? styles.popoverRight : ''}`}>
+          {values.includes('auto') ? (
+            <button
+              type="button"
+              className={`${styles.special} ${value === 'auto' ? styles.specialOn : ''}`}
+              onClick={() => pick('auto')}
+            >
+              {name('auto')}
+            </button>
+          ) : null}
           {hasRarity ? (
             <button
               type="button"
@@ -265,8 +284,6 @@ export function Segmented({
   );
 }
 
-/** A grid of rendered samples, for options whose names mean nothing on their
-    own: choosing a surface or a coat should show the material, not the word. */
 export function TileGrid({
   value,
   values,

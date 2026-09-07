@@ -8,6 +8,7 @@ import {
   RARITIES,
   RARITY_LABELS,
   validateDescription,
+  prepareCardDesign,
 } from '@miscellary/shared';
 import type {
   Card,
@@ -22,7 +23,7 @@ import CardPreview from './CardPreview';
 import ImagePicker from './ImagePicker';
 import { ChoiceMenu, ColourMenu, Field, Section, Segmented, TileGrid } from './controls';
 import { FONT_LABELS } from '@/lib/fonts';
-import { coatTile, textureTile } from '@/lib/palette';
+import { borderTile, coatTile, shapeTile, textureTile } from '@/lib/palette';
 import { GROUP_LABELS, GROUP_NOTES, valueLabel, valueLabels } from '@/lib/templateLabels';
 import ui from './ui.module.css';
 import { ApiRequestError } from '@/lib/api';
@@ -39,6 +40,12 @@ interface CardFormProps {
 }
 
 const TEXT_KEYS = new Set(['fieldnote', 'dossier']);
+const OPTION_TILES: Record<string, typeof textureTile> = {
+  texture: textureTile,
+  finish: coatTile,
+  shape: shapeTile,
+  weight: borderTile,
+};
 const TEMPLATE_GROUPS = [
   { label: 'Photo first', match: (key: string) => !TEXT_KEYS.has(key) },
   { label: 'With a description', match: (key: string) => TEXT_KEYS.has(key) },
@@ -62,7 +69,6 @@ function reached(needed: Rarity | undefined, rarity: Rarity): boolean {
   return !needed || RARITIES.indexOf(rarity) >= RARITIES.indexOf(needed);
 }
 
-/** Values this tier cannot print yet, mapped to the tier that opens them. */
 function locksFor(opt: TemplateOption, rarity: Rarity): Record<string, string> {
   const out: Record<string, string> = {};
   for (const v of opt.values) {
@@ -72,12 +78,12 @@ function locksFor(opt: TemplateOption, rarity: Rarity): Record<string, string> {
   return out;
 }
 
-/** What each tier adds on top of the one below it, for this template. */
 function ladder(template: CardTemplate | undefined): Map<Rarity, string[]> {
   const byTier = new Map<Rarity, string[]>();
   const add = (tier: Rarity, what: string) => byTier.set(tier, [...(byTier.get(tier) ?? []), what]);
   if (template?.unlocks) add(template.unlocks, `the ${template.name} template`);
   for (const [name, opt] of Object.entries(template?.options ?? {})) {
+    if (['gradient', 'relief', 'treatment', 'coverage'].includes(name)) continue;
     for (const v of opt.values) {
       const needed = opt.unlocks?.[v];
       if (needed) add(needed, valueLabel(name, v).toLowerCase());
@@ -86,7 +92,6 @@ function ladder(template: CardTemplate | undefined): Map<Rarity, string[]> {
   return byTier;
 }
 
-/** Bring a config back inside what a rarity may print, and say what moved. */
 function settle(
   template: CardTemplate,
   config: TemplateConfig,
@@ -101,7 +106,6 @@ function settle(
       moved.push(valueLabel(name, value).toLowerCase());
     }
   }
-  // A legendary card must carry a chase, and nothing below it may.
   const chase = next.treatment ?? 'none';
   if (rarity === 'legendary' && chase === 'none') next.treatment = 'foil';
   return { config: next, moved };
@@ -145,7 +149,6 @@ export default function CardForm({
     setNote(null);
   }
 
-  // Keep existing config valid when rarity changes.
   function pickRarity(next: Rarity) {
     setRarity(next);
     if (!template) return;
@@ -183,7 +186,7 @@ export default function CardForm({
       rarity,
       description,
       template_key: templateKey,
-      template_config: config,
+      template_config: prepareCardDesign(templateKey, config, rarity),
     };
     try {
       if (card) await updateCard(setId, card.id, body);
@@ -202,7 +205,6 @@ export default function CardForm({
   function control(name: string, opt: TemplateOption) {
     const value = config[name] ?? opt.default;
     const set = (v: string) => setConfig({ ...config, [name]: v });
-    // Legendary cards cannot be saved without a chase treatment.
     const values =
       name === 'treatment' && rarity === 'legendary'
         ? opt.values.filter((v) => v !== 'none')
@@ -210,8 +212,8 @@ export default function CardForm({
     const locks = locksFor(opt, rarity);
     const labels = opt.type === 'font' ? FONT_LABELS : valueLabels(name, values);
 
-    if (name === 'texture' || name === 'finish') {
-      const tileFor = name === 'texture' ? textureTile : coatTile;
+    const tileFor = OPTION_TILES[name];
+    if (tileFor) {
       return (
         <TileGrid
           value={value}
@@ -252,7 +254,7 @@ export default function CardForm({
       ([, opt]) => (opt.group ?? 'board') === name,
     );
     const shown = options.filter(
-      ([key]) => key !== 'coverage' || (config.treatment ?? 'none') !== 'none',
+      ([key]) => !['gradient', 'relief', 'treatment', 'coverage'].includes(key),
     );
     if (shown.length === 0) return null;
     return (
@@ -309,7 +311,7 @@ export default function CardForm({
         </div>
         <p className={styles.tierNote}>
           {rarity === 'legendary'
-            ? 'A legendary card is struck with a foil or holographic chase.'
+            ? 'A foil or holographic finish is matched automatically to your design.'
             : nextTier
               ? `${RARITY_LABELS[nextTier]} adds ${opens.get(nextTier)!.join(', ')}.`
               : 'Every option on this template is open at this tier.'}
@@ -401,7 +403,7 @@ export default function CardForm({
             description={description}
             imageUrl={image?.url ?? null}
             templateKey={templateKey}
-            templateConfig={config}
+            templateConfig={prepareCardDesign(templateKey, config, rarity)}
             mark={mark}
           />
         </div>

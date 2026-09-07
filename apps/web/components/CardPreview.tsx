@@ -1,4 +1,6 @@
+import { paintToCss, resolveCardTokens } from '@miscellary/shared';
 import type { Rarity, TemplateConfig } from '@miscellary/shared';
+import type { CSSProperties } from 'react';
 import Description from './Description';
 import SetMark from './SetMark';
 import { resolveMark } from '@/lib/setIdentity';
@@ -41,7 +43,43 @@ function restOf(description: string): string {
         .trim();
 }
 
-/* Sibling layers keep blend modes against the card itself. */
+/* Written out rather than built from the token so the surfaces bundler can inline each file. */
+const TEXTURE_URLS: Record<string, string> = {
+  linen: '/materials/tex-linen.png',
+  canvas: '/materials/tex-canvas.png',
+  grain: '/materials/tex-grain.png',
+  felt: '/materials/tex-felt.png',
+  brushed: '/materials/tex-brushed.png',
+};
+
+function cardVars(templateKey: string, config: TemplateConfig, rarity: Rarity): CSSProperties {
+  const t = resolveCardTokens(templateKey, config, rarity);
+  const vars: Record<string, string> = {
+    '--stock': t.stock,
+    '--edge': paintToCss(t.edge),
+    '--edge-w': `${t.edgeWidth}cqw`,
+    '--corner': `${t.corner}cqw`,
+    '--ink': t.ink,
+    '--ink-muted': t.inkMuted,
+    '--art-bg': t.artBg,
+    '--ac': t.accent,
+    '--bc': t.border,
+    '--rc': t.rarity,
+    '--core': t.core,
+  };
+  if (t.glow) vars['--glow'] = t.glow;
+  if (t.texture) {
+    const { image, size, opacity, blend } = t.texture;
+    const url = image && image !== 'none' ? TEXTURE_URLS[image] : null;
+    if (image === 'none') vars['--tex'] = 'none';
+    else if (url) vars['--tex'] = `url('${url}')`;
+    if (size !== null) vars['--tex-size'] = `${size}px`;
+    if (opacity !== null) vars['--tex-opacity'] = String(opacity);
+    if (blend) vars['--tex-blend'] = blend;
+  }
+  return vars as CSSProperties;
+}
+
 function chaseLayers(css: Record<string, string>, framed: boolean) {
   const frame = framed ? ` ${css.chaseFrame}` : '';
   return (
@@ -80,6 +118,7 @@ export default function CardPreview({
       className={`${styles.card} ${styles[templateKey] ?? styles.classic} ${size === 'small' ? styles.small : styles.large}`}
       data-rarity={rarity}
       data-lit={lit ? '' : undefined}
+      style={cardVars(templateKey, templateConfig, rarity)}
       {...data}
     >
       <div className={styles.stock}>

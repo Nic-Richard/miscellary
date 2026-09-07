@@ -5,33 +5,43 @@
   "type": "module",
   "main": "expo-router/entry",
   "scripts": {
-    "dev": "expo start",
-    "android": "expo start --android",
-    "build": "expo export --platform android --output-dir dist",
-    "typecheck": "tsc --noEmit",
-    "lint": "eslint ."
+    "surfaces:build": "node scripts/build-surfaces.mjs",
+    "dev": "pnpm surfaces:build && expo start",
+    "android": "pnpm surfaces:build && expo start --android",
+    "build": "pnpm surfaces:build && expo export --platform android --output-dir dist",
+    "typecheck": "pnpm surfaces:build && tsc --noEmit && tsc -p surfaces/tsconfig.json",
+    "lint": "eslint .",
+    "test": "node --experimental-strip-types --test tests/connection.test.mjs"
   },
   "dependencies": {
+    "@expo/vector-icons": "14.1.0",
     "@miscellary/shared": "workspace:*",
     "expo": "~53.0.9",
     "expo-constants": "~17.1.6",
     "expo-file-system": "~18.1.11",
+    "expo-font": "~13.3.2",
     "expo-image-manipulator": "~13.1.7",
     "expo-image-picker": "~16.1.4",
+    "expo-linear-gradient": "~14.1.5",
     "expo-linking": "~7.1.5",
-    "expo-router": "~5.0.7",
+    "expo-router": "~5.1.11",
     "expo-secure-store": "~14.2.3",
     "expo-status-bar": "~2.2.3",
     "react": "19.0.0",
-    "react-native": "0.79.2",
+    "react-dom": "19.0.0",
+    "react-native": "0.79.6",
     "react-native-safe-area-context": "5.4.0",
-    "react-native-screens": "~4.10.0"
+    "react-native-screens": "~4.11.1",
+    "react-native-svg": "15.11.2",
+    "react-native-webview": "13.13.5"
   },
   "devDependencies": {
     "@babel/core": "^7.27.4",
     "@miscellary/config": "workspace:*",
     "@types/node": "^22.15.30",
     "@types/react": "19.1.17",
+    "@types/react-dom": "19.1.11",
+    "esbuild": "^0.28.2",
     "eslint": "^9.28.0",
     "typescript": "~5.8.3"
   }

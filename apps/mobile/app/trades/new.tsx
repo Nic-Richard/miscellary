@@ -43,6 +43,8 @@ function Picker({
               <CardPreview
                 width={100}
                 title={c.card.title}
+                description={c.card.description}
+                mark={c.set_mark}
                 rarity={c.card.rarity}
                 imageUrl={c.card.image.url}
                 templateKey={c.card.template_key}

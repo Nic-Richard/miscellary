@@ -4,8 +4,10 @@
     "slug": "miscellary",
     "scheme": "miscellary",
     "version": "0.0.1",
-    "orientation": "portrait",
-    "userInterfaceStyle": "dark",
+    "orientation": "default",
+    "userInterfaceStyle": "light",
+    "androidStatusBar": { "barStyle": "dark-content", "backgroundColor": "#f4eee1" },
+    "androidNavigationBar": { "barStyle": "dark-content", "backgroundColor": "#f9f4ea" },
     "newArchEnabled": true,
     "android": {
       "package": "com.miscellary.app",
@@ -20,9 +22,6 @@
           "cameraPermission": "Miscellary uses the camera to photograph the things you collect."
         }
       ]
-    ],
-    "extra": {
-      "apiUrl": "http://10.0.2.2:8000"
-    }
+    ]
   }
 }

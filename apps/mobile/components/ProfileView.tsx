@@ -95,6 +95,8 @@ export default function ProfileView({
             key={slot.position}
             width={150}
             title={slot.owned_card.card.title}
+            description={slot.owned_card.card.description}
+            mark={slot.owned_card.set_mark}
             rarity={slot.owned_card.card.rarity}
             imageUrl={slot.owned_card.card.image.url}
             templateKey={slot.owned_card.card.template_key}

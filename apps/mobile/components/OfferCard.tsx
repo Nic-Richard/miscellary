@@ -1,28 +1,37 @@
 import type { OwnedCard, TradeOffer } from '@miscellary/shared';
 import { router } from 'expo-router';
-import { StyleSheet, Text, View } from 'react-native';
-import { colors } from '@/lib/theme';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Feather } from '@expo/vector-icons';
+import { colors, fonts } from '@/lib/theme';
 import CardPreview from './CardPreview';
 import { Button, Muted } from './ui';
 
 function Side({ label, cards }: { label: string; cards: OwnedCard[] }) {
   return (
     <View style={{ flex: 1, gap: 6 }}>
-      <Muted style={styles.sideLabel}>{label}</Muted>
-      <View style={styles.cards}>
+      <Muted style={styles.sideLabel}>
+        {label} · {cards.length}
+      </Muted>
+      <ScrollView
+        horizontal
+        contentContainerStyle={styles.cards}
+        showsHorizontalScrollIndicator={false}
+      >
         {cards.length === 0 ? <Muted style={{ fontSize: 12 }}>nothing</Muted> : null}
         {cards.map((c) => (
           <CardPreview
             key={c.id}
-            width={90}
+            width={104}
             title={c.card.title}
+            description={c.card.description}
+            mark={c.set_mark}
             rarity={c.card.rarity}
             imageUrl={c.card.image.url}
             templateKey={c.card.template_key}
             templateConfig={c.card.template_config}
           />
         ))}
-      </View>
+      </ScrollView>
     </View>
   );
 }
@@ -48,7 +57,7 @@ export default function OfferCard({ offer, me, busy, onAction }: OfferCardProps)
   return (
     <View style={styles.root}>
       <View style={styles.header}>
-        <Text style={{ color: colors.muted }}>
+        <Text style={{ color: colors.muted, fontFamily: fonts.body, fontSize: 16, flexShrink: 1 }}>
           {incoming ? 'From' : 'To'}{' '}
           <Text style={{ color: colors.text, fontWeight: '700' }}>@{other.username}</Text>
           {offer.counter_of ? <Text style={{ color: colors.gold }}> · counter</Text> : null}
@@ -56,8 +65,12 @@ export default function OfferCard({ offer, me, busy, onAction }: OfferCardProps)
         <Text
           style={{
             color: statusColor,
-            fontSize: 10,
-            fontWeight: '700',
+            fontSize: 11,
+            fontFamily: fonts.medium,
+            backgroundColor: colors.sur2,
+            paddingHorizontal: 8,
+            paddingVertical: 5,
+            borderRadius: 4,
             textTransform: 'uppercase',
           }}
         >
@@ -65,11 +78,21 @@ export default function OfferCard({ offer, me, busy, onAction }: OfferCardProps)
         </Text>
       </View>
       {offer.message ? (
-        <Muted style={{ fontStyle: 'italic', fontSize: 13 }}>“{offer.message}”</Muted>
+        <Muted
+          style={{
+            fontSize: 15,
+            padding: 12,
+            backgroundColor: colors.bg,
+            borderLeftWidth: 2,
+            borderLeftColor: colors.bdr2,
+          }}
+        >
+          “{offer.message}”
+        </Muted>
       ) : null}
       <View style={styles.sides}>
         <Side label={incoming ? 'They give' : 'You give'} cards={offer.give} />
-        <Text style={{ color: colors.faint, fontSize: 18, alignSelf: 'center' }}>⇄</Text>
+        <Feather name="repeat" color={colors.accent} size={18} style={{ alignSelf: 'center' }} />
         <Side label={incoming ? 'They want' : 'You get'} cards={offer.want} />
       </View>
       {offer.status === 'pending' ? (
@@ -111,13 +134,20 @@ const styles = StyleSheet.create({
     backgroundColor: colors.sur,
     borderColor: colors.bdr2,
     borderWidth: 1,
-    borderRadius: 8,
-    padding: 12,
-    gap: 10,
+    borderRadius: 6,
+    borderTopWidth: 3,
+    borderTopColor: colors.accent,
+    padding: 16,
+    gap: 16,
   },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  sideLabel: { fontSize: 10, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5 },
+  sideLabel: {
+    fontSize: 12,
+    fontFamily: fonts.medium,
+    textTransform: 'uppercase',
+    letterSpacing: 0.7,
+  },
   sides: { flexDirection: 'row', gap: 8 },
-  cards: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  cards: { gap: 8, paddingBottom: 8 },
   actions: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
 });

@@ -60,6 +60,7 @@ export default function SearchScreen() {
             <CardPreview
               width={150}
               title={c.title}
+              description={c.description}
               rarity={c.rarity}
               imageUrl={c.image.url}
               templateKey={c.template_key}

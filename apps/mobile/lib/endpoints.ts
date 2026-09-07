@@ -18,8 +18,16 @@ import type {
 } from '@miscellary/shared';
 import { apiFetch } from './api';
 
-export const listPublicSets = (sort: 'new' | 'popular' = 'new') =>
-  apiFetch<Paginated<CardSetSummary>>(`/api/v1/sets/?sort=${sort}`);
+export const listPublicSets = (
+  sort: 'new' | 'popular' = 'new',
+  next: string | null = null,
+  signal?: AbortSignal,
+) => {
+  // Pagination URLs may carry the Docker host; keep requests on our configured API.
+  const page = next?.match(/[?&]page=(\d+)(?:&|$)/)?.[1];
+  const query = `sort=${sort}${page ? `&page=${encodeURIComponent(page)}` : ''}`;
+  return apiFetch<Paginated<CardSetSummary>>(`/api/v1/sets/?${query}`, { auth: false, signal });
+};
 export const getPublicSet = (slug: string) => apiFetch<CardSetDetail>(`/api/v1/sets/${slug}/`);
 export const listTemplates = () => apiFetch<CardTemplate[]>('/api/v1/templates/', { auth: false });
 export const search = (q: string) =>

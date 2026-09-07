@@ -1,0 +1,90 @@
+{
+  "nasa:PIA02873": {
+    "subject": "Jupiter",
+    "url": "https://images-assets.nasa.gov/image/PIA02873/PIA02873~small.jpg",
+    "source": "https://images.nasa.gov/details/PIA02873",
+    "credit": "NASA/JPL/Space Science Institute",
+    "rights": "NASA media usage guidelines; no endorsement implied",
+    "rights_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/"
+  },
+  "nasa:PIA01492": {
+    "subject": "Neptune",
+    "url": "https://images-assets.nasa.gov/image/PIA01492/PIA01492~medium.jpg",
+    "source": "https://images.nasa.gov/details/PIA01492",
+    "credit": "NASA/JPL",
+    "rights": "NASA media usage guidelines; no endorsement implied",
+    "rights_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/"
+  },
+  "nasa:PIA00271": {
+    "subject": "Venus — radar globe",
+    "url": "https://images-assets.nasa.gov/image/PIA00271/PIA00271~medium.jpg",
+    "source": "https://images.nasa.gov/details/PIA00271",
+    "credit": "NASA/JPL",
+    "rights": "NASA media usage guidelines; no endorsement implied",
+    "rights_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/"
+  },
+  "nasa:PIA19048": {
+    "subject": "Europa",
+    "url": "https://images-assets.nasa.gov/image/PIA19048/PIA19048~medium.jpg",
+    "source": "https://images.nasa.gov/details/PIA19048",
+    "credit": "NASA/JPL-Caltech/SETI Institute",
+    "rights": "NASA media usage guidelines; no endorsement implied",
+    "rights_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/"
+  },
+  "nasa:PIA18182": {
+    "subject": "Uranus",
+    "url": "https://images-assets.nasa.gov/image/PIA18182/PIA18182~medium.jpg",
+    "source": "https://images.nasa.gov/details/PIA18182",
+    "credit": "NASA/JPL-Caltech",
+    "rights": "NASA media usage guidelines; no endorsement implied",
+    "rights_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/"
+  },
+  "nasa:PIA14922": {
+    "subject": "Titan and Saturn",
+    "url": "https://images-assets.nasa.gov/image/PIA14922/PIA14922~medium.jpg",
+    "source": "https://images.nasa.gov/details/PIA14922",
+    "credit": "NASA/JPL-Caltech/Space Science Institute",
+    "rights": "NASA media usage guidelines; no endorsement implied",
+    "rights_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/"
+  },
+  "camera:sx70": {
+    "subject": "Polaroid SX-70",
+    "url": "https://live.staticflickr.com/2654/3795892866_335dd86309_o.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Polaroid_SX-70_camera.jpg",
+    "credit": "Michael Gatchell",
+    "rights": "CC BY 2.0",
+    "rights_url": "https://creativecommons.org/licenses/by/2.0/"
+  },
+  "camera:pentax-k1000": {
+    "subject": "Pentax K1000",
+    "url": "https://upload.wikimedia.org/wikipedia/commons/e/e9/Pentax_K1000.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Pentax_K1000.jpg",
+    "credit": "Martin Taylor",
+    "rights": "CC BY-SA 2.5",
+    "rights_url": "https://creativecommons.org/licenses/by-sa/2.5/"
+  },
+  "camera:nikon-f": {
+    "subject": "Nikon F",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b7/Nikon_F_35mm.jpg/960px-Nikon_F_35mm.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Nikon_F_35mm.jpg",
+    "credit": "Hiyotada",
+    "rights": "CC0 1.0",
+    "rights_url": "https://creativecommons.org/publicdomain/zero/1.0/"
+  },
+  "camera:canon-ae1": {
+    "subject": "Canon AE-1",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/58/Canon_AE-1_front_with_50mm_lens.jpg/960px-Canon_AE-1_front_with_50mm_lens.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Canon_AE-1_front_with_50mm_lens.jpg",
+    "credit": "Cburnett",
+    "rights": "CC BY-SA 3.0",
+    "rights_url": "https://creativecommons.org/licenses/by-sa/3.0/"
+  },
+  "camera:leica-m3": {
+    "subject": "Leica M3",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6c/Leica_M3.jpg/960px-Leica_M3.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Leica_M3.jpg",
+    "credit": "Aconcagua",
+    "rights": "CC BY-SA 3.0",
+    "rights_url": "https://creativecommons.org/licenses/by-sa/3.0/"
+  }
+}
