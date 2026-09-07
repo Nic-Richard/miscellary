@@ -11,5 +11,5 @@
     "skipLibCheck": true,
     "paths": { "@/*": ["../../web/*"] }
   },
-  "include": ["**/*.ts", "**/*.tsx", "../../web/next-env.d.ts"]
+  "include": ["**/*.ts", "**/*.tsx"]
 }
