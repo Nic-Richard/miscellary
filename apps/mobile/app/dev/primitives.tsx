@@ -5,6 +5,7 @@ import Svg, { Circle, Defs, RadialGradient, Rect, Stop, Mask } from 'react-nativ
 import { useCallback, useEffect, useState } from 'react';
 import { CARD_FIXTURES } from '@miscellary/shared';
 import type { Card, CardFixture } from '@miscellary/shared';
+import CardBack from '@/components/CardBack';
 import CardPreview from '@/components/card/CardPreview';
 import { Button, ErrorText, Loading, Muted } from '@/components/ui';
 import { getMySet, getPublicSet, listMySets, listPublicSets } from '@/lib/endpoints';
@@ -145,6 +146,29 @@ function FixtureGallery() {
   );
 }
 
+function CardBackGallery() {
+  const backs = [
+    { title: 'Other Worlds', mark: 'waves', packColour: 'mint' },
+    { title: 'Night Signals', mark: 'moon', packColour: 'indigo' },
+    { title: 'Field Archive', mark: 'leaf', packColour: 'cream' },
+    { title: 'No Set Mark', mark: 'none', packColour: 'black' },
+  ];
+  return (
+    <>
+      <Text style={styles.title}>Native card backs</Text>
+      <Text style={styles.note}>
+        Coloured, neutral, marked, and unmarked backs using the web geometry and shared identity
+        colours.
+      </Text>
+      <View style={styles.backGrid}>
+        {backs.map((back) => (
+          <CardBack key={`${back.mark}-${back.packColour}`} width={140} {...back} />
+        ))}
+      </View>
+    </>
+  );
+}
+
 function Probe({
   label,
   expect,
@@ -189,6 +213,7 @@ export default function PrimitivesScreen() {
       <Stack.Screen options={{ title: 'Native cards' }} />
       <RealCards />
       <FixtureGallery />
+      <CardBackGallery />
 
       <Text style={styles.title}>Renderer primitives</Text>
       <Text style={styles.note}>
@@ -336,6 +361,7 @@ const styles = StyleSheet.create({
   page: { padding: 16, gap: 12, paddingBottom: 48 },
   title: { fontFamily: fonts.display, fontSize: 28, color: colors.text },
   note: { fontFamily: fonts.body, fontSize: 13, color: colors.muted, marginBottom: 4 },
+  backGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   probe: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   swatch: {
     width: 72,

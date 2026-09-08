@@ -76,6 +76,7 @@ export default function CardWindow({
           <Image
             source={{ uri: imageUrl }}
             resizeMode="cover"
+            fadeDuration={0}
             style={{ position: 'absolute', inset: 0 }}
           />
         ) : null}

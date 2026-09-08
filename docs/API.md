@@ -87,17 +87,17 @@ moved in the meantime the offer is cancelled instead.
 
 ## Social
 
-| Method      | Path                                          | Auth     | Notes                                                                                        |
-| ----------- | --------------------------------------------- | -------- | -------------------------------------------------------------------------------------------- |
-| GET         | `/users/{username}/`                          | optional | profile: counts, `showcase_title`, `is_following`, `is_me`, showcase, published sets         |
-| POST/DELETE | `/users/{username}/follow/`                   | bearer   | → `{following, follower_count}`                                                              |
-| GET         | `/users/{username}/followers/`, `/following/` | –        | up to 200 people                                                                             |
-| GET/PUT     | `/me/showcase/`                               | bearer   | PUT `{slots: [{position, owned_card_id}]}` replaces up to six; only owned cards are accepted |
-| POST/DELETE | `/sets/{slug}/like/`, `/cards/{id}/like/`     | bearer   | → `{liked, like_count}`                                                                      |
-| GET/POST    | `/sets/{slug}/comments/`                      | optional | GET `{count, results}`; authenticated POST `{body, parent_id?}` creates a comment or reply   |
-| DELETE      | `/comments/{id}/`                             | bearer   | author or set creator; comments with replies remain as tombstones                            |
-| POST        | `/reports/`                                   | bearer   | exactly one of `set_slug`, `card_id`, `comment_id`, `username` + `reason` + `details?`       |
-| GET         | `/search/?q=`                                 | –        | `{users, sets, cards}`; Postgres full-text for sets/cards, name match for people             |
+| Method      | Path                                          | Auth     | Notes                                                                                                                      |
+| ----------- | --------------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------- |
+| GET         | `/users/{username}/`                          | optional | profile: counts, `showcase_title`, `is_following`, `is_me`, showcase, published sets                                       |
+| POST/DELETE | `/users/{username}/follow/`                   | bearer   | → `{following, follower_count}`                                                                                            |
+| GET         | `/users/{username}/followers/`, `/following/` | –        | up to 200 people                                                                                                           |
+| GET/PUT     | `/me/showcase/`                               | bearer   | PUT `{slots: [{position, owned_card_id}]}` replaces up to 40; positions are 1 through 40 and only owned cards are accepted |
+| POST/DELETE | `/sets/{slug}/like/`, `/cards/{id}/like/`     | bearer   | → `{liked, like_count}`                                                                                                    |
+| GET/POST    | `/sets/{slug}/comments/`                      | optional | GET `{count, results}`; authenticated POST `{body, parent_id?}` creates a comment or reply                                 |
+| DELETE      | `/comments/{id}/`                             | bearer   | author or set creator; comments with replies remain as tombstones                                                          |
+| POST        | `/reports/`                                   | bearer   | exactly one of `set_slug`, `card_id`, `comment_id`, `username` + `reason` + `details?`                                     |
+| GET         | `/search/?q=`                                 | –        | `{users, sets, cards}`; Postgres full-text for sets/cards, name match for people                                           |
 
 Platform removal of a set (admin action) wipes every distributed copy and cancels pending trades
 that included them. A creator's own delete keeps collectors' copies.

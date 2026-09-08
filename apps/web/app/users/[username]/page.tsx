@@ -56,7 +56,7 @@ export default function ProfilePageView() {
   const joined = new Date(profile.created_at).getFullYear();
   const binder = Array.from(
     { length: SHOWCASE_SLOTS },
-    (_, i) => profile.showcase.find((s) => s.position === i) ?? null,
+    (_, i) => profile.showcase.find((s) => s.position === i + 1) ?? null,
   );
 
   return (

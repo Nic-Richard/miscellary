@@ -1,5 +1,6 @@
 import type { CardSetDetail, PackOpening, PackStatus } from '@miscellary/shared';
-import { Link, useLocalSearchParams } from 'expo-router';
+import Feather from '@expo/vector-icons/Feather';
+import { Link, router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCallback, useEffect, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -104,12 +105,24 @@ export default function BinderScreen() {
       style={{ backgroundColor: colors.bg }}
       contentContainerStyle={{
         padding: 16,
+        paddingTop: 12 + insets.top,
         paddingLeft: 16 + insets.left,
         paddingRight: 16 + insets.right,
         paddingBottom: 40 + insets.bottom,
       }}
     >
-      <Tag>{set.status === 'draft' ? 'Draft preview' : 'Binder'}</Tag>
+      <View style={styles.topline}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+          hitSlop={8}
+          onPress={() => router.back()}
+          style={({ pressed }) => [styles.back, pressed && { opacity: 0.55 }]}
+        >
+          <Feather name="arrow-left" size={22} color={colors.text} />
+        </Pressable>
+        <Tag>{set.status === 'draft' ? 'Draft preview' : 'Binder'}</Tag>
+      </View>
       <Title>{set.title}</Title>
       <View style={styles.metaRow}>
         <Link href={{ pathname: '/users/[username]', params: { username: set.creator.username } }}>
@@ -192,6 +205,17 @@ export default function BinderScreen() {
 }
 
 const styles = StyleSheet.create({
+  topline: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 4 },
+  back: {
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: colors.bdr2,
+    backgroundColor: colors.sur,
+  },
   metaRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
   social: { flexDirection: 'row', gap: 14, alignItems: 'center', marginVertical: 10 },
   like: {

@@ -5,10 +5,12 @@ export default function SetMark({
   mark = 'waves',
   size,
   color,
+  strokeWidth = 1.6,
 }: {
   mark?: string;
   size: number;
   color: string;
+  strokeWidth?: number;
 }) {
   if (mark === 'none') return null;
   return (
@@ -20,7 +22,7 @@ export default function SetMark({
             d={path}
             fill="none"
             stroke={color}
-            strokeWidth={1.6}
+            strokeWidth={strokeWidth}
             strokeLinecap="round"
             strokeLinejoin="round"
           />

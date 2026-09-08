@@ -244,6 +244,7 @@ export interface TradeOfferWrite {
 }
 
 export interface ShowcaseSlot {
+  /** Public sleeve number, from 1 through SHOWCASE_SLOTS. */
   position: number;
   owned_card: OwnedCard;
 }

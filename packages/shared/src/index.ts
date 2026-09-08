@@ -8,3 +8,4 @@ export * from './cardMaterial';
 export * from './cardText';
 export * from './cardTokens';
 export * from './setMarks';
+export * from './setIdentity';

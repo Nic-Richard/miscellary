@@ -1,16 +1,22 @@
 import type { Card, CardSetDetail } from '@miscellary/shared';
 import { useState } from 'react';
-import { Modal, View, useWindowDimensions } from 'react-native';
+import { Modal, Pressable, Text, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import SharedSurface from './SharedSurface';
 import BinderDetails from './BinderDetails';
+import NativeBinderPager from './binder/NativeBinderPager';
 import { Button, Muted } from './ui';
+
+export type BinderRenderer = 'web' | 'native';
 
 export default function BinderPages({
   cards,
   set,
   likedIds,
   onLike,
+  colour,
+  mark,
+  renderer = 'native',
 }: {
   cards: Card[];
   colour: string;
@@ -18,6 +24,7 @@ export default function BinderPages({
   likedIds: string[];
   onLike?: (id: string) => void;
   set: CardSetDetail;
+  renderer?: BinderRenderer;
 }) {
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
@@ -31,14 +38,30 @@ export default function BinderPages({
     <View style={{ gap: 12 }}>
       <View style={{ flexDirection: rail ? 'row' : 'column', gap: 12 }}>
         <View style={{ flex: 1 }}>
-          <SharedSurface
-            mode="binder"
-            data={{ set: { ...set, cards }, page: first, half: !landscape }}
-            autoHeight
-            onEvent={(type, id) => {
-              if (type === 'inspect') setSelected(cards.find((card) => card.id === id) ?? null);
-            }}
-          />
+          {renderer === 'native' ? (
+            <NativeBinderPager
+              cards={cards}
+              page={first}
+              pages={pages}
+              half={!landscape}
+              mark={mark}
+              colour={colour}
+              onPageChange={setPage}
+              onInspect={(id) => setSelected(cards.find((card) => card.id === id) ?? null)}
+            />
+          ) : (
+            <SharedSurface
+              mode="binder"
+              data={{ set: { ...set, cards }, page: first, half: !landscape }}
+              autoHeight
+              onEvent={(type, id) => {
+                if (type === 'inspect') setSelected(cards.find((card) => card.id === id) ?? null);
+                if (type === 'page' && typeof id === 'number') {
+                  setPage(Math.max(0, Math.min(pages - (landscape ? 2 : 1), id)));
+                }
+              }}
+            />
+          )}
           <View
             style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
           >
@@ -70,14 +93,14 @@ export default function BinderPages({
       {selected ? (
         <Modal
           visible
+          statusBarTranslucent
+          navigationBarTranslucent
           supportedOrientations={['portrait', 'landscape']}
           onRequestClose={() => setSelected(null)}
         >
           <View
             style={{
               flex: 1,
-              paddingTop: insets.top,
-              paddingBottom: insets.bottom,
               backgroundColor: '#241d16',
             }}
           >
@@ -95,11 +118,38 @@ export default function BinderPages({
               }}
             />
             {onLike ? (
-              <Button
-                title={likedIds.includes(selected.id) ? 'Unlike card' : 'Like card'}
-                kind="secondary"
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={likedIds.includes(selected.id) ? 'Unlike card' : 'Like card'}
+                hitSlop={8}
                 onPress={() => onLike(selected.id)}
-              />
+                style={({ pressed }) => ({
+                  position: 'absolute',
+                  right: insets.right + 14,
+                  bottom: insets.bottom + 14,
+                  width: 40,
+                  height: 40,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: 20,
+                  borderWidth: 1,
+                  borderColor: likedIds.includes(selected.id)
+                    ? 'rgba(213, 109, 100, 0.72)'
+                    : 'rgba(247, 241, 227, 0.24)',
+                  backgroundColor: 'rgba(30, 24, 17, 0.76)',
+                  opacity: pressed ? 0.62 : 1,
+                })}
+              >
+                <Text
+                  style={{
+                    color: likedIds.includes(selected.id) ? '#d56d64' : 'rgba(247, 241, 227, 0.7)',
+                    fontSize: 19,
+                    lineHeight: 21,
+                  }}
+                >
+                  ♥
+                </Text>
+              </Pressable>
             ) : null}
           </View>
         </Modal>

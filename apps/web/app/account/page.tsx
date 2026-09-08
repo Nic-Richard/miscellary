@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import type { CurrentUser, OwnedCard, ShowcaseSlot } from '@miscellary/shared';
 import { SHOWCASE_SLOTS } from '@miscellary/shared';
@@ -30,6 +30,8 @@ export default function AccountPage() {
   const [pinned, setPinned] = useState<Map<string, OwnedCard>>(new Map());
   const [picking, setPicking] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const binderRef = useRef<HTMLDivElement>(null);
+  const pickerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -43,7 +45,7 @@ export default function AccountPage() {
         const next: (string | null)[] = Array(SHOWCASE_SLOTS).fill(null);
         const held = new Map<string, OwnedCard>();
         for (const s of showcase as ShowcaseSlot[]) {
-          next[s.position] = s.owned_card.id;
+          next[s.position - 1] = s.owned_card.id;
           held.set(s.owned_card.id, s.owned_card);
         }
         setPinned(held);
@@ -51,6 +53,14 @@ export default function AccountPage() {
       })
       .catch((e: Error) => setError(e.message));
   }, [user]);
+
+  useEffect(() => {
+    if (picking === null) return;
+    const frame = requestAnimationFrame(() => {
+      pickerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [picking]);
 
   async function saveProfile(e: FormEvent) {
     e.preventDefault();
@@ -72,9 +82,14 @@ export default function AccountPage() {
     }
   }
 
-  async function persistSlots(next: (string | null)[]) {
+  async function persistSlots(next: (string | null)[], returnToBinder = false) {
     setSlots(next);
     setPicking(null);
+    if (returnToBinder) {
+      requestAnimationFrame(() => {
+        binderRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    }
     try {
       await saveShowcase(
         next.flatMap((id, position) => (id ? [{ position, owned_card_id: id }] : [])),
@@ -161,29 +176,32 @@ export default function AccountPage() {
 
       <h2 className={styles.h2}>Your binder</h2>
       <p className={styles.muted}>
-        A page of {SHOWCASE_SLOTS} sleeves at the top of your profile, for anyone who visits. Pin
-        the cards you want shown; a card you trade away leaves its sleeve on its own.
+        Ten pages with {SHOWCASE_SLOTS} sleeves at the top of your profile, for anyone who visits.
+        Pin the cards you want shown; a card you trade away leaves its sleeve on its own.
       </p>
       <div className={styles.cover}>
         <span className={ui.label}>Cover</span>
         <BinderColourPicker value={binderColour} onChange={(c) => void pickCover(c)} />
       </div>
-      <div className={styles.slotsWrap}>
+      <div ref={binderRef} className={styles.slotsWrap}>
         <ProfileBinder
           title={showcaseTitle}
           colour={binderColour}
           mine
           onInspect={setInspect}
           onPick={(i) => setPicking(picking === i ? null : i)}
+          onRemove={(position) =>
+            void persistSlots(slots.map((slot, index) => (index === position ? null : slot)))
+          }
           slots={slots.map((id, position) => {
             const owned = id ? byId.get(id) : undefined;
-            return owned ? { position, owned_card: owned } : null;
+            return owned ? { position: position + 1, owned_card: owned } : null;
           })}
         />
       </div>
 
       {picking !== null ? (
-        <div className={`${ui.panel} ${styles.picker}`}>
+        <div ref={pickerRef} className={`${ui.panel} ${styles.picker}`}>
           <div className={styles.row}>
             <strong>Pick a card for sleeve {picking + 1}</strong>
             {slots[picking] ? (
@@ -204,7 +222,12 @@ export default function AccountPage() {
                   key={c.id}
                   type="button"
                   className={styles.pick}
-                  onClick={() => void persistSlots(slots.map((s, i) => (i === picking ? c.id : s)))}
+                  onClick={() =>
+                    void persistSlots(
+                      slots.map((s, i) => (i === picking ? c.id : s)),
+                      true,
+                    )
+                  }
                 >
                   <CardPreview
                     size="small"

@@ -94,7 +94,10 @@ export const saveShowcase = (slots: { position: number; owned_card_id: string }[
   apiFetch<ShowcaseSlot[]>('/api/v1/me/showcase/', {
     method: 'PUT',
     body: {
-      slots: slots.map((s) => ({ position: String(s.position), owned_card_id: s.owned_card_id })),
+      slots: slots.map((s) => ({
+        position: String(s.position + 1),
+        owned_card_id: s.owned_card_id,
+      })),
     },
   });
 export const likeSet = (slug: string, like: boolean) =>

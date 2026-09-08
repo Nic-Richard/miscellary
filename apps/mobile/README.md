@@ -1,6 +1,6 @@
 # Android preview
 
-The Android client uses Expo Router and native screens, with shared web surfaces for cards, binders, packs, and editing. It uses the same API and `@miscellary/shared` contracts as the web app.
+The Android client uses Expo Router and native screens, with shared web surfaces retained for packs, inspection, and editing. It uses the same API and `@miscellary/shared` contracts as the web app.
 
 - Browse: phone-sized binder shelf, sorting, pagination, refresh, and search
 - Existing set binder with daily pack opening and staged reveal
@@ -11,7 +11,7 @@ The Android client uses Expo Router and native screens, with shared web surfaces
 
 Refresh tokens live in SecureStore; the access token stays in memory and refreshes on 401.
 
-Cards currently render through `SharedSurface`. The native renderer is being built from shared card tokens; the WebView remains the reference and fallback until its replacement is proven. The dev-only PRIMITIVES button opens the device rendering checks.
+Standalone card previews use the native renderer across Collection, Search, Trades, profiles, and Studio. The WebView card renderer remains available as an explicit fallback, and the development Collection screen can switch between both implementations. Set and profile binders default to native layouts with page turns and retain explicit WebView fallbacks. Pack, inspector, reveal, and editor surfaces still use `SharedSurface`. The dev-only PRIMITIVES button opens the device rendering checks.
 
 ## Phone over Wi-Fi
 

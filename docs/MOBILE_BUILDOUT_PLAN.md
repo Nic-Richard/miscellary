@@ -1,6 +1,6 @@
 # Android build-out plan
 
-Status: native drawing primitives and all six card previews are implemented and have received an initial phone review. They are not yet connected to product screens. The WebView remains the active renderer.
+Status: native card fronts and backs are implemented, with standalone cards using the native renderer and an explicit WebView fallback. Native set and profile binders have received initial phone review, including portrait and landscape page turns. The final swipe, compositing, and image-fade adjustments still need device review. Inspector, pack, reveal, and editor surfaces remain on the shared WebView path.
 
 ## Native card renderer
 
@@ -46,15 +46,33 @@ port to `react-native-svg` closely. The binder uses image assets with transforms
 2. **Native primitives.** Stock, edge, window shapes, texture, finish coat, relief, and chase, built
    from tokens rather than from screenshots. Complete.
 3. **Native `CardPreview`.** All six templates at 100, 150, and 300 px. Implemented and initially reviewed on the phone; further parity and integration QA remains.
-4. **Card back and set marks.** SVG ports of the existing geometry.
-5. **Binder.** Existing binder assets, native layout, page turn through transforms.
+4. **Card back and set marks.** Reworked after the initial phone review failed. The revised explicit
+   native layers now tile the linen asset across the full card and are pending another phone review.
+5. **Binder.** Existing binder assets and a native layout. The current page-turn effect is an initial
+   prototype and was not ported unchanged. Placement resolves the web coordinates explicitly
+   against the measured horizontal and vertical axes. Portrait pans across one full binder for the
+   two pages in a spread. Crossing from a right page to the next left page combines leftward motion
+   with a front-and-back page leaf instead of scrolling into another binder. Landscape turns a
+   layered binder leaf: the destination spread sits below
+   the leaf, the outgoing stationary page remains visible until the leaf covers it, and the landing
+   page is drawn on the leaf back. Buttons use the same orientation-specific transition. Native image
+   prefetch and explicit binder measurements prepare the current and neighboring cards before the
+   transition. The web and WebView binder use the landscape layer order and preload neighboring
+   spreads. Reduced-motion preferences remove settling and turn transitions. This interaction is
+   pending phone and browser review.
 6. **Inspector.** Touch rotation, and lighting driven by translation and opacity on prepared
-   gradient layers rather than per-frame gradient recomputation.
-7. **Pack.** Existing pack artwork with an SVG overlay.
-8. **Editor controls.** `CardForm` already iterates the API's `template.options` with `unlocks`
-   gating, so the rules stay on the server and native supplies the control widgets.
+   gradient layers rather than per-frame gradient recomputation. Until that replacement is ready,
+   the shared inspector uses a full-screen mobile layout with a height-constrained landscape card.
+7. **Pack.** Existing pack artwork with an SVG overlay. Pack opening needs a phone-specific layout;
+   the current desktop composition becomes jumbled on the mobile viewport and is not the native
+   layout specification.
+8. **Editor strategy and hardening.** Treat native controls as a decision point, not a required
+   rewrite. The card editor and pack designer may remain single WebView workflows if upload,
+   keyboard, focus, performance, accessibility, back behavior, and draft recovery pass on the
+   phone. On a narrow screen, pin the live design preview to roughly the top half while the controls
+   scroll independently below it. Prefer a side-by-side layout where landscape width permits.
 
-Phases 2 and 3 leave all `SharedSurface` call sites unchanged. Later phases replace one call site at a time after the native replacement is proven, leaving the rest on the WebView.
+Phases 2 and 3 initially left all `SharedSurface` call sites unchanged. After phone review, the shared card-preview wrapper moved standalone card fronts to native rendering while retaining an explicit WebView option. Set and profile binders now default to native layouts with page turns and retain explicit WebView fallbacks. Inspector, pack, reveal, and editor surfaces remain unchanged until their native replacements are proven.
 
 ### Verifying parity
 
@@ -87,17 +105,27 @@ dependency beyond `react-native-svg` and `expo-linear-gradient` is required.
 
 `components/card/CardPreview.tsx` assembles all six templates. It reuses the existing set mark and description components, and shares caption splitting with the web through `cardText.ts`. The dev gallery includes 18 fixtures at 100, 150, and 300 px, plus live cards loaded through the existing API. Photos use the existing mobile media URL handling. No upload backend or `SharedSurface` call site changed.
 
-The primitives and card previews received an initial phone review and were accepted as close enough for now. A complete upload/save/reopen round-trip and product-screen integration have not been established by that review. Remaining differences include the Polaroid serif fallback, description clipping, long-title layout, Minimal scrim sizing, and very non-square arch geometry. Window and panel measurement, gradient-stop cost, and card-grid performance still need review.
+The primitives and card previews received an initial phone review and were accepted as close enough for now. A Collection A/B review also accepted the native result, while the WebView collection took roughly 15 seconds to load on the test phone. This establishes a product reason to prefer native previews, but it is not a complete memory or frame-rate measurement. A complete upload/save/reopen round-trip and broader product-screen review are still required. Remaining differences include the Polaroid serif fallback, description clipping, long-title layout, Minimal scrim sizing, and very non-square arch geometry. Window and panel measurement, gradient-stop cost, and card-grid performance still need review.
 
 Keep the PRIMITIVES screen until the native rendering path has been integrated and verified. `SetMark.tsx` is now used by the native renderer; the other legacy drawing components remain available during migration.
 
+### Phase 4
+
+The first native card-back review failed because mirroring the web SVG structure did not reproduce
+its rendered composition on Android. The revised back uses explicit repeated marks, native borders,
+circles, text, and explicitly tiled linen layers instead of relying on one SVG pattern paint server
+or Android repeated-image coverage.
+Pack colour adjustments moved into `@miscellary/shared`, so web and native use the same hue,
+saturation, and brightness values. The PRIMITIVES screen includes coloured, neutral, marked, and
+unmarked backs for another phone review.
+
 ## Current implementation and remaining work
 
-The shared WebView surfaces provide the current card, binder, pack, inspector, and editor presentation. The earlier native renderer remains in the tree but is not the active rendering path. Its assets and approved dependencies are retained for the native replacement.
+The native renderer now provides standalone card previews in Collection, Search, Trades, profiles, and Studio. The card-preview wrapper retains the WebView renderer as an explicit fallback, including a development A/B control in Collection. The set binder also defaults to native rendering and retains an explicit WebView path. Shared WebView surfaces still provide pack, inspector, reveal, and editor presentation. The other legacy native drawing components remain in the tree during migration.
 
 The demo database contains eight collectors, eleven published sets, and one draft. Other Worlds and Shutter Shelf use curated, credited photos. Thirteen legacy photo downloads still fall back to gradients. See `DEMO_PHOTOGRAPHY.md`. Do not reset demo data without approval.
 
-The next priority is proving and integrating the native renderer. Before replacing card-list call sites, measure WebView memory and scrolling on the phone. Remaining work includes native parity, Android visual and gesture QA, remaining demo photography, and launch content.
+The next priority is reviewing binder swipe and turn behavior on the phone and in the browser. Binder review should cover both orientations, button and swipe navigation, slow drags, quick flicks, boundary resistance, vertical page scrolling, card taps, adjacent-page image readiness, and reduced motion. Inspector review should cover portrait and landscape fitting, full-screen background coverage, rotation, close behavior, and the compact like control. After that, continue with the native inspector and the remaining composed native surfaces in dependency order. Remaining work includes native parity, Android visual and gesture QA, remaining demo photography, and launch content.
 
 The current code and `MISCELLARY_ROADMAP.md` take precedence over older product descriptions. This document is the detailed Android plan; the roadmap remains the overall source of truth.
 

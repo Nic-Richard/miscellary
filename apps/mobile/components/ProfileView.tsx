@@ -1,11 +1,22 @@
-import type { ProfilePage } from '@miscellary/shared';
+import { SHOWCASE_SLOTS } from '@miscellary/shared';
+import type { OwnedCard, ProfilePage } from '@miscellary/shared';
 import { Link, router } from 'expo-router';
-import { useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useMemo, useState } from 'react';
+import {
+  Alert,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
+} from 'react-native';
 import { useAuth } from '@/lib/auth';
 import { sendReport, setFollow } from '@/lib/endpoints';
 import { colors } from '@/lib/theme';
-import CardPreview from './CardPreview';
+import NativeBinderPager from './binder/NativeBinderPager';
+import ProfileBinderDetails from './ProfileBinderDetails';
+import SharedSurface from './SharedSurface';
 import { Button, Muted } from './ui';
 
 export default function ProfileView({
@@ -16,7 +27,22 @@ export default function ProfileView({
   headerExtra?: React.ReactNode;
 }) {
   const { user } = useAuth();
+  const { width, height } = useWindowDimensions();
   const [profile, setProfile] = useState(initial);
+  const [page, setPage] = useState(0);
+  const [selected, setSelected] = useState<OwnedCard | null>(null);
+  const showcase = useMemo(
+    () =>
+      Array.from(
+        { length: SHOWCASE_SLOTS },
+        (_, index) => profile.showcase.find((slot) => slot.position === index + 1) ?? null,
+      ),
+    [profile.showcase],
+  );
+  const landscape = width > height;
+  const rail = landscape && width >= 800;
+  const shownPage = landscape ? Math.floor(page / 2) * 2 : page;
+  const pages = SHOWCASE_SLOTS / 4;
 
   async function toggleFollow() {
     const r = await setFollow(profile.username, !profile.is_following);
@@ -87,22 +113,41 @@ export default function ProfileView({
         ) : null}
       </View>
 
-      <Text style={styles.h2}>Showcase</Text>
-      {profile.showcase.length === 0 ? <Muted>Nothing showcased yet.</Muted> : null}
-      <View style={styles.grid}>
-        {profile.showcase.map((slot) => (
-          <CardPreview
-            key={slot.position}
-            width={150}
-            title={slot.owned_card.card.title}
-            description={slot.owned_card.card.description}
-            mark={slot.owned_card.set_mark}
-            rarity={slot.owned_card.card.rarity}
-            imageUrl={slot.owned_card.card.image.url}
-            templateKey={slot.owned_card.card.template_key}
-            templateConfig={slot.owned_card.card.template_config}
+      <Text style={styles.h2}>Binder</Text>
+      <View style={{ flexDirection: rail ? 'row' : 'column', gap: 12 }}>
+        <View style={{ flex: 1 }}>
+          <NativeBinderPager
+            cards={showcase.map((slot) => slot?.owned_card.card)}
+            marks={showcase.map((slot) => slot?.owned_card.set_mark)}
+            page={shownPage}
+            pages={pages}
+            half={!landscape}
+            colour={profile.binder_colour}
+            onPageChange={setPage}
+            onInspect={(_, index) => setSelected(showcase[index]?.owned_card ?? null)}
           />
-        ))}
+          <View style={styles.pager}>
+            <Button
+              title="Previous"
+              kind="secondary"
+              disabled={shownPage === 0}
+              onPress={() => setPage(Math.max(0, shownPage - (landscape ? 2 : 1)))}
+            />
+            <Muted>
+              {shownPage + 1}
+              {landscape ? `–${shownPage + 2}` : ''} / {pages}
+            </Muted>
+            <Button
+              title="Next"
+              kind="secondary"
+              disabled={shownPage + (landscape ? 2 : 1) >= pages}
+              onPress={() => setPage(shownPage + (landscape ? 2 : 1))}
+            />
+          </View>
+        </View>
+        <View style={{ width: rail ? 240 : '100%' }}>
+          <ProfileBinderDetails cards={showcase.map((slot) => slot?.owned_card)} />
+        </View>
       </View>
 
       <Text style={styles.h2}>Sets by @{profile.username}</Text>
@@ -120,6 +165,30 @@ export default function ProfileView({
           </Text>
         </Link>
       ))}
+      {selected ? (
+        <Modal
+          visible
+          statusBarTranslucent
+          navigationBarTranslucent
+          supportedOrientations={['portrait', 'landscape']}
+          onRequestClose={() => setSelected(null)}
+        >
+          <View style={styles.inspector}>
+            <SharedSurface
+              mode="inspect"
+              data={{
+                card: selected.card,
+                setTitle: selected.set_title,
+                setSlug: selected.set_slug,
+                mark: selected.set_mark,
+              }}
+              onEvent={(type) => {
+                if (type === 'close') setSelected(null);
+              }}
+            />
+          </View>
+        </Modal>
+      ) : null}
     </ScrollView>
   );
 }
@@ -138,7 +207,8 @@ const styles = StyleSheet.create({
   },
   actions: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
   h2: { color: colors.text, fontSize: 16, fontWeight: '700', marginTop: 8 },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  pager: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  inspector: { flex: 1, backgroundColor: '#241d16' },
   setRow: {
     backgroundColor: colors.sur,
     borderColor: colors.bdr2,

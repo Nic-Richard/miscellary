@@ -34,6 +34,7 @@ def test_profile_page(api_client, user, published):
     assert body["follower_count"] == 1 and body["following_count"] == 0
     assert body["set_count"] == 1 and body["card_count"] == 1
     assert body["sets"][0]["slug"] == published.slug
+    assert body["showcase"][0]["position"] == 1
     assert body["showcase"][0]["owned_card"]["id"] == str(owned.id)
     assert body["is_following"] is False and body["is_me"] is False
 
@@ -64,27 +65,35 @@ def test_showcase_only_shows_cards_you_still_own(auth_client, user, published):
 
     url = reverse("social:showcase")
     bad = auth_client.put(
-        url, {"slots": [{"position": "0", "owned_card_id": str(theirs.id)}]}, format="json"
+        url, {"slots": [{"position": "1", "owned_card_id": str(theirs.id)}]}, format="json"
     )
     assert bad.status_code == 400
+
+    boundary = auth_client.put(
+        url, {"slots": [{"position": "40", "owned_card_id": str(mine.id)}]}, format="json"
+    )
+    assert boundary.status_code == 200
+    too_high = auth_client.put(
+        url, {"slots": [{"position": "41", "owned_card_id": str(mine.id)}]}, format="json"
+    )
+    assert too_high.status_code == 400
 
     response = auth_client.put(
         url,
         {
             "slots": [
-                {"position": "0", "owned_card_id": str(mine.id)},
-                {"position": "3", "owned_card_id": str(also_mine.id)},
+                {"position": "1", "owned_card_id": str(mine.id)},
+                {"position": "4", "owned_card_id": str(also_mine.id)},
             ]
         },
         format="json",
     )
     assert response.status_code == 200
-    assert [s["position"] for s in response.json()] == [0, 3]
+    assert [s["position"] for s in response.json()] == [1, 4]
 
-    # Trade one away: it silently drops out of the showcase.
     offer = trades.create_offer(user, theirs.owner, [mine.id], [theirs.id])
     trades.accept_offer(theirs.owner, offer)
-    assert [s["position"] for s in auth_client.get(url).json()] == [3]
+    assert [s["position"] for s in auth_client.get(url).json()] == [4]
 
 
 def test_likes_on_sets_and_cards(auth_client, user, published):

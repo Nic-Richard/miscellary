@@ -1,10 +1,20 @@
 import { SHOWCASE_SLOTS } from '@miscellary/shared';
 import type { OwnedCard, ProfilePage } from '@miscellary/shared';
 import { useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useRef, useState } from 'react';
+import {
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
+} from 'react-native';
 import CardPreview from '@/components/CardPreview';
+import NativeBinderPager from '@/components/binder/NativeBinderPager';
 import LoginGate from '@/components/LoginGate';
+import ProfileBinderDetails from '@/components/ProfileBinderDetails';
 import ProfileView from '@/components/ProfileView';
 import { useAuth } from '@/lib/auth';
 import { getProfile, getShowcase, listMyCards, saveShowcase, updateProfile } from '@/lib/endpoints';
@@ -13,6 +23,7 @@ import { Button, ErrorText, Input, Loading, Muted, Title } from '@/components/ui
 
 function Me() {
   const { user, logout, refreshUser } = useAuth();
+  const { width, height } = useWindowDimensions();
   const [profile, setProfile] = useState<ProfilePage | null>(null);
   const [editing, setEditing] = useState(false);
   const [displayName, setDisplayName] = useState('');
@@ -20,7 +31,9 @@ function Me() {
   const [cards, setCards] = useState<OwnedCard[]>([]);
   const [slots, setSlots] = useState<(string | null)[]>(Array(SHOWCASE_SLOTS).fill(null));
   const [picking, setPicking] = useState<number | null>(null);
+  const [binderPage, setBinderPage] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const pickerScrollRef = useRef<ScrollView>(null);
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -35,7 +48,7 @@ function Me() {
       setBio(p.bio);
       setCards(page.results);
       const next: (string | null)[] = Array(SHOWCASE_SLOTS).fill(null);
-      for (const s of showcase) next[s.position] = s.owned_card.id;
+      for (const s of showcase) next[s.position - 1] = s.owned_card.id;
       setSlots(next);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not load your profile.');
@@ -53,8 +66,10 @@ function Me() {
       await updateProfile({ display_name: displayName, bio });
       await refreshUser();
       await load();
+      return true;
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not save.');
+      return false;
     }
   }
 
@@ -67,12 +82,20 @@ function Me() {
       );
       await load();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not save the showcase.');
+      setError(e instanceof Error ? e.message : 'Could not save the binder.');
     }
   }
 
   if (!profile) return error ? <ErrorText>{error}</ErrorText> : <Loading />;
-  const byId = new Map(cards.map((c) => [c.id, c]));
+  const byId = new Map([
+    ...profile.showcase.map((slot) => [slot.owned_card.id, slot.owned_card] as const),
+    ...cards.map((card) => [card.id, card] as const),
+  ]);
+  const showcase = slots.map((id) => (id ? byId.get(id) : undefined));
+  const landscape = width > height;
+  const rail = landscape && width >= 800;
+  const shownPage = landscape ? Math.floor(binderPage / 2) * 2 : binderPage;
+  const pages = SHOWCASE_SLOTS / 4;
 
   if (editing)
     return (
@@ -99,42 +122,61 @@ function Me() {
         <Button
           title="Save profile"
           onPress={async () => {
-            await saveProfile();
-            setEditing(false);
+            if (await saveProfile()) setEditing(false);
           }}
         />
 
-        <Text style={styles.h2}>Showcase</Text>
+        <Text style={styles.h2}>Binder</Text>
         <Muted>Tap a slot to pick one of your cards.</Muted>
-        <View style={styles.grid}>
-          {slots.map((id, i) => {
-            const owned = id ? byId.get(id) : undefined;
-            return (
-              <Pressable key={i} onPress={() => setPicking(i)} style={styles.slot}>
-                {owned ? (
-                  <CardPreview
-                    width={140}
-                    title={owned.card.title}
-                    rarity={owned.card.rarity}
-                    imageUrl={owned.card.image.url}
-                    templateKey={owned.card.template_key}
-                    templateConfig={owned.card.template_config}
-                  />
-                ) : (
-                  <Muted>Slot {i + 1}</Muted>
-                )}
-              </Pressable>
-            );
-          })}
+        <View style={{ flexDirection: rail ? 'row' : 'column', gap: 12 }}>
+          <View style={{ flex: 1 }}>
+            <NativeBinderPager
+              cards={showcase.map((owned) => owned?.card)}
+              marks={showcase.map((owned) => owned?.set_mark)}
+              page={shownPage}
+              pages={pages}
+              half={!landscape}
+              colour={profile.binder_colour}
+              onPageChange={setBinderPage}
+              onInspect={(_, index) => setPicking(index)}
+              onPickEmpty={setPicking}
+              onRemove={(position) =>
+                void persistSlots(slots.map((slot, index) => (index === position ? null : slot)))
+              }
+            />
+            <View style={styles.binderPager}>
+              <Button
+                title="Previous"
+                kind="secondary"
+                disabled={shownPage === 0}
+                onPress={() => setBinderPage(Math.max(0, shownPage - (landscape ? 2 : 1)))}
+              />
+              <Muted>
+                {shownPage + 1}
+                {landscape ? `–${shownPage + 2}` : ''} / {pages}
+              </Muted>
+              <Button
+                title="Next"
+                kind="secondary"
+                disabled={shownPage + (landscape ? 2 : 1) >= pages}
+                onPress={() => setBinderPage(shownPage + (landscape ? 2 : 1))}
+              />
+            </View>
+          </View>
+          <View style={{ width: rail ? 240 : '100%' }}>
+            <ProfileBinderDetails cards={showcase} />
+          </View>
         </View>
         <Button title="Done" kind="secondary" onPress={() => setEditing(false)} />
 
         <Modal
           visible={picking !== null}
           animationType="slide"
+          onShow={() => pickerScrollRef.current?.scrollTo({ y: 0, animated: false })}
           onRequestClose={() => setPicking(null)}
         >
           <ScrollView
+            ref={pickerScrollRef}
             style={{ backgroundColor: colors.bg }}
             contentContainerStyle={{ padding: 16, gap: 12, paddingTop: 48 }}
           >
@@ -200,15 +242,6 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   h2: { color: colors.text, fontSize: 16, fontWeight: '700', marginTop: 8 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  slot: {
-    width: 148,
-    height: 208,
-    borderWidth: 2,
-    borderStyle: 'dashed',
-    borderColor: colors.bdr2,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  binderPager: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   row: { flexDirection: 'row', gap: 8 },
 });

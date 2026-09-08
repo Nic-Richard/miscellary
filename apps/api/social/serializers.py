@@ -7,11 +7,15 @@ from .models import COMMENT_MAX, SHOWCASE_SLOTS, Comment, Report, ShowcaseSlot
 
 
 class ShowcaseSlotSerializer(serializers.ModelSerializer):
+    position = serializers.SerializerMethodField()
     owned_card = OwnedCardSerializer(read_only=True)
 
     class Meta:
         model = ShowcaseSlot
         fields = ["position", "owned_card"]
+
+    def get_position(self, obj: ShowcaseSlot) -> int:
+        return obj.position + 1
 
 
 class ProfilePageSerializer(serializers.Serializer):

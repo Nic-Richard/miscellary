@@ -6,7 +6,7 @@ from django.db import models
 from cards.models import CardDefinition, CardSet
 from packs.models import OwnedCard
 
-SHOWCASE_SLOTS = 8
+SHOWCASE_SLOTS = 40
 COMMENT_MAX = 1000
 
 

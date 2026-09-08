@@ -83,6 +83,7 @@ Completed:
 - Preserved card inspection from binder contexts.
 - Fixed incomplete profile binders caused by paginated owned-card lookup.
 - Allowed cards in a full profile binder to be replaced.
+- Expanded profile binders to ten pages with 40 editable sleeves.
 
 Any future binder-material expansion is optional polish, not required core work.
 

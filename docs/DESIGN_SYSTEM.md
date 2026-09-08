@@ -191,9 +191,9 @@ exchange visible in a pinned deal bar. Duplicate copies are grouped into a singl
 and cards held by another pending offer remain visible but unavailable.
 
 `components/ProfileBinder.tsx` gives every collector a personal binder at the top of their
-profile: one page of eight sleeves holding cards they own and chose to display, publicly visible.
-Empty sleeves stay visible as space to fill, and become the pick targets when the owner is
-editing. The same component serves the public profile and the account editor.
+profile: ten pages of four sleeves holding up to 40 cards they own and chose to display, publicly
+visible. Empty sleeves stay visible as space to fill, and become the pick targets when the owner
+is editing. The same component serves the public profile and the account editor.
 
 Binder covers are chosen, not themed. `BINDER_COLOURS` is a curated shelf of twelve bound covers,
 mirrored between `apps/api/cards/identity.py` and `apps/web/lib/setIdentity.ts`. The cloth is one

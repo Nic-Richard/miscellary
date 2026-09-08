@@ -2,9 +2,10 @@
 
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Card, CardSetDetail, OwnedCard } from '@miscellary/shared';
 import Binder from '@/components/binder/Binder';
+import type { BinderPage as BinderPageData } from '@/components/binder/Binder';
 import CardGrid, { CardCell } from '@/components/CardGrid';
 import FolderTabs from '@/components/binder/FolderTabs';
 import CardInspector from '@/components/CardInspector';
@@ -37,8 +38,52 @@ function StatIcon({ name }: { name: keyof typeof STAT_ICONS }) {
   );
 }
 
-// The API returns one row per owned copy, each annotated with how many copies
-// the owner holds. Collapse them so a duplicate is one tile, not several.
+function SetCard({
+  card,
+  detail,
+  number,
+  published,
+  onInspect,
+}: {
+  card: Card;
+  detail: CardSetDetail;
+  number: number;
+  published: boolean;
+  onInspect: (card: Card) => void;
+}) {
+  return (
+    <div className={styles.cardCell}>
+      <button
+        type="button"
+        className={styles.inspect}
+        onClick={() => onInspect(card)}
+        aria-label={`Inspect ${card.title}`}
+      >
+        <CardPreview
+          size="small"
+          title={card.title}
+          rarity={card.rarity}
+          number={number}
+          description={card.description}
+          imageUrl={card.image.url}
+          templateKey={card.template_key}
+          templateConfig={card.template_config}
+          mark={detail.mark}
+        />
+      </button>
+      {published ? (
+        <div className={styles.cardSocial}>
+          <LikeButton
+            liked={detail.liked_card_ids.includes(card.id)}
+            count={card.like_count}
+            onToggle={(like) => likeCard(card.id, like)}
+          />
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function stack(owned: OwnedCard[]): OwnedCard[] {
   const seen = new Map<string, OwnedCard>();
   for (const copy of owned) if (!seen.has(copy.card.id)) seen.set(copy.card.id, copy);
@@ -56,6 +101,7 @@ export default function BinderPage() {
   const [owned, setOwned] = useState<OwnedCard[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [inspect, setInspect] = useState<Card | null>(null);
+  const preloadedImages = useRef<HTMLImageElement[]>([]);
 
   // Wait for auth so a creator can view their own draft binder.
   useEffect(() => {
@@ -79,6 +125,41 @@ export default function BinderPage() {
       .catch(() => setOwned([]));
   }, [tab, user, owned, slug]);
 
+  useEffect(() => {
+    if (!set) return;
+    const images = set.cards.map((card) => {
+      const image = new window.Image();
+      image.src = card.image.url;
+      void image.decode?.().catch(() => undefined);
+      return image;
+    });
+    preloadedImages.current = images;
+    return () => {
+      if (preloadedImages.current === images) preloadedImages.current = [];
+    };
+  }, [set]);
+
+  const binderPages = useMemo<BinderPageData[]>(() => {
+    if (!set) return [];
+    const published = set.status === 'published';
+    return Array.from({ length: Math.max(1, Math.ceil(set.cards.length / 8)) }, (_, pageIndex) => ({
+      startIndex: pageIndex * 8,
+      slots: Array.from({ length: 8 }, (_, slotIndex) => {
+        const card = set.cards[pageIndex * 8 + slotIndex];
+        return card ? (
+          <SetCard
+            key={card.id}
+            card={card}
+            detail={set}
+            number={pageIndex * 8 + slotIndex + 1}
+            published={published}
+            onInspect={setInspect}
+          />
+        ) : null;
+      }),
+    }));
+  }, [set]);
+
   async function onRecycle(ownedId: string) {
     try {
       await recycleCard(ownedId);
@@ -98,9 +179,6 @@ export default function BinderPage() {
   if (error) return <p className={ui.error}>{error}</p>;
   if (!set) return <p className={ui.muted}>Loading…</p>;
 
-  const spreads = Array.from({ length: Math.max(1, Math.ceil(set.cards.length / 8)) }, (_, index) =>
-    set.cards.slice(index * 8, index * 8 + 8),
-  );
   const rarityCount = new Set(set.cards.map((c) => c.rarity)).size;
   const popularCards = [...set.cards].sort((a, b) => b.like_count - a.like_count).slice(0, 3);
   const released = set.published_at ? new Date(set.published_at).getFullYear() : null;
@@ -112,36 +190,18 @@ export default function BinderPage() {
 
   function renderCard(card: Card, number: number) {
     return (
-      <div className={styles.cardCell}>
-        <button
-          type="button"
-          className={styles.inspect}
-          onClick={() => setInspect(card)}
-          aria-label={`Inspect ${card.title}`}
-        >
-          <CardPreview
-            size="small"
-            title={card.title}
-            rarity={card.rarity}
-            number={number}
-            description={card.description}
-            imageUrl={card.image.url}
-            templateKey={card.template_key}
-            templateConfig={card.template_config}
-            mark={detail.mark}
-          />
-        </button>
-        {isPublished ? (
-          <div className={styles.cardSocial}>
-            <LikeButton
-              liked={detail.liked_card_ids.includes(card.id)}
-              count={card.like_count}
-              onToggle={(like) => likeCard(card.id, like)}
-            />
-          </div>
-        ) : null}
-      </div>
+      <SetCard
+        card={card}
+        detail={detail}
+        number={number}
+        published={isPublished}
+        onInspect={setInspect}
+      />
     );
+  }
+
+  function navigateSpread(direction: -1 | 1) {
+    setSpread((current) => Math.max(0, Math.min(binderPages.length - 1, current + direction)));
   }
 
   return (
@@ -251,30 +311,40 @@ export default function BinderPage() {
                 colour={set.binder_colour}
                 page={spread}
                 startIndex={spread * 8}
-                slots={Array.from({ length: 8 }, (_, slotIndex) => {
-                  const card = spreads[spread]?.[slotIndex];
-                  if (!card) return null;
-                  return renderCard(card, spread * 8 + slotIndex + 1);
-                })}
+                canPrevious={spread > 0}
+                canNext={spread < binderPages.length - 1}
+                onNavigate={navigateSpread}
+                pages={binderPages}
+                slots={binderPages[spread]?.slots ?? []}
               />
-              {spreads.length > 1 ? (
+              {binderPages.length > 1 ? (
                 <div className={styles.pager}>
                   <button
                     type="button"
                     className={`${ui.btnQuiet} ${ui.btnSmall}`}
-                    onClick={() => setSpread((n) => Math.max(0, n - 1))}
+                    onPointerDown={(event) => {
+                      if (event.button === 0) navigateSpread(-1);
+                    }}
+                    onClick={(event) => {
+                      if (event.detail === 0) navigateSpread(-1);
+                    }}
                     disabled={spread === 0}
                   >
                     ← Previous
                   </button>
                   <span className={styles.pageNo}>
-                    Pages {spread * 2 + 1} and {spread * 2 + 2} of {spreads.length * 2}
+                    Pages {spread * 2 + 1} and {spread * 2 + 2} of {binderPages.length * 2}
                   </span>
                   <button
                     type="button"
                     className={`${ui.btnQuiet} ${ui.btnSmall}`}
-                    onClick={() => setSpread((n) => Math.min(spreads.length - 1, n + 1))}
-                    disabled={spread >= spreads.length - 1}
+                    onPointerDown={(event) => {
+                      if (event.button === 0) navigateSpread(1);
+                    }}
+                    onClick={(event) => {
+                      if (event.detail === 0) navigateSpread(1);
+                    }}
+                    disabled={spread >= binderPages.length - 1}
                   >
                     Next →
                   </button>

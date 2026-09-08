@@ -3,15 +3,17 @@ import { Link, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import CardPreview from '@/components/CardPreview';
+import type { CardRenderer } from '@/components/CardPreview';
 import LoginGate from '@/components/LoginGate';
 import { listMyCards, listMyPoints, recycleCard } from '@/lib/endpoints';
 import { colors } from '@/lib/theme';
-import { ErrorText, Muted, Tag, Title } from '@/components/ui';
+import { Chip, ErrorText, Muted, Tag, Title } from '@/components/ui';
 
 function Collection() {
   const [cards, setCards] = useState<OwnedCard[]>([]);
   const [points, setPoints] = useState<SetPointsBalance[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [cardRenderer, setCardRenderer] = useState<CardRenderer>('native');
 
   const load = useCallback(async () => {
     try {
@@ -56,6 +58,23 @@ function Collection() {
     >
       <Tag>Collection</Tag>
       <Title>Your cards</Title>
+      {__DEV__ ? (
+        <View style={styles.rendererCheck}>
+          <Muted style={{ fontSize: 12 }}>Card renderer</Muted>
+          <View style={styles.rendererOptions}>
+            <Chip
+              label="WebView"
+              active={cardRenderer === 'web'}
+              onPress={() => setCardRenderer('web')}
+            />
+            <Chip
+              label="Native"
+              active={cardRenderer === 'native'}
+              onPress={() => setCardRenderer('native')}
+            />
+          </View>
+        </View>
+      ) : null}
       <ErrorText>{error}</ErrorText>
       {cards.length === 0 ? <Muted>Nothing yet. Open a pack from any published set.</Muted> : null}
       {[...bySet.entries()].map(([slug, list]) => (
@@ -73,6 +92,7 @@ function Collection() {
               <View key={owned.id} style={{ alignItems: 'center', gap: 4 }}>
                 <CardPreview
                   width={150}
+                  renderer={cardRenderer}
                   title={owned.card.title}
                   description={owned.card.description}
                   mark={owned.set_mark}
@@ -120,6 +140,13 @@ const styles = StyleSheet.create({
     paddingBottom: 6,
     marginBottom: 10,
   },
+  rendererCheck: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  rendererOptions: { flexDirection: 'row', gap: 8 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, justifyContent: 'center' },
   recycle: {
     borderWidth: 1,

@@ -31,7 +31,6 @@ from .serializers import (
 
 
 def me(request: Request) -> User:
-    # IsAuthenticated already ran; this just narrows the type.
     assert isinstance(request.user, User)
     return request.user
 
@@ -126,13 +125,11 @@ class ShowcaseView(APIView):
         owned = set(OwnedCard.objects.filter(pk__in=ids, owner=user).values_list("pk", flat=True))
         if len(owned) != len(set(ids)):
             raise ValidationError("You can only showcase cards you own.")
-        positions = [int(s.get("position", -1)) for s in slots]
+        positions = [int(s.get("position", 0)) - 1 for s in slots]
         if any(p < 0 or p >= SHOWCASE_SLOTS for p in positions) or len(set(positions)) != len(
             positions
         ):
-            raise ValidationError(
-                f"Positions must be unique and between 0 and {SHOWCASE_SLOTS - 1}."
-            )
+            raise ValidationError(f"Positions must be unique and between 1 and {SHOWCASE_SLOTS}.")
         with transaction.atomic():
             ShowcaseSlot.objects.filter(user=user).delete()
             ShowcaseSlot.objects.bulk_create(
