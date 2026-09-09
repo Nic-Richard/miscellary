@@ -1,6 +1,3 @@
-from collections.abc import Mapping
-from typing import Any, cast
-
 from django.db.models import Count, Exists, OuterRef, Prefetch, Value
 from django.shortcuts import get_object_or_404
 from rest_framework import permissions, status
@@ -144,30 +141,9 @@ class MySetDetailView(APIView):
     def get(self, request: Request, set_id) -> Response:
         return Response(CardSetDetailSerializer(my_set(request, set_id)).data)
 
-    # The mark and pack colour only affect how the set is presented, never a
-    # published card's snapshot, so they stay editable after publishing.
-    IDENTITY_FIELDS = {
-        "mark",
-        "pack_colour",
-        "pack_finish",
-        "pack_layers",
-        "binder_colour",
-        "emblem_layout",
-        "pack_subtitle",
-        "pack_text",
-        "emblem_shape",
-        "emblem_style",
-        "emblem_text",
-        "emblem_type_scale",
-        "mark_scale",
-        "pack_size",
-    }
-
     def patch(self, request: Request, set_id) -> Response:
         card_set = my_set(request, set_id)
-        data = cast(Mapping[str, Any], request.data)
-        if not self.IDENTITY_FIELDS.issuperset(data.keys()):
-            require_draft(card_set)
+        require_draft(card_set)
         serializer = CardSetWriteSerializer(
             card_set, data=request.data, partial=True, context={"request": request}
         )

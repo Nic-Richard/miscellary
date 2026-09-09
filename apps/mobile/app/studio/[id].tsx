@@ -1,10 +1,12 @@
 import type { CardSetDetail } from '@miscellary/shared';
+import Feather from '@expo/vector-icons/Feather';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import SharedSurface from '@/components/SharedSurface';
 import CardPreview from '@/components/CardPreview';
+import PackPreview from '@/components/PackPreview';
 import {
   deleteCard,
   deleteSet,
@@ -13,7 +15,7 @@ import {
   publishSet,
   updateSet,
 } from '@/lib/endpoints';
-import { colors } from '@/lib/theme';
+import { colors, fonts } from '@/lib/theme';
 import { Button, ErrorText, Input, Loading, Muted, Tag, Title } from '@/components/ui';
 
 export default function SetEditorScreen() {
@@ -55,7 +57,7 @@ export default function SetEditorScreen() {
 
   function publish() {
     if (!set) return;
-    Alert.alert('Publish this set?', 'Cards can never be edited after publishing.', [
+    Alert.alert('Publish this set?', 'Nothing in it can be edited afterward.', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Publish',
@@ -132,23 +134,46 @@ export default function SetEditorScreen() {
       )}
       <ErrorText>{error}</ErrorText>
       <View style={{ alignItems: 'center', gap: 12 }}>
-        <SharedSurface mode="pack" data={{ set }} width={180} height={301} passive />
-        <Button title="Design pack and binder" onPress={() => setDesigningPack(true)} />
+        <PackPreview set={set} width={180} />
+        {isDraft ? (
+          <Button title="Design pack and binder" onPress={() => setDesigningPack(true)} />
+        ) : null}
       </View>
       <Modal
         visible={designingPack}
+        statusBarTranslucent
+        navigationBarTranslucent
         onRequestClose={() => setDesigningPack(false)}
         supportedOrientations={['portrait', 'landscape']}
       >
         <View
           style={{
             flex: 1,
-            paddingTop: insets.top,
-            paddingBottom: insets.bottom,
             backgroundColor: colors.bg,
           }}
         >
-          <Button title="Back to set" kind="secondary" onPress={() => setDesigningPack(false)} />
+          <View
+            style={[
+              styles.editorHeader,
+              {
+                minHeight: 48 + insets.top,
+                paddingTop: insets.top,
+                paddingLeft: 10 + insets.left,
+                paddingRight: 14 + insets.right,
+              },
+            ]}
+          >
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Back to set"
+              hitSlop={8}
+              onPress={() => setDesigningPack(false)}
+              style={({ pressed }) => [styles.editorBack, pressed && { opacity: 0.55 }]}
+            >
+              <Feather name="arrow-left" size={21} color={colors.text} />
+            </Pressable>
+            <Text style={styles.editorTitle}>Pack and binder</Text>
+          </View>
           {designingPack ? (
             <SharedSurface
               mode="pack-editor"
@@ -196,6 +221,7 @@ export default function SetEditorScreen() {
               imageUrl={c.image.url}
               templateKey={c.template_key}
               templateConfig={c.template_config}
+              render={c.render}
             />
             {isDraft ? (
               <View style={styles.row}>
@@ -238,4 +264,27 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, justifyContent: 'center' },
+  editorHeader: {
+    minHeight: 48,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 9,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.bdr,
+    backgroundColor: colors.sur,
+  },
+  editorBack: {
+    width: 34,
+    height: 34,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 17,
+  },
+  editorTitle: {
+    color: colors.text,
+    fontFamily: fonts.display,
+    fontSize: 24,
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+  },
 });

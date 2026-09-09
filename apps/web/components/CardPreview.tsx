@@ -1,7 +1,8 @@
 import { captionFrom, paintToCss, resolveCardTokens, restOf } from '@miscellary/shared';
-import type { Rarity, TemplateConfig } from '@miscellary/shared';
+import type { CardRenderAssets, Rarity, TemplateConfig } from '@miscellary/shared';
 import type { CSSProperties } from 'react';
 import Description from './Description';
+import BakedCard from './BakedCard';
 import SetMark from './SetMark';
 import { resolveMark } from '@/lib/setIdentity';
 import styles from './CardPreview.module.css';
@@ -17,7 +18,9 @@ export interface CardPreviewProps {
   number?: number;
   caption?: string;
   mark?: string | undefined;
-  lit?: boolean;
+  lit?: boolean | undefined;
+  render?: CardRenderAssets | null | undefined;
+  renderMode?: 'static' | 'mask';
 }
 
 const TEXT_TEMPLATES = new Set(['fieldnote', 'dossier']);
@@ -81,7 +84,33 @@ export default function CardPreview({
   caption,
   mark,
   lit,
+  render,
+  renderMode,
 }: CardPreviewProps) {
+  const bakedImage = size === 'small' ? render?.thumbnail : render?.front;
+  if (!renderMode && render && bakedImage) {
+    return (
+      <BakedCard
+        render={render}
+        title={title}
+        rarity={rarity}
+        templateKey={templateKey}
+        templateConfig={templateConfig}
+        size={size}
+        lit={lit}
+      />
+    );
+  }
+  if (!renderMode && render) {
+    return (
+      <div
+        className={`${styles.card} ${styles.pending} ${size === 'small' ? styles.small : styles.large}`}
+        style={cardVars(templateKey, templateConfig, rarity)}
+        role="img"
+        aria-label={`${title} render pending`}
+      />
+    );
+  }
   const data: Record<string, string> = {};
   for (const [k, v] of Object.entries(templateConfig)) data[`data-${k}`] = v;
   const shownTitle = title || 'Untitled';
@@ -97,6 +126,7 @@ export default function CardPreview({
       className={`${styles.card} ${styles[templateKey] ?? styles.classic} ${size === 'small' ? styles.small : styles.large}`}
       data-rarity={rarity}
       data-lit={lit ? '' : undefined}
+      data-render={renderMode}
       style={cardVars(templateKey, templateConfig, rarity)}
       {...data}
     >
@@ -107,13 +137,18 @@ export default function CardPreview({
           <SetMark mark={resolveMark(mark)} className={styles.mark} />
         </header>
         <div className={styles.art}>
-          {imageUrl ? (
+          {renderMode !== 'mask' && imageUrl ? (
             <img src={imageUrl} alt="" />
-          ) : (
+          ) : renderMode !== 'mask' ? (
             <div className={styles.placeholder}>No photo yet</div>
-          )}
-          {varnish ? <i className={styles.varnish} aria-hidden="true" /> : null}
-          {chase && coverage === 'art' ? chaseLayers(styles, false) : null}
+          ) : null}
+          {varnish && renderMode !== 'mask' ? (
+            <i className={styles.varnish} aria-hidden="true" />
+          ) : null}
+          {renderMode === 'mask' && coverage === 'art' ? (
+            <i className={styles.materialMask} aria-hidden="true" />
+          ) : null}
+          {!renderMode && chase && coverage === 'art' ? chaseLayers(styles, false) : null}
         </div>
 
         {isText ? (
@@ -133,7 +168,15 @@ export default function CardPreview({
           </footer>
         ) : null}
 
-        {chase && coverage !== 'art' ? chaseLayers(styles, coverage === 'frame') : null}
+        {!renderMode && chase && coverage !== 'art'
+          ? chaseLayers(styles, coverage === 'frame')
+          : null}
+        {renderMode === 'mask' && coverage !== 'art' ? (
+          <i
+            className={`${styles.materialMask} ${coverage === 'frame' ? styles.materialMaskFrame : ''}`}
+            aria-hidden="true"
+          />
+        ) : null}
 
         {!isText && size === 'large' && body ? (
           <Description text={body} className={styles.desc} />

@@ -120,10 +120,10 @@ for (const variant of ['card', 'pack', 'full']) {
   const js = result.outputFiles.find((file) => file.path.endsWith('.js')).text;
   const resources = [...assets.values()];
   const bootstrap = `const assets=${JSON.stringify(resources)}; const urls=assets.map(uri=>{const [head,data]=uri.split(',');const bytes=Uint8Array.from(atob(data), c=>c.charCodeAt(0));return URL.createObjectURL(new Blob([bytes],{type:head.slice(5).split(';')[0]}));}); const expand=value=>value.replace(/__ASSET_(\\d+)__/g,(_,i)=>urls[Number(i)]);const style=document.createElement('style');style.textContent=expand(${JSON.stringify(fonts + css)});document.head.appendChild(style);const script=document.createElement('script');script.textContent=expand(${JSON.stringify(js)});document.body.appendChild(script);`;
-  const html = `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body><div id="root"></div><script>${bootstrap.replaceAll('</script', '<\\/script')}</script></body></html>`;
+  const html = `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body><div id="root"></div><script>${bootstrap.replaceAll('</script', '<\\/script')}</script></body></html>`;
   bundles[variant] = { html };
   console.log(
-    `Bundled ${variant} desktop surface with ${assets.size} local assets (${Math.round(html.length / 1024)} KB).`,
+    `Bundled ${variant} shared surface with ${assets.size} local assets (${Math.round(html.length / 1024)} KB).`,
   );
 }
 await mkdir(resolve(mobile, 'generated'), { recursive: true });

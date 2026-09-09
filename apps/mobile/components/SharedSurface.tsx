@@ -49,7 +49,7 @@ export default function SharedSurface({
     height: number;
   }) {
     if (
-      !['card', 'art', 'avatar'].includes(input.kind) ||
+      !['card', 'cover', 'avatar', 'pack'].includes(input.kind) ||
       input.data.length > 14_000_000 ||
       !['image/png', 'image/jpeg', 'image/webp'].includes(input.contentType)
     )

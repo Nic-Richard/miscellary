@@ -24,10 +24,8 @@ trading. It is not a financial marketplace and does not create artificial digita
 
 - Creators build sets as private drafts and publish them when ready.
 - A published set has a public binder containing its card definitions.
-- Published card definitions are immutable, including their image, text, rarity, and template
-  snapshot.
-- Set identity settings can remain editable after publication without changing published card
-  definitions.
+- Published sets are immutable, including their identity, pack and binder appearance, card images,
+  text, rarities, and template snapshots.
 - Creators collect cards from their own sets under the same rules as everyone else.
 - A creator does not automatically receive owned copies of published cards.
 

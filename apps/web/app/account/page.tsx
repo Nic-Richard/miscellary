@@ -237,6 +237,7 @@ export default function AccountPage() {
                     imageUrl={c.card.image.url}
                     templateKey={c.card.template_key}
                     templateConfig={c.card.template_config}
+                    render={c.card.render}
                   />
                 </button>
               ))}

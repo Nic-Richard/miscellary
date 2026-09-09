@@ -49,6 +49,7 @@ function Picker({
                 imageUrl={c.card.image.url}
                 templateKey={c.card.template_key}
                 templateConfig={c.card.template_config}
+                render={c.card.render}
               />
               {c.held ? <Text style={styles.held}>held</Text> : null}
             </Pressable>

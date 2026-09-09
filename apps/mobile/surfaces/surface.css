@@ -56,8 +56,275 @@ body[data-surface='pack'] #content > div {
   width: 100%;
   max-width: none;
 }
+body[data-surface='reveal'],
+body[data-surface='reveal'] #root,
+body[data-surface='reveal'] #content {
+  width: 100%;
+  height: 100dvh;
+  overflow: hidden;
+}
 body[data-surface$='editor'] #content {
+  box-sizing: border-box;
   padding: 12px;
+}
+body[data-surface$='editor'],
+body[data-surface$='editor'] #root,
+body[data-surface$='editor'] #content {
+  min-height: 100dvh;
+  background: #f4eee1;
+}
+
+@media (orientation: portrait) and (max-width: 900px) {
+  body[data-surface='reveal'] [data-pack-reveal='overlay'] {
+    box-sizing: border-box;
+    align-items: stretch;
+    gap: 6px;
+    height: 100dvh;
+    padding: max(18px, env(safe-area-inset-top)) 10px max(10px, env(safe-area-inset-bottom));
+    overflow: hidden;
+  }
+  body[data-surface='reveal'] [data-pack-reveal='header'] {
+    flex: none;
+    gap: 1px;
+  }
+  body[data-surface='reveal'] [data-pack-reveal='header'] h2 {
+    font-size: clamp(28px, 10vw, 42px);
+  }
+  body[data-surface='reveal'] [data-pack-reveal='sealed'] {
+    flex: 1 1 0;
+    display: grid;
+    place-items: center;
+    min-height: 0;
+    width: 100%;
+  }
+  body[data-surface='reveal'] [data-pack-reveal='stage'] {
+    flex: 1 1 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    place-items: center;
+    min-height: 0;
+    padding: 2px 0;
+    container-type: size;
+  }
+  body[data-surface='reveal'] [data-pack-reveal='stage'] [data-pack-reveal='current'] {
+    width: min(72vw, calc(71.4286cqh - 20px), 290px);
+    gap: 6px;
+  }
+  body[data-surface='reveal'] [data-pack-reveal='deck'] {
+    width: min(44vw, 22dvh, 160px);
+  }
+  body[data-surface='reveal']
+    [data-pack-reveal='stage'][data-has-current='true']
+    [data-pack-reveal='deck'] {
+    position: absolute;
+    top: -12px;
+    right: 8px;
+    z-index: 3;
+    width: min(16vw, 64px);
+  }
+  body[data-surface='reveal'] [data-pack-reveal='stage'] [data-pack-reveal='deck'] span {
+    bottom: -20px;
+    font-size: 8px;
+  }
+  body[data-surface='reveal'] [data-pack-reveal='strip'] {
+    flex: none;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    align-items: flex-end;
+    gap: 7px;
+    width: auto;
+    margin: 0 -10px;
+    padding: 7px calc(50vw - 31px) 10px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    border-bottom-width: 6px;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+  body[data-surface='reveal'] [data-pack-reveal='strip']::-webkit-scrollbar {
+    display: none;
+  }
+  body[data-surface='reveal'] [data-pack-reveal='strip'] > div {
+    flex: 0 0 62px;
+    width: 62px;
+    scroll-snap-align: center;
+  }
+  body[data-surface='reveal'] [data-pack-reveal='strip'] > div[aria-current='true'] {
+    transform: translateY(-5px);
+  }
+  body[data-surface='reveal'] [data-pack-reveal='actions'] {
+    flex: none;
+    margin-top: 0;
+  }
+
+  body[data-surface='card-editor'] #content {
+    padding: 0;
+  }
+  body[data-surface='card-editor'] form {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    border-right: 0;
+    border-left: 0;
+    border-radius: 0;
+  }
+  body[data-surface='card-editor'] form > :first-child {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 2px 14px calc(24px + env(safe-area-inset-bottom));
+  }
+  body[data-surface='card-editor'] form > :last-child {
+    --card-max: min(62vw, 32dvh, 250px);
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    order: -1;
+    align-self: stretch;
+    width: auto;
+    min-height: 47dvh;
+    margin: 0 0 14px;
+    padding: 9px 12px 10px;
+    box-sizing: border-box;
+    justify-content: center;
+    overflow: hidden;
+    background: rgba(244, 238, 225, 0.97);
+    border-bottom: 1px solid var(--bdr2);
+    box-shadow: 0 8px 18px rgba(55, 46, 37, 0.12);
+  }
+  body[data-surface='card-editor'] form > :last-child > :first-child {
+    width: 100%;
+  }
+
+  body[data-surface='pack-editor'] #content {
+    padding: 0;
+  }
+  body[data-surface='pack-editor'] #content > div {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+  }
+  body[data-surface='pack-editor'] #content > div > :first-child {
+    align-self: stretch;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0 14px calc(24px + env(safe-area-inset-bottom));
+  }
+  body[data-surface='pack-editor'] #content > div > :last-child {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    order: -1;
+    align-self: stretch;
+    width: auto;
+    min-height: 47dvh;
+    margin: 0 0 14px;
+    padding: 8px 12px 10px;
+    overflow: hidden;
+    background: rgba(244, 238, 225, 0.97);
+    border-bottom: 1px solid var(--bdr2);
+    box-shadow: 0 8px 18px rgba(55, 46, 37, 0.12);
+  }
+  body[data-surface='pack-editor'] #content > div > :last-child > :first-child {
+    width: min(56vw, 28dvh, 260px);
+    max-width: none;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 600px) {
+  body[data-surface='reveal'] [data-pack-reveal='overlay'] {
+    box-sizing: border-box;
+    gap: 3px;
+    height: 100dvh;
+    padding: max(5px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right))
+      max(5px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
+    overflow: hidden;
+  }
+  body[data-surface='reveal'] [data-pack-reveal='header'] {
+    gap: 0;
+  }
+  body[data-surface='reveal'] [data-pack-reveal='header'] h2 {
+    font-size: clamp(24px, 7dvh, 34px);
+  }
+  body[data-surface='reveal'] [data-pack-reveal='header'] p,
+  body[data-surface='reveal'] [data-pack-reveal='header'] span {
+    font-size: 8px;
+  }
+  body[data-surface='reveal'] [data-pack-reveal='stage'] {
+    flex: 1 1 0;
+    grid-template-columns: minmax(100px, 20vw) minmax(170px, 25vw);
+    gap: 5vw;
+    min-height: 0;
+    padding: 0;
+    container-type: size;
+  }
+  body[data-surface='reveal'] [data-pack-reveal='deck'] {
+    width: min(18vw, 30dvh, 150px);
+  }
+  body[data-surface='reveal'] [data-pack-reveal='current'] {
+    width: min(25vw, calc(71.4286cqh - 30px), 210px);
+    gap: 3px;
+  }
+  body[data-surface='reveal'] [data-pack-reveal='strip'] {
+    flex: none;
+    flex-wrap: nowrap;
+    gap: 4px;
+    width: min(92vw, 920px);
+    padding: 2px 10px 4px;
+    overflow: hidden;
+    border-bottom-width: 4px;
+  }
+  body[data-surface='reveal'] [data-pack-reveal='strip'] > div {
+    flex: 0 1 42px;
+    width: 42px;
+  }
+  body[data-surface='reveal'] [data-pack-reveal='actions'] {
+    flex: none;
+    margin-top: 0;
+  }
+  body[data-surface='reveal'] [data-pack-reveal='actions'] button {
+    padding: 6px 12px;
+  }
+
+  body[data-surface='card-editor'] form {
+    grid-template-columns: minmax(0, 1fr) minmax(220px, 38vw);
+    align-items: start;
+    width: 100%;
+    box-sizing: border-box;
+    gap: 18px;
+    padding: 16px 18px 20px;
+  }
+  body[data-surface='card-editor'] form > :last-child {
+    --card-max: min(35vw, 54dvh, 270px);
+    position: sticky;
+    top: 12px;
+    width: 100%;
+  }
+  body[data-surface='pack-editor'] #content > div {
+    grid-template-columns: minmax(0, 1fr) minmax(220px, 36vw);
+    align-items: start;
+    width: 100%;
+    box-sizing: border-box;
+    gap: 20px;
+  }
+  body[data-surface='pack-editor'] #content > div > :first-child {
+    width: 100%;
+  }
+  body[data-surface='pack-editor'] #content > div > :last-child {
+    position: sticky;
+    top: 12px;
+    width: 100%;
+  }
+  body[data-surface='pack-editor'] #content > div > :last-child > :first-child {
+    width: min(31vw, 48dvh, 260px);
+    max-width: none;
+  }
 }
 body[data-surface='inspect'] {
   width: 100%;
@@ -69,6 +336,28 @@ body[data-surface='inspect'] #root,
 body[data-surface='inspect'] #content {
   width: 100%;
   height: 100%;
+}
+
+body[data-surface^='render-'],
+body[data-surface^='render-'] #root,
+body[data-surface^='render-'] #content {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: transparent;
+}
+
+body[data-surface^='render-'] #content > div {
+  width: 100%;
+  max-width: none;
+}
+
+body[data-surface='render-mask'],
+body[data-surface='render-mask'] #root,
+body[data-surface='render-mask'] #content {
+  background: #000;
 }
 
 @media (prefers-reduced-motion: reduce) {

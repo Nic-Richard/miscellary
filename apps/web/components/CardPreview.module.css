@@ -100,6 +100,14 @@
 .large {
   --card-default-max: 300px;
 }
+.pending {
+  border-radius: var(--corner);
+  background: var(--stock);
+  opacity: 0.72;
+}
+.pending::after {
+  display: none;
+}
 
 .stock {
   position: absolute;
@@ -928,4 +936,63 @@
 }
 .card[data-lit] {
   --lit-angle: calc(104deg + var(--ry, 0) * 0.55deg);
+}
+
+.card[data-render='static'] .stock::after {
+  display: none;
+}
+
+.materialMask {
+  display: none;
+}
+
+.card[data-render='mask']::after,
+.card[data-render='mask'] .stock::before,
+.card[data-render='mask'] .stock::after,
+.card[data-render='mask'] .art::before,
+.card[data-render='mask'] .art::after {
+  display: none;
+}
+
+.card[data-render='mask'] .stock {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+
+.card[data-render='mask'] .head,
+.card[data-render='mask'] .panel,
+.card[data-render='mask'] .foot,
+.card[data-render='mask'] .desc {
+  visibility: hidden;
+}
+
+.card[data-render='mask'] .art {
+  border-color: transparent;
+  background: transparent;
+}
+
+.card[data-render='mask'] .materialMask {
+  position: absolute;
+  inset: 0;
+  display: block;
+  border-radius: inherit;
+  background: #fff;
+}
+
+.card[data-render='mask'] .materialMaskFrame {
+  -webkit-mask-image: linear-gradient(#000, #000), linear-gradient(#000, #000);
+  mask-image: linear-gradient(#000, #000), linear-gradient(#000, #000);
+  -webkit-mask-size:
+    100% 100%,
+    calc(100% - 9cqw) calc(100% - 9cqw);
+  mask-size:
+    100% 100%,
+    calc(100% - 9cqw) calc(100% - 9cqw);
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
 }

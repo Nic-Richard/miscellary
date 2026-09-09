@@ -1,6 +1,6 @@
 import pytest
 
-from cards.models import CardDefinition, PublishedCardError
+from cards.models import CardDefinition, CardSet, PublishedCardError
 from cards.publishing import publish_problems, publish_set
 from cards.tests.helpers import fill_publishable, make_card, make_image, make_set
 
@@ -59,7 +59,32 @@ def test_published_cards_are_frozen_at_the_model_layer(user):
     with pytest.raises(PublishedCardError):
         make_card(card_set, "common")
 
+    card.refresh_from_db()
+    card.position = 99
+    with pytest.raises(PublishedCardError, match="position"):
+        card.save()
+
     assert CardDefinition.objects.get(pk=card.pk).title != "Renamed"
+
+
+def test_published_set_is_frozen_at_the_model_layer(user):
+    card_set = make_set(user)
+    fill_publishable(card_set)
+    publish_set(card_set)
+    card_set.refresh_from_db()
+
+    card_set.mark = "crystal"
+    with pytest.raises(PublishedCardError, match="mark"):
+        card_set.save()
+
+    card_set.refresh_from_db()
+    card_set.status = CardSet.Status.DRAFT
+    with pytest.raises(PublishedCardError, match="lifecycle"):
+        card_set.save(update_fields=["status"])
+
+    card_set.refresh_from_db()
+    card_set.soft_delete()
+    assert card_set.status == CardSet.Status.DELETED
 
 
 def test_draft_cards_are_editable(user):

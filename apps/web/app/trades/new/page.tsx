@@ -125,6 +125,7 @@ function Side({
                         templateKey={first.card.template_key}
                         templateConfig={first.card.template_config}
                         mark={first.set_mark}
+                        render={first.card.render}
                       />
                       {stack.copies.length > 1 ? (
                         <span className={styles.copies}>&times;{stack.copies.length}</span>

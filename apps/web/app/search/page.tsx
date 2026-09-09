@@ -106,6 +106,7 @@ function Results() {
                   imageUrl={c.image.url}
                   templateKey={c.template_key}
                   templateConfig={c.template_config}
+                  render={c.render}
                 />
                 <span className={styles.meta}>{c.set_title}</span>
               </Link>

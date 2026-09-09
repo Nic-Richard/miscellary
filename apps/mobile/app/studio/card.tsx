@@ -2,7 +2,6 @@ import type { CardSetDetail, CardTemplate } from '@miscellary/shared';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import SharedSurface from '@/components/SharedSurface';
 import { ErrorText, Loading } from '@/components/ui';
 import { getMySet, listTemplates } from '@/lib/endpoints';
@@ -13,7 +12,6 @@ export default function CardScreen() {
   const [set, setSet] = useState<CardSetDetail | null>(null);
   const [templates, setTemplates] = useState<CardTemplate[]>([]);
   const [error, setError] = useState('');
-  const insets = useSafeAreaInsets();
   useEffect(() => {
     let cancelled = false;
     void Promise.all([getMySet(setId), listTemplates()])
@@ -40,7 +38,7 @@ export default function CardScreen() {
   if (error) return <ErrorText>{error}</ErrorText>;
   if (!set || !templates.length) return <Loading />;
   return (
-    <View style={{ flex: 1, paddingBottom: insets.bottom, backgroundColor: colors.bg }}>
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
       <SharedSurface
         mode="card-editor"
         data={{

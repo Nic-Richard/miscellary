@@ -184,7 +184,7 @@ def test_publish_flow(auth_client, user):
     )
 
 
-def test_published_set_identity_remains_editable(auth_client, user):
+def test_published_set_is_completely_immutable(auth_client, user):
     card_set = make_set(user)
     fill_publishable(card_set)
     publish_set(card_set)
@@ -195,15 +195,14 @@ def test_published_set_identity_remains_editable(auth_client, user):
         {"mark": "crystal", "pack_colour": "indigo", "pack_size": 3},
         format="json",
     )
-    assert response.status_code == 200
-    assert response.json()["mark"] == "crystal"
-    assert response.json()["pack_colour"] == "indigo"
-    assert response.json()["pack_size"] == 3
+    assert response.status_code == 400
 
     response = auth_client.patch(url, {"title": "Changed after publishing"}, format="json")
     assert response.status_code == 400
     card_set.refresh_from_db()
     assert card_set.title == "Rocks of the Backyard"
+    assert card_set.mark != "crystal"
+    assert card_set.pack_colour != "indigo"
 
 
 def test_public_listing_and_binder(api_client, user):

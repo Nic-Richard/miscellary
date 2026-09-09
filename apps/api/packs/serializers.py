@@ -10,6 +10,7 @@ class OwnedCardSerializer(serializers.ModelSerializer):
     set_slug = serializers.CharField(source="card.card_set.slug", read_only=True)
     set_title = serializers.CharField(source="card.card_set.title", read_only=True)
     set_mark = serializers.CharField(source="card.card_set.mark", read_only=True)
+    set_pack_colour = serializers.CharField(source="card.card_set.pack_colour", read_only=True)
     # How many copies the owner holds of this card, so duplicates can be flagged.
     copies = serializers.IntegerField(read_only=True)
     held = serializers.BooleanField(read_only=True)
@@ -22,6 +23,7 @@ class OwnedCardSerializer(serializers.ModelSerializer):
             "set_slug",
             "set_title",
             "set_mark",
+            "set_pack_colour",
             "copies",
             "held",
             "acquired_at",

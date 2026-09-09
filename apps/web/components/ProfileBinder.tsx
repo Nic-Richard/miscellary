@@ -63,6 +63,7 @@ function Sleeved({
       templateKey={owned.card.template_key}
       templateConfig={owned.card.template_config}
       mark={owned.set_mark}
+      render={owned.card.render}
     />
   );
 
@@ -124,7 +125,11 @@ export default function ProfileBinder({
   const filled = slots.filter(Boolean).length;
   const caption = title?.trim() || DEFAULT_TITLE;
   const preloadKey = slots
-    .flatMap((slot) => (slot?.owned_card.card.image.url ? [slot.owned_card.card.image.url] : []))
+    .flatMap((slot) => {
+      const card = slot?.owned_card.card;
+      const source = card?.render?.thumbnail?.url ?? card?.image.url;
+      return source ? [source] : [];
+    })
     .join('\n');
   const representedSets = useMemo(() => {
     const counts = new Map<string, { slug: string; title: string; count: number }>();

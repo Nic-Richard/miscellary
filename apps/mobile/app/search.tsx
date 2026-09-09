@@ -65,6 +65,7 @@ export default function SearchScreen() {
               imageUrl={c.image.url}
               templateKey={c.template_key}
               templateConfig={c.template_config}
+              render={c.render}
             />
           </Link>
         ))}

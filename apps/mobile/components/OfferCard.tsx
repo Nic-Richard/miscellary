@@ -1,12 +1,20 @@
 import type { OwnedCard, TradeOffer } from '@miscellary/shared';
 import { router } from 'expo-router';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { colors, fonts } from '@/lib/theme';
 import CardPreview from './CardPreview';
 import { Button, Muted } from './ui';
 
-function Side({ label, cards }: { label: string; cards: OwnedCard[] }) {
+function Side({
+  label,
+  cards,
+  onInspect,
+}: {
+  label: string;
+  cards: OwnedCard[];
+  onInspect?: (owned: OwnedCard) => void;
+}) {
   return (
     <View style={{ flex: 1, gap: 6 }}>
       <Muted style={styles.sideLabel}>
@@ -19,17 +27,27 @@ function Side({ label, cards }: { label: string; cards: OwnedCard[] }) {
       >
         {cards.length === 0 ? <Muted style={{ fontSize: 12 }}>nothing</Muted> : null}
         {cards.map((c) => (
-          <CardPreview
+          <Pressable
             key={c.id}
-            width={104}
-            title={c.card.title}
-            description={c.card.description}
-            mark={c.set_mark}
-            rarity={c.card.rarity}
-            imageUrl={c.card.image.url}
-            templateKey={c.card.template_key}
-            templateConfig={c.card.template_config}
-          />
+            accessibilityRole="button"
+            accessibilityLabel={`Inspect ${c.card.title}`}
+            disabled={!onInspect}
+            onPress={() => onInspect?.(c)}
+            style={({ pressed }) => ({ opacity: pressed ? 0.76 : 1 })}
+          >
+            <CardPreview
+              width={104}
+              title={c.card.title}
+              description={c.card.description}
+              mark={c.set_mark}
+              rarity={c.card.rarity}
+              imageUrl={c.card.image.url}
+              templateKey={c.card.template_key}
+              templateConfig={c.card.template_config}
+              number={c.card.position + 1}
+              render={c.card.render}
+            />
+          </Pressable>
         ))}
       </ScrollView>
     </View>
@@ -41,9 +59,10 @@ interface OfferCardProps {
   me: string;
   busy?: boolean;
   onAction: (action: 'accept' | 'reject' | 'cancel') => void;
+  onInspect?: (owned: OwnedCard) => void;
 }
 
-export default function OfferCard({ offer, me, busy, onAction }: OfferCardProps) {
+export default function OfferCard({ offer, me, busy, onAction, onInspect }: OfferCardProps) {
   const incoming = offer.recipient.username === me;
   const other = incoming ? offer.sender : offer.recipient;
   const statusColor =
@@ -91,9 +110,13 @@ export default function OfferCard({ offer, me, busy, onAction }: OfferCardProps)
         </Muted>
       ) : null}
       <View style={styles.sides}>
-        <Side label={incoming ? 'They give' : 'You give'} cards={offer.give} />
+        <Side
+          label={incoming ? 'They give' : 'You give'}
+          cards={offer.give}
+          onInspect={onInspect}
+        />
         <Feather name="repeat" color={colors.accent} size={18} style={{ alignSelf: 'center' }} />
-        <Side label={incoming ? 'They want' : 'You get'} cards={offer.want} />
+        <Side label={incoming ? 'They want' : 'You get'} cards={offer.want} onInspect={onInspect} />
       </View>
       {offer.status === 'pending' ? (
         <View style={styles.actions}>

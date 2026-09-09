@@ -50,6 +50,30 @@ export interface ImageRef {
   ready: boolean;
 }
 
+export interface CardRenderImage {
+  url: string;
+  width: number;
+  height: number;
+}
+
+export interface CardRenderAssets {
+  status: 'pending' | 'ready';
+  signature: string;
+  version: number;
+  thumbnail: CardRenderImage | null;
+  front: CardRenderImage | null;
+  mask_thumbnail: CardRenderImage | null;
+  mask: CardRenderImage | null;
+  back: CardRenderImage | null;
+}
+
+export interface CardBackRender {
+  status: 'pending' | 'ready';
+  signature: string;
+  version: number;
+  image: CardRenderImage | null;
+}
+
 export interface CreateUploadResponse {
   image: ImageRef;
   upload_url: string;
@@ -130,6 +154,8 @@ export interface Card {
   template_config: TemplateConfig;
   position: number;
   like_count: number;
+  /** Presentation cache for a published definition. Drafts return null. */
+  render?: CardRenderAssets | null;
 }
 
 export interface CardSetSummary {
@@ -161,6 +187,7 @@ export interface CardSetSummary {
   like_count: number;
   opening_count: number;
   liked: boolean;
+  render_back?: CardBackRender | null;
   created_at: string;
   published_at: string | null;
 }
@@ -201,6 +228,7 @@ export interface OwnedCard {
   set_slug: string;
   set_title: string;
   set_mark: string;
+  set_pack_colour: string;
   copies: number;
   held: boolean;
   acquired_at: string;

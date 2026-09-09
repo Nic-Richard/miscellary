@@ -18,7 +18,8 @@ export const listMyCards = (setSlug?: string) =>
     `/api/v1/me/cards/${setSlug ? `?set=${encodeURIComponent(setSlug)}` : ''}`,
   );
 export const recycleCard = (id: string) =>
-  apiFetch<{ points: number; set_slug: string }>(`/api/v1/me/cards/${id}/recycle/`, {
-    method: 'POST',
-  });
+  apiFetch<{ points: number; earned: number; set_slug: string }>(
+    `/api/v1/me/cards/${id}/recycle/`,
+    { method: 'POST' },
+  );
 export const listMyPoints = () => apiFetch<SetPointsBalance[]>('/api/v1/me/points/');

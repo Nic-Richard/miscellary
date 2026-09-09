@@ -35,6 +35,7 @@ function Side({
                 templateKey={c.card.template_key}
                 templateConfig={c.card.template_config}
                 mark={c.set_mark}
+                render={c.card.render}
               />
             );
             if (!onInspect) {

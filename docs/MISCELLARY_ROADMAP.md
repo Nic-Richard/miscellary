@@ -12,7 +12,7 @@ Status:
 
 Items are ordered roughly by current priority. The order can change as dependencies or product decisions become clearer.
 
-## 1. Card editor overhaul — In progress
+## 1. Card editor overhaul: In progress
 
 The main overhaul was implemented. Phone review reopened the creative-control follow-up:
 Full Art borders, better description panels, automatic technical production choices, and restored
@@ -45,7 +45,7 @@ Remaining responsive, cross-browser, and real-device QA belongs to the later QA 
 - Removed automatic foil/holo travelling animation from normal card rendering.
 - Moved card lighting responsibility to the surrounding scene.
 
-## 2. Binder lighting and card presentation — Complete
+## 2. Binder lighting and card presentation: Complete
 
 Binder views now provide the environmental lighting for cards rather than relying on baked card shine or canned chase animations.
 
@@ -58,7 +58,7 @@ Completed:
 
 Remaining work belongs under final responsive, browser, performance, and real-device QA rather than this feature.
 
-## 3. Homepage redesign — Complete
+## 3. Homepage redesign: Complete
 
 The homepage was redesigned around the actual Miscellary product rather than generic marketing panels.
 
@@ -71,7 +71,7 @@ Completed:
 
 Remaining responsive and mobile QA is tracked later in the roadmap.
 
-## 4. Personal profile binder and set binder customization — Complete
+## 4. Personal profile binder and set binder customization: Complete
 
 The old Showcase concept was replaced with a user's public binder.
 
@@ -87,7 +87,7 @@ Completed:
 
 Any future binder-material expansion is optional polish, not required core work.
 
-## 5. Binder page-turn interaction — Complete
+## 5. Binder page-turn interaction: Complete
 
 A quick physical page-turn animation is implemented.
 
@@ -99,7 +99,7 @@ Completed:
 
 Touch and narrow-viewport behavior still need final real-device/responsive QA.
 
-## 6. Background and panel material pass — Complete
+## 6. Background and panel material pass: Complete
 
 The old repeated texture treatment was replaced with a clearer material hierarchy.
 
@@ -111,7 +111,7 @@ Completed:
 
 Further changes should be driven by specific visual problems rather than another broad material rewrite.
 
-## 7. Mark / emblem cleanup — Complete
+## 7. Mark / emblem cleanup: Complete
 
 The built-in set marks received a geometry cleanup.
 
@@ -123,7 +123,7 @@ Completed:
 
 Only revisit individual marks if a concrete rendering problem appears.
 
-## 8. Pack tear interaction — Complete
+## 8. Pack tear interaction: Complete
 
 The pack tear was reworked to feel less rigid and more physical.
 
@@ -136,63 +136,52 @@ Completed:
 
 Final touch behavior and performance still need real-device QA.
 
-## 9. Android / React Native product build-out — In progress
+## 9. Android / React Native product build-out and shared rendering: In progress
 
-The Android app still needs substantial work and should eventually become a real first-class client rather than a secondary approximation of the web app.
+Android remains a native application, but duplicate native visual renderers are no longer the goal.
+Native code owns navigation, authentication, camera and gallery access, uploads, and platform
+integration. The canonical web renderer supplies the inspector, binder, pack opening, and editors
+through mobile-adapted WebView surfaces. Superseded native visual renderers have been removed so
+these surfaces do not drift into parallel products.
+
+Published cards use baked presentation assets instead of reconstructing their static layers in each
+context. Each frozen card definition can reference a thumbnail, a detailed front, a shared set back,
+and optional material masks. The original definition and source image remain authoritative and allow
+regeneration when the renderer version changes. Drafts continue to render live.
 
 The detailed implementation plan is [MOBILE_BUILDOUT_PLAN.md](MOBILE_BUILDOUT_PLAN.md).
-Android was confirmed as the next priority ahead of production launch content.
 
-First batch implemented, pending actual-phone review:
+### Completed foundation
 
 - Current cream/teal app shell, bundled typography, navigation icons, status bar, and shared controls.
 - Phone-sized Browse binder shelf with sorting, pagination, refresh, and loading/error/retry states.
 - Wi-Fi API/media connectivity and documented Expo Go SDK 53 phone/emulator preview paths.
 - Existing routes and five main destinations preserved.
+- Shared WebView bridge for API calls, uploads, navigation, sizing, and locally bundled web surfaces.
+- Shared binder, inspector, pack, and editor surfaces adapted for mobile layout and interaction.
+- Baked published-card display with lightweight native material response for repeated card contexts.
+- Render cache contract, renderer signatures, deterministic render-only modes, and local generation
+  and import commands for new development data.
+- Published set content and appearance locked at the model and API layers.
 
-The physical phone loaded successfully. Batch 2 added template-aware rendering, paged binders,
-landscape supporting panels, front/back inspection, bundled editor fonts, directional material
-lighting, editor follow-up, and trade-offer styling. Two shared demo collections received curated
-photography and richer styling, applied in an approved demo reset. Thirteen legacy photo downloads
-fell back to gradients and still need replacement. Device review and
-remaining rendering fidelity are still open. Pack opening and broader Studio/trade workflow
-redesigns remain later work.
+### Remaining shared-renderer work
 
-### Product / design work
+- The seeded baked assets and mobile shared surfaces have been reviewed on a physical Android phone
+  and accepted for this checkpoint.
+- Measure grid load time, memory, and scrolling on a normal physical Android phone.
+- Profile slow loading and interaction before deciding whether it comes from application code or the
+  local Docker and Expo development workflow.
+- Verify missing render assets, slow networks, image caching, reduced motion, and accessibility.
+- Decide when automated production generation is needed. Publication remains independent from
+  browser rendering.
 
-- Revisit each major flow specifically for a phone screen.
-- Do not simply shrink the desktop layouts.
-- Decide what the mobile navigation should prioritize.
-- Make pack opening feel good on touch.
-- Adapt binder browsing to a narrow viewport.
-- Make card inspection practical on touch.
-- Rework Studio / creation flows for mobile if they remain in scope.
-- Revisit trading, collections, profiles, search, and notifications for mobile ergonomics.
+### Product and device testing
 
-### Card rendering
+- Verify auth refresh, SecureStore behavior, camera/gallery uploads, keyboard behavior, and Android
+  back handling.
+- Repeat the accepted binder, inspector, pack, and editor phone pass after any performance changes.
 
-The React Native card renderer currently differs from web.
-
-Decide how closely mobile should reproduce:
-
-- stock/material hierarchy
-- rarity treatments
-- Full Art
-- foil / holo
-- card backs
-- inspector lighting / tilt
-
-It does not need identical CSS effects, but it should preserve the same visual language and rarity logic.
-
-### Testing
-
-- Real Android-device testing is still required.
-- Verify auth refresh / SecureStore behavior.
-- Verify camera/gallery uploads.
-- Verify touch interactions and scrolling.
-- Verify performance on a normal mid-range device.
-
-## 10. Production-quality seed / launch content — Remaining
+## 10. Production-quality seed / launch content: Remaining
 
 The current demo seed is useful for development, but launch should not feel like an empty database or an obviously fake demo.
 
@@ -222,7 +211,7 @@ Create a clear distinction between:
 
 Production startup should not automatically recreate seed users.
 
-## 11. Production deployment and live URL — Remaining
+## 11. Production deployment and live URL: Remaining
 
 Miscellary still needs to go live.
 
@@ -248,7 +237,7 @@ Miscellary still needs to go live.
 
 The deployed site should be tested from a clean browser session rather than assumed correct because local Docker works.
 
-## 12. Smoothness, responsiveness, and performance pass — Remaining
+## 12. Smoothness, responsiveness, and performance pass: Remaining
 
 After the main product/UI work settles, do a focused performance and interaction pass.
 
@@ -417,7 +406,7 @@ Observability should stay lightweight and proportional to a portfolio project.
 
 # Suggested remaining order of work
 
-1. Android design and implementation.
+1. Android shared-renderer integration and baked-card delivery.
 2. Production-quality launch content.
 3. Responsive, accessibility, empty-state, and inspector QA.
 4. Smoothness and performance pass.

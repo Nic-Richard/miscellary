@@ -69,6 +69,7 @@ function SetCard({
           templateKey={card.template_key}
           templateConfig={card.template_config}
           mark={detail.mark}
+          render={card.render}
         />
       </button>
       {published ? (
@@ -86,7 +87,10 @@ function SetCard({
 
 function stack(owned: OwnedCard[]): OwnedCard[] {
   const seen = new Map<string, OwnedCard>();
-  for (const copy of owned) if (!seen.has(copy.card.id)) seen.set(copy.card.id, copy);
+  for (const copy of owned) {
+    const current = seen.get(copy.card.id);
+    if (!current || (current.held && !copy.held)) seen.set(copy.card.id, copy);
+  }
   return [...seen.values()];
 }
 
@@ -101,6 +105,9 @@ export default function BinderPage() {
   const [owned, setOwned] = useState<OwnedCard[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [inspect, setInspect] = useState<Card | null>(null);
+  const [recycling, setRecycling] = useState<string | null>(null);
+  const [gain, setGain] = useState<{ cardId: string; amount: number; key: number } | null>(null);
+  const [packPoints, setPackPoints] = useState<number | undefined>();
   const preloadedImages = useRef<HTMLImageElement[]>([]);
 
   // Wait for auth so a creator can view their own draft binder.
@@ -129,7 +136,7 @@ export default function BinderPage() {
     if (!set) return;
     const images = set.cards.map((card) => {
       const image = new window.Image();
-      image.src = card.image.url;
+      image.src = card.render?.thumbnail?.url ?? card.image.url;
       void image.decode?.().catch(() => undefined);
       return image;
     });
@@ -160,13 +167,33 @@ export default function BinderPage() {
     }));
   }, [set]);
 
-  async function onRecycle(ownedId: string) {
+  async function onRecycle(copy: OwnedCard) {
+    setRecycling(copy.id);
     try {
-      await recycleCard(ownedId);
-      const page = await listMyCards(slug);
-      setOwned(page.results);
+      const result = await recycleCard(copy.id);
+      setPackPoints(result.points);
+      setOwned((current) =>
+        current
+          ? current
+              .filter((ownedCard) => ownedCard.id !== copy.id)
+              .map((ownedCard) =>
+                ownedCard.card.id === copy.card.id
+                  ? { ...ownedCard, copies: ownedCard.copies - 1 }
+                  : ownedCard,
+              )
+          : current,
+      );
+      const nextGain = {
+        cardId: copy.card.id,
+        amount: result.earned,
+        key: Date.now(),
+      };
+      setGain(nextGain);
+      setTimeout(() => setGain((current) => (current?.key === nextGain.key ? null : current)), 800);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not recycle.');
+    } finally {
+      setRecycling(null);
     }
   }
 
@@ -256,7 +283,18 @@ export default function BinderPage() {
               <ReportButton target={{ set_slug: set.slug }} />
             </div>
           ) : null}
-          {isPublished ? <PackPanel slug={set.slug} title={set.title} identity={set} /> : null}
+          {isPublished ? (
+            <PackPanel
+              slug={set.slug}
+              title={set.title}
+              identity={set}
+              points={packPoints}
+              onOpened={(opening) => {
+                setPackPoints(opening.status.points);
+                setOwned(null);
+              }}
+            />
+          ) : null}
         </div>
       </div>
 
@@ -391,21 +429,28 @@ export default function BinderPage() {
                 <CardGrid>
                   {stack(owned).map((copy) => (
                     <CardCell
-                      key={copy.id}
+                      key={copy.card.id}
                       footer={
-                        copy.copies > 1 ? (
-                          <button
-                            type="button"
-                            className={styles.recycle}
-                            onClick={() => void onRecycle(copy.id)}
-                            disabled={copy.held}
-                            title={copy.held ? 'In a pending trade' : undefined}
-                          >
-                            ×{copy.copies} · Recycle one
-                          </button>
-                        ) : (
-                          'Only copy'
-                        )
+                        <span className={styles.recycleAnchor}>
+                          {copy.copies > 1 ? (
+                            <button
+                              type="button"
+                              className={styles.recycle}
+                              onClick={() => void onRecycle(copy)}
+                              disabled={copy.held || recycling === copy.id}
+                              title={copy.held ? 'In a pending trade' : undefined}
+                            >
+                              ×{copy.copies} · Recycle one
+                            </button>
+                          ) : (
+                            'Only copy'
+                          )}
+                          {gain?.cardId === copy.card.id ? (
+                            <span key={gain.key} className={styles.pointGain}>
+                              +{gain.amount}
+                            </span>
+                          ) : null}
+                        </span>
                       }
                     >
                       {renderCard(copy.card, copy.card.position + 1)}

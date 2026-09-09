@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent, ReactNode } from 'react';
-import { RARITY_LABELS } from '@miscellary/shared';
+import { RARITY_LABELS, resolveCardTokens } from '@miscellary/shared';
 import type { Card, Creator, OwnedCard } from '@miscellary/shared';
 import CardBack from './CardBack';
 import CardPreview from './CardPreview';
@@ -29,9 +29,6 @@ const FRICTION = 0.9;
 const THROW = 0.3;
 const MAX_THROW = 9;
 const TURN_MS = 420;
-
-// Match the preview's corner radius so the extrusion follows the card shape.
-const CORNER: Record<string, number> = { round: 0.03, soft: 0.016, sharp: 0.004 };
 
 // Stacked silhouettes keep the extruded edge aligned with rounded corners.
 const CORE_LAYERS = [0, 1, 2, 3, 4, 5, 6];
@@ -211,6 +208,8 @@ export default function CardInspector({
     };
   }, [onClose]);
 
+  const corner = resolveCardTokens(card.template_key, card.template_config, card.rarity).corner;
+
   return (
     <div
       className={styles.scrim}
@@ -230,7 +229,7 @@ export default function CardInspector({
           className={styles.stage}
           style={
             {
-              '--corner': CORNER[card.template_config.corners ?? 'round'] ?? CORNER.round,
+              '--corner': corner / 100,
             } as React.CSSProperties
           }
           onPointerDown={onPointerDown}
@@ -257,11 +256,19 @@ export default function CardInspector({
                 templateKey={card.template_key}
                 templateConfig={card.template_config}
                 mark={mark}
+                render={card.render}
               />
             </div>
             <div className={styles.reverse}>
               <span className={styles.shade} aria-hidden="true" />
-              <CardBack mark={mark} packColour={packColour} title={setTitle} />
+              <CardBack
+                mark={mark}
+                packColour={packColour}
+                title={setTitle}
+                imageUrl={card.render?.back?.url}
+                corner={corner}
+                pending={Boolean(card.render) && !card.render?.back}
+              />
             </div>
             {CORE_LAYERS.map((i) => (
               <span
@@ -319,6 +326,7 @@ export function OwnedCardInspector({ owned, onClose }: { owned: OwnedCard; onClo
       setTitle={owned.set_title}
       setSlug={owned.set_slug}
       mark={owned.set_mark}
+      packColour={owned.set_pack_colour}
       copies={owned.copies}
       onClose={onClose}
     />

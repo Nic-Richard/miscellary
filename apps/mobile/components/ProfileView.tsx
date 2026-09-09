@@ -2,20 +2,11 @@ import { SHOWCASE_SLOTS } from '@miscellary/shared';
 import type { OwnedCard, ProfilePage } from '@miscellary/shared';
 import { Link, router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import {
-  Alert,
-  Modal,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-  useWindowDimensions,
-} from 'react-native';
+import { Alert, Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useAuth } from '@/lib/auth';
 import { sendReport, setFollow } from '@/lib/endpoints';
 import { colors } from '@/lib/theme';
-import NativeBinderPager from './binder/NativeBinderPager';
-import ProfileBinderDetails from './ProfileBinderDetails';
+import CardInspector from './CardInspector';
 import SharedSurface from './SharedSurface';
 import { Button, Muted } from './ui';
 
@@ -27,9 +18,7 @@ export default function ProfileView({
   headerExtra?: React.ReactNode;
 }) {
   const { user } = useAuth();
-  const { width, height } = useWindowDimensions();
   const [profile, setProfile] = useState(initial);
-  const [page, setPage] = useState(0);
   const [selected, setSelected] = useState<OwnedCard | null>(null);
   const showcase = useMemo(
     () =>
@@ -39,11 +28,6 @@ export default function ProfileView({
       ),
     [profile.showcase],
   );
-  const landscape = width > height;
-  const rail = landscape && width >= 800;
-  const shownPage = landscape ? Math.floor(page / 2) * 2 : page;
-  const pages = SHOWCASE_SLOTS / 4;
-
   async function toggleFollow() {
     const r = await setFollow(profile.username, !profile.is_following);
     setProfile({ ...profile, is_following: r.following, follower_count: r.follower_count });
@@ -114,41 +98,21 @@ export default function ProfileView({
       </View>
 
       <Text style={styles.h2}>Binder</Text>
-      <View style={{ flexDirection: rail ? 'row' : 'column', gap: 12 }}>
-        <View style={{ flex: 1 }}>
-          <NativeBinderPager
-            cards={showcase.map((slot) => slot?.owned_card.card)}
-            marks={showcase.map((slot) => slot?.owned_card.set_mark)}
-            page={shownPage}
-            pages={pages}
-            half={!landscape}
-            colour={profile.binder_colour}
-            onPageChange={setPage}
-            onInspect={(_, index) => setSelected(showcase[index]?.owned_card ?? null)}
-          />
-          <View style={styles.pager}>
-            <Button
-              title="Previous"
-              kind="secondary"
-              disabled={shownPage === 0}
-              onPress={() => setPage(Math.max(0, shownPage - (landscape ? 2 : 1)))}
-            />
-            <Muted>
-              {shownPage + 1}
-              {landscape ? `–${shownPage + 2}` : ''} / {pages}
-            </Muted>
-            <Button
-              title="Next"
-              kind="secondary"
-              disabled={shownPage + (landscape ? 2 : 1) >= pages}
-              onPress={() => setPage(shownPage + (landscape ? 2 : 1))}
-            />
-          </View>
-        </View>
-        <View style={{ width: rail ? 240 : '100%' }}>
-          <ProfileBinderDetails cards={showcase.map((slot) => slot?.owned_card)} />
-        </View>
-      </View>
+      <SharedSurface
+        mode="profile-binder"
+        data={{
+          slots: showcase,
+          title: profile.showcase_title,
+          colour: profile.binder_colour,
+          mine: profile.is_me,
+        }}
+        autoHeight
+        onEvent={(type, id) => {
+          if (type === 'inspect') {
+            setSelected(showcase.find((slot) => slot?.owned_card.id === id)?.owned_card ?? null);
+          }
+        }}
+      />
 
       <Text style={styles.h2}>Sets by @{profile.username}</Text>
       {profile.sets.length === 0 ? <Muted>No published sets.</Muted> : null}
@@ -174,17 +138,14 @@ export default function ProfileView({
           onRequestClose={() => setSelected(null)}
         >
           <View style={styles.inspector}>
-            <SharedSurface
-              mode="inspect"
-              data={{
-                card: selected.card,
-                setTitle: selected.set_title,
-                setSlug: selected.set_slug,
-                mark: selected.set_mark,
-              }}
-              onEvent={(type) => {
-                if (type === 'close') setSelected(null);
-              }}
+            <CardInspector
+              card={selected.card}
+              setTitle={selected.set_title}
+              setSlug={selected.set_slug}
+              mark={selected.set_mark}
+              packColour={selected.set_pack_colour}
+              copies={selected.copies}
+              onClose={() => setSelected(null)}
             />
           </View>
         </Modal>
@@ -207,7 +168,6 @@ const styles = StyleSheet.create({
   },
   actions: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
   h2: { color: colors.text, fontSize: 16, fontWeight: '700', marginTop: 8 },
-  pager: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   inspector: { flex: 1, backgroundColor: '#241d16' },
   setRow: {
     backgroundColor: colors.sur,

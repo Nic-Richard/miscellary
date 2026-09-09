@@ -1,6 +1,6 @@
 import type { PackOpening } from '@miscellary/shared';
+import { StatusBar } from 'expo-status-bar';
 import { Modal, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import SharedSurface from './SharedSurface';
 
 export default function PackReveal({
@@ -10,15 +10,19 @@ export default function PackReveal({
   opening: PackOpening;
   onClose: () => void;
 }) {
-  const insets = useSafeAreaInsets();
   return (
-    <Modal visible onRequestClose={onClose} supportedOrientations={['portrait', 'landscape']}>
+    <Modal
+      visible
+      statusBarTranslucent
+      navigationBarTranslucent
+      onRequestClose={onClose}
+      supportedOrientations={['portrait', 'landscape']}
+    >
+      <StatusBar style="light" backgroundColor="#103832" translucent />
       <View
         style={{
           flex: 1,
-          paddingTop: insets.top,
-          paddingBottom: insets.bottom,
-          backgroundColor: '#241d16',
+          backgroundColor: '#103832',
         }}
       >
         <SharedSurface

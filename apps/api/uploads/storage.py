@@ -56,3 +56,12 @@ def object_size(key: str) -> int | None:
 
 def delete_object(key: str) -> None:
     client().delete_object(Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key=key)
+
+
+def put_object(key: str, body: bytes, content_type: str) -> None:
+    client().put_object(
+        Bucket=settings.AWS_STORAGE_BUCKET_NAME,
+        Key=key,
+        Body=body,
+        ContentType=content_type,
+    )

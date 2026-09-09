@@ -143,6 +143,7 @@ export default function HomePage() {
                   templateKey={pick.card.template_key}
                   templateConfig={pick.card.template_config}
                   mark={pick.set.mark}
+                  render={pick.card.render}
                 />
               </Link>
             );
@@ -191,6 +192,7 @@ export default function HomePage() {
                     templateKey={card.template_key}
                     templateConfig={card.template_config}
                     mark={featured.mark}
+                    render={card.render}
                   />
                 );
               })}

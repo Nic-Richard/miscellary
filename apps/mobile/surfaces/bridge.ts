@@ -8,6 +8,7 @@ declare global {
     ReactNativeWebView?: { postMessage: (message: string) => void };
     miscellaryReply: (reply: { id: number; data?: unknown; error?: string }) => void;
     miscellaryRender: (props: Record<string, unknown>) => void;
+    miscellaryReady: Promise<void>;
   }
 }
 export function send(type: string, data?: unknown) {

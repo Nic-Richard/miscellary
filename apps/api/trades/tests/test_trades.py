@@ -274,7 +274,8 @@ def test_api_flow(api_client):
     assert (
         api_client.get(reverse("trades:offers"), {"box": "outbox"}).json()[0]["id"] == offer["id"]
     )
-    assert api_client.get(reverse("packs:collection")).json()["results"][1]["held"] is True
+    collection = api_client.get(reverse("packs:collection")).json()["results"]
+    assert next(card for card in collection if card["id"] == str(a1.id))["held"] is True
 
     # Alice can't accept her own offer; Bob can.
     assert api_client.post(reverse("trades:accept", args=[offer["id"]])).status_code == 400

@@ -2,20 +2,11 @@ import { SHOWCASE_SLOTS } from '@miscellary/shared';
 import type { OwnedCard, ProfilePage } from '@miscellary/shared';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
-import {
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-  useWindowDimensions,
-} from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import CardPreview from '@/components/CardPreview';
-import NativeBinderPager from '@/components/binder/NativeBinderPager';
 import LoginGate from '@/components/LoginGate';
-import ProfileBinderDetails from '@/components/ProfileBinderDetails';
 import ProfileView from '@/components/ProfileView';
+import SharedSurface from '@/components/SharedSurface';
 import { useAuth } from '@/lib/auth';
 import { getProfile, getShowcase, listMyCards, saveShowcase, updateProfile } from '@/lib/endpoints';
 import { colors } from '@/lib/theme';
@@ -23,7 +14,6 @@ import { Button, ErrorText, Input, Loading, Muted, Title } from '@/components/ui
 
 function Me() {
   const { user, logout, refreshUser } = useAuth();
-  const { width, height } = useWindowDimensions();
   const [profile, setProfile] = useState<ProfilePage | null>(null);
   const [editing, setEditing] = useState(false);
   const [displayName, setDisplayName] = useState('');
@@ -31,7 +21,6 @@ function Me() {
   const [cards, setCards] = useState<OwnedCard[]>([]);
   const [slots, setSlots] = useState<(string | null)[]>(Array(SHOWCASE_SLOTS).fill(null));
   const [picking, setPicking] = useState<number | null>(null);
-  const [binderPage, setBinderPage] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const pickerScrollRef = useRef<ScrollView>(null);
 
@@ -92,10 +81,6 @@ function Me() {
     ...cards.map((card) => [card.id, card] as const),
   ]);
   const showcase = slots.map((id) => (id ? byId.get(id) : undefined));
-  const landscape = width > height;
-  const rail = landscape && width >= 800;
-  const shownPage = landscape ? Math.floor(binderPage / 2) * 2 : binderPage;
-  const pages = SHOWCASE_SLOTS / 4;
 
   if (editing)
     return (
@@ -128,45 +113,26 @@ function Me() {
 
         <Text style={styles.h2}>Binder</Text>
         <Muted>Tap a slot to pick one of your cards.</Muted>
-        <View style={{ flexDirection: rail ? 'row' : 'column', gap: 12 }}>
-          <View style={{ flex: 1 }}>
-            <NativeBinderPager
-              cards={showcase.map((owned) => owned?.card)}
-              marks={showcase.map((owned) => owned?.set_mark)}
-              page={shownPage}
-              pages={pages}
-              half={!landscape}
-              colour={profile.binder_colour}
-              onPageChange={setBinderPage}
-              onInspect={(_, index) => setPicking(index)}
-              onPickEmpty={setPicking}
-              onRemove={(position) =>
-                void persistSlots(slots.map((slot, index) => (index === position ? null : slot)))
-              }
-            />
-            <View style={styles.binderPager}>
-              <Button
-                title="Previous"
-                kind="secondary"
-                disabled={shownPage === 0}
-                onPress={() => setBinderPage(Math.max(0, shownPage - (landscape ? 2 : 1)))}
-              />
-              <Muted>
-                {shownPage + 1}
-                {landscape ? `–${shownPage + 2}` : ''} / {pages}
-              </Muted>
-              <Button
-                title="Next"
-                kind="secondary"
-                disabled={shownPage + (landscape ? 2 : 1) >= pages}
-                onPress={() => setBinderPage(shownPage + (landscape ? 2 : 1))}
-              />
-            </View>
-          </View>
-          <View style={{ width: rail ? 240 : '100%' }}>
-            <ProfileBinderDetails cards={showcase} />
-          </View>
-        </View>
+        <SharedSurface
+          mode="profile-binder"
+          data={{
+            slots: showcase.map((owned, index) =>
+              owned ? { position: index + 1, owned_card: owned } : null,
+            ),
+            title: profile.showcase_title,
+            colour: profile.binder_colour,
+            mine: true,
+            editing: true,
+          }}
+          autoHeight
+          onEvent={(type, position) => {
+            if ((type === 'pick' || type === 'remove') && typeof position !== 'number') return;
+            if (type === 'pick') setPicking(position as number);
+            if (type === 'remove') {
+              void persistSlots(slots.map((slot, index) => (index === position ? null : slot)));
+            }
+          }}
+        />
         <Button title="Done" kind="secondary" onPress={() => setEditing(false)} />
 
         <Modal
@@ -208,6 +174,7 @@ function Me() {
                       imageUrl={c.card.image.url}
                       templateKey={c.card.template_key}
                       templateConfig={c.card.template_config}
+                      render={c.card.render}
                     />
                   </Pressable>
                 ))}
@@ -242,6 +209,5 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   h2: { color: colors.text, fontSize: 16, fontWeight: '700', marginTop: 8 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  binderPager: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   row: { flexDirection: 'row', gap: 8 },
 });

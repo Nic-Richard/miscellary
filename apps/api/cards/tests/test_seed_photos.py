@@ -29,6 +29,15 @@ def test_photo_preparation_never_accesses_database(monkeypatch):
         call_command("seed_demo")
 
 
+def test_demo_corner_rotation_includes_each_cut():
+    cuts = [
+        seed_demo.DEMO_CORNER_CUTS[index % len(seed_demo.DEMO_CORNER_CUTS)] for index in range(8)
+    ]
+    assert cuts.count("round") == 4
+    assert cuts.count("soft") == 2
+    assert cuts.count("sharp") == 2
+
+
 def test_curated_sets_match_publishing_contract(monkeypatch):
     command = seed_demo.Command()
     make_set = Mock()

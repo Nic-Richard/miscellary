@@ -29,32 +29,33 @@ Send `X-Client-Platform: mobile` to receive refresh tokens in the body instead o
 
 ## Templates, sets, cards
 
-| Method           | Path                             | Auth     | Notes                                                                                               |
-| ---------------- | -------------------------------- | -------- | --------------------------------------------------------------------------------------------------- |
-| GET              | `/templates/`                    | –        | platform templates with their options                                                               |
-| GET              | `/sets/`                         | –        | published sets, paginated (`?page=`)                                                                |
-| GET              | `/sets/{slug}/`                  | optional | binder: set + cards. Drafts only for their creator                                                  |
-| GET              | `/me/sets/`                      | bearer   | my sets                                                                                             |
-| POST             | `/me/sets/`                      | bearer   | `{title, description?}` → 201 draft                                                                 |
-| GET/PATCH/DELETE | `/me/sets/{id}/`                 | bearer   | PATCH draft fields or published identity fields; DELETE hard-deletes drafts, soft-deletes published |
-| GET              | `/me/sets/{id}/publish/`         | bearer   | `{problems: []}`, showing what blocks publishing                                                    |
-| POST             | `/me/sets/{id}/publish/`         | bearer   | publish; 400 `{error, problems}` if blocked                                                         |
-| POST             | `/me/sets/{id}/cards/`           | bearer   | `{image_id, title, rarity, description, template_key, template_config}`                             |
-| PATCH/DELETE     | `/me/sets/{id}/cards/{card_id}/` | bearer   | draft only                                                                                          |
+| Method           | Path                             | Auth     | Notes                                                                         |
+| ---------------- | -------------------------------- | -------- | ----------------------------------------------------------------------------- |
+| GET              | `/templates/`                    | –        | platform templates with their options                                         |
+| GET              | `/sets/`                         | –        | published sets, paginated (`?page=`)                                          |
+| GET              | `/sets/{slug}/`                  | optional | binder: set + cards. Drafts only for their creator                            |
+| GET              | `/me/sets/`                      | bearer   | my sets                                                                       |
+| POST             | `/me/sets/`                      | bearer   | `{title, description?}` → 201 draft                                           |
+| GET/PATCH/DELETE | `/me/sets/{id}/`                 | bearer   | PATCH drafts only; DELETE hard-deletes drafts and soft-deletes published sets |
+| GET              | `/me/sets/{id}/publish/`         | bearer   | `{problems: []}`, showing what blocks publishing                              |
+| POST             | `/me/sets/{id}/publish/`         | bearer   | publish; 400 `{error, problems}` if blocked                                   |
+| POST             | `/me/sets/{id}/cards/`           | bearer   | `{image_id, title, rarity, description, template_key, template_config}`       |
+| PATCH/DELETE     | `/me/sets/{id}/cards/{card_id}/` | bearer   | draft only                                                                    |
 
 Each template option is `{label, values, default, type, group, unlocks?}`. `type` is how the value
 is picked (`choice`, `swatch`, `font`), `group` is the editor section it belongs to (`board`,
 `print`, `type`, `press`), and `unlocks` maps individual values to the rarity that opens them.
 Clients render the option set they are given; the API is the only place the catalogue is defined.
 
-Published cards are frozen at the model layer (`CardDefinition.save()` refuses changes to
-image, title, rarity, description, and the template snapshot).
+Published sets and cards are frozen at the model layer. Set content, identity, pack and binder
+appearance, card definitions, and template snapshots cannot change after publication. Creator
+deletion and platform removal remain lifecycle operations. Pack artwork must be uploaded with
+`kind: pack` before its image ID can be used in `pack_layers`.
 
-Set identity remains editable after publishing. Identity fields are `mark`, `pack_colour`,
-`pack_finish`, `pack_layers`, `binder_colour`, `emblem_layout`, `emblem_shape`, `emblem_style`,
-`emblem_text`, `emblem_type_scale`, `mark_scale`, `pack_subtitle`, `pack_text`, and `pack_size`. Other set fields,
-including the cover, remain draft-only. Pack artwork must be uploaded with `kind: pack` before its
-image ID can be used in `pack_layers`.
+Published cards include a `render` presentation cache with a signature, renderer version, status,
+300 by 420 thumbnail, 1000 by 1400 front, optional foil or holo masks, and set back. Published sets
+also include `render_back`. Drafts return `null`. Missing or stale assets report `pending`; publishing
+does not wait for browser rendering.
 
 ## Packs and collection
 
@@ -62,8 +63,8 @@ image ID can be used in `pack_layers`.
 | ------ | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | GET    | `/sets/{slug}/packs/`      | `{free_available, points, pack_cost, pack_size, recycle_values, resets_at}`                                                                                              |
 | POST   | `/sets/{slug}/packs/open/` | `{use_points?: bool}` → 201 opening with `cards[]` (each has `copies`) and refreshed `status`; 400 with a plain `error` if today's free pack is used or points are short |
-| GET    | `/me/cards/?set=slug`      | owned cards, paginated, `copies` per card                                                                                                                                |
-| POST   | `/me/cards/{id}/recycle/`  | duplicates only → `{points, set_slug}`                                                                                                                                   |
+| GET    | `/me/cards/?set=slug`      | owned cards, paginated, with `copies` and set slug, title, mark, and pack colour                                                                                         |
+| POST   | `/me/cards/{id}/recycle/`  | duplicates only → `{points, earned, set_slug}`                                                                                                                           |
 | GET    | `/me/points/`              | non-zero set point balances                                                                                                                                              |
 
 One free pack per user per set per UTC day is a database constraint, so concurrent requests can't

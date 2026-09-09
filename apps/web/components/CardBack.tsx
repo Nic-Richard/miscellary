@@ -1,4 +1,5 @@
 import { useId } from 'react';
+import type { CSSProperties } from 'react';
 import { markPaths } from './SetMark';
 import { packStyle, resolveMark } from '@/lib/setIdentity';
 import styles from './CardBack.module.css';
@@ -7,18 +8,42 @@ export default function CardBack({
   mark,
   packColour,
   title,
+  imageUrl,
+  corner = 3,
+  unclipped = false,
+  pending = false,
 }: {
   mark?: string | undefined;
   packColour?: string | undefined;
   title?: string | undefined;
+  imageUrl?: string | undefined;
+  corner?: number | undefined;
+  unclipped?: boolean | undefined;
+  pending?: boolean | undefined;
 }) {
   const id = useId().replace(/:/g, '');
   const chosen = resolveMark(mark);
   const paths = markPaths(chosen);
   const hasMark = paths.length > 0;
+  const style = {
+    ...packStyle(packColour),
+    '--back-corner-x': `${corner}%`,
+    '--back-corner-y': `${corner / 1.4}%`,
+  } as CSSProperties;
+  const className = `${styles.back} ${unclipped ? styles.unclipped : ''}`;
+
+  if (imageUrl) {
+    return (
+      <div className={className} style={style} aria-hidden="true">
+        <img className={styles.baked} src={imageUrl} alt="" />
+      </div>
+    );
+  }
+  if (pending)
+    return <div className={`${className} ${styles.pending}`} style={style} aria-hidden="true" />;
 
   return (
-    <div className={styles.back} style={packStyle(packColour)} aria-hidden="true">
+    <div className={className} style={style} aria-hidden="true">
       <span className={styles.field} />
       <span className={styles.stock} />
 

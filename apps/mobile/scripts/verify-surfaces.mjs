@@ -153,12 +153,67 @@ try {
     throw new Error('Inspector drag did not rotate the card.');
   const screenshot = await call('Page.captureScreenshot');
   await writeFile('tmp/surface-review/inspector.png', Buffer.from(screenshot.data, 'base64'));
+
+  const packSet = sets.find((candidate) => candidate.cards.length >= 10);
+  if (!packSet) throw new Error('Pack review needs a set with ten cards.');
+  const opening = {
+    id: 'surface-review',
+    kind: 'free',
+    card_set: packSet,
+    cards: packSet.cards.slice(0, 10).map((card, index) => ({
+      id: `surface-card-${index}`,
+      card,
+      set_slug: packSet.slug,
+      set_title: packSet.title,
+      set_mark: packSet.mark,
+      set_pack_colour: packSet.pack_colour,
+      copies: 1,
+      held: false,
+      acquired_at: new Date(0).toISOString(),
+    })),
+    opened_at: new Date(0).toISOString(),
+  };
+  for (const [orientation, width, height] of [
+    ['portrait', 390, 844],
+    ['landscape', 844, 390],
+  ]) {
+    await render('reveal', { opening }, width, height);
+    const sealedOffset = await evaluate(
+      `(()=>{const pack=document.querySelector('[data-pack-reveal="sealed"] > *').getBoundingClientRect();return Math.abs((pack.left+pack.width/2)-innerWidth/2);})()`,
+    );
+    if (sealedOffset > 2)
+      throw new Error(`${orientation} sealed pack is not centered: ${sealedOffset}px`);
+    await evaluate(
+      `document.querySelector('[aria-label="Tear the pack open"]').dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}))`,
+    );
+    await pause(900);
+    for (let index = 0; index < 5; index++) {
+      await evaluate(`document.querySelector('[aria-label="Reveal the next card"]')?.click()`);
+      await pause(80);
+    }
+    await pause(350);
+    const layout = await evaluate(
+      `(()=>{const stage=document.querySelector('[data-pack-reveal="stage"]');const current=document.querySelector('[data-pack-reveal="current"]');const strip=document.querySelector('[data-pack-reveal="strip"]');const a=stage.getBoundingClientRect();const b=current.getBoundingClientRect();const c=strip.getBoundingClientRect();return {columns:getComputedStyle(stage).gridTemplateColumns,overlap:b.bottom>c.top+1,stripOverflow:strip.scrollWidth>strip.clientWidth,stripCards:strip.children.length,stageHeight:a.height,currentHeight:b.height};})()`,
+    );
+    if (layout.overlap || layout.stripCards !== 10 || layout.stageHeight <= layout.currentHeight)
+      throw new Error(`${orientation} pack layout: ${JSON.stringify(layout)}`);
+    if (orientation === 'portrait' && !layout.stripOverflow)
+      throw new Error(`Portrait pack strip did not scroll: ${JSON.stringify(layout)}`);
+    if (orientation === 'landscape' && !layout.columns.includes(' '))
+      throw new Error(`Landscape pack stage is not side by side: ${JSON.stringify(layout)}`);
+    const packScreenshot = await call('Page.captureScreenshot');
+    await writeFile(
+      `tmp/surface-review/pack-${orientation}.png`,
+      Buffer.from(packScreenshot.data, 'base64'),
+    );
+  }
   if (exceptions.length) throw new Error(exceptions.join('\n'));
   console.log(
-    `Verified ${templates.size} desktop templates at four widths, binder views, image loads, and inspector drag in Chromium. Android WebView/device QA remains required.`,
+    `Verified ${templates.size} shared card templates at four widths, binder views, image loads, inspector drag, and portrait and landscape pack reveals in Chromium. Android WebView/device QA remains required.`,
   );
 } finally {
   await fetch(`http://127.0.0.1:9224/json/close/${target.id}`);
   socket.close();
+  server.closeAllConnections?.();
   server.close();
 }

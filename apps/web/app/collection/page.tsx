@@ -17,7 +17,10 @@ import styles from './page.module.css';
 // the owner holds. Collapse them so a duplicate is one tile, not several.
 function stack(owned: OwnedCard[]): OwnedCard[] {
   const seen = new Map<string, OwnedCard>();
-  for (const copy of owned) if (!seen.has(copy.card.id)) seen.set(copy.card.id, copy);
+  for (const copy of owned) {
+    const current = seen.get(copy.card.id);
+    if (!current || (current.held && !copy.held)) seen.set(copy.card.id, copy);
+  }
   return [...seen.values()];
 }
 
@@ -28,6 +31,8 @@ function Collection() {
   const [points, setPoints] = useState<SetPointsBalance[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [inspect, setInspect] = useState<OwnedCard | null>(null);
+  const [recycling, setRecycling] = useState<string | null>(null);
+  const [gain, setGain] = useState<{ cardId: string; amount: number; key: number } | null>(null);
 
   const reload = useCallback(async () => {
     const [page, pts] = await Promise.all([listMyCards(setSlug), listMyPoints()]);
@@ -42,11 +47,36 @@ function Collection() {
 
   async function onRecycle(owned: OwnedCard) {
     setError(null);
+    setRecycling(owned.id);
     try {
-      await recycleCard(owned.id);
-      await reload();
+      const result = await recycleCard(owned.id);
+      setCards((current) =>
+        current
+          ? current
+              .filter((copy) => copy.id !== owned.id)
+              .map((copy) =>
+                copy.card.id === owned.card.id ? { ...copy, copies: copy.copies - 1 } : copy,
+              )
+          : current,
+      );
+      setPoints((current) => [
+        ...current.filter((balance) => balance.set_slug !== result.set_slug),
+        { set_slug: result.set_slug, set_title: owned.set_title, points: result.points },
+      ]);
+      setInspect((current) =>
+        current?.card.id === owned.card.id ? { ...current, copies: current.copies - 1 } : current,
+      );
+      const nextGain = {
+        cardId: owned.card.id,
+        amount: result.earned,
+        key: Date.now(),
+      };
+      setGain(nextGain);
+      setTimeout(() => setGain((current) => (current?.key === nextGain.key ? null : current)), 800);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not recycle.');
+    } finally {
+      setRecycling(null);
     }
   }
 
@@ -113,21 +143,28 @@ function Collection() {
             <CardGrid>
               {stack(list).map((owned) => (
                 <CardCell
-                  key={owned.id}
+                  key={owned.card.id}
                   footer={
-                    owned.copies > 1 ? (
-                      <button
-                        type="button"
-                        className={styles.recycle}
-                        onClick={() => void onRecycle(owned)}
-                        disabled={owned.held}
-                        title={owned.held ? 'In a pending trade' : undefined}
-                      >
-                        ×{owned.copies} · Recycle one
-                      </button>
-                    ) : (
-                      <span>Only copy</span>
-                    )
+                    <span className={styles.recycleAnchor}>
+                      {owned.copies > 1 ? (
+                        <button
+                          type="button"
+                          className={styles.recycle}
+                          onClick={() => void onRecycle(owned)}
+                          disabled={owned.held || recycling === owned.id}
+                          title={owned.held ? 'In a pending trade' : undefined}
+                        >
+                          ×{owned.copies} · Recycle one
+                        </button>
+                      ) : (
+                        <span>Only copy</span>
+                      )}
+                      {gain?.cardId === owned.card.id ? (
+                        <span key={gain.key} className={styles.pointGain}>
+                          +{gain.amount}
+                        </span>
+                      ) : null}
+                    </span>
                   }
                 >
                   <button
@@ -146,6 +183,7 @@ function Collection() {
                       templateKey={owned.card.template_key}
                       templateConfig={owned.card.template_config}
                       mark={owned.set_mark}
+                      render={owned.card.render}
                     />
                   </button>
                 </CardCell>

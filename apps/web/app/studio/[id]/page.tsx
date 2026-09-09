@@ -61,7 +61,6 @@ export default function SetEditorPage() {
     }
   }
 
-  // Identity is presentation, not card data, so it stays editable after publishing.
   async function saveIdentity(patch: Partial<SetWrite>) {
     if (!set) return;
     try {
@@ -73,8 +72,7 @@ export default function SetEditorPage() {
   }
 
   async function onPublish() {
-    if (!set || !window.confirm('Publish this set? Cards can never be edited after publishing.'))
-      return;
+    if (!set || !window.confirm('Publish this set? Nothing in it can be edited afterward.')) return;
     try {
       setSet(await publishSet(set.id));
       setProblems([]);
@@ -191,18 +189,20 @@ export default function SetEditorPage() {
         ) : null}
       </div>
 
-      <div className={`${ui.panel} ${styles.identity}`}>
-        <h2 className={ui.panelTitle}>Pack and identity</h2>
-        <p className={styles.identityNote}>
-          How this set presents itself: the foil, what is printed on it, and the mark that goes on
-          its cards and empty sleeves. All of it stays editable after publishing.
-        </p>
-        <PackDesigner
-          set={set}
-          onDraft={(patch) => setSet({ ...set, ...patch })}
-          onSave={saveIdentity}
-        />
-      </div>
+      {isDraft ? (
+        <div className={`${ui.panel} ${styles.identity}`}>
+          <h2 className={ui.panelTitle}>Pack and identity</h2>
+          <p className={styles.identityNote}>
+            Choose the foil, printed details, set mark, and empty-sleeve treatment before
+            publishing.
+          </p>
+          <PackDesigner
+            set={set}
+            onDraft={(patch) => setSet({ ...set, ...patch })}
+            onSave={saveIdentity}
+          />
+        </div>
+      ) : null}
 
       <div className={styles.cardsHeader}>
         <h2 className={ui.subtitle}>Cards · {set.cards.length}</h2>
@@ -261,6 +261,7 @@ export default function SetEditorPage() {
               templateKey={c.template_key}
               templateConfig={c.template_config}
               mark={set.mark}
+              render={c.render}
             />
           </CardCell>
         ))}

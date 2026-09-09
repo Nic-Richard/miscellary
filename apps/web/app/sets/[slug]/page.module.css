@@ -359,6 +359,37 @@
   opacity: 0.5;
   cursor: default;
 }
+.recycleAnchor {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+.pointGain {
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 8px);
+  color: var(--accent);
+  font-size: 16px;
+  font-weight: 700;
+  animation: pointGain 800ms var(--ease-out) both;
+}
+
+@keyframes pointGain {
+  0% {
+    opacity: 0;
+    transform: translateY(calc(-50% + 5px));
+  }
+  20%,
+  78% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(calc(-50% - 9px));
+  }
+}
 
 /* The binder slot sizes the card, so the trigger has to pass that size through
    rather than shrink to its content. */

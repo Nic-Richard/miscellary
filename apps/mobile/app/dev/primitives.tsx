@@ -1,48 +1,17 @@
-import { Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Modal, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Stack } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle, Defs, RadialGradient, Rect, Stop, Mask } from 'react-native-svg';
 import { useCallback, useEffect, useState } from 'react';
-import { CARD_FIXTURES } from '@miscellary/shared';
-import type { Card, CardFixture } from '@miscellary/shared';
-import CardBack from '@/components/CardBack';
-import CardPreview from '@/components/card/CardPreview';
+import { CARD_FIXTURES, RECYCLE_VALUE } from '@miscellary/shared';
+import type { Card, CardSetDetail, PackOpening } from '@miscellary/shared';
+import CardInspector from '@/components/CardInspector';
+import CardPreview from '@/components/CardPreview';
+import PackPreview from '@/components/PackPreview';
+import PackReveal from '@/components/PackReveal';
 import { Button, ErrorText, Loading, Muted } from '@/components/ui';
 import { getMySet, getPublicSet, listMySets, listPublicSets } from '@/lib/endpoints';
 import { colors, fonts } from '@/lib/theme';
-
-function copyFor(fixture: CardFixture) {
-  return {
-    title: fixture.name.split('-').slice(1).join(' ') || fixture.templateKey,
-    description: 'Found on the long walk back.\nStill the best one in the box, and not close.',
-  };
-}
-
-function Row({ fixture }: { fixture: CardFixture }) {
-  const { title, description } = copyFor(fixture);
-  const shared = {
-    title,
-    description,
-    imageUrl: null,
-    rarity: fixture.rarity,
-    templateKey: fixture.templateKey,
-    templateConfig: fixture.config,
-    number: 7,
-    mark: 'waves',
-  };
-  return (
-    <View style={{ gap: 6 }}>
-      <Text style={styles.label}>
-        {fixture.name} · {fixture.templateKey} · {fixture.rarity}
-      </Text>
-      <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
-        <CardPreview {...shared} width={100} />
-        <CardPreview {...shared} width={150} />
-      </View>
-      <CardPreview {...shared} width={300} />
-    </View>
-  );
-}
 
 function RealCards() {
   const [cards, setCards] = useState<{ card: Card; mark?: string }[]>([]);
@@ -111,6 +80,7 @@ function RealCards() {
                 templateConfig={card.template_config}
                 number={card.position + 1}
                 mark={mark}
+                render={card.render}
               />
             ))}
           </View>
@@ -124,6 +94,7 @@ function RealCards() {
             templateConfig={card.template_config}
             number={card.position + 1}
             mark={mark}
+            render={card.render}
           />
         </View>
       ))}
@@ -131,40 +102,116 @@ function RealCards() {
   );
 }
 
-function FixtureGallery() {
+function InspectorGallery() {
+  const [open, setOpen] = useState(false);
+  const fixture = CARD_FIXTURES.find((entry) => entry.rarity === 'legendary') ?? CARD_FIXTURES[0]!;
+  const card: Card = {
+    id: 'inspector-fixture',
+    title: 'After the Signal',
+    rarity: fixture.rarity,
+    description: 'A final transmission caught between stations.\nGold ink, midnight stock.',
+    image: {
+      id: 'inspector-image',
+      kind: 'card',
+      url: '',
+      width: 1200,
+      height: 1600,
+      ready: true,
+    },
+    template_key: fixture.templateKey,
+    template_version: 1,
+    template_config: fixture.config,
+    position: 6,
+    like_count: 0,
+  };
+
   return (
     <>
-      <Text style={styles.title}>Native card previews</Text>
+      <Text style={styles.title}>Card inspector</Text>
       <Text style={styles.note}>
-        Every fixture at 100, 150 and 300 px, drawn by the native renderer. Compare against the same
-        card on the web.
+        Check touch rotation, card-back rendering, controls, and responsive fitting in the shared
+        inspector.
       </Text>
-      {CARD_FIXTURES.map((fixture) => (
-        <Row key={fixture.name} fixture={fixture} />
-      ))}
+      <Button title="Open inspector" kind="secondary" onPress={() => setOpen(true)} />
+      <Modal
+        visible={open}
+        statusBarTranslucent
+        navigationBarTranslucent
+        supportedOrientations={['portrait', 'landscape']}
+        onRequestClose={() => setOpen(false)}
+      >
+        {open ? (
+          <CardInspector
+            card={card}
+            setTitle="Night Signals"
+            setSlug="night-signals"
+            mark="moon"
+            packColour="indigo"
+            onClose={() => setOpen(false)}
+          />
+        ) : null}
+      </Modal>
     </>
   );
 }
 
-function CardBackGallery() {
-  const backs = [
-    { title: 'Other Worlds', mark: 'waves', packColour: 'mint' },
-    { title: 'Night Signals', mark: 'moon', packColour: 'indigo' },
-    { title: 'Field Archive', mark: 'leaf', packColour: 'cream' },
-    { title: 'No Set Mark', mark: 'none', packColour: 'black' },
-  ];
+function PackGallery() {
+  const [set, setSet] = useState<CardSetDetail | null>(null);
+  const [open, setOpen] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    void listPublicSets('new', null)
+      .then((page) => {
+        const first = page.results[0];
+        if (first) return getPublicSet(first.slug);
+        return null;
+      })
+      .then(setSet)
+      .catch((reason) =>
+        setError(reason instanceof Error ? reason.message : 'Could not load pack.'),
+      );
+  }, []);
+
+  const opening: PackOpening | null = set?.cards.length
+    ? {
+        id: 'pack-fixture',
+        kind: 'free',
+        card_set: set,
+        cards: set.cards.slice(0, Math.min(set.pack_size, 10)).map((card, index) => ({
+          id: `pack-pull-${index}`,
+          card,
+          set_slug: set.slug,
+          set_title: set.title,
+          set_mark: set.mark,
+          set_pack_colour: set.pack_colour,
+          copies: index % 4 === 0 ? 2 : 1,
+          held: false,
+          acquired_at: new Date().toISOString(),
+        })),
+        opened_at: new Date().toISOString(),
+        status: {
+          free_available: false,
+          points: 0,
+          pack_cost: 50,
+          pack_size: set.pack_size,
+          recycle_values: RECYCLE_VALUE,
+          resets_at: new Date(Date.now() + 86_400_000).toISOString(),
+        },
+      }
+    : null;
+
   return (
     <>
-      <Text style={styles.title}>Native card backs</Text>
+      <Text style={styles.title}>Pack surfaces</Text>
       <Text style={styles.note}>
-        Coloured, neutral, marked, and unmarked backs using the web geometry and shared identity
-        colours.
+        Check the saved pack front and the shared opening flow against current set data.
       </Text>
-      <View style={styles.backGrid}>
-        {backs.map((back) => (
-          <CardBack key={`${back.mark}-${back.packColour}`} width={140} {...back} />
-        ))}
-      </View>
+      {error ? <ErrorText>{error}</ErrorText> : null}
+      {!set && !error ? <Loading /> : null}
+      {set ? <PackPreview set={set} width={140} /> : null}
+      {opening ? <Button title="Open pack" kind="secondary" onPress={() => setOpen(true)} /> : null}
+      {open && opening ? <PackReveal opening={opening} onClose={() => setOpen(false)} /> : null}
     </>
   );
 }
@@ -210,10 +257,10 @@ function Blend({
 export default function PrimitivesScreen() {
   return (
     <ScrollView style={{ backgroundColor: colors.bg }} contentContainerStyle={styles.page}>
-      <Stack.Screen options={{ title: 'Native cards' }} />
+      <Stack.Screen options={{ title: 'Rendering checks' }} />
       <RealCards />
-      <FixtureGallery />
-      <CardBackGallery />
+      <InspectorGallery />
+      <PackGallery />
 
       <Text style={styles.title}>Renderer primitives</Text>
       <Text style={styles.note}>
@@ -361,7 +408,6 @@ const styles = StyleSheet.create({
   page: { padding: 16, gap: 12, paddingBottom: 48 },
   title: { fontFamily: fonts.display, fontSize: 28, color: colors.text },
   note: { fontFamily: fonts.body, fontSize: 13, color: colors.muted, marginBottom: 4 },
-  backGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   probe: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   swatch: {
     width: 72,

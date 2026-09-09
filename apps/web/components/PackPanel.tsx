@@ -31,10 +31,14 @@ export default function PackPanel({
   slug,
   title,
   identity,
+  points,
+  onOpened,
 }: {
   slug: string;
   title: string;
   identity: SetIdentity;
+  points?: number | undefined;
+  onOpened?: (opening: PackOpening) => void;
 }) {
   const { user } = useAuth();
   const [status, setStatus] = useState<PackStatus | null>(null);
@@ -63,6 +67,7 @@ export default function PackPanel({
       const result = await openPack(slug, usePoints);
       setOpening(result);
       setStatus(result.status);
+      onOpened?.(result);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not open the pack.');
     } finally {
@@ -94,7 +99,8 @@ export default function PackPanel({
     );
   if (!status) return null;
 
-  const canBuy = status.points >= status.pack_cost;
+  const pointBalance = points ?? status.points;
+  const canBuy = pointBalance >= status.pack_cost;
 
   return (
     <>
@@ -126,7 +132,7 @@ export default function PackPanel({
           )}
           <p className={styles.note}>
             {status.free_available ? (
-              <>Free pack ready · {status.points} set points</>
+              <>Free pack ready · {pointBalance} set points</>
             ) : (
               <>Next free pack in {countdown(status.resets_at, now)}</>
             )}
@@ -142,7 +148,7 @@ export default function PackPanel({
             </button>
           ) : (
             <span className={styles.pointsBtn}>
-              {status.points} set points · <Link href={`/collection?set=${slug}`}>your cards</Link>
+              {pointBalance} set points · <Link href={`/collection?set=${slug}`}>your cards</Link>
             </span>
           )}
           {error ? <p className={ui.error}>{error}</p> : null}

@@ -65,9 +65,12 @@ export const listMyCards = (setSlug?: string) =>
 export const listUserCards = (username: string) =>
   apiFetch<Paginated<OwnedCard>>(`/api/v1/users/${encodeURIComponent(username)}/cards/`);
 export const recycleCard = (id: string) =>
-  apiFetch<{ points: number; set_slug: string }>(`/api/v1/me/cards/${id}/recycle/`, {
-    method: 'POST',
-  });
+  apiFetch<{ points: number; earned: number; set_slug: string }>(
+    `/api/v1/me/cards/${id}/recycle/`,
+    {
+      method: 'POST',
+    },
+  );
 export const listMyPoints = () => apiFetch<SetPointsBalance[]>('/api/v1/me/points/');
 
 export const listOffers = (box: 'inbox' | 'outbox' | 'history') =>

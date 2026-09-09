@@ -1,7 +1,8 @@
-import type { TradeOffer } from '@miscellary/shared';
+import type { OwnedCard, TradeOffer } from '@miscellary/shared';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Modal, ScrollView, StyleSheet, View } from 'react-native';
+import CardInspector from '@/components/CardInspector';
 import LoginGate from '@/components/LoginGate';
 import OfferCard from '@/components/OfferCard';
 import { useAuth } from '@/lib/auth';
@@ -18,6 +19,7 @@ function Trades() {
   const [partner, setPartner] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [selected, setSelected] = useState<OwnedCard | null>(null);
 
   const load = useCallback(
     () =>
@@ -90,9 +92,29 @@ function Trades() {
           offer={o}
           me={user?.profile.username ?? ''}
           busy={busy}
+          onInspect={setSelected}
           onAction={(a) => void act(o.id, a)}
         />
       ))}
+      {selected ? (
+        <Modal
+          visible
+          statusBarTranslucent
+          navigationBarTranslucent
+          supportedOrientations={['portrait', 'landscape']}
+          onRequestClose={() => setSelected(null)}
+        >
+          <CardInspector
+            card={selected.card}
+            setTitle={selected.set_title}
+            setSlug={selected.set_slug}
+            mark={selected.set_mark}
+            packColour={selected.set_pack_colour}
+            copies={selected.copies}
+            onClose={() => setSelected(null)}
+          />
+        </Modal>
+      ) : null}
     </ScrollView>
   );
 }

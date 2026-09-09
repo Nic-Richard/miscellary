@@ -198,9 +198,9 @@ is editing. The same component serves the public profile and the account editor.
 Binder covers are chosen, not themed. `BINDER_COLOURS` is a curated shelf of twelve bound covers,
 mirrored between `apps/api/cards/identity.py` and `apps/web/lib/setIdentity.ts`. The cloth is one
 photograph recoloured by rotating its hue, so a cover costs no new artwork and the cream pages,
-rings and sleeves stay put underneath. A collector picks the cover of their profile binder; a
-creator picks the cover their set's public binder is bound in, and because it is set identity
-rather than card data it stays editable after publishing.
+rings and sleeves stay put underneath. A collector can change their profile binder cover. A creator
+chooses the cover for a set's public binder before publishing, when it becomes frozen with the rest
+of the set.
 
 ## Motion
 

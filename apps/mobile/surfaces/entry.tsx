@@ -1,12 +1,21 @@
 import { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import type { Card, CardSetDetail, CardTemplate, PackOpening } from '@miscellary/shared';
+import type {
+  Card,
+  CardSetDetail,
+  CardTemplate,
+  Creator,
+  PackOpening,
+  ShowcaseSlot,
+} from '@miscellary/shared';
 import CardPreview from '../../web/components/CardPreview';
 import type { CardPreviewProps } from '../../web/components/CardPreview';
+import CardBack from '../../web/components/CardBack';
 import CardInspector from '../../web/components/CardInspector';
 import Binder from '../../web/components/binder/Binder';
 import PackPouch from '../../web/components/PackPouch';
 import PackReveal from '../../web/components/PackReveal';
+import ProfileBinder from '../../web/components/ProfileBinder';
 import PackDesigner from '../../web/components/studio/PackDesigner';
 import CardForm from '../../web/components/CardForm';
 import { apiFetch } from './api';
@@ -37,15 +46,34 @@ function Surface({ mode, data }: Props) {
     const last = Math.min(set.cards.length, (spread + 2) * 8);
     for (const card of set.cards.slice(first, last)) {
       const image = new Image();
-      image.src = card.image.url;
+      image.src = card.render?.thumbnail?.url ?? card.image.url;
       void image.decode?.().catch(() => undefined);
     }
   }, [data.page, mode, set]);
   let content;
   if (mode === 'card') content = <CardPreview {...cardProps} size="large" />;
+  else if (mode === 'render-front')
+    content = <CardPreview {...cardProps} size="large" renderMode="static" />;
+  else if (mode === 'render-mask')
+    content = <CardPreview {...cardProps} size="large" renderMode="mask" />;
+  else if (mode === 'render-back')
+    content = (
+      <CardBack
+        title={String(data.title ?? '')}
+        mark={data.mark as string}
+        packColour={data.packColour as string}
+        unclipped
+      />
+    );
   else if (mode === 'pack') content = <PackPouch title={set.title} identity={set} />;
   else if (mode === 'reveal')
-    content = <PackReveal opening={data.opening as PackOpening} onClose={() => send('close')} />;
+    content = (
+      <PackReveal
+        opening={data.opening as PackOpening}
+        mobileLayout
+        onClose={() => send('close')}
+      />
+    );
   else if (mode === 'inspect')
     content = (
       <CardInspector
@@ -54,6 +82,8 @@ function Surface({ mode, data }: Props) {
         setSlug={String(data.setSlug ?? '')}
         mark={data.mark as string}
         packColour={data.packColour as string}
+        creator={data.creator as Creator | undefined}
+        copies={data.copies as number | undefined}
         onClose={() => send('close')}
       />
     );
@@ -74,6 +104,7 @@ function Surface({ mode, data }: Props) {
           return card ? (
             <button className="card-slot" onClick={() => send('inspect', card.id)}>
               <CardPreview
+                size="small"
                 title={card.title}
                 rarity={card.rarity}
                 description={card.description}
@@ -82,6 +113,7 @@ function Surface({ mode, data }: Props) {
                 templateConfig={card.template_config}
                 number={card.position + 1}
                 mark={set.mark}
+                render={card.render}
               />
             </button>
           ) : null;
@@ -104,6 +136,20 @@ function Surface({ mode, data }: Props) {
         />
       </div>
     );
+  } else if (mode === 'profile-binder') {
+    const editing = Boolean(data.editing);
+    content = (
+      <ProfileBinder
+        slots={data.slots as (ShowcaseSlot | null)[]}
+        title={String(data.title ?? '')}
+        colour={data.colour as string}
+        mine={Boolean(data.mine)}
+        open
+        onPick={editing ? (position) => send('pick', position) : undefined}
+        onRemove={editing ? (position) => send('remove', position) : undefined}
+        onInspect={editing ? undefined : (owned) => send('inspect', owned.id)}
+      />
+    );
   } else if (mode === 'card-editor')
     content = (
       <CardForm
@@ -118,7 +164,7 @@ function Surface({ mode, data }: Props) {
   else if (mode === 'pack-editor' && draft)
     content = (
       <>
-        <p role="alert">{error}</p>
+        {error ? <p role="alert">{error}</p> : null}
         <PackDesigner
           set={draft}
           onDraft={(patch) => setDraft((current) => ({ ...current, ...patch }))}
@@ -141,5 +187,30 @@ function Surface({ mode, data }: Props) {
   return <main id="content">{content}</main>;
 }
 const root = createRoot(document.getElementById('root')!);
-window.miscellaryRender = (props) => root.render(<Surface {...(props as Props)} />);
+window.miscellaryReady = Promise.resolve();
+window.miscellaryRender = (props) => {
+  root.render(<Surface {...(props as Props)} />);
+  window.miscellaryReady = new Promise((resolve) => {
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        void document.fonts.ready.then(async () => {
+          await Promise.allSettled(
+            [...document.images].map(
+              (image) =>
+                image.decode?.() ??
+                new Promise<void>((done) => {
+                  if (image.complete) done();
+                  else {
+                    image.addEventListener('load', () => done(), { once: true });
+                    image.addEventListener('error', () => done(), { once: true });
+                  }
+                }),
+            ),
+          );
+          resolve();
+        });
+      }),
+    );
+  });
+};
 send('ready');

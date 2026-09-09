@@ -6,6 +6,7 @@
   "main": "expo-router/entry",
   "scripts": {
     "surfaces:build": "node scripts/build-surfaces.mjs",
+    "renders:generate": "pnpm surfaces:build && node scripts/render-card-assets.mjs",
     "dev": "pnpm surfaces:build && expo start",
     "android": "pnpm surfaces:build && expo start --android",
     "build": "pnpm surfaces:build && expo export --platform android --output-dir dist",

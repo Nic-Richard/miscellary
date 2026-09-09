@@ -64,6 +64,7 @@ SPECIALTY_BY_RARITY: dict[str, list[dict[str, str]]] = {
         {"treatment": "foil", "finish": "gloss", "coverage": "art", "relief": "emboss"},
     ],
 }
+DEMO_CORNER_CUTS = ("round", "round", "soft", "sharp")
 
 CACHE_DIR = Path(__file__).resolve().parents[5] / "tmp" / "seed-photos"
 PHOTO_MANIFEST = Path(__file__).resolve().parents[1] / "seed_photos.json"
@@ -1467,6 +1468,8 @@ class Command(BaseCommand):
             template = TEMPLATES_BY_KEY[template_key]
             config = {key: value for key, value in config.items() if key in template["options"]}
             full_config = {**default_config(template_key), **config}
+            if "corners" not in config and "corners" in template["options"]:
+                full_config["corners"] = DEMO_CORNER_CUTS[i % len(DEMO_CORNER_CUTS)]
             variety = zlib.crc32(f"{title}:{name}".encode())
             for option, choices in {
                 "frame": [

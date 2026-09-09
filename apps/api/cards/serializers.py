@@ -9,6 +9,14 @@ from . import packlayers, packtext, templates
 from .markdown import ISSUE_MESSAGES, description_issues
 from .models import CardDefinition, CardSet
 from .rarity import RARITIES
+from .rendering import (
+    CARD_RENDERER_VERSION,
+    FACE_SIZE,
+    THUMBNAIL_SIZE,
+    back_render_signature,
+    card_render_signature,
+    render_url,
+)
 
 
 class CreatorSerializer(serializers.Serializer):
@@ -20,6 +28,43 @@ class CreatorSerializer(serializers.Serializer):
 class CardSerializer(serializers.ModelSerializer):
     image = ImageSerializer(read_only=True)
     like_count = serializers.IntegerField(read_only=True, default=0)
+    render = serializers.SerializerMethodField()
+
+    def get_render(self, obj: CardDefinition):
+        if obj.card_set.status == CardSet.Status.DRAFT:
+            return None
+        signature = card_render_signature(obj)
+        back_signature = back_render_signature(obj.card_set)
+        chase = obj.template_config.get("treatment") in {"foil", "holo"}
+        front_ready = (
+            obj.render_signature == signature
+            and bool(obj.render_front_thumbnail_key)
+            and bool(obj.render_front_key)
+            and (not chase or bool(obj.render_mask_thumbnail_key and obj.render_mask_key))
+        )
+        back_ready = obj.card_set.render_back_signature == back_signature and bool(
+            obj.card_set.render_back_key
+        )
+
+        def asset(key: str, size: tuple[int, int]):
+            if not key:
+                return None
+            return {"url": render_url(key), "width": size[0], "height": size[1]}
+
+        return {
+            "status": "ready" if front_ready and back_ready else "pending",
+            "signature": signature,
+            "version": CARD_RENDERER_VERSION,
+            "thumbnail": asset(obj.render_front_thumbnail_key, THUMBNAIL_SIZE)
+            if front_ready
+            else None,
+            "front": asset(obj.render_front_key, FACE_SIZE) if front_ready else None,
+            "mask_thumbnail": asset(obj.render_mask_thumbnail_key, THUMBNAIL_SIZE)
+            if front_ready and chase
+            else None,
+            "mask": asset(obj.render_mask_key, FACE_SIZE) if front_ready and chase else None,
+            "back": asset(obj.card_set.render_back_key, FACE_SIZE) if back_ready else None,
+        }
 
     class Meta:
         model = CardDefinition
@@ -34,6 +79,7 @@ class CardSerializer(serializers.ModelSerializer):
             "template_config",
             "position",
             "like_count",
+            "render",
         ]
         read_only_fields = fields
 
@@ -89,6 +135,25 @@ class CardSetSerializer(serializers.ModelSerializer):
     like_count = serializers.IntegerField(read_only=True, default=0)
     opening_count = serializers.IntegerField(read_only=True, default=0)
     liked = serializers.BooleanField(read_only=True, default=False)
+    render_back = serializers.SerializerMethodField()
+
+    def get_render_back(self, obj: CardSet):
+        if obj.status == CardSet.Status.DRAFT:
+            return None
+        signature = back_render_signature(obj)
+        ready = obj.render_back_signature == signature and bool(obj.render_back_key)
+        return {
+            "status": "ready" if ready else "pending",
+            "signature": signature,
+            "version": CARD_RENDERER_VERSION,
+            "image": {
+                "url": render_url(obj.render_back_key),
+                "width": FACE_SIZE[0],
+                "height": FACE_SIZE[1],
+            }
+            if ready
+            else None,
+        }
 
     def get_pack_layers(self, obj) -> list[dict]:
         """The stored stack with each image's url and pixel size filled in.
@@ -143,6 +208,7 @@ class CardSetSerializer(serializers.ModelSerializer):
             "like_count",
             "opening_count",
             "liked",
+            "render_back",
             "created_at",
             "published_at",
         ]

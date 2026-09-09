@@ -49,10 +49,12 @@ def test_collection_and_recycle(auth_client, user, published):
     assert response.json()["count"] == 2
     assert response.json()["results"][0]["copies"] == 2
     assert response.json()["results"][0]["set_slug"] == published.slug
+    assert response.json()["results"][0]["set_pack_colour"] == published.pack_colour
 
     response = auth_client.post(reverse("packs:recycle", args=[a.id]))
     assert response.status_code == 200
     assert response.json()["points"] == 1
+    assert response.json()["earned"] == 1
 
     assert auth_client.get(reverse("packs:points")).json() == [
         {"set_slug": published.slug, "set_title": published.title, "points": 1}
@@ -61,6 +63,19 @@ def test_collection_and_recycle(auth_client, user, published):
     # Last copy can't be recycled; other people's cards 404.
     remaining = OwnedCard.objects.get(owner=user)
     assert auth_client.post(reverse("packs:recycle", args=[remaining.id])).status_code == 400
+
+
+def test_collection_keeps_cards_in_set_order(auth_client, user, published):
+    cards = list(published.cards.order_by("position")[:3])
+    for card in reversed(cards):
+        OwnedCard.objects.create(owner=user, card=card)
+
+    response = auth_client.get(reverse("packs:collection"), {"set": published.slug})
+
+    assert response.status_code == 200
+    assert [row["card"]["id"] for row in response.json()["results"]] == [
+        str(card.id) for card in cards
+    ]
 
 
 def test_deleted_set_stops_generating_packs(auth_client, published):

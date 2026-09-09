@@ -83,7 +83,13 @@ class CollectionPagination(PageNumberPagination):
 
 
 def collection_response(request: Request, owner_id) -> Response:
-    queryset = with_copies(OwnedCard.objects.filter(owner_id=owner_id))
+    queryset = with_copies(OwnedCard.objects.filter(owner_id=owner_id)).order_by(
+        "card__card_set__title",
+        "card__card_set_id",
+        "card__position",
+        "acquired_at",
+        "id",
+    )
     set_slug = request.query_params.get("set")
     if set_slug:
         queryset = queryset.filter(card__card_set__slug=set_slug)
@@ -110,11 +116,12 @@ class UserCollectionView(APIView):
 class RecycleCardView(APIView):
     def post(self, request: Request, card_id) -> Response:
         owned = get_object_or_404(OwnedCard, id=card_id, owner=request.user)
+        earned = RECYCLE_VALUE[owned.card.rarity]
         try:
             balance = actions.recycle_card(request.user, owned)
         except actions.PackError as exc:
             return Response({"error": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
-        return Response({"points": balance, "set_slug": owned.card.card_set.slug})
+        return Response({"points": balance, "earned": earned, "set_slug": owned.card.card_set.slug})
 
 
 class MyPointsView(APIView):

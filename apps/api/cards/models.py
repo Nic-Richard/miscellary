@@ -77,6 +77,8 @@ class CardSet(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     published_at = models.DateTimeField(null=True, blank=True)
     deleted_at = models.DateTimeField(null=True, blank=True)
+    render_back_signature = models.CharField(max_length=64, blank=True)
+    render_back_key = models.CharField(max_length=255, blank=True)
 
     class Meta:
         ordering = ["-created_at"]
@@ -87,6 +89,35 @@ class CardSet(models.Model):
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = f"{slugify(self.title)[:48] or 'set'}-{secrets.token_hex(3)}"
+        if not self._state.adding:
+            current = CardSet.objects.get(pk=self.pk)
+            if current.status != self.Status.DRAFT:
+                update_fields = kwargs.get("update_fields")
+                requested = set(update_fields) if update_fields is not None else None
+                allowed_statuses = {
+                    self.Status.PUBLISHED: {
+                        self.Status.PUBLISHED,
+                        self.Status.DELETED,
+                        self.Status.REMOVED,
+                    },
+                    self.Status.DELETED: {self.Status.DELETED, self.Status.REMOVED},
+                    self.Status.REMOVED: {self.Status.REMOVED},
+                }
+                status_requested = requested is None or "status" in requested
+                if status_requested and self.status not in allowed_statuses[current.status]:
+                    raise PublishedCardError("Published set lifecycle can't be reversed.")
+                mutable = {"status", "deleted_at", "render_back_signature", "render_back_key"}
+                changed = [
+                    field.attname
+                    for field in self._meta.concrete_fields
+                    if field.attname not in mutable
+                    and (requested is None or field.name in requested or field.attname in requested)
+                    and getattr(self, field.attname) != getattr(current, field.attname)
+                ]
+                if changed:
+                    raise PublishedCardError(
+                        f"Published sets can't be changed ({', '.join(changed)})."
+                    )
         super().save(*args, **kwargs)
 
     @property
@@ -111,6 +142,7 @@ class CardDefinition(models.Model):
     """
 
     FROZEN_FIELDS = (
+        "card_set_id",
         "image_id",
         "title",
         "rarity",
@@ -118,6 +150,7 @@ class CardDefinition(models.Model):
         "template_key",
         "template_version",
         "template_config",
+        "position",
     )
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -132,6 +165,11 @@ class CardDefinition(models.Model):
     template_config = models.JSONField(default=dict, blank=True)
     position = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
+    render_signature = models.CharField(max_length=64, blank=True)
+    render_front_thumbnail_key = models.CharField(max_length=255, blank=True)
+    render_front_key = models.CharField(max_length=255, blank=True)
+    render_mask_thumbnail_key = models.CharField(max_length=255, blank=True)
+    render_mask_key = models.CharField(max_length=255, blank=True)
 
     class Meta:
         ordering = ["position", "created_at"]
@@ -158,8 +196,13 @@ class CardDefinition(models.Model):
         return super().delete(*args, **kwargs)
 
     def _is_locked(self) -> bool:
-        return (
-            CardSet.objects.filter(id=self.card_set_id)
-            .exclude(status=CardSet.Status.DRAFT)
-            .exists()
-        )
+        set_ids = {self.card_set_id}
+        if not self._state.adding:
+            current = (
+                CardDefinition.objects.filter(pk=self.pk)
+                .values_list("card_set_id", flat=True)
+                .first()
+            )
+            if current is not None:
+                set_ids.add(current)
+        return CardSet.objects.filter(id__in=set_ids).exclude(status=CardSet.Status.DRAFT).exists()
