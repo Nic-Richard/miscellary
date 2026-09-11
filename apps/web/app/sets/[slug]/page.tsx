@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useParams, usePathname } from 'next/navigation';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { cardCode } from '@miscellary/shared';
 import type { Card, CardSetDetail, OwnedCard } from '@miscellary/shared';
 import Binder from '@/components/binder/Binder';
 import type { BinderPage as BinderPageData } from '@/components/binder/Binder';
@@ -12,16 +13,24 @@ import CardInspector from '@/components/CardInspector';
 import CardPreview from '@/components/CardPreview';
 import Comments from '@/components/Comments';
 import Description from '@/components/Description';
+import DemoBadge from '@/components/DemoBadge';
 import LikeButton from '@/components/LikeButton';
 import PackPanel from '@/components/PackPanel';
 import ReportButton from '@/components/ReportButton';
 import { getProfile, likeCard, likeSet, setFollow } from '@/lib/social';
 import { useAuth } from '@/lib/auth';
+import { loginHref } from '@/lib/returnTo';
+import { useContinuation } from '@/lib/useContinuation';
 import { getPublicSet } from '@/lib/sets';
 import { listMyCards, recycleCard } from '@/lib/packs';
 import ui from '@/components/ui.module.css';
 import SetCover from '@/components/SetCover';
 import styles from './page.module.css';
+
+const FOLLOW_ACTION = 'follow';
+const LIKE_SET_ACTION = 'like-set';
+const LIKE_CARD_ACTION = 'like-card';
+const LIKE_CARD_CARRIES = ['card'];
 
 const STAT_ICONS = {
   cards: 'M7 4h10v16H7ZM4 7h1v10H4Zm15 0h1v10h-1ZM10 8h4M10 11h4',
@@ -41,13 +50,11 @@ function StatIcon({ name }: { name: keyof typeof STAT_ICONS }) {
 function SetCard({
   card,
   detail,
-  number,
   published,
   onInspect,
 }: {
   card: Card;
   detail: CardSetDetail;
-  number: number;
   published: boolean;
   onInspect: (card: Card) => void;
 }) {
@@ -63,8 +70,13 @@ function SetCard({
           size="small"
           title={card.title}
           rarity={card.rarity}
-          number={number}
+          code={cardCode(
+            detail.printed_set_code,
+            card.position,
+            card.set_total || detail.cards.length,
+          )}
           description={card.description}
+          printedText={card.printed_text}
           imageUrl={card.image.url}
           templateKey={card.template_key}
           templateConfig={card.template_config}
@@ -78,6 +90,8 @@ function SetCard({
             liked={detail.liked_card_ids.includes(card.id)}
             count={card.like_count}
             onToggle={(like) => likeCard(card.id, like)}
+            action={LIKE_CARD_ACTION}
+            carries={{ card: card.id }}
           />
         </div>
       ) : null}
@@ -96,6 +110,7 @@ function stack(owned: OwnedCard[]): OwnedCard[] {
 
 export default function BinderPage() {
   const { slug } = useParams<{ slug: string }>();
+  const pathname = usePathname();
   const { loading, user } = useAuth();
   const [set, setSet] = useState<CardSetDetail | null>(null);
   const [following, setFollowing] = useState<boolean | null>(null);
@@ -110,7 +125,6 @@ export default function BinderPage() {
   const [packPoints, setPackPoints] = useState<number | undefined>();
   const preloadedImages = useRef<HTMLImageElement[]>([]);
 
-  // Wait for auth so a creator can view their own draft binder.
   useEffect(() => {
     if (loading) return;
     getPublicSet(slug)
@@ -158,7 +172,6 @@ export default function BinderPage() {
             key={card.id}
             card={card}
             detail={set}
-            number={pageIndex * 8 + slotIndex + 1}
             published={published}
             onInspect={setInspect}
           />
@@ -197,11 +210,43 @@ export default function BinderPage() {
     }
   }
 
-  async function toggleFollow() {
+  const toggleFollow = useCallback(async () => {
     if (!set || following === null) return;
     const result = await setFollow(set.creator.username, !following);
     setFollowing(result.following);
-  }
+  }, [set, following]);
+
+  useContinuation(FOLLOW_ACTION, () => void toggleFollow(), following === false);
+  useContinuation(
+    LIKE_SET_ACTION,
+    () => {
+      if (!set || set.liked) return;
+      void likeSet(set.slug, true).then((result) =>
+        setSet({ ...set, liked: result.liked, like_count: result.like_count }),
+      );
+    },
+    Boolean(user && set),
+  );
+  useContinuation(
+    LIKE_CARD_ACTION,
+    (carried) => {
+      const card = set?.cards.find((entry) => entry.id === carried.get('card'));
+      if (!set || !card) return;
+      setInspect(card);
+      if (set.liked_card_ids.includes(card.id)) return;
+      void likeCard(card.id, true).then((result) =>
+        setSet({
+          ...set,
+          liked_card_ids: [...set.liked_card_ids, card.id],
+          cards: set.cards.map((entry) =>
+            entry.id === card.id ? { ...entry, like_count: result.like_count } : entry,
+          ),
+        }),
+      );
+    },
+    Boolean(user && set),
+    LIKE_CARD_CARRIES,
+  );
 
   if (error) return <p className={ui.error}>{error}</p>;
   if (!set) return <p className={ui.muted}>Loading…</p>;
@@ -212,19 +257,10 @@ export default function BinderPage() {
   const creatorName = set.creator.display_name || set.creator.username;
   const isPublished = set.status === 'published';
 
-  // `set` is narrowed above; capture it so the closure keeps the narrowing.
   const detail = set;
 
-  function renderCard(card: Card, number: number) {
-    return (
-      <SetCard
-        card={card}
-        detail={detail}
-        number={number}
-        published={isPublished}
-        onInspect={setInspect}
-      />
-    );
+  function renderCard(card: Card) {
+    return <SetCard card={card} detail={detail} published={isPublished} onInspect={setInspect} />;
   }
 
   function navigateSpread(direction: -1 | 1) {
@@ -259,6 +295,7 @@ export default function BinderPage() {
             <Link href={`/users/${set.creator.username}`} className={styles.creatorLink}>
               <span className={styles.monogram}>{creatorName[0]?.toUpperCase()}</span>
               <strong>{creatorName}</strong>
+              {set.creator.is_demo ? <DemoBadge compact /> : null}
             </Link>
             {following !== null ? (
               <button
@@ -268,6 +305,13 @@ export default function BinderPage() {
               >
                 {following ? 'Following' : 'Follow'}
               </button>
+            ) : !user && isPublished ? (
+              <Link
+                href={loginHref(pathname, FOLLOW_ACTION)}
+                className={`${ui.btnPrimary} ${ui.btnSmall}`}
+              >
+                Log in to follow
+              </Link>
             ) : null}
           </div>
         </div>
@@ -279,6 +323,7 @@ export default function BinderPage() {
                 liked={set.liked}
                 count={set.like_count}
                 onToggle={(like) => likeSet(set.slug, like)}
+                action={LIKE_SET_ACTION}
               />
               <ReportButton target={{ set_slug: set.slug }} />
             </div>
@@ -400,8 +445,8 @@ export default function BinderPage() {
                 </span>
               </div>
               <CardGrid>
-                {set.cards.map((card, i) => (
-                  <CardCell key={card.id}>{renderCard(card, i + 1)}</CardCell>
+                {set.cards.map((card) => (
+                  <CardCell key={card.id}>{renderCard(card)}</CardCell>
                 ))}
               </CardGrid>
             </div>
@@ -453,7 +498,7 @@ export default function BinderPage() {
                         </span>
                       }
                     >
-                      {renderCard(copy.card, copy.card.position + 1)}
+                      {renderCard(copy.card)}
                     </CardCell>
                   ))}
                 </CardGrid>

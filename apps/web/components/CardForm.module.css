@@ -1,6 +1,6 @@
 .root {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
+  grid-template-columns: minmax(0, 340px) minmax(0, 1fr);
   gap: 28px;
   align-items: start;
   margin-bottom: 28px;
@@ -111,14 +111,17 @@
 }
 .templates {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(178px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
   gap: 8px;
+  margin: 4px 0 14px;
 }
 .templateBtn {
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  padding: 10px 13px 11px;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 6px 8px;
+  color: var(--muted);
   background: rgba(255, 255, 255, 0.45);
   border: 1px solid var(--bdr2);
   border-radius: 6px;
@@ -130,14 +133,14 @@
 }
 .templateBtn strong {
   color: #3a2f26;
-  font: 400 17px / 1 var(--display);
-  letter-spacing: 0.08em;
+  font: 400 13px / 1 var(--display);
+  letter-spacing: 0.07em;
   text-transform: uppercase;
+  text-align: center;
 }
-.templateBtn small {
-  color: var(--muted);
-  font-size: 11px;
-  line-height: 1.35;
+.templateBtn:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 .templateBtn:hover {
   border-color: var(--accent);
@@ -188,9 +191,27 @@
   align-items: stretch;
   gap: 10px;
 }
+.copyHeading {
+  display: block;
+  color: var(--text);
+  font-family: var(--display);
+  font-size: 15px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.copyNote,
+.copyCount {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+.copyCount {
+  text-align: center;
+}
 .proof {
-  display: flex;
-  justify-content: center;
+  /* The proof is edited directly, so it gets the room the controls give up. */
+  --card-max: 520px;
 }
 .scales {
   display: flex;
@@ -228,8 +249,31 @@
 @media (max-width: 900px) {
   .root {
     grid-template-columns: 1fr;
+    padding: 18px 16px 20px;
   }
+  /* On one column the proof comes first, so the controls under it are what a
+     scroll reaches next rather than being pushed off the screen. */
   .preview {
-    position: static;
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    order: -1;
+    padding: 8px 0 10px;
+    background: var(--sur, #f7f1e4);
+    box-shadow: 0 6px 12px -10px rgba(0, 0, 0, 0.5);
+  }
+  .proof {
+    /* Small enough to leave the controls in view, large enough to type on. */
+    --card-max: min(240px, 52vw);
+  }
+  .copyNote {
+    margin: 0;
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 560px) {
+  .proof {
+    --card-max: min(200px, 56vw);
   }
 }

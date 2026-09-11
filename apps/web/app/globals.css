@@ -22,10 +22,10 @@
   --gold: #b8903a;
   --danger: #ae4a3a;
 
-  --rarity-common: #3f8f88;
-  --rarity-uncommon: #b48a2c;
+  --rarity-common: #7a8085;
+  --rarity-uncommon: #3f6ea8;
   --rarity-rare: #7b5fa3;
-  --rarity-epic: #c66a3c;
+  --rarity-epic: #c0568c;
   --rarity-legendary: #c9a24a;
 
   --display: var(--font-display), 'Arial Narrow', 'Impact', sans-serif;

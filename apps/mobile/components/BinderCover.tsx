@@ -4,6 +4,7 @@ import { Link } from 'expo-router';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { binderColors, colors, fonts } from '@/lib/theme';
 import cloth from '../assets/cloth.png';
+import DemoBadge from './DemoBadge';
 
 export default function BinderCover({ set }: { set: CardSetSummary }) {
   const [failedUrl, setFailedUrl] = useState<string | null>(null);
@@ -50,9 +51,12 @@ export default function BinderCover({ set }: { set: CardSetSummary }) {
           </View>
           <View style={styles.pages} />
         </View>
-        <Text numberOfLines={1} style={styles.creator}>
-          @{set.creator.username}
-        </Text>
+        <View style={styles.creatorRow}>
+          <Text numberOfLines={1} style={styles.creator}>
+            @{set.creator.username}
+          </Text>
+          {set.creator.is_demo ? <DemoBadge /> : null}
+        </View>
         <Text style={styles.likes}>
           {set.like_count === 1
             ? '1 collector liked this'
@@ -135,7 +139,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderColor: '#bcb097',
   },
-  creator: { fontFamily: fonts.medium, fontSize: 14, color: colors.text, marginTop: 10 },
+  creatorRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10 },
+  creator: { fontFamily: fonts.medium, fontSize: 14, color: colors.text },
   likes: {
     fontFamily: fonts.body,
     fontSize: 12,

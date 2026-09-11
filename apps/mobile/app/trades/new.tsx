@@ -1,3 +1,4 @@
+import { cardCode } from '@miscellary/shared';
 import type { OwnedCard } from '@miscellary/shared';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
@@ -44,6 +45,8 @@ function Picker({
                 width={100}
                 title={c.card.title}
                 description={c.card.description}
+                printedText={c.card.printed_text}
+                code={cardCode(c.card.printed_set_code, c.card.position, c.card.set_total)}
                 mark={c.set_mark}
                 rarity={c.card.rarity}
                 imageUrl={c.card.image.url}

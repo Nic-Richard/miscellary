@@ -9,75 +9,89 @@ describe('resolveCardTokens', () => {
     expect(t.edge).toEqual({ kind: 'solid', color: '#cdbfa6' });
     expect(t.edgeWidth).toBe(0.7);
     expect(t.corner).toBe(3);
-    expect(t.ink).toBe('#3a2f26');
+    expect(t.ink).toBe('#241c14');
   });
 
   it('takes the stock and its edge from the chosen board', () => {
-    const t = resolveCardTokens('classic', { frame: 'sand' }, 'common');
+    const t = resolveCardTokens('classic', { stock: 'sand' }, 'common');
     expect(t.stock).toBe('#e8dcc2');
     expect(t.edge).toEqual({ kind: 'solid', color: '#c8b898' });
   });
 
   it('prefers the chosen board over the template board', () => {
     expect(resolveCardTokens('polaroid', {}, 'common').stock).toBe('#fcfaf4');
-    expect(resolveCardTokens('polaroid', { frame: 'cream' }, 'common').stock).toBe('#f4ecda');
+    expect(resolveCardTokens('polaroid', { stock: 'cream' }, 'common').stock).toBe('#f4ecda');
   });
 
   it('lightens text on a dark board', () => {
-    const t = resolveCardTokens('classic', { frame: 'ink' }, 'common');
-    expect(t.ink).toBe('#f3ecdd');
-    expect(t.inkMuted).toBe('#b9c9c4');
+    const t = resolveCardTokens('classic', { stock: 'ink' }, 'common');
+    expect(t.ink).toBe('#fffdf7');
+    expect(t.inkMuted).toBe('#cdd6d2');
     expect(t.artBg).toBe('rgba(0, 0, 0, 0.24)');
   });
 
   it('keeps the template text colours on a light board', () => {
-    const t = resolveCardTokens('minimal', { frame: 'cream' }, 'common');
+    const t = resolveCardTokens('minimal', { stock: 'cream' }, 'common');
     expect(t.ink).toBe('#fdf9ee');
     expect(t.inkMuted).toBe('rgba(253, 249, 238, 0.8)');
   });
 
   it('gives rarity a metallic edge above common', () => {
-    expect(resolveCardTokens('classic', { frame: 'cream' }, 'common').edge).toEqual({
+    expect(resolveCardTokens('classic', { stock: 'cream' }, 'common').edge).toEqual({
       kind: 'solid',
       color: '#d8cdb4',
     });
-    const legendary = resolveCardTokens('classic', { frame: 'cream' }, 'legendary');
+    const legendary = resolveCardTokens(
+      'classic',
+      { stock: 'cream', border: 'rarity' },
+      'legendary',
+    );
     expect(legendary.edge.kind).toBe('gradient');
     expect(paintToCss(legendary.edge)).toContain('linear-gradient(135deg');
-    expect(legendary.edgeWidth).toBe(2.2);
+    expect(legendary.edgeWidth).toBe(0.7);
     expect(legendary.core).toBe('#f4e7c4');
     expect(legendary.glow).toBe('rgba(184, 144, 58, 0.38)');
   });
 
-  it('lets an explicit border ink outrank the rarity edge', () => {
-    const t = resolveCardTokens('classic', { frame: 'cream', border: 'gold' }, 'legendary');
-    expect(t.edge).toEqual({ kind: 'solid', color: '#b8903a' });
-    expect(t.edgeWidth).toBe(2.2);
+  it('leaves the edge alone for an ink that is not the rarity', () => {
+    const t = resolveCardTokens('classic', { stock: 'cream', border: 'gold' }, 'legendary');
+    expect(t.edge).toEqual({ kind: 'solid', color: '#7c5f1e' });
+    expect(t.edgeWidth).toBe(0.7);
   });
 
-  it('treats an auto border as no border choice', () => {
-    const t = resolveCardTokens('classic', { frame: 'cream', border: 'auto' }, 'rare');
-    expect(t.edge.kind).toBe('gradient');
+  it('treats an auto border as the board edge, not the rarity edge', () => {
+    const t = resolveCardTokens('classic', { stock: 'cream', border: 'auto' }, 'rare');
+    expect(t.edge).toEqual({ kind: 'solid', color: '#d8cdb4' });
     expect(t.border).toBe('#7b5fa3');
   });
 
   it('resolves rarity borders and accents to the rarity colour', () => {
     const t = resolveCardTokens('classic', { border: 'rarity', accent: 'rarity' }, 'epic');
-    expect(t.border).toBe('#c66a3c');
-    expect(t.accent).toBe('#c66a3c');
-    expect(t.edge).toEqual({ kind: 'solid', color: '#c66a3c' });
+    expect(t.border).toBe('#c0568c');
+    expect(t.accent).toBe('#c0568c');
+    expect(t.edge.kind).toBe('gradient');
   });
 
-  it('lets a chosen thickness outrank the rarity thickness', () => {
-    expect(resolveCardTokens('classic', {}, 'epic').edgeWidth).toBe(1.4);
-    expect(resolveCardTokens('classic', { weight: 'fine' }, 'epic').edgeWidth).toBe(1.2);
-    expect(resolveCardTokens('classic', { weight: 'auto' }, 'epic').edgeWidth).toBe(1.4);
+  it('takes the edge width from the choice, or the template', () => {
+    expect(resolveCardTokens('classic', { border: 'rarity' }, 'epic').edgeWidth).toBe(0.7);
+    expect(resolveCardTokens('classic', {}, 'legendary').edgeWidth).toBe(0.7);
+    expect(resolveCardTokens('classic', { border_width: 'hairline' }, 'legendary').edgeWidth).toBe(
+      1.2,
+    );
+    expect(resolveCardTokens('classic', { border_width: 'thick' }, 'common').edgeWidth).toBe(4.4);
+  });
+
+  it('carries the added colour boards and flips type on the deep ones', () => {
+    expect(resolveCardTokens('classic', { stock: 'petal' }, 'common').stock).toBe('#f3dde8');
+    expect(resolveCardTokens('classic', { stock: 'indigo' }, 'common').stock).toBe('#2b2f5c');
+    expect(resolveCardTokens('classic', { stock: 'indigo' }, 'common').ink).toBe('#fffdf7');
   });
 
   it('keeps the bold template heavy and round by default', () => {
     const t = resolveCardTokens('bold', {}, 'common');
     expect(t.edgeWidth).toBe(3);
     expect(t.corner).toBe(5);
+    expect(resolveCardTokens('bold', { corners: 'round' }, 'common').corner).toBe(5);
     expect(resolveCardTokens('bold', { corners: 'sharp' }, 'common').corner).toBe(0.4);
   });
 
@@ -98,20 +112,10 @@ describe('resolveCardTokens', () => {
 
   it('softens every untextured dark board, including cocoa and aubergine', () => {
     const softened = { image: null, size: null, opacity: 0.2, blend: 'screen' };
-    for (const frame of ['ink', 'slate', 'wine', 'cocoa', 'aubergine']) {
-      expect(resolveCardTokens('classic', { frame }, 'common').texture, frame).toEqual(softened);
+    for (const stock of ['ink', 'slate', 'wine', 'cocoa', 'aubergine']) {
+      expect(resolveCardTokens('classic', { stock }, 'common').texture, stock).toEqual(softened);
     }
-    expect(resolveCardTokens('classic', { frame: 'cream' }, 'common').texture).toBeNull();
-  });
-
-  it('falls back to the dossier board only when it is left untextured', () => {
-    expect(resolveCardTokens('dossier', {}, 'common').texture).toEqual({
-      image: null,
-      size: null,
-      opacity: 0.16,
-      blend: 'screen',
-    });
-    expect(resolveCardTokens('dossier', { frame: 'ink' }, 'common').texture?.opacity).toBe(0.2);
+    expect(resolveCardTokens('classic', { stock: 'cream' }, 'common').texture).toBeNull();
   });
 });
 

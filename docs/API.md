@@ -29,23 +29,44 @@ Send `X-Client-Platform: mobile` to receive refresh tokens in the body instead o
 
 ## Templates, sets, cards
 
-| Method           | Path                             | Auth     | Notes                                                                         |
-| ---------------- | -------------------------------- | -------- | ----------------------------------------------------------------------------- |
-| GET              | `/templates/`                    | –        | platform templates with their options                                         |
-| GET              | `/sets/`                         | –        | published sets, paginated (`?page=`)                                          |
-| GET              | `/sets/{slug}/`                  | optional | binder: set + cards. Drafts only for their creator                            |
-| GET              | `/me/sets/`                      | bearer   | my sets                                                                       |
-| POST             | `/me/sets/`                      | bearer   | `{title, description?}` → 201 draft                                           |
-| GET/PATCH/DELETE | `/me/sets/{id}/`                 | bearer   | PATCH drafts only; DELETE hard-deletes drafts and soft-deletes published sets |
-| GET              | `/me/sets/{id}/publish/`         | bearer   | `{problems: []}`, showing what blocks publishing                              |
-| POST             | `/me/sets/{id}/publish/`         | bearer   | publish; 400 `{error, problems}` if blocked                                   |
-| POST             | `/me/sets/{id}/cards/`           | bearer   | `{image_id, title, rarity, description, template_key, template_config}`       |
-| PATCH/DELETE     | `/me/sets/{id}/cards/{card_id}/` | bearer   | draft only                                                                    |
+| Method           | Path                             | Auth     | Notes                                                                                 |
+| ---------------- | -------------------------------- | -------- | ------------------------------------------------------------------------------------- |
+| GET              | `/templates/`                    | –        | platform templates with their options                                                 |
+| GET              | `/sets/`                         | –        | published sets, paginated (`?page=`)                                                  |
+| GET              | `/sets/{slug}/`                  | optional | binder: set + cards. Drafts only for their creator                                    |
+| GET              | `/me/sets/`                      | bearer   | my sets                                                                               |
+| POST             | `/me/sets/`                      | bearer   | `{title, description?}` → 201 draft                                                   |
+| GET/PATCH/DELETE | `/me/sets/{id}/`                 | bearer   | PATCH drafts only; DELETE hard-deletes drafts and soft-deletes published sets         |
+| GET              | `/me/sets/{id}/publish/`         | bearer   | `{problems: []}`, showing what blocks publishing                                      |
+| POST             | `/me/sets/{id}/publish/`         | bearer   | publish; 400 `{error, problems}` if blocked                                           |
+| POST             | `/me/sets/{id}/cards/`           | bearer   | `{image_id, title, rarity, description, printed_text, template_key, template_config}` |
+| PATCH/DELETE     | `/me/sets/{id}/cards/{card_id}/` | bearer   | draft only                                                                            |
 
 Each template option is `{label, values, default, type, group, unlocks?}`. `type` is how the value
 is picked (`choice`, `swatch`, `font`), `group` is the editor section it belongs to (`board`,
 `print`, `type`, `press`), and `unlocks` maps individual values to the rarity that opens them.
 Clients render the option set they are given; the API is the only place the catalogue is defined.
+Production work that is not a decision is not an option: relief, cut-edge colour and spot work are
+applied by the renderer from the card's rarity and its own coat, and never appear in the catalogue
+or in a stored config.
+
+Each template also carries `text`: a `printed_label` naming its printed region, plus `title` and
+`printed` rules of `{max_length, min_scale, lines, markup}`. A region is fitted against the rendered
+card and shrinks no further than `min_scale`, and `max_length` is the point past which even that
+would not fit, so it is a hard cutoff rather than where overflow starts. `markup` is `none`,
+`inline` (bold and italics) or `block` (those plus `- ` bullets and line breaks), and the same
+description subset is validated on `printed_text` as on `description`. `printed` is `null` on
+templates with no separate printed region.
+
+A set carries a `set_code`: exactly three uppercase letters or digits chosen by the creator, which
+they can PATCH on a draft and `suggested_set_code` derives from the title. Publishing fills a blank
+code in from the title and appends a two-character base-36 suffix, allocated as the lowest one that
+code has not used, from `01` up to `ZZ`; `00` is reserved. `printed_set_code` is the base on its own
+while the set is a draft, because no suffix is reserved until publication, and the frozen pair such
+as `CAM-01` afterwards. Published cards expose
+`printed_set_code` and `set_total` alongside `position`; all three freeze together, so a card's
+printed identifier is the same on every copy and unique within its set. It is not a serial number
+for an owned copy.
 
 Published sets and cards are frozen at the model layer. Set content, identity, pack and binder
 appearance, card definitions, and template snapshots cannot change after publication. Creator
@@ -53,9 +74,11 @@ deletion and platform removal remain lifecycle operations. Pack artwork must be 
 `kind: pack` before its image ID can be used in `pack_layers`.
 
 Published cards include a `render` presentation cache with a signature, renderer version, status,
-300 by 420 thumbnail, 1000 by 1400 front, optional foil or holo masks, and set back. Published sets
-also include `render_back`. Drafts return `null`. Missing or stale assets report `pending`; publishing
-does not wait for browser rendering.
+300 by 420 thumbnail, 1000 by 1400 front, `spot`, a mask pair, and set back. `spot` is
+`{material, area}` for a card produced with spot work and `null` for one printed plain, and the mask
+pair is present only for the former, because that is what confines the material to its region.
+Published sets also include `render_back`. Drafts return `null`. Missing or stale assets report
+`pending`; publishing does not wait for browser rendering.
 
 ## Packs and collection
 

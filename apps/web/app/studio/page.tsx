@@ -1,19 +1,21 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import type { CardSetSummary } from '@miscellary/shared';
 import BinderCover from '@/components/BinderCover';
 import coverStyles from '@/components/BinderCover.module.css';
 import { useAuth } from '@/lib/auth';
+import { loginHref } from '@/lib/returnTo';
 import { createSet, listMySets } from '@/lib/sets';
 import ui from '@/components/ui.module.css';
 import styles from './page.module.css';
 
 export default function StudioPage() {
   const { user, loading } = useAuth();
+  const pathname = usePathname();
   const router = useRouter();
   const [sets, setSets] = useState<CardSetSummary[] | null>(null);
   const [title, setTitle] = useState('');
@@ -41,7 +43,7 @@ export default function StudioPage() {
   if (!user)
     return (
       <p className={ui.muted}>
-        <Link href="/login">Log in</Link> to create sets.
+        <Link href={loginHref(pathname)}>Log in</Link> to create sets.
       </p>
     );
 

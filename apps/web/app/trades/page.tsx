@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import type { OwnedCard, TradeOffer } from '@miscellary/shared';
@@ -9,6 +9,7 @@ import OfferCard from '@/components/OfferCard';
 import Sheet, { Empty } from '@/components/Sheet';
 import { Segmented } from '@/components/controls';
 import { useAuth } from '@/lib/auth';
+import { loginHref } from '@/lib/returnTo';
 import { actOnOffer, listOffers } from '@/lib/trades';
 import { OwnedCardInspector } from '@/components/CardInspector';
 import ui from '@/components/ui.module.css';
@@ -18,6 +19,7 @@ type Box = 'inbox' | 'outbox' | 'history';
 
 export default function TradesPage() {
   const { user, loading } = useAuth();
+  const pathname = usePathname();
   const router = useRouter();
   const [box, setBox] = useState<Box>('inbox');
   const [offers, setOffers] = useState<TradeOffer[] | null>(null);
@@ -61,7 +63,7 @@ export default function TradesPage() {
           <Empty
             icon="trade"
             action={
-              <Link className={ui.btnPrimary} href="/login">
+              <Link className={ui.btnPrimary} href={loginHref(pathname)}>
                 Log in
               </Link>
             }

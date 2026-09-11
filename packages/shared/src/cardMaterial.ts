@@ -1,4 +1,6 @@
 import type { TemplateConfig } from './api';
+import { CARD_COLOURS, isDarkStock } from './cardTokens';
+import { currentConfig } from './cardConfig';
 import type { Rarity } from './rarity';
 
 export interface Stop {
@@ -37,64 +39,107 @@ export interface Chase {
   band: ChaseBand;
 }
 
+export type SpotMaterial = 'varnish' | 'pearl' | 'foil' | 'holo';
+export type SpotArea = 'spot' | 'reverse' | 'full';
+export type SpotPattern = 'linear' | 'mirror' | 'cosmos' | 'rainbow';
+
+export const SPOT_PATTERNS: Record<SpotPattern, { grain: string; size: string; wash?: string }> = {
+  linear: { grain: '', size: '' },
+  mirror: { grain: 'none', size: 'auto' },
+  cosmos: {
+    grain: [
+      'radial-gradient(circle at 30% 22%, rgba(255, 255, 255, 0.95) 0 0.5cqw, transparent 1.3cqw)',
+      'radial-gradient(circle at 72% 58%, rgba(255, 255, 255, 0.8) 0 0.34cqw, transparent 1cqw)',
+      'radial-gradient(circle at 44% 84%, rgba(255, 255, 255, 0.62) 0 0.8cqw, transparent 1.9cqw)',
+      'radial-gradient(circle at 86% 28%, rgba(206, 232, 255, 0.75) 0 0.4cqw, transparent 1.1cqw)',
+    ].join(', '),
+    size: '13cqw 17cqw, 19cqw 11cqw, 27cqw 23cqw, 17cqw 19cqw',
+  },
+  rainbow: {
+    grain: 'none',
+    size: 'auto',
+    wash: [
+      'linear-gradient(var(--lit-angle, 104deg),',
+      'rgba(255, 170, 210, 0.5) 4%,',
+      'rgba(255, 214, 160, 0.46) 20%,',
+      'rgba(246, 246, 158, 0.44) 36%,',
+      'rgba(166, 240, 190, 0.46) 52%,',
+      'rgba(158, 216, 255, 0.48) 68%,',
+      'rgba(196, 174, 255, 0.5) 84%,',
+      'rgba(255, 176, 224, 0.5) 100%)',
+    ].join(' '),
+  },
+};
+
+export interface CardSpot {
+  material: SpotMaterial;
+  area: SpotArea;
+  pattern: SpotPattern;
+  layers: Chase;
+}
+
 export interface CardMaterial {
   coat: Gradient;
   coatBlend: string;
   grain: number;
   sheen: number;
   relief: ReliefShadow[] | null;
-
-  varnish: boolean;
-  chase: Chase | null;
+  spot: CardSpot | null;
 }
 
 const COATS: Record<string, Gradient> = {
   matte: {
     angle: 104,
     stops: [
-      { color: 'rgba(255, 255, 255, 0)', at: 26 },
-      { color: 'rgba(255, 255, 255, 0.05)', at: 50 },
-      { color: 'rgba(255, 255, 255, 0)', at: 74 },
+      { color: 'rgba(255, 255, 255, 0)', at: 30 },
+      { color: 'rgba(255, 252, 244, 0.07)', at: 50 },
+      { color: 'rgba(255, 255, 255, 0)', at: 70 },
     ],
   },
   satin: {
     angle: 104,
     stops: [
-      { color: 'rgba(255, 255, 255, 0)', at: 18 },
-      { color: 'rgba(255, 255, 255, 0.12)', at: 46 },
-      { color: 'rgba(255, 255, 255, 0)', at: 78 },
+      { color: 'rgba(255, 255, 255, 0)', at: 20 },
+      { color: 'rgba(255, 253, 246, 0.14)', at: 38 },
+      { color: 'rgba(255, 255, 255, 0.26)', at: 50 },
+      { color: 'rgba(255, 253, 246, 0.14)', at: 62 },
+      { color: 'rgba(255, 255, 255, 0)', at: 80 },
     ],
   },
   gloss: {
     angle: 104,
     stops: [
-      { color: 'rgba(255, 255, 255, 0)', at: 14 },
-      { color: 'rgba(255, 255, 255, 0.06)', at: 34 },
+      { color: 'rgba(255, 255, 255, 0)', at: 38 },
       { color: 'rgba(255, 255, 255, 0.2)', at: 46 },
-      { color: 'rgba(255, 255, 255, 0.05)', at: 58 },
-      { color: 'rgba(255, 255, 255, 0)', at: 82 },
+      { color: 'rgba(255, 255, 255, 0.86)', at: 50 },
+      { color: 'rgba(255, 255, 255, 0.2)', at: 54 },
+      { color: 'rgba(255, 255, 255, 0)', at: 62 },
+      { color: 'rgba(255, 255, 255, 0.09)', at: 72 },
+      { color: 'rgba(255, 255, 255, 0)', at: 80 },
     ],
   },
   pearl: {
     angle: 104,
     stops: [
-      { color: 'rgba(198, 178, 255, 0.2)', at: 6 },
-      { color: 'rgba(255, 255, 255, 0.16)', at: 28 },
-      { color: 'rgba(170, 214, 255, 0.16)', at: 48 },
-      { color: 'rgba(255, 255, 255, 0.12)', at: 68 },
-      { color: 'rgba(212, 176, 255, 0.2)', at: 92 },
+      { color: 'rgba(255, 255, 255, 0)', at: 14 },
+      { color: 'rgba(196, 172, 255, 0.34)', at: 30 },
+      { color: 'rgba(255, 255, 255, 0.6)', at: 43 },
+      { color: 'rgba(158, 220, 255, 0.38)', at: 53 },
+      { color: 'rgba(255, 232, 190, 0.32)', at: 66 },
+      { color: 'rgba(214, 176, 255, 0.24)', at: 80 },
+      { color: 'rgba(255, 255, 255, 0)', at: 92 },
     ],
   },
   metal: {
     angle: 104,
     stops: [
-      { color: 'rgba(255, 190, 142, 0.1)', at: 4 },
-      { color: 'rgba(255, 240, 222, 0.3)', at: 20 },
-      { color: 'rgba(196, 118, 70, 0.08)', at: 34 },
-      { color: 'rgba(255, 246, 232, 0.34)', at: 52 },
-      { color: 'rgba(196, 118, 70, 0.08)', at: 66 },
-      { color: 'rgba(255, 236, 214, 0.24)', at: 82 },
-      { color: 'rgba(255, 190, 142, 0.1)', at: 96 },
+      { color: 'rgba(26, 16, 4, 0.2)', at: 16 },
+      { color: 'rgba(255, 238, 206, 0.52)', at: 32 },
+      { color: 'rgba(52, 34, 8, 0.3)', at: 43 },
+      { color: 'rgba(255, 250, 232, 0.82)', at: 51 },
+      { color: 'rgba(52, 34, 8, 0.28)', at: 60 },
+      { color: 'rgba(255, 232, 194, 0.44)', at: 71 },
+      { color: 'rgba(26, 16, 4, 0.18)', at: 88 },
     ],
   },
 };
@@ -103,56 +148,56 @@ const DARK_COATS: Record<string, Gradient> = {
   pearl: {
     angle: 104,
     stops: [
-      { color: 'rgba(206, 226, 255, 0.16)', at: 8 },
-      { color: 'rgba(255, 255, 255, 0.26)', at: 30 },
-      { color: 'rgba(176, 200, 232, 0.12)', at: 52 },
-      { color: 'rgba(255, 255, 255, 0.2)', at: 72 },
-      { color: 'rgba(206, 226, 255, 0.16)', at: 94 },
+      { color: 'rgba(255, 255, 255, 0)', at: 12 },
+      { color: 'rgba(206, 226, 255, 0.3)', at: 30 },
+      { color: 'rgba(255, 255, 255, 0.52)', at: 44 },
+      { color: 'rgba(176, 210, 240, 0.3)', at: 56 },
+      { color: 'rgba(226, 214, 255, 0.24)', at: 74 },
+      { color: 'rgba(255, 255, 255, 0)', at: 90 },
     ],
   },
   gloss: {
     angle: 104,
     stops: [
-      { color: 'rgba(255, 255, 255, 0)', at: 14 },
-      { color: 'rgba(255, 255, 255, 0.1)', at: 34 },
-      { color: 'rgba(255, 255, 255, 0.28)', at: 46 },
-      { color: 'rgba(255, 255, 255, 0.08)', at: 58 },
-      { color: 'rgba(255, 255, 255, 0)', at: 82 },
+      { color: 'rgba(255, 255, 255, 0)', at: 38 },
+      { color: 'rgba(255, 255, 255, 0.26)', at: 46 },
+      { color: 'rgba(255, 255, 255, 0.96)', at: 50 },
+      { color: 'rgba(255, 255, 255, 0.26)', at: 54 },
+      { color: 'rgba(255, 255, 255, 0)', at: 62 },
+      { color: 'rgba(255, 255, 255, 0.12)', at: 72 },
+      { color: 'rgba(255, 255, 255, 0)', at: 80 },
     ],
   },
 };
 
 const FINISHES: Record<string, { coat: string; grain: number; sheen: number }> = {
-  matte: { coat: 'matte', grain: 0.4, sheen: 0.62 },
-  satin: { coat: 'satin', grain: 0.3, sheen: 0.74 },
-  gloss: { coat: 'gloss', grain: 0.22, sheen: 0.86 },
-  pearl: { coat: 'pearl', grain: 0.24, sheen: 0.9 },
-  metallic: { coat: 'metal', grain: 0.18, sheen: 1 },
+  matte: { coat: 'matte', grain: 0.56, sheen: 0.5 },
+  satin: { coat: 'satin', grain: 0.34, sheen: 0.72 },
+  gloss: { coat: 'gloss', grain: 0.14, sheen: 0.92 },
+  pearl: { coat: 'pearl', grain: 0.2, sheen: 0.84 },
+  metallic: { coat: 'metal', grain: 0.1, sheen: 0.96 },
 };
 
 const RARITY_FINISHES: Partial<Record<Rarity, { coat: string; grain: number; sheen: number }>> = {
-  rare: { coat: 'pearl', grain: 0.24, sheen: 0.72 },
-  epic: { coat: 'metal', grain: 0.18, sheen: 0.82 },
+  rare: { coat: 'pearl', grain: 0.2, sheen: 0.7 },
+  epic: { coat: 'metal', grain: 0.1, sheen: 0.8 },
 };
 
-const BASE_FINISH = { coat: 'matte', grain: 0.4, sheen: 0.62 };
+const BASE_FINISH = { coat: 'matte', grain: 0.56, sheen: 0.5 };
 
-const RELIEFS: Record<string, ReliefShadow[]> = {
-  emboss: [
-    { spread: 0.5, blur: 0, color: 'rgba(255, 248, 226, 0.24)' },
-    { spread: 0, blur: 1.4, color: 'rgba(40, 24, 8, 0.28)' },
-  ],
-  deboss: [
-    { spread: 0.5, blur: 0, color: 'rgba(40, 24, 8, 0.26)' },
-    { spread: 0, blur: 1.4, color: 'rgba(255, 248, 226, 0.2)' },
-  ],
+const COAT_BLENDS: Record<string, string> = {
+  matte: 'soft-light',
+  satin: 'soft-light',
+  gloss: 'overlay',
+  pearl: 'soft-light',
+  metal: 'overlay',
 };
 
-// Preserve the default relief for stored epic and legendary cards.
-const RARITY_RELIEF: ReliefShadow[] = [
-  { spread: 0.5, blur: 0, color: 'rgba(255, 248, 226, 0.2)' },
-  { spread: 0, blur: 1.3, color: 'rgba(40, 24, 8, 0.26)' },
+const STRUCK_RIM: ReliefShadow[] = [
+  { spread: 0.5, blur: 0, color: 'rgba(255, 248, 226, 0.24)' },
+  { spread: 0, blur: 1.4, color: 'rgba(40, 24, 8, 0.28)' },
 ];
+const STRUCK_TIERS = new Set(['rare', 'epic', 'legendary']);
 
 const FOIL: Chase = {
   field: {
@@ -252,47 +297,159 @@ const HOLO: Chase = {
   },
 };
 
-const DARK_TEMPLATES = new Set(['minimal', 'dossier']);
+/* Clear varnish carries no colour of its own. What makes it read is a hard,
+   narrow specular against the matte board it sits on, and the edge where the
+   screen stops. */
+const VARNISH: Chase = {
+  field: {
+    stripes: {
+      angle: 104,
+      period: 0.9,
+      stops: [
+        { color: 'rgba(255, 255, 255, 0)', at: 0 },
+        { color: 'rgba(255, 255, 255, 0.05)', at: 0.45 },
+        { color: 'rgba(255, 255, 255, 0)', at: 0.9 },
+      ],
+    },
+    sheet: {
+      angle: 104,
+      stops: [
+        { color: 'rgba(255, 255, 255, 0.04)', at: 0 },
+        { color: 'rgba(255, 255, 255, 0.12)', at: 50 },
+        { color: 'rgba(255, 255, 255, 0.04)', at: 100 },
+      ],
+    },
+    blend: 'soft-light',
+    opacity: 0.5,
+  },
+  band: {
+    gradient: {
+      angle: 104,
+      stops: [
+        { color: 'transparent', at: 40 },
+        { color: 'rgba(255, 255, 255, 0.34)', at: 47 },
+        { color: 'rgba(255, 255, 255, 0.92)', at: 50 },
+        { color: 'rgba(255, 255, 255, 0.34)', at: 53 },
+        { color: 'transparent', at: 60 },
+      ],
+    },
+    scale: 2.2,
+    blend: 'screen',
+    opacity: 0.62,
+  },
+};
 
-const DARK_STOCKS = new Set([
-  'slate',
-  'charcoal',
-  'ink',
-  'dark',
-  'forest',
-  'oxblood',
-  'navy',
-  'plum',
-  'moss',
-  'teal',
-  'wine',
-  'bronze',
-  'cocoa',
-  'aubergine',
-]);
+/* Pearl ink shifts hue across the sweep rather than reflecting a light source,
+   so its band is wide and its field carries the interference. */
+const PEARL_SPOT: Chase = {
+  field: {
+    stripes: {
+      angle: 96,
+      period: 1.6,
+      stops: [
+        { color: 'rgba(255, 255, 255, 0)', at: 0 },
+        { color: 'rgba(255, 255, 255, 0.16)', at: 0.7 },
+        { color: 'rgba(120, 96, 190, 0.12)', at: 1.1 },
+        { color: 'rgba(255, 255, 255, 0)', at: 1.6 },
+      ],
+    },
+    sheet: {
+      angle: 104,
+      stops: [
+        { color: 'rgba(206, 178, 255, 0.34)', at: 4 },
+        { color: 'rgba(255, 250, 240, 0.4)', at: 26 },
+        { color: 'rgba(150, 216, 255, 0.34)', at: 48 },
+        { color: 'rgba(255, 228, 186, 0.32)', at: 70 },
+        { color: 'rgba(214, 176, 255, 0.34)', at: 96 },
+      ],
+    },
+    blend: 'overlay',
+    opacity: 0.58,
+  },
+  band: {
+    gradient: {
+      angle: 104,
+      stops: [
+        { color: 'transparent', at: 28 },
+        { color: 'rgba(212, 186, 255, 0.42)', at: 38 },
+        { color: 'rgba(255, 255, 255, 0.72)', at: 48 },
+        { color: 'rgba(164, 224, 255, 0.46)', at: 56 },
+        { color: 'rgba(255, 232, 196, 0.36)', at: 66 },
+        { color: 'transparent', at: 76 },
+      ],
+    },
+    scale: 3,
+    blend: 'screen',
+    opacity: 0.5,
+  },
+};
+
+const SPOT_LAYERS: Record<SpotMaterial, Chase> = {
+  varnish: VARNISH,
+  pearl: PEARL_SPOT,
+  foil: FOIL,
+  holo: HOLO,
+};
+
+const SPOT_TIERS = new Set(['uncommon', 'rare', 'epic', 'legendary']);
+const SPOT_AREAS = new Set<SpotArea>(['spot', 'reverse', 'full']);
+const PATTERNS = new Set<SpotPattern>(['linear', 'mirror', 'cosmos', 'rainbow']);
+
+/**
+ * The spot treatment a card is produced with. It echoes the material the card
+ * is already made of, and every tier above common gets one. The chase a
+ * legendary carries is the same work at whatever area it covers, so the same
+ * material over the whole face is the full-surface variant rather than a spot.
+ */
+export function resolveCardSpot(
+  stored: TemplateConfig,
+  rarity: Rarity,
+): { material: SpotMaterial; area: SpotArea; pattern: SpotPattern } | null {
+  if (!SPOT_TIERS.has(rarity)) return null;
+  const config = currentConfig(stored);
+  const chosen = config.pattern as SpotPattern | undefined;
+  const treatment = config.treatment;
+  if (treatment === 'foil' || treatment === 'holo') {
+    // A pattern is a working of the foil film, so it only means anything on a
+    // card that has one. Everything else takes the material's own ruling.
+    const pattern = chosen && PATTERNS.has(chosen) ? chosen : 'linear';
+    const coverage = config.coverage as SpotArea | undefined;
+    const area = coverage && SPOT_AREAS.has(coverage) ? coverage : 'spot';
+    return { material: treatment, area, pattern };
+  }
+  const pattern: SpotPattern = 'linear';
+  // Coverage is a placement decision, so it applies to the material a card is
+  // given automatically as well as to a chosen foil.
+  const coverage = config.coverage as SpotArea | undefined;
+  const area = coverage && SPOT_AREAS.has(coverage) ? coverage : 'spot';
+  if (config.finish === 'metallic') return { material: 'foil', area, pattern };
+  if (config.finish === 'pearl') return { material: 'pearl', area, pattern };
+  return { material: 'varnish', area, pattern };
+}
+
+const DARK_TEMPLATES = new Set(['minimal']);
 
 export function resolveCardMaterial(
   key: string,
-  config: TemplateConfig,
+  stored: TemplateConfig,
   rarity: Rarity,
 ): CardMaterial {
-  const dark = DARK_TEMPLATES.has(key) || (!!config.frame && DARK_STOCKS.has(config.frame));
-  // Explicit finishes override rarity defaults.
+  const config = currentConfig(stored);
+  const board = config.stock ? CARD_COLOURS[config.stock] : undefined;
+  const dark = DARK_TEMPLATES.has(key) || (!!board && isDarkStock(board));
   const finish = config.finish
     ? (FINISHES[config.finish] ?? BASE_FINISH)
     : (RARITY_FINISHES[rarity] ?? BASE_FINISH);
   const coat = (dark ? DARK_COATS[finish.coat] : undefined) ?? COATS[finish.coat] ?? COATS.matte!;
-  const rarityRelief = rarity === 'epic' || rarity === 'legendary' ? RARITY_RELIEF : null;
-  const treatment = config.treatment;
+  const spot = resolveCardSpot(stored, rarity);
 
   return {
     coat,
-    coatBlend: 'soft-light',
+    coatBlend: COAT_BLENDS[finish.coat] ?? 'soft-light',
     grain: finish.grain,
     sheen: finish.sheen,
-    relief: config.relief ? (RELIEFS[config.relief] ?? null) : rarityRelief,
-    varnish: config.relief === 'spot',
-    chase: treatment === 'foil' ? FOIL : treatment === 'holo' ? HOLO : null,
+    relief: STRUCK_TIERS.has(rarity) ? STRUCK_RIM : null,
+    spot: spot ? { ...spot, layers: SPOT_LAYERS[spot.material] } : null,
   };
 }
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import type { PackOpening, Rarity } from '@miscellary/shared';
-import { RARITIES, resolveCardTokens } from '@miscellary/shared';
+import { cardCode, RARITIES, resolveCardTokens } from '@miscellary/shared';
 import CardBack from './CardBack';
 import CardPreview from './CardPreview';
 import PackTear from './PackTear';
@@ -172,8 +172,13 @@ export default function PackReveal({
               <CardPreview
                 title={current.card.title}
                 rarity={current.card.rarity}
-                number={current.card.position + 1}
+                code={cardCode(
+                  current.card.printed_set_code,
+                  current.card.position,
+                  current.card.set_total,
+                )}
                 description={current.card.description}
+                printedText={current.card.printed_text}
                 imageUrl={current.card.image.url}
                 templateKey={current.card.template_key}
                 templateConfig={current.card.template_config}
@@ -205,8 +210,9 @@ export default function PackReveal({
                   size="small"
                   title={o.card.title}
                   rarity={o.card.rarity}
-                  number={o.card.position + 1}
+                  code={cardCode(o.card.printed_set_code, o.card.position, o.card.set_total)}
                   description=""
+                  printedText={o.card.printed_text}
                   imageUrl={o.card.image.url}
                   templateKey={o.card.template_key}
                   templateConfig={o.card.template_config}

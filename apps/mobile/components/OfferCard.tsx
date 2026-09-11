@@ -1,9 +1,11 @@
+import { cardCode } from '@miscellary/shared';
 import type { OwnedCard, TradeOffer } from '@miscellary/shared';
 import { router } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { colors, fonts } from '@/lib/theme';
 import CardPreview from './CardPreview';
+import DemoBadge from './DemoBadge';
 import { Button, Muted } from './ui';
 
 function Side({
@@ -39,12 +41,13 @@ function Side({
               width={104}
               title={c.card.title}
               description={c.card.description}
+              printedText={c.card.printed_text}
               mark={c.set_mark}
               rarity={c.card.rarity}
               imageUrl={c.card.image.url}
               templateKey={c.card.template_key}
               templateConfig={c.card.template_config}
-              number={c.card.position + 1}
+              code={cardCode(c.card.printed_set_code, c.card.position, c.card.set_total)}
               render={c.card.render}
             />
           </Pressable>
@@ -79,6 +82,7 @@ export default function OfferCard({ offer, me, busy, onAction, onInspect }: Offe
         <Text style={{ color: colors.muted, fontFamily: fonts.body, fontSize: 16, flexShrink: 1 }}>
           {incoming ? 'From' : 'To'}{' '}
           <Text style={{ color: colors.text, fontWeight: '700' }}>@{other.username}</Text>
+          {other.is_demo ? <DemoBadge /> : null}
           {offer.counter_of ? <Text style={{ color: colors.gold }}> · counter</Text> : null}
         </Text>
         <Text

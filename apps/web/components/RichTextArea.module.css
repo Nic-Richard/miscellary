@@ -1,0 +1,25 @@
+.printed {
+  display: block;
+  overflow-y: auto;
+  cursor: text;
+  line-height: 1.5;
+}
+
+.printed:hover,
+.printed:focus-visible {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.printed p,
+.printed ul {
+  margin: 0 0 6px;
+}
+
+.printed > * > :last-child {
+  margin-bottom: 0;
+}
+
+.printed ul {
+  padding-left: 18px;
+}

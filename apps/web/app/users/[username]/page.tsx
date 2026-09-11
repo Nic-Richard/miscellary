@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useParams, usePathname } from 'next/navigation';
+import { useCallback, useEffect, useState } from 'react';
 import type { OwnedCard, ProfilePage } from '@miscellary/shared';
 import { SHOWCASE_SLOTS } from '@miscellary/shared';
 import BinderCover from '@/components/BinderCover';
@@ -11,10 +11,15 @@ import Sheet, { Empty } from '@/components/Sheet';
 import { OwnedCardInspector } from '@/components/CardInspector';
 import ProfileBinder from '@/components/ProfileBinder';
 import ReportButton from '@/components/ReportButton';
+import DemoBadge from '@/components/DemoBadge';
 import { useAuth } from '@/lib/auth';
+import { loginHref } from '@/lib/returnTo';
+import { useContinuation } from '@/lib/useContinuation';
 import { getProfile, setFollow } from '@/lib/social';
 import ui from '@/components/ui.module.css';
 import styles from './page.module.css';
+
+const FOLLOW_ACTION = 'follow';
 
 const ICONS = {
   followers:
@@ -27,6 +32,7 @@ const ICONS = {
 
 export default function ProfilePageView() {
   const { username } = useParams<{ username: string }>();
+  const pathname = usePathname();
   const { loading, user } = useAuth();
   const [profile, setProfile] = useState<ProfilePage | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -39,7 +45,7 @@ export default function ProfilePageView() {
       .catch((e: Error) => setError(e.message));
   }, [username, loading]);
 
-  async function toggleFollow() {
+  const toggleFollow = useCallback(async () => {
     if (!profile) return;
     const result = await setFollow(profile.username, !profile.is_following);
     setProfile({
@@ -47,7 +53,13 @@ export default function ProfilePageView() {
       is_following: result.following,
       follower_count: result.follower_count,
     });
-  }
+  }, [profile]);
+
+  useContinuation(
+    FOLLOW_ACTION,
+    () => void toggleFollow(),
+    Boolean(user && profile && !profile.is_me && !profile.is_following),
+  );
 
   if (error) return <p className={ui.error}>{error}</p>;
   if (!profile) return <p className={ui.muted}>Loading…</p>;
@@ -79,6 +91,7 @@ export default function ProfilePageView() {
             Collector profile
           </p>
           <h1 className={ui.title}>{name}</h1>
+          {profile.is_demo ? <DemoBadge /> : null}
           <p className={ui.subtitle}>@{profile.username}</p>
           {profile.bio ? <p className={ui.lead}>{profile.bio}</p> : null}
           <div className={styles.actions}>
@@ -103,7 +116,14 @@ export default function ProfilePageView() {
                 </Link>
                 <ReportButton target={{ username: profile.username }} />
               </>
-            ) : null}
+            ) : (
+              <Link
+                href={loginHref(pathname, FOLLOW_ACTION)}
+                className={`${ui.btnPrimary} ${ui.btnSmall}`}
+              >
+                Log in to follow
+              </Link>
+            )}
           </div>
         </div>
 

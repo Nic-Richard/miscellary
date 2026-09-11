@@ -94,9 +94,7 @@ export default function PackLayerEditor({ layers, onDraft, onSave }: PackLayerEd
   return (
     <div className={styles.root}>
       {layers.length === 0 && !adding ? (
-        <p className={styles.empty}>
-          Nothing on the front yet. Add your own artwork, or put the set&rsquo;s badge back.
-        </p>
+        <p className={styles.empty}>Nothing on the front yet.</p>
       ) : null}
 
       {layers.map((layer, i) => {
@@ -174,7 +172,7 @@ export default function PackLayerEditor({ layers, onDraft, onSave }: PackLayerEd
             {open === i ? (
               <div className={styles.body}>
                 {emblem ? (
-                  <p className={styles.empty}>How it is drawn is set in Badge, below.</p>
+                  <p className={styles.empty}>Drawn as set in Badge, below.</p>
                 ) : (
                   <Field label="Picture">
                     <ArtPicker value={null} onChange={(image) => replace(i, image)} />

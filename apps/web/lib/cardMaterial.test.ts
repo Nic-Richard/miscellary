@@ -1,8 +1,6 @@
 import { readFileSync } from 'node:fs';
-import { resolveCardMaterial } from '@miscellary/shared';
+import { resolveCardMaterial, resolveCardSpot } from '@miscellary/shared';
 import { describe, expect, it } from 'vitest';
-
-// Guard the CSS material values until the web renderer uses the shared resolver.
 
 const css = readFileSync(new URL('../components/CardPreview.module.css', import.meta.url), 'utf8');
 
@@ -17,18 +15,20 @@ function declaration(selector: string, property: string): string {
 describe('card material matches the stylesheet', () => {
   it('keeps grain and sheen aligned for every finish', () => {
     for (const [finish, expected] of Object.entries({
-      matte: { grain: 0.4, sheen: 0.62 },
-      satin: { grain: 0.3, sheen: 0.74 },
-      gloss: { grain: 0.22, sheen: 0.86 },
-      pearl: { grain: 0.24, sheen: 0.9 },
-      metallic: { grain: 0.18, sheen: 1 },
+      matte: { grain: 0.56, sheen: 0.5, blend: 'soft-light' },
+      satin: { grain: 0.34, sheen: 0.72, blend: 'soft-light' },
+      gloss: { grain: 0.14, sheen: 0.92, blend: 'overlay' },
+      pearl: { grain: 0.2, sheen: 0.84, blend: 'soft-light' },
+      metallic: { grain: 0.1, sheen: 0.96, blend: 'overlay' },
     })) {
       const selector = `.card[data-finish='${finish}']`;
       expect(Number(declaration(selector, '--grain')), finish).toBe(expected.grain);
       expect(Number(declaration(selector, '--sheen')), finish).toBe(expected.sheen);
+      expect(declaration(selector, '--finish-blend'), finish).toBe(expected.blend);
       const material = resolveCardMaterial('classic', { finish }, 'common');
       expect(material.grain, finish).toBe(expected.grain);
       expect(material.sheen, finish).toBe(expected.sheen);
+      expect(material.coatBlend, finish).toBe(expected.blend);
     }
   });
 
@@ -49,13 +49,40 @@ describe('card material matches the stylesheet', () => {
     }
   });
 
-  it('keeps the relief pair aligned', () => {
-    for (const relief of ['emboss', 'deboss']) {
-      const declared = declaration(`.card[data-relief='${relief}']`, '--relief');
-      const material = resolveCardMaterial('classic', { relief }, 'common');
-      for (const shadow of material.relief ?? []) {
-        expect(declared, `${relief}/${shadow.color}`).toContain(shadow.color);
-      }
+  it('gives every struck tier a spot treatment the mask can follow', () => {
+    expect(resolveCardSpot({}, 'common')).toBeNull();
+    expect(resolveCardSpot({}, 'uncommon')).toEqual({
+      material: 'varnish',
+      area: 'spot',
+      pattern: 'linear',
+    });
+    expect(resolveCardSpot({ finish: 'pearl' }, 'rare')).toEqual({
+      material: 'pearl',
+      area: 'spot',
+      pattern: 'linear',
+    });
+    expect(resolveCardSpot({ finish: 'metallic' }, 'epic')).toEqual({
+      material: 'foil',
+      area: 'spot',
+      pattern: 'linear',
+    });
+    expect(
+      resolveCardSpot({ treatment: 'holo', coverage: 'full', pattern: 'cosmos' }, 'legendary'),
+    ).toEqual({ material: 'holo', area: 'full', pattern: 'cosmos' });
+    expect(resolveCardSpot({ treatment: 'holo', coverage: 'reverse' }, 'legendary')?.area).toBe(
+      'reverse',
+    );
+    expect(resolveCardSpot({ treatment: 'foil', coverage: 'reverse' }, 'rare')).toEqual({
+      material: 'foil',
+      area: 'reverse',
+      pattern: 'linear',
+    });
+  });
+
+  it('keeps the struck rim aligned with the tier that gets it', () => {
+    const declared = declaration(`.card[data-rarity='legendary']`, '--relief');
+    for (const shadow of resolveCardMaterial('classic', {}, 'rare').relief ?? []) {
+      expect(declared, shadow.color).toContain(shadow.color);
     }
   });
 });

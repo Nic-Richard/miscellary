@@ -1,10 +1,11 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import type { CurrentUser, OwnedCard, ShowcaseSlot } from '@miscellary/shared';
-import { SHOWCASE_SLOTS } from '@miscellary/shared';
+import { cardCode, SHOWCASE_SLOTS } from '@miscellary/shared';
 import BinderColourPicker from '@/components/BinderColourPicker';
 import CardPreview from '@/components/CardPreview';
 import ProfileBinder from '@/components/ProfileBinder';
@@ -12,12 +13,14 @@ import { OwnedCardInspector } from '@/components/CardInspector';
 import ui from '@/components/ui.module.css';
 import { apiFetch } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
+import { loginHref } from '@/lib/returnTo';
 import { listMyCards } from '@/lib/packs';
 import { getShowcase, saveShowcase } from '@/lib/social';
 import styles from './page.module.css';
 
 export default function AccountPage() {
   const { user, loading, refreshUser } = useAuth();
+  const pathname = usePathname();
   const [displayName, setDisplayName] = useState('');
   const [bio, setBio] = useState('');
   const [showcaseTitle, setShowcaseTitle] = useState('');
@@ -116,7 +119,7 @@ export default function AccountPage() {
   if (!user)
     return (
       <p className={styles.muted}>
-        You need to <Link href="/login">log in</Link> to see your account.
+        You need to <Link href={loginHref(pathname)}>log in</Link> to see your account.
       </p>
     );
 
@@ -233,7 +236,9 @@ export default function AccountPage() {
                     size="small"
                     title={c.card.title}
                     rarity={c.card.rarity}
+                    code={cardCode(c.card.printed_set_code, c.card.position, c.card.set_total)}
                     description=""
+                    printedText={c.card.printed_text}
                     imageUrl={c.card.image.url}
                     templateKey={c.card.template_key}
                     templateConfig={c.card.template_config}

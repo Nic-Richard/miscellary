@@ -114,6 +114,12 @@ for (const variant of ['card', 'pack', 'full']) {
     ['Space Mono', 'SpaceMono_400Regular', 400],
     ['Caveat', 'Caveat_400Regular', 400],
     ['Alfa Slab One', 'AlfaSlabOne_400Regular', 400],
+    ['Oswald', 'Oswald_400Regular', 400],
+    ['Marcellus SC', 'MarcellusSC_400Regular', 400],
+    ['EB Garamond', 'EBGaramond_400Regular', 400],
+    ['Spectral', 'Spectral_400Regular', 400],
+    ['Cabin', 'Cabin_400Regular', 400],
+    ['Jost', 'Jost_400Regular', 400],
   ])
     fonts += `@font-face{font-family:'${family}';font-weight:${weight};src:url('${await asset(resolve(mobile, `assets/fonts/${file}.ttf`))}')}`;
   const css = result.outputFiles.find((file) => file.path.endsWith('.css')).text;

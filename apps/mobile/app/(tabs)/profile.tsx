@@ -1,4 +1,4 @@
-import { SHOWCASE_SLOTS } from '@miscellary/shared';
+import { cardCode, SHOWCASE_SLOTS } from '@miscellary/shared';
 import type { OwnedCard, ProfilePage } from '@miscellary/shared';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
@@ -170,6 +170,8 @@ function Me() {
                     <CardPreview
                       width={140}
                       title={c.card.title}
+                      printedText={c.card.printed_text}
+                      code={cardCode(c.card.printed_set_code, c.card.position, c.card.set_total)}
                       rarity={c.card.rarity}
                       imageUrl={c.card.image.url}
                       templateKey={c.card.template_key}

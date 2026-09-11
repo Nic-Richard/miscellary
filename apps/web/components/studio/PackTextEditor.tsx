@@ -49,11 +49,7 @@ export default function PackTextEditor({ layers, onDraft, onSave }: PackTextEdit
 
   return (
     <div className={styles.root}>
-      {layers.length === 0 ? (
-        <p className={styles.empty}>
-          Nothing yet. Add a line to print your own words anywhere on the pack.
-        </p>
-      ) : null}
+      {layers.length === 0 ? <p className={styles.empty}>No lines yet.</p> : null}
 
       {layers.map((layer, i) => (
         <div key={i} className={`${styles.layer} ${layer.hidden ? styles.layerOff : ''}`}>

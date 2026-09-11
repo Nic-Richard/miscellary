@@ -4,11 +4,17 @@ import {
   Alfa_Slab_One,
   Archivo_Black,
   Bebas_Neue,
+  Cabin,
   Caveat,
   Cinzel,
+  EB_Garamond,
+  Jost,
+  Marcellus_SC,
+  Oswald,
   Playfair_Display,
   Roboto_Condensed,
   Space_Mono,
+  Spectral,
 } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/lib/auth';
@@ -32,8 +38,29 @@ const spacemono = Space_Mono({
 });
 const caveat = Caveat({ subsets: ['latin'], variable: '--font-caveat' });
 const alfa = Alfa_Slab_One({ subsets: ['latin'], weight: '400', variable: '--font-alfa' });
+const oswald = Oswald({ subsets: ['latin'], variable: '--font-oswald' });
+const marcellus = Marcellus_SC({ subsets: ['latin'], weight: '400', variable: '--font-marcellus' });
+const garamond = EB_Garamond({ subsets: ['latin'], variable: '--font-garamond' });
+const spectral = Spectral({ subsets: ['latin'], weight: '400', variable: '--font-spectral' });
+const cabin = Cabin({ subsets: ['latin'], variable: '--font-cabin' });
+const jost = Jost({ subsets: ['latin'], variable: '--font-jost' });
 
-const fonts = [display, body, playfair, cinzel, archivo, spacemono, caveat, alfa]
+const fonts = [
+  display,
+  body,
+  playfair,
+  cinzel,
+  archivo,
+  spacemono,
+  caveat,
+  alfa,
+  oswald,
+  marcellus,
+  garamond,
+  spectral,
+  cabin,
+  jost,
+]
   .map((f) => f.variable)
   .join(' ');
 

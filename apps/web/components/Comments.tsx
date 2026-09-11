@@ -1,11 +1,14 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Comment } from '@miscellary/shared';
 import { deleteComment, getComments, postComment } from '@/lib/social';
 import { useAuth } from '@/lib/auth';
+import { loginHref } from '@/lib/returnTo';
 import ReportButton from './ReportButton';
+import DemoBadge from './DemoBadge';
 import ui from './ui.module.css';
 import styles from './Comments.module.css';
 
@@ -173,6 +176,7 @@ function Note({
           ) : (
             <span className={styles.name}>{name}</span>
           )}
+          {comment.author?.is_demo ? <DemoBadge compact /> : null}
           {comment.is_creator ? <span className={styles.creatorTag}>Creator</span> : null}
           <time className={styles.when} dateTime={comment.created_at}>
             {when(comment.created_at)}
@@ -237,6 +241,7 @@ function Note({
 
 export default function Comments({ slug }: { slug: string }) {
   const { user } = useAuth();
+  const pathname = usePathname();
   const [thread, setThread] = useState<Comment[] | null>(null);
   const [count, setCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -283,7 +288,7 @@ export default function Comments({ slug }: { slug: string }) {
           />
         ) : (
           <p className={styles.signedOut}>
-            <Link href="/login" className={styles.link}>
+            <Link href={loginHref(pathname)} className={styles.link}>
               Sign in
             </Link>{' '}
             to leave a note about this set.

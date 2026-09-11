@@ -1,8 +1,10 @@
 'use client';
 
 import Link from 'next/link';
+import { cardCode } from '@miscellary/shared';
 import type { OwnedCard, TradeOffer } from '@miscellary/shared';
 import CardPreview from './CardPreview';
+import DemoBadge from './DemoBadge';
 import ui from './ui.module.css';
 import styles from './OfferCard.module.css';
 
@@ -30,7 +32,9 @@ function Side({
                 size="small"
                 title={c.card.title}
                 rarity={c.card.rarity}
+                code={cardCode(c.card.printed_set_code, c.card.position, c.card.set_total)}
                 description=""
+                printedText={c.card.printed_text}
                 imageUrl={c.card.image.url}
                 templateKey={c.card.template_key}
                 templateConfig={c.card.template_config}
@@ -95,6 +99,7 @@ export default function OfferCard({ offer, me, onAction, onInspect, busy }: Offe
           <Link href={`/users/${other.username}`} className={styles.handle}>
             @{other.username}
           </Link>
+          {other.is_demo ? <DemoBadge compact /> : null}
           {offer.counter_of ? <span className={styles.badge}>counter</span> : null}
         </span>
         <span className={`${styles.status} ${styles[offer.status] ?? ''}`}>

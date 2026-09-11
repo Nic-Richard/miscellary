@@ -37,10 +37,10 @@ export const binderColors: Record<string, string> = {
 };
 
 export const rarityColors: Record<string, string> = {
-  common: '#3f8f88',
-  uncommon: '#b48a2c',
+  common: '#7a8085',
+  uncommon: '#3f6ea8',
   rare: '#7b5fa3',
-  epic: '#c66a3c',
+  epic: '#c0568c',
   legendary: '#c9a24a',
 };
 

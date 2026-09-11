@@ -64,16 +64,14 @@ def test_specialty_values_need_the_rarity_that_unlocks_them():
     assert templates.config_problems("classic", _config(finish="pearl"), "common")
     assert templates.config_problems("classic", _config(finish="pearl"), "uncommon")
     assert templates.config_problems("classic", _config(finish="pearl"), "rare") == []
-    assert templates.config_problems("classic", _config(finish="pearl"), "legendary") == [
-        "A legendary card needs a legendary treatment."
-    ]
+    assert templates.config_problems("classic", _config(finish="pearl"), "legendary") == []
 
 
 def test_ordinary_catalogue_is_open_at_every_rarity():
     ordinary = _config(
-        frame="ink",
+        stock="ink",
         accent="crimson",
-        font="caveat",
+        title_typeface="caveat",
         texture="felt",
         corners="sharp",
         tint="mono",
@@ -84,11 +82,22 @@ def test_ordinary_catalogue_is_open_at_every_rarity():
 
 
 def test_specialty_press_work_climbs_one_tier_at_a_time():
-    assert templates.config_problems("classic", _config(relief="spot"), "common")
-    assert templates.config_problems("classic", _config(relief="spot"), "uncommon") == []
-    assert templates.config_problems("classic", _config(relief="emboss"), "uncommon")
-    assert templates.config_problems("classic", _config(relief="emboss"), "rare") == []
-    assert templates.config_problems("classic", _config(relief="deboss"), "rare") == []
+    assert templates.config_problems("classic", _config(finish="pearl"), "uncommon")
+    assert templates.config_problems("classic", _config(finish="pearl"), "rare") == []
+    assert templates.config_problems("classic", _config(finish="metallic"), "rare") == []
+    assert templates.config_problems("classic", _config(treatment="foil"), "rare")
+    assert templates.config_problems("classic", _config(treatment="foil"), "epic") == []
+    assert templates.config_problems("classic", _config(treatment="holo"), "epic")
+    assert templates.config_problems("classic", _config(treatment="holo"), "legendary") == []
+    assert templates.config_problems("classic", _config(pattern="rainbow"), "epic")
+    rainbow = _config(treatment="holo", pattern="rainbow")
+    assert templates.config_problems("classic", rainbow, "legendary") == []
+
+
+def test_relief_and_panel_surface_are_not_creator_choices():
+    for template in templates.TEMPLATES:
+        assert "relief" not in template["options"], template["key"]
+        assert "paper" not in template["options"], template["key"]
 
 
 def test_photo_treatment_reaches_every_template():
@@ -96,23 +105,28 @@ def test_photo_treatment_reaches_every_template():
         assert "tint" in template["options"]
 
 
-def test_full_art_carries_no_board_options():
+def test_every_template_offers_the_same_boards():
+    boards = {t["key"]: t["options"]["stock"]["values"] for t in templates.TEMPLATES}
+    assert all(values == templates.STOCKS_ALL for values in boards.values())
+
+
+def test_full_art_mounts_its_photo_over_the_whole_board():
     options = templates.TEMPLATES_BY_KEY["minimal"]["options"]
-    assert "frame" not in options
-    assert "texture" not in options
+    assert options["stock"]["default"] == "ink"
+    assert options["texture"]["default"] == "smooth"
     assert "border" in options
-    assert "weight" in options
+    assert "border_width" in options
     assert "shape" not in options
 
 
-@pytest.mark.parametrize("key", ["classic", "polaroid", "bold", "fieldnote", "dossier"])
+@pytest.mark.parametrize("key", ["classic", "polaroid", "bold", "fieldnote"])
 def test_framed_templates_allow_shapes_and_borders_at_common(key):
     options = templates.TEMPLATES_BY_KEY[key]["options"]
-    for name in ["frame", "shape", "border", "weight"]:
+    for name in ["stock", "shape", "border", "border_width"]:
         for value in options[name]["values"]:
             config = {**templates.default_config(key), name: value}
             assert templates.config_problems(key, config, "common") == []
-    assert templates.config_problems(key, {"weight": "huge"}, "common")
+    assert templates.config_problems(key, {"border_width": "huge"}, "common")
 
 
 def test_every_option_is_placed_in_an_editor_group():
@@ -147,21 +161,20 @@ def test_template_gate_is_skipped_when_rarity_is_not_given():
 
 
 def test_ungated_templates_stay_open_to_everyone():
-    for key in ["classic", "polaroid", "bold", "fieldnote", "dossier"]:
+    for key in ["classic", "polaroid", "bold", "fieldnote"]:
         assert templates.template_problems(key, "common") == []
 
 
-def test_legendary_requires_a_treatment_but_not_a_particular_look():
-    assert templates.config_problems("classic", _config(), "legendary") == [
-        "A legendary card needs a legendary treatment."
-    ]
+def test_legendary_is_offered_a_treatment_but_never_forced_one():
+    assert templates.config_problems("classic", _config(), "legendary") == []
     plain_legendary = _config(treatment="foil", finish="matte", texture="linen")
     assert templates.config_problems("classic", plain_legendary, "legendary") == []
     assert templates.config_problems("classic", _config(treatment="holo"), "legendary") == []
 
 
-def test_treatment_is_refused_below_legendary():
-    assert templates.config_problems("classic", _config(treatment="foil"), "epic")
+def test_treatment_is_refused_below_its_tier():
+    assert templates.config_problems("classic", _config(treatment="foil"), "rare")
+    assert templates.config_problems("classic", _config(treatment="holo"), "epic")
 
 
 def test_rarity_is_not_checked_when_it_is_not_given():

@@ -1,13 +1,16 @@
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Text } from 'react-native';
 import { ApiRequestError } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
+import { internalRoute, RETURN_PARAM } from '@/lib/returnTo';
 import { colors } from '@/lib/theme';
 import { Button, ErrorText, Input, Screen, Title } from '@/components/ui';
 
 export default function RegisterScreen() {
   const { register } = useAuth();
+  const params = useLocalSearchParams();
+  const next = internalRoute(params[RETURN_PARAM]);
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -21,7 +24,7 @@ export default function RegisterScreen() {
     setFields({});
     try {
       await register({ email, username, password });
-      router.replace('/(tabs)');
+      router.replace(next ?? '/(tabs)');
     } catch (e) {
       if (e instanceof ApiRequestError) {
         setError(e.message);

@@ -1,14 +1,16 @@
 'use client';
 
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useState } from 'react';
+import { cardCode } from '@miscellary/shared';
 import type { OwnedCard, SetPointsBalance } from '@miscellary/shared';
 import CardGrid, { CardCell } from '@/components/CardGrid';
 import Sheet, { Empty } from '@/components/Sheet';
 import { OwnedCardInspector } from '@/components/CardInspector';
 import CardPreview from '@/components/CardPreview';
 import { useAuth } from '@/lib/auth';
+import { loginHref } from '@/lib/returnTo';
 import { listMyCards, listMyPoints, recycleCard } from '@/lib/packs';
 import ui from '@/components/ui.module.css';
 import styles from './page.module.css';
@@ -26,6 +28,7 @@ function stack(owned: OwnedCard[]): OwnedCard[] {
 
 function Collection() {
   const { user, loading } = useAuth();
+  const pathname = usePathname();
   const setSlug = useSearchParams().get('set') ?? undefined;
   const [cards, setCards] = useState<OwnedCard[] | null>(null);
   const [points, setPoints] = useState<SetPointsBalance[]>([]);
@@ -84,7 +87,7 @@ function Collection() {
   if (!user)
     return (
       <p className={ui.muted}>
-        <Link href="/login">Log in</Link> to see your collection.
+        <Link href={loginHref(pathname)}>Log in</Link> to see your collection.
       </p>
     );
 
@@ -177,8 +180,13 @@ function Collection() {
                       size="small"
                       title={owned.card.title}
                       rarity={owned.card.rarity}
-                      number={owned.card.position + 1}
+                      code={cardCode(
+                        owned.card.printed_set_code,
+                        owned.card.position,
+                        owned.card.set_total,
+                      )}
                       description={owned.card.description}
+                      printedText={owned.card.printed_text}
                       imageUrl={owned.card.image.url}
                       templateKey={owned.card.template_key}
                       templateConfig={owned.card.template_config}

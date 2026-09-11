@@ -3,11 +3,12 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent, ReactNode } from 'react';
-import { RARITY_LABELS, resolveCardTokens } from '@miscellary/shared';
+import { cardCode, RARITY_LABELS, resolveCardTokens } from '@miscellary/shared';
 import type { Card, Creator, OwnedCard } from '@miscellary/shared';
 import CardBack from './CardBack';
 import CardPreview from './CardPreview';
 import Description from './Description';
+import DemoBadge from './DemoBadge';
 import styles from './CardInspector.module.css';
 
 export interface CardInspectorProps {
@@ -250,8 +251,9 @@ export default function CardInspector({
                 size="large"
                 title={card.title}
                 rarity={card.rarity}
-                number={card.position + 1}
+                code={cardCode(card.printed_set_code, card.position, card.set_total)}
                 description={card.description}
+                printedText={card.printed_text}
                 imageUrl={card.image.url}
                 templateKey={card.template_key}
                 templateConfig={card.template_config}
@@ -308,6 +310,12 @@ export default function CardInspector({
             <Link href={`/sets/${setSlug}`}>{setTitle}</Link>
             {creator ? <> · {creator.display_name}</> : null}
             {copies ? ` · ${copies} ${copies === 1 ? 'copy' : 'copies'}` : ''}
+            {creator?.is_demo ? (
+              <>
+                {' '}
+                <DemoBadge compact />
+              </>
+            ) : null}
           </p>
           {card.description ? (
             <Description text={card.description} className={styles.body} />

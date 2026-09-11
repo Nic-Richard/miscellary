@@ -1,4 +1,5 @@
 import { resolveCardMaterial, resolveCardTokens } from '@miscellary/shared';
+import { SPOT_PATTERNS } from '@miscellary/shared';
 import type { CardRenderAssets, Rarity, TemplateConfig } from '@miscellary/shared';
 import type { CSSProperties } from 'react';
 import styles from './BakedCard.module.css';
@@ -33,25 +34,41 @@ export default function BakedCard({
   if (!image) return null;
   const material = resolveCardMaterial(templateKey, templateConfig, rarity);
   const tokens = resolveCardTokens(templateKey, templateConfig, rarity);
+  const full = material.spot?.area === 'full';
   const mask = size === 'small' ? render.mask_thumbnail : render.mask;
-  const chase = material.chase;
+  const spot = material.spot;
+  const layers = spot?.layers;
+  const worked = spot ? SPOT_PATTERNS[spot.pattern] : null;
+  const grain =
+    layers &&
+    (worked?.grain
+      ? worked.grain
+      : `repeating-linear-gradient(${layers.field.stripes.angle}deg, ${stops(layers.field.stripes.stops, 'cqw')})`);
   const vars = {
     '--baked-corner-x': `${tokens.corner}%`,
     '--baked-corner-y': `${tokens.corner / 1.4}%`,
     '--baked-coat': `linear-gradient(var(--lit-angle, ${material.coat.angle}deg), ${stops(material.coat.stops)})`,
+    '--baked-coat-blend': material.coatBlend,
     '--baked-sheen': material.sheen,
     '--baked-mask': mask ? `url('${mask.url}')` : 'none',
-    '--baked-field': chase
-      ? `repeating-linear-gradient(${chase.field.stripes.angle}deg, ${stops(chase.field.stripes.stops, 'cqw')}), linear-gradient(var(--lit-angle, ${chase.field.sheet.angle}deg), ${stops(chase.field.sheet.stops)})`
+    '--baked-field': layers
+      ? `${grain}, linear-gradient(var(--lit-angle, ${layers.field.sheet.angle}deg), ${stops(layers.field.sheet.stops)})`
       : 'none',
-    '--baked-field-opacity': chase?.field.opacity ?? 0,
-    '--baked-field-blend': chase?.field.blend ?? 'normal',
-    '--baked-band': chase
-      ? `linear-gradient(var(--lit-angle, ${chase.band.gradient.angle}deg), ${stops(chase.band.gradient.stops)})`
-      : 'none',
-    '--baked-band-opacity': chase?.band.opacity ?? 0,
-    '--baked-band-blend': chase?.band.blend ?? 'normal',
-    '--baked-band-size': `${(chase?.band.scale ?? 1) * 100}%`,
+    '--baked-grain-size': worked?.size ? `${worked.size}, auto` : 'auto, auto',
+    '--baked-field-opacity': layers
+      ? layers.field.opacity * (full ? 0.5 : 1) * (worked?.wash ? 0.5 : 1)
+      : 0,
+    '--baked-field-blend': layers?.field.blend ?? 'normal',
+    '--baked-band': worked?.wash
+      ? worked.wash
+      : layers
+        ? `linear-gradient(var(--lit-angle, ${layers.band.gradient.angle}deg), ${stops(layers.band.gradient.stops)})`
+        : 'none',
+    '--baked-band-opacity': layers ? layers.band.opacity * (full ? 0.5 : 1) : 0,
+    '--baked-band-blend': worked?.wash ? 'soft-light' : (layers?.band.blend ?? 'normal'),
+    '--baked-band-size': worked?.wash
+      ? '150%'
+      : `${(full ? 5.6 : (layers?.band.scale ?? 1)) * 100}%`,
   } as CSSProperties;
 
   return (
@@ -64,10 +81,10 @@ export default function BakedCard({
     >
       <img src={image.url} alt="" />
       <i className={styles.finish} aria-hidden="true" />
-      {chase && mask ? (
+      {spot && mask ? (
         <>
-          <i className={styles.chaseField} aria-hidden="true" />
-          <i className={styles.chaseBand} aria-hidden="true" />
+          <i className={styles.spotField} aria-hidden="true" />
+          <i className={styles.spotBand} aria-hidden="true" />
         </>
       ) : null}
     </div>

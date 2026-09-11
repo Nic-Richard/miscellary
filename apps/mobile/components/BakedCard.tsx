@@ -98,11 +98,13 @@ export default function BakedCard({
   const mask = render.mask_thumbnail;
   const material = resolveCardMaterial(templateKey, templateConfig, rarity);
   const tokens = resolveCardTokens(templateKey, templateConfig, rarity);
-  const chase = material.chase;
+  const spot = material.spot;
+  const layers = spot?.layers ?? null;
+  const wash = spot?.area === 'full' ? 0.5 : 1;
   const corner = width * (tokens.corner / 100);
   if (!image) return null;
-  const field = chase ? gradientGeometry(chase.field.sheet, width, height) : null;
-  const band = chase ? gradientGeometry(chase.band.gradient, width, height) : null;
+  const field = layers ? gradientGeometry(layers.field.sheet, width, height) : null;
+  const band = layers ? gradientGeometry(layers.band.gradient, width, height) : null;
 
   return (
     <View
@@ -119,7 +121,7 @@ export default function BakedCard({
         style={StyleSheet.absoluteFill}
       />
       <CardFinish material={material} width={width} height={height} />
-      {chase && mask && field && band ? (
+      {layers && mask && field && band ? (
         <Svg width={width} height={height} pointerEvents="none" style={StyleSheet.absoluteFill}>
           <Defs>
             <Mask id={`${id}-mask`}>
@@ -139,10 +141,10 @@ export default function BakedCard({
               x2={field.end.x}
               y2={field.end.y}
             >
-              {chase.field.sheet.stops.map((stop, index) => (
+              {layers.field.sheet.stops.map((stop, index) => (
                 <Stop
                   key={`${stop.color}-${index}`}
-                  offset={`${stop.at ?? (index / (chase.field.sheet.stops.length - 1)) * 100}%`}
+                  offset={`${stop.at ?? (index / (layers.field.sheet.stops.length - 1)) * 100}%`}
                   stopColor={stop.color}
                 />
               ))}
@@ -154,10 +156,10 @@ export default function BakedCard({
               x2={band.end.x}
               y2={band.end.y}
             >
-              {chase.band.gradient.stops.map((stop, index) => (
+              {layers.band.gradient.stops.map((stop, index) => (
                 <Stop
                   key={`${stop.color}-${index}`}
-                  offset={`${stop.at ?? (index / (chase.band.gradient.stops.length - 1)) * 100}%`}
+                  offset={`${stop.at ?? (index / (layers.band.gradient.stops.length - 1)) * 100}%`}
                   stopColor={stop.color}
                 />
               ))}
@@ -167,14 +169,14 @@ export default function BakedCard({
             width={width}
             height={height}
             fill={`url(#${id}-field)`}
-            opacity={chase.field.opacity}
+            opacity={layers.field.opacity * wash}
             mask={`url(#${id}-mask)`}
           />
           <Rect
             width={width}
             height={height}
             fill={`url(#${id}-band)`}
-            opacity={chase.band.opacity}
+            opacity={layers.band.opacity * wash}
             mask={`url(#${id}-mask)`}
           />
         </Svg>

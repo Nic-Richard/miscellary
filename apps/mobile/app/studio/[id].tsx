@@ -1,3 +1,4 @@
+import { cardCode } from '@miscellary/shared';
 import type { CardSetDetail } from '@miscellary/shared';
 import Feather from '@expo/vector-icons/Feather';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
@@ -99,6 +100,7 @@ export default function SetEditorScreen() {
 
   if (!set) return error ? <ErrorText>{error}</ErrorText> : <Loading />;
   const isDraft = set.status === 'draft';
+  const setCode = set.printed_set_code;
 
   return (
     <ScrollView
@@ -217,6 +219,8 @@ export default function SetEditorScreen() {
               title={c.title}
               rarity={c.rarity}
               description={c.description}
+              printedText={c.printed_text}
+              code={cardCode(setCode, c.position, c.set_total || set.cards.length)}
               mark={set.mark}
               imageUrl={c.image.url}
               templateKey={c.template_key}

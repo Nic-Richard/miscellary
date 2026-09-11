@@ -28,8 +28,10 @@ class PackError(Exception):
 
 
 def has_unlimited_packs(user) -> bool:
-    """Testing exemption from the daily limit. The setting is empty in production."""
-    return user.email in settings.UNLIMITED_PACK_EMAILS
+    """Testing exemption from the daily limit. Disabled in production."""
+    return (
+        settings.UNLIMITED_PACKS_FOR_DEMO_ACCOUNTS and user.is_demo
+    ) or user.email in settings.UNLIMITED_PACK_EMAILS
 
 
 def free_pack_available(user, card_set: CardSet) -> bool:

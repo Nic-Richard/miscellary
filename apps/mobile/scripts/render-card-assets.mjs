@@ -5,6 +5,10 @@ import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 
 const mobile = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+
+// Mirrors cardCode in @miscellary/shared, which this plain-node script cannot import.
+const printedCode = (card) =>
+  card.printed_set_code ? `${card.printed_set_code} ${card.position + 1}/${card.set_total}` : '';
 const repo = resolve(mobile, '../..');
 
 const { values: args } = parseArgs({
@@ -174,10 +178,11 @@ try {
         title: card.title,
         rarity: card.rarity,
         description: card.description,
+        printedText: card.printed_text,
+        code: printedCode(card),
         imageUrl: card.image.url,
         templateKey: card.template_key,
         templateConfig: card.template_config,
-        number: card.position + 1,
         mark: set.mark,
       };
       const front = await render('render-front', data, 'webp', 92);
@@ -186,7 +191,7 @@ try {
       await writeFile(resolve(directory, 'thumbnail.webp'), Buffer.from(thumbnail, 'base64'));
       let mask = null;
       let maskThumbnail = null;
-      if (['foil', 'holo'].includes(card.template_config.treatment)) {
+      if (card.render?.spot) {
         const capturedMask = await render('render-mask', data, 'png');
         mask = await alphaMask(capturedMask.data);
         maskThumbnail = await resize(mask, 'png');

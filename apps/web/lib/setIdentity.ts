@@ -186,15 +186,6 @@ export const EMBLEM_TEXT_NAMES = Object.keys(EMBLEM_TEXT_COLOURS);
 export const SCALE_MIN = 60;
 export const SCALE_MAX = 140;
 
-export const PACK_COLOUR_FAMILIES = [
-  { label: 'Green', values: ['mint', 'moss', 'forest'] },
-  { label: 'Blue', values: ['ocean', 'sky', 'indigo'] },
-  { label: 'Purple', values: ['violet', 'orchid'] },
-  { label: 'Red', values: ['rose', 'crimson'] },
-  { label: 'Warm', values: ['ember', 'rust', 'gold', 'bronze', 'sand'] },
-  { label: 'Neutral', values: ['cream', 'white', 'silver', 'ash', 'slate', 'charcoal', 'black'] },
-];
-
 export interface SetIdentity {
   mark?: string;
   pack_colour?: string;

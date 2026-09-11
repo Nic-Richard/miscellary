@@ -89,3 +89,22 @@
     justify-self: center;
   }
 }
+
+.code {
+  max-width: 120px;
+  font-family: var(--display);
+  font-size: 18px;
+  letter-spacing: 0.16em;
+  text-align: center;
+  text-transform: uppercase;
+}
+.codeNote {
+  margin: 6px 0 0;
+  color: var(--danger);
+  font-size: 12px;
+}
+.codePreview {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}

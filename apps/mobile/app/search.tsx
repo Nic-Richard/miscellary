@@ -2,7 +2,9 @@ import type { SearchResults } from '@miscellary/shared';
 import { Link, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { cardCode } from '@miscellary/shared';
 import CardPreview from '@/components/CardPreview';
+import DemoBadge from '@/components/DemoBadge';
 import { search } from '@/lib/endpoints';
 import { colors } from '@/lib/theme';
 import { Loading, Muted, Title } from '@/components/ui';
@@ -37,6 +39,7 @@ export default function SearchScreen() {
         >
           <Text style={{ color: colors.accent }}>@{u.username}</Text>
           <Text style={{ color: colors.faint }}> {u.display_name}</Text>
+          {u.is_demo ? <DemoBadge /> : null}
         </Link>
       ))}
       {results.sets.length ? <Text style={styles.h2}>Sets</Text> : null}
@@ -51,6 +54,7 @@ export default function SearchScreen() {
             {' '}
             {s.card_count} cards · @{s.creator.username}
           </Text>
+          {s.creator.is_demo ? <DemoBadge /> : null}
         </Link>
       ))}
       {results.cards.length ? <Text style={styles.h2}>Cards</Text> : null}
@@ -61,6 +65,8 @@ export default function SearchScreen() {
               width={150}
               title={c.title}
               description={c.description}
+              printedText={c.printed_text}
+              code={cardCode(c.printed_set_code, c.position, c.set_total)}
               rarity={c.rarity}
               imageUrl={c.image.url}
               templateKey={c.template_key}

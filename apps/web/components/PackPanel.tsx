@@ -1,10 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
+import { useCallback, useEffect, useState } from 'react';
 import type { PackOpening, PackStatus } from '@miscellary/shared';
 import { useAuth } from '@/lib/auth';
 import { getPackStatus, openPack } from '@/lib/packs';
+import { loginHref } from '@/lib/returnTo';
+import { useContinuation } from '@/lib/useContinuation';
 import PackPouch from './PackPouch';
 import type { SetIdentity } from '@/lib/setIdentity';
 import PackReveal from './PackReveal';
@@ -18,6 +21,8 @@ function Arrow() {
     </svg>
   );
 }
+
+export const PACK_ACTION = 'pack';
 
 function countdown(until: string, now: number): string {
   const ms = Math.max(0, new Date(until).getTime() - now);
@@ -41,6 +46,7 @@ export default function PackPanel({
   onOpened?: (opening: PackOpening) => void;
 }) {
   const { user } = useAuth();
+  const pathname = usePathname();
   const [status, setStatus] = useState<PackStatus | null>(null);
   const [opening, setOpening] = useState<PackOpening | null>(null);
   const [busy, setBusy] = useState(false);
@@ -60,20 +66,29 @@ export default function PackPanel({
     return () => clearInterval(timer);
   }, [status]);
 
-  async function open(usePoints: boolean) {
-    setBusy(true);
-    setError(null);
-    try {
-      const result = await openPack(slug, usePoints);
-      setOpening(result);
-      setStatus(result.status);
-      onOpened?.(result);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not open the pack.');
-    } finally {
-      setBusy(false);
-    }
-  }
+  const open = useCallback(
+    async (usePoints: boolean) => {
+      setBusy(true);
+      setError(null);
+      try {
+        const result = await openPack(slug, usePoints);
+        setOpening(result);
+        setStatus(result.status);
+        onOpened?.(result);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Could not open the pack.');
+      } finally {
+        setBusy(false);
+      }
+    },
+    [slug, onOpened],
+  );
+
+  useContinuation(
+    PACK_ACTION,
+    () => void open(false),
+    Boolean(user && status?.free_available && !busy),
+  );
 
   const packSize = status?.pack_size ?? 10;
   const pouch = (
@@ -88,8 +103,11 @@ export default function PackPanel({
         <div className={`${ui.ticket} ${styles.ticket}`}>
           <h2 className={styles.heading}>Open a pack</h2>
           <p className={styles.sub}>{packSize} cards per pack</p>
-          <Link href="/login" className={`${ui.btnPrimary} ${styles.cta}`}>
-            Log in
+          <Link
+            href={loginHref(pathname, PACK_ACTION)}
+            className={`${ui.btnPrimary} ${styles.cta}`}
+          >
+            Log in to open
             <Arrow />
           </Link>
           <p className={styles.note}>One free pack from every set, every day</p>

@@ -25,6 +25,7 @@ class ProfilePageSerializer(serializers.Serializer):
     showcase_title = serializers.CharField()
     binder_colour = serializers.CharField(allow_blank=True)
     avatar_url = serializers.CharField(allow_null=True)
+    is_demo = serializers.BooleanField()
     created_at = serializers.DateTimeField()
     follower_count = serializers.IntegerField()
     following_count = serializers.IntegerField()

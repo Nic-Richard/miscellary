@@ -1,4 +1,5 @@
 import pytest
+from django.db import IntegrityError
 
 from cards.models import CardDefinition, CardSet, PublishedCardError
 from cards.publishing import publish_problems, publish_set
@@ -38,6 +39,68 @@ def test_publish_success_is_permanent(user):
     assert publish_set(card_set) == ["This set is already published."]
 
 
+def test_publishing_freezes_the_printed_card_identifier(user):
+    card_set = make_set(user, title="Pocket Geology")
+    fill_publishable(card_set)
+    assert publish_set(card_set) == []
+    card_set.refresh_from_db()
+
+    assert card_set.printed_code == "POC-01"
+    assert {card.set_total for card in card_set.cards.all()} == {5}
+
+    card_set.set_code = "ROC"
+    with pytest.raises(PublishedCardError, match="set_code"):
+        card_set.save()
+
+    card_set.refresh_from_db()
+    card_set.set_code_suffix = "02"
+    with pytest.raises(PublishedCardError, match="set_code_suffix"):
+        card_set.save()
+
+    card = card_set.cards.first()
+    card.set_total = 99
+    with pytest.raises(PublishedCardError, match="set_total"):
+        card.save()
+
+
+def test_a_chosen_set_code_survives_publication(user):
+    card_set = make_set(user, title="Pocket Geology", set_code="GEO")
+    fill_publishable(card_set)
+    assert publish_set(card_set) == []
+    card_set.refresh_from_db()
+    assert card_set.printed_code == "GEO-01"
+
+
+def test_each_set_takes_the_next_free_suffix_for_its_code(user):
+    codes = []
+    for _ in range(3):
+        card_set = make_set(user, title="Garden Birds", set_code="BRD")
+        fill_publishable(card_set)
+        assert publish_set(card_set) == []
+        card_set.refresh_from_db()
+        codes.append(card_set.printed_code)
+    assert codes == ["BRD-01", "BRD-02", "BRD-03"]
+
+    CardSet.objects.filter(set_code_suffix="02").update(set_code="OLD")
+    reused = make_set(user, title="Garden Birds", set_code="BRD")
+    fill_publishable(reused)
+    assert publish_set(reused) == []
+    reused.refresh_from_db()
+    assert reused.printed_code == "BRD-02"
+
+
+def test_a_printed_code_cannot_be_used_twice(user):
+    first = make_set(user, title="Garden Birds", set_code="BRD")
+    fill_publishable(first)
+    publish_set(first)
+    first.refresh_from_db()
+
+    clash = make_set(user, title="Other Birds", set_code="BRD")
+    clash.set_code_suffix = first.set_code_suffix
+    with pytest.raises(IntegrityError):
+        clash.save(update_fields=["set_code", "set_code_suffix"])
+
+
 def test_published_cards_are_frozen_at_the_model_layer(user):
     card_set = make_set(user)
     fill_publishable(card_set)
@@ -58,6 +121,11 @@ def test_published_cards_are_frozen_at_the_model_layer(user):
 
     with pytest.raises(PublishedCardError):
         make_card(card_set, "common")
+
+    card.refresh_from_db()
+    card.printed_text = "Changed face copy"
+    with pytest.raises(PublishedCardError, match="printed_text"):
+        card.save()
 
     card.refresh_from_db()
     card.position = 99

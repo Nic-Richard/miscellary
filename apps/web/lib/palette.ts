@@ -1,105 +1,124 @@
 import type { CSSProperties } from 'react';
 
-export interface Family<T = string> {
-  label: string;
-  values: T[];
-}
+/* One palette, one value per colour, wherever a colour is picked: the board,
+   the border ink, the accent and the set mark all draw from this. A colour is
+   itself whatever it is printed as, so the picker shows the same swatch in
+   every control.
 
-export const INK_COLOURS: Record<string, string> = {
-  rarity: '#8d8477',
-  ink: '#241f1a',
-  charcoal: '#43413c',
-  slate: '#5d6b70',
-  teal: '#2f8078',
-  green: '#4c7a5a',
-  forest: '#2b5b3c',
-  blue: '#4f6f9e',
-  ocean: '#2f6690',
-  indigo: '#3a4482',
-  purple: '#7b5fa3',
-  violet: '#6a4b93',
-  plum: '#7c3f63',
-  rose: '#b1587a',
-  red: '#b04c3c',
-  crimson: '#9d2f3f',
-  rust: '#a8503a',
-  ember: '#c4622c',
-  gold: '#b8903a',
-  bronze: '#84603a',
-  copper: '#b56c49',
-  ochre: '#b49736',
-  silver: '#aab2b6',
-  sage: '#7f9977',
-  cream: '#f0e6d2',
-  white: '#fbf7ef',
-};
-
-export const INK_FAMILIES: Family[] = [
-  { label: 'Neutral', values: ['ink', 'charcoal', 'slate', 'silver'] },
-  { label: 'Green', values: ['teal', 'green', 'forest', 'sage'] },
-  { label: 'Blue', values: ['blue', 'ocean', 'indigo'] },
-  { label: 'Purple', values: ['purple', 'violet', 'plum'] },
-  { label: 'Red', values: ['rose', 'red', 'crimson'] },
-  { label: 'Warm', values: ['rust', 'ember', 'gold', 'bronze', 'copper', 'ochre'] },
-  { label: 'Pale', values: ['cream', 'white'] },
+   Eight rows of nine. A row is a hue, running light to dark. */
+export const COLOUR_ROWS: string[][] = [
+  ['white', 'haze', 'ash', 'silver', 'graphite', 'slate', 'steel', 'charcoal', 'ink'],
+  ['bone', 'cream', 'butter', 'linen', 'sand', 'straw', 'ochre', 'gold', 'bronze'],
+  ['shell', 'peach', 'apricot', 'melon', 'copper', 'ember', 'umber', 'rust', 'cocoa'],
+  ['blush', 'salmon', 'coral', 'red', 'brick', 'crimson', 'garnet', 'wine', 'oxblood'],
+  ['petal', 'powder', 'peony', 'blossom', 'magenta', 'rose', 'fuchsia', 'mulberry', 'plum'],
+  [
+    'lavender',
+    'thistle',
+    'lilac',
+    'wisteria',
+    'amethyst',
+    'purple',
+    'damson',
+    'violet',
+    'aubergine',
+  ],
+  ['sky', 'sea', 'cornflower', 'blue', 'azure', 'ocean', 'indigo', 'navy', 'teal'],
+  ['mint', 'sage', 'fern', 'jade', 'olive', 'green', 'forest', 'moss', 'pine'],
 ];
 
-export const STOCK_COLOURS: Record<string, string> = {
-  cream: '#f4ecda',
-  bone: '#f7f2e6',
+export const CARD_COLOURS: string[] = COLOUR_ROWS.flat();
+
+export const COLOURS: Record<string, string> = {
+  rarity: '#8d8477',
   white: '#fdfbf6',
-  sand: '#e8dcc2',
-  linen: '#efe7d5',
+  haze: '#dfe0e2',
   ash: '#d9d3c6',
-  blush: '#f2e2dd',
-  sky: '#e4ecf3',
-  mint: '#e3eee6',
-  butter: '#f5edd1',
-  peach: '#f1d6bf',
-  lavender: '#e1ddec',
-  sage: '#d4dfc8',
-  lilac: '#ead5e5',
-  light: '#f7f2e6',
+  silver: '#8f9a9f',
+  graphite: '#5b6165',
   slate: '#4a565c',
+  steel: '#3c4750',
   charcoal: '#3a3733',
   ink: '#22201c',
-  dark: '#1f3a36',
-  forest: '#22402f',
-  oxblood: '#3f2223',
-  navy: '#232f4a',
-  plum: '#3b2438',
-  moss: '#2c3a22',
-  teal: '#17434a',
-  wine: '#4a2036',
+  bone: '#f7f2e6',
+  cream: '#f4ecda',
+  butter: '#f5edd1',
+  linen: '#efe7d5',
+  sand: '#e8dcc2',
+  straw: '#ece0bc',
+  ochre: '#9b822e',
+  gold: '#7c5f1e',
   bronze: '#46341f',
+  shell: '#f7e6d6',
+  peach: '#f1d6bf',
+  apricot: '#e8b98c',
+  melon: '#d99a68',
+  copper: '#9c5d3f',
+  ember: '#a95426',
+  umber: '#6b4326',
+  rust: '#5a2f1e',
   cocoa: '#49332d',
+  blush: '#f2e2dd',
+  salmon: '#e8a396',
+  coral: '#d97a68',
+  red: '#974134',
+  brick: '#8f4436',
+  crimson: '#872836',
+  garnet: '#5e1f28',
+  wine: '#4a2036',
+  oxblood: '#3f2223',
+  petal: '#f3dde8',
+  powder: '#f0cfe0',
+  peony: '#e0a3c0',
+  blossom: '#cf7fa4',
+  magenta: '#a83d70',
+  rose: '#9b4968',
+  fuchsia: '#7a3358',
+  mulberry: '#5c2742',
+  plum: '#3b2438',
+  lavender: '#e1ddec',
+  thistle: '#ded4ee',
+  lilac: '#ead5e5',
+  wisteria: '#b3a3d6',
+  amethyst: '#9179c4',
+  purple: '#6a518d',
+  damson: '#4a3468',
+  violet: '#4a3068',
   aubergine: '#30243f',
+  sky: '#e4ecf3',
+  sea: '#d8e8e8',
+  cornflower: '#8fa9cf',
+  blue: '#445f88',
+  azure: '#2f4f7a',
+  ocean: '#28587c',
+  indigo: '#2b2f5c',
+  navy: '#232f4a',
+  teal: '#17434a',
+  mint: '#e3eee6',
+  sage: '#d4dfc8',
+  fern: '#9dbf9a',
+  jade: '#6fa383',
+  olive: '#7d8c4e',
+  green: '#41694d',
+  forest: '#22402f',
+  moss: '#2c3a22',
+  pine: '#1c3327',
 };
 
-export const STOCK_FAMILIES: Family[] = [
-  { label: 'Pale', values: ['white', 'bone', 'light', 'cream', 'linen'] },
-  { label: 'Warm', values: ['sand', 'ash', 'butter', 'blush', 'peach'] },
-  { label: 'Cool', values: ['sky', 'mint', 'sage', 'lavender', 'lilac'] },
-  { label: 'Deep', values: ['slate', 'charcoal', 'ink', 'dark'] },
-  { label: 'Colour', values: ['forest', 'moss', 'teal', 'navy'] },
-  { label: 'Rich', values: ['oxblood', 'wine', 'plum', 'bronze', 'cocoa', 'aubergine'] },
-];
-
-export function groupValues(values: string[], families: Family[]): Family[] {
-  const seen = new Set<string>();
-  const out: Family[] = [];
-  for (const family of families) {
-    const present = family.values.filter((v) => values.includes(v));
-    present.forEach((v) => seen.add(v));
-    if (present.length) out.push({ label: family.label, values: present });
-  }
-  const rest = values.filter((v) => !seen.has(v) && v !== 'rarity');
-  if (rest.length) out.push({ label: 'Other', values: rest });
-  return out;
+/** The offered colours as picker rows, specials removed. Anything the palette
+ *  does not name, such as a pack foil tint, lands in a row of its own. */
+export function colourRows(values: string[]): string[][] {
+  const offered = values.filter((v) => v !== 'auto' && v !== 'rarity');
+  const known = new Set(CARD_COLOURS);
+  const rows = COLOUR_ROWS.map((row) => row.filter((token) => offered.includes(token))).filter(
+    (row) => row.length > 0,
+  );
+  const rest = offered.filter((token) => !known.has(token));
+  return rest.length ? [...rows, rest] : rows;
 }
 
 export function swatchColour(token: string): string {
-  return INK_COLOURS[token] ?? STOCK_COLOURS[token] ?? '#b9b0a0';
+  return COLOURS[token] ?? '#b9b0a0';
 }
 
 const BOARD = '#cabb9f';
@@ -144,7 +163,6 @@ export function shapeTile(token: string): CSSProperties {
   const clips: Record<string, string> = {
     circle: 'circle(42%)',
     diamond: 'polygon(50% 0, 100% 50%, 50% 100%, 0 50%)',
-    hex: 'polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%)',
   };
   return {
     background: '#7b9183',
@@ -157,7 +175,13 @@ export function shapeTile(token: string): CSSProperties {
 }
 
 export function borderTile(token: string): CSSProperties {
-  const widths: Record<string, number> = { auto: 1, fine: 1.2, standard: 2.1, bold: 3, heavy: 4.4 };
+  const widths: Record<string, number> = {
+    auto: 1,
+    hairline: 1.2,
+    thin: 2.1,
+    medium: 3,
+    thick: 4.4,
+  };
   return {
     background: '#f4ecda',
     border: `${widths[token] ?? 1}px ${token === 'auto' ? 'dashed' : 'solid'} #84603a`,

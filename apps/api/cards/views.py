@@ -53,7 +53,7 @@ class TemplateListView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request: Request) -> Response:
-        return Response(TemplateSerializer(templates.TEMPLATES, many=True).data)
+        return Response(TemplateSerializer(templates.CATALOGUE, many=True).data)
 
 
 # ---- public ----

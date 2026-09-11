@@ -13,6 +13,7 @@ export interface PublicProfile {
   /** Cover of the personal binder on this profile. Empty means the default. */
   binder_colour: string;
   avatar_url: string | null;
+  is_demo: boolean;
   created_at: string;
 }
 
@@ -60,6 +61,8 @@ export interface CardRenderAssets {
   status: 'pending' | 'ready';
   signature: string;
   version: number;
+  /** The spot treatment this card is masked for, if it has one. */
+  spot: { material: string; area: string } | null;
   thumbnail: CardRenderImage | null;
   front: CardRenderImage | null;
   mask_thumbnail: CardRenderImage | null;
@@ -80,7 +83,6 @@ export interface CreateUploadResponse {
   max_size: number;
 }
 
-/** Editor grouping, in the order a creator works through a card. */
 export const OPTION_GROUPS = ['board', 'print', 'type', 'press'] as const;
 export type OptionGroup = (typeof OPTION_GROUPS)[number];
 
@@ -90,7 +92,6 @@ export interface TemplateOption {
   default: string;
   type?: 'choice' | 'swatch' | 'font';
   group?: OptionGroup;
-  /** Minimum rarity for gated values. */
   unlocks?: Record<string, Rarity>;
 }
 
@@ -99,9 +100,24 @@ export interface CardTemplate {
   version: number;
   name: string;
   description: string;
-  /** Minimum rarity for the template. */
   unlocks?: Rarity;
   options: Record<string, TemplateOption>;
+  text: CardTextRules;
+}
+
+export type CopyMarkup = 'none' | 'inline' | 'block';
+
+export interface TextRegionRules {
+  max_length: number;
+  min_scale: number;
+  lines: number;
+  markup: CopyMarkup;
+}
+
+export interface CardTextRules {
+  printed_label: string | null;
+  title: TextRegionRules;
+  printed: TextRegionRules | null;
 }
 
 export type TemplateConfig = Record<string, string>;
@@ -141,6 +157,7 @@ export interface Creator {
   username: string;
   display_name: string;
   avatar_url: string | null;
+  is_demo: boolean;
 }
 
 export interface Card {
@@ -148,11 +165,15 @@ export interface Card {
   title: string;
   rarity: Rarity;
   description: string;
+  printed_text: string;
   image: ImageRef;
   template_key: string;
   template_version: number;
   template_config: TemplateConfig;
   position: number;
+  /** Frozen at publication, with position, for the printed card identifier. */
+  printed_set_code: string;
+  set_total: number;
   like_count: number;
   /** Presentation cache for a published definition. Drafts return null. */
   render?: CardRenderAssets | null;
@@ -164,7 +185,6 @@ export interface CardSetSummary {
   title: string;
   description: string;
   cover: ImageRef | null;
-  /** Creator-chosen identity. Empty strings mean the platform default. */
   mark: string;
   pack_colour: string;
   pack_finish: string;
@@ -181,6 +201,10 @@ export interface CardSetSummary {
   pack_subtitle: string;
   pack_text: PackTextLayer[];
   pack_size: number;
+  set_code: string;
+  suggested_set_code: string;
+  /** Published code, or the draft base before a suffix is assigned. */
+  printed_set_code: string;
   status: SetStatus;
   creator: Creator;
   card_count: number;
@@ -202,6 +226,7 @@ export interface CardWrite {
   title: string;
   rarity: Rarity;
   description: string;
+  printed_text: string;
   template_key: string;
   template_config: TemplateConfig;
 }

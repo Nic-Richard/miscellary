@@ -5,7 +5,12 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
 from cards.models import CardDefinition, CardSet
-from cards.rendering import CARD_RENDERER_VERSION, back_render_signature, card_render_signature
+from cards.rendering import (
+    CARD_RENDERER_VERSION,
+    back_render_signature,
+    card_render_signature,
+    card_spot,
+)
 from uploads import storage
 
 
@@ -55,8 +60,8 @@ class Command(BaseCommand):
             )
             if card is None or item.get("signature") != card_render_signature(card):
                 raise CommandError(f"Card render input changed: {item.get('id', 'unknown')}")
-            chase = card.template_config.get("treatment") in {"foil", "holo"}
-            if chase != bool(item.get("mask") and item.get("mask_thumbnail")):
+            spot = bool(card_spot(card.template_config, card.rarity))
+            if spot != bool(item.get("mask") and item.get("mask_thumbnail")):
                 raise CommandError(f"Card material mask is incomplete: {card.id}")
 
             prefix = f"renders/cards/{card.id}/{item['signature']}"
@@ -72,7 +77,7 @@ class Command(BaseCommand):
                     self._path(root, item.get("front")),
                 ),
             }
-            if chase:
+            if spot:
                 files.update(
                     {
                         "render_mask_thumbnail_key": (

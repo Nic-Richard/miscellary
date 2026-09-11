@@ -4,6 +4,9 @@
 
 - [ ] Android on a real device: camera permission prompt and denial, system crop returns a 4:5 image, upload completes on mobile data, SecureStore session survives a force-stop, Android back from every stack screen, deep links `miscellary://sets/<slug>` open the binder.
 - [ ] Web on a phone browser: register, upload, open a pack, trade.
+- [ ] Compare a production-like web build and installed Android build before treating Docker/Expo Go lag as renderer performance.
+- [ ] Production bootstrap accounts are visibly marked as demo accounts, including an accessible label.
+- [ ] Bootstrap card imagery has durable source/license records and no source or seed metadata is printed in normal card copy.
 - [ ] Production email delivery from SES (verification and reset links point at `WEB_URL`).
 - [ ] Refresh cookie works cross-origin from the Vercel domain (`COOKIE_SAMESITE` correct).
 - [ ] S3 CORS allows the production web origin only.

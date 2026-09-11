@@ -16,6 +16,7 @@ def card_payload(image, **overrides):
         "title": "Quartz",
         "rarity": "common",
         "description": "Found **behind** the shed.",
+        "printed_text": "Behind the shed",
         "template_key": "classic",
         "template_config": {"accent": "blue"},
     }
@@ -29,6 +30,7 @@ def test_templates_are_public(api_client):
     keys = [t["key"] for t in response.json()]
     assert "classic" in keys
     assert response.json()[0]["options"]
+    assert response.json()[0]["text"]["title"]["max_length"]
 
 
 def test_create_set_and_card(auth_client, user):
@@ -48,23 +50,26 @@ def test_create_set_and_card(auth_client, user):
     assert response.status_code == 201
     card = response.json()
     assert card["image"]["url"].endswith(image.key)
+    assert card["printed_text"] == "Behind the shed"
+    assert card["description"] == "Found **behind** the shed."
     assert card["template_config"] == {
-        "frame": "dark",
+        "stock": "bone",
         "texture": "linen",
         "corners": "round",
         "border": "auto",
-        "weight": "auto",
+        "border_width": "thin",
         "tint": "none",
-        "window": "line",
+        "window": "rule",
         "shape": "square",
-        "font": "display",
+        "title_typeface": "display",
+        "body_typeface": "body",
         "accent": "blue",
         "finish": "matte",
-        "relief": "none",
         "treatment": "none",
-        "coverage": "art",
+        "coverage": "spot",
+        "pattern": "linear",
     }
-    assert card["template_version"] == 2
+    assert card["template_version"] == 1
 
 
 def test_card_validation(auth_client, user):
@@ -90,41 +95,64 @@ def test_card_validation(auth_client, user):
     response = auth_client.post(url, card_payload(image, rarity="mythic"), format="json")
     assert "rarity" in response.json()["fields"]
 
+    text_rules = templates.TEMPLATES_BY_KEY["classic"]["text"]
+    over_title = "W" * (text_rules["title"]["max_length"] + 1)
+    response = auth_client.post(url, card_payload(image, title=over_title), format="json")
+    assert "title" in response.json()["fields"]
 
-@pytest.mark.parametrize("key", ["classic", "polaroid", "bold", "fieldnote", "dossier"])
+    over_printed = "x" * (text_rules["printed"]["max_length"] + 1)
+    response = auth_client.post(url, card_payload(image, printed_text=over_printed), format="json")
+    assert "printed_text" in response.json()["fields"]
+
+    response = auth_client.post(
+        url,
+        card_payload(image, template_key="polaroid", printed_text="Not used"),
+        format="json",
+    )
+    assert "printed_text" in response.json()["fields"]
+
+
+@pytest.mark.parametrize("key", ["classic", "polaroid", "bold", "fieldnote"])
 def test_card_editor_options_survive_save_and_publish(auth_client, api_client, user, key):
     card_set = make_set(user)
     config = {
-        "frame": "cocoa" if key == "dossier" else "lavender",
+        "stock": "lavender",
         "shape": "arch",
         "border": "copper",
-        "weight": "heavy",
+        "border_width": "thick",
     }
     response = auth_client.post(
         reverse("cards:my-cards", args=[card_set.id]),
-        card_payload(make_image(user), template_key=key, template_config=config),
+        card_payload(
+            make_image(user),
+            template_key=key,
+            template_config=config,
+            printed_text="" if key == "polaroid" else "Behind the shed",
+        ),
         format="json",
     )
     assert response.status_code == 201
     saved = response.json()
-    assert saved["template_version"] == 2
+    assert saved["template_version"] == 1
     assert saved["template_config"] == {**templates.default_config(key), **config}
     fill_publishable(card_set)
     assert publish_set(card_set) == []
     published = api_client.get(reverse("cards:public-set", args=[card_set.slug])).json()
     card = next(c for c in published["cards"] if c["id"] == saved["id"])
     assert card["template_config"] == saved["template_config"]
-    assert card["template_version"] == 2
+    assert card["template_version"] == 1
 
 
 def test_published_snapshot_ignores_current_editor_defaults(api_client, user, monkeypatch):
     card_set = make_set(user)
-    config = {"frame": "light", "border": "red", "weight": "heavy"}
+    config = {"stock": "bone", "border": "red", "border_width": "thick"}
     card = make_card(card_set, template_key="bold", template_version=2, template_config=config)
     fill_publishable(card_set)
     assert publish_set(card_set) == []
     monkeypatch.setitem(templates.TEMPLATES_BY_KEY["bold"]["options"]["border"], "values", ["gold"])
-    monkeypatch.setitem(templates.TEMPLATES_BY_KEY["bold"]["options"]["weight"], "default", "fine")
+    monkeypatch.setitem(
+        templates.TEMPLATES_BY_KEY["bold"]["options"]["border_width"], "default", "hairline"
+    )
     response = api_client.get(reverse("cards:public-set", args=[card_set.slug]))
     assert response.status_code == 200
     snapshot = next(c for c in response.json()["cards"] if c["id"] == str(card.id))
@@ -217,12 +245,32 @@ def test_public_listing_and_binder(api_client, user):
     assert titles == ["Published"]
     assert response.json()["results"][0]["card_count"] == 5
     assert response.json()["results"][0]["creator"]["username"] == user.username
+    assert response.json()["results"][0]["creator"]["is_demo"] is False
 
     binder = api_client.get(reverse("cards:public-set", args=[published.slug]))
     assert binder.status_code == 200
     assert len(binder.json()["cards"]) == 5
+    assert binder.json()["printed_set_code"] == "PUB-01"
+    first = binder.json()["cards"][0]
+    assert (first["printed_set_code"], first["position"], first["set_total"]) == ("PUB-01", 0, 5)
 
     assert api_client.get(reverse("cards:public-set", args=[draft.slug])).status_code == 404
+
+
+def test_set_code_is_editable_on_a_draft_and_validated(auth_client, user):
+    card_set = make_set(user, title="Pocket Geology")
+    url = reverse("cards:my-set", args=[card_set.id])
+
+    draft = auth_client.get(url).json()
+    assert draft["suggested_set_code"] == "POC"
+    assert draft["printed_set_code"] == "POC"
+
+    saved = auth_client.patch(url, {"set_code": "geo"}, format="json").json()
+    assert (saved["set_code"], saved["printed_set_code"]) == ("GEO", "GEO")
+    assert "set_code" in auth_client.patch(url, {"set_code": "GE"}, format="json").json()["fields"]
+    assert (
+        "set_code" in auth_client.patch(url, {"set_code": "GEOL"}, format="json").json()["fields"]
+    )
 
 
 def test_creator_can_see_own_draft_binder(auth_client, user):

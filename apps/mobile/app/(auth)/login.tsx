@@ -1,12 +1,15 @@
-import { Link, router } from 'expo-router';
+import { Link, router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Text, View } from 'react-native';
 import { useAuth } from '@/lib/auth';
+import { internalRoute, RETURN_PARAM } from '@/lib/returnTo';
 import { colors } from '@/lib/theme';
 import { Button, ErrorText, Input, Screen, Title } from '@/components/ui';
 
 export default function LoginScreen() {
   const { login } = useAuth();
+  const params = useLocalSearchParams();
+  const next = internalRoute(params[RETURN_PARAM]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -17,7 +20,8 @@ export default function LoginScreen() {
     setError(null);
     try {
       await login({ email, password });
-      router.back();
+      if (next) router.replace(next);
+      else router.back();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Login failed.');
     } finally {
@@ -43,7 +47,13 @@ export default function LoginScreen() {
         onPress={() => void submit()}
       />
       <View style={{ alignItems: 'center', marginTop: 8 }}>
-        <Link href="/(auth)/register">
+        <Link
+          href={
+            next
+              ? `/(auth)/register?${RETURN_PARAM}=${encodeURIComponent(next)}`
+              : '/(auth)/register'
+          }
+        >
           <Text style={{ color: colors.accent }}>No account? Sign up</Text>
         </Link>
       </View>

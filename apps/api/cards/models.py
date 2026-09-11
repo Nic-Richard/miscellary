@@ -25,6 +25,9 @@ from .identity import (
     PACK_SUBTITLE_MAX_LENGTH,
     SCALE_MAX,
     SCALE_MIN,
+    SET_CODE_LENGTH,
+    SET_SUFFIX_LENGTH,
+    printed_set_code,
 )
 from .packlayers import default_stack
 from .rarity import RARITY_CHOICES
@@ -52,10 +55,11 @@ class CardSet(models.Model):
         Image, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
     )
     mark = models.CharField(max_length=20, choices=MARK_CHOICES, blank=True)
+    set_code = models.CharField(max_length=SET_CODE_LENGTH, blank=True)
+    set_code_suffix = models.CharField(max_length=SET_SUFFIX_LENGTH, blank=True)
     pack_colour = models.CharField(max_length=20, choices=PACK_COLOUR_CHOICES, blank=True)
     binder_colour = models.CharField(max_length=20, choices=BINDER_COLOUR_CHOICES, blank=True)
     pack_finish = models.CharField(max_length=20, choices=PACK_FINISH_CHOICES, blank=True)
-    # Serializers enforce ownership for referenced pack images.
     pack_layers = models.JSONField(default=default_stack, blank=True)
     emblem_layout = models.CharField(max_length=20, choices=EMBLEM_LAYOUT_CHOICES, blank=True)
     pack_subtitle = models.CharField(max_length=PACK_SUBTITLE_MAX_LENGTH, blank=True)
@@ -82,6 +86,13 @@ class CardSet(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["set_code", "set_code_suffix"],
+                condition=~models.Q(set_code_suffix=""),
+                name="unique_printed_set_code",
+            )
+        ]
 
     def __str__(self) -> str:
         return self.title
@@ -121,6 +132,10 @@ class CardSet(models.Model):
         super().save(*args, **kwargs)
 
     @property
+    def printed_code(self) -> str:
+        return printed_set_code(self.set_code, self.set_code_suffix)
+
+    @property
     def is_draft(self) -> bool:
         return self.status == self.Status.DRAFT
 
@@ -147,10 +162,12 @@ class CardDefinition(models.Model):
         "title",
         "rarity",
         "description",
+        "printed_text",
         "template_key",
         "template_version",
         "template_config",
         "position",
+        "set_total",
     )
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -159,11 +176,12 @@ class CardDefinition(models.Model):
     title = models.CharField(max_length=60)
     rarity = models.CharField(max_length=10, choices=RARITY_CHOICES)
     description = models.TextField(max_length=600, blank=True)
-    # Frozen template snapshot for published cards.
+    printed_text = models.TextField(max_length=220, blank=True)
     template_key = models.CharField(max_length=30)
     template_version = models.PositiveSmallIntegerField()
     template_config = models.JSONField(default=dict, blank=True)
     position = models.PositiveIntegerField(default=0)
+    set_total = models.PositiveSmallIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     render_signature = models.CharField(max_length=64, blank=True)
     render_front_thumbnail_key = models.CharField(max_length=255, blank=True)

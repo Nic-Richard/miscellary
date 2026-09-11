@@ -3,6 +3,7 @@ import { Link } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
 import { colors, fonts } from '@/lib/theme';
 import Description from './Description';
+import DemoBadge from './DemoBadge';
 
 export default function BinderDetails({
   set,
@@ -59,6 +60,7 @@ export default function BinderDetails({
       ) : null}
       <View style={panel}>
         <Text style={heading}>Collector</Text>
+        {set.creator.is_demo ? <DemoBadge /> : null}
         <Text style={{ fontFamily: fonts.body, color: colors.muted, fontSize: 15 }}>
           {set.creator.display_name || set.creator.username} keeps this set. Open a pack to collect
           your own copies.

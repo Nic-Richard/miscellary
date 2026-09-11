@@ -4,7 +4,6 @@ export interface IdentityColour {
   brightness: number;
 }
 
-// Mirrors apps/api/cards/identity.py and drives both renderers.
 export const PACK_COLOURS: Record<string, IdentityColour> = {
   mint: { hue: 0, saturation: 1, brightness: 1 },
   moss: { hue: -42, saturation: 0.95, brightness: 0.97 },
@@ -51,4 +50,26 @@ export const BINDER_COLOURS: Record<string, IdentityColour> = {
 
 export function resolveBinderColour(stored?: string): IdentityColour {
   return BINDER_COLOURS[stored || 'teal'] ?? BINDER_COLOURS.teal!;
+}
+
+export const SET_CODE_LENGTH = 3;
+
+export function normaliseSetCode(value: string): string {
+  return value
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, '')
+    .slice(0, SET_CODE_LENGTH);
+}
+
+export function setCodeProblems(value: string): string[] {
+  if (!value) return [];
+  if (value.length !== SET_CODE_LENGTH) {
+    return [`A set code is exactly ${SET_CODE_LENGTH} characters.`];
+  }
+  return [];
+}
+
+export function cardCode(printedSetCode: string, position: number, total: number): string {
+  if (!printedSetCode || total < 1) return '';
+  return `${printedSetCode} ${position + 1}/${total}`;
 }

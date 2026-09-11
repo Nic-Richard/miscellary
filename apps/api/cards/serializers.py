@@ -6,6 +6,7 @@ from uploads.models import Image
 from uploads.serializers import ImageSerializer
 
 from . import packlayers, packtext, templates
+from .identity import set_code_problems, suggest_set_code
 from .markdown import ISSUE_MESSAGES, description_issues
 from .models import CardDefinition, CardSet
 from .rarity import RARITIES
@@ -15,6 +16,7 @@ from .rendering import (
     THUMBNAIL_SIZE,
     back_render_signature,
     card_render_signature,
+    card_spot,
     render_url,
 )
 
@@ -23,11 +25,13 @@ class CreatorSerializer(serializers.Serializer):
     username = serializers.CharField()
     display_name = serializers.CharField(source="profile.display_name")
     avatar_url = serializers.CharField(source="profile.avatar_url", allow_null=True)
+    is_demo = serializers.BooleanField()
 
 
 class CardSerializer(serializers.ModelSerializer):
     image = ImageSerializer(read_only=True)
     like_count = serializers.IntegerField(read_only=True, default=0)
+    printed_set_code = serializers.CharField(source="card_set.printed_code", read_only=True)
     render = serializers.SerializerMethodField()
 
     def get_render(self, obj: CardDefinition):
@@ -35,12 +39,13 @@ class CardSerializer(serializers.ModelSerializer):
             return None
         signature = card_render_signature(obj)
         back_signature = back_render_signature(obj.card_set)
-        chase = obj.template_config.get("treatment") in {"foil", "holo"}
+        # Spot work is masked to its region, so those cards need a mask pair.
+        spot = card_spot(obj.template_config, obj.rarity)
         front_ready = (
             obj.render_signature == signature
             and bool(obj.render_front_thumbnail_key)
             and bool(obj.render_front_key)
-            and (not chase or bool(obj.render_mask_thumbnail_key and obj.render_mask_key))
+            and (not spot or bool(obj.render_mask_thumbnail_key and obj.render_mask_key))
         )
         back_ready = obj.card_set.render_back_signature == back_signature and bool(
             obj.card_set.render_back_key
@@ -59,10 +64,11 @@ class CardSerializer(serializers.ModelSerializer):
             if front_ready
             else None,
             "front": asset(obj.render_front_key, FACE_SIZE) if front_ready else None,
+            "spot": spot,
             "mask_thumbnail": asset(obj.render_mask_thumbnail_key, THUMBNAIL_SIZE)
-            if front_ready and chase
+            if front_ready and spot
             else None,
-            "mask": asset(obj.render_mask_key, FACE_SIZE) if front_ready and chase else None,
+            "mask": asset(obj.render_mask_key, FACE_SIZE) if front_ready and spot else None,
             "back": asset(obj.card_set.render_back_key, FACE_SIZE) if back_ready else None,
         }
 
@@ -73,11 +79,14 @@ class CardSerializer(serializers.ModelSerializer):
             "title",
             "rarity",
             "description",
+            "printed_text",
             "image",
             "template_key",
             "template_version",
             "template_config",
             "position",
+            "printed_set_code",
+            "set_total",
             "like_count",
             "render",
         ]
@@ -92,7 +101,15 @@ class CardWriteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CardDefinition
-        fields = ["image_id", "title", "rarity", "description", "template_key", "template_config"]
+        fields = [
+            "image_id",
+            "title",
+            "rarity",
+            "description",
+            "printed_text",
+            "template_key",
+            "template_config",
+        ]
 
     def validate_image_id(self, value):
         image = Image.objects.filter(
@@ -108,17 +125,47 @@ class CardWriteSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError([ISSUE_MESSAGES[i] for i in issues])
         return value
 
+    def validate_printed_text(self, value: str) -> str:
+        # Printed regions take the same small subset the description does, so
+        # headings, links, HTML and code are refused here too.
+        issues = [issue for issue in description_issues(value) if issue != "too_long"]
+        if issues:
+            raise serializers.ValidationError([ISSUE_MESSAGES[i] for i in issues])
+        return value
+
     def validate(self, attrs):
         key = attrs.get("template_key") or (self.instance.template_key if self.instance else None)
         config = attrs.get("template_config")
         if config is None:
             config = self.instance.template_config if self.instance else {}
         rarity = attrs.get("rarity") or (self.instance.rarity if self.instance else None)
+        title = attrs.get("title") or (self.instance.title if self.instance else "")
+        printed_text = attrs.get("printed_text")
+        if printed_text is None:
+            printed_text = self.instance.printed_text if self.instance else ""
+        text_rules = templates.TEMPLATES_BY_KEY[key]["text"]
+        if len(title) > text_rules["title"]["max_length"]:
+            title_limit = text_rules["title"]["max_length"]
+            raise serializers.ValidationError(
+                {"title": [f"This template fits titles up to {title_limit} characters."]}
+            )
+        printed_rules = text_rules["printed"]
+        if printed_rules is None and printed_text:
+            raise serializers.ValidationError(
+                {"printed_text": ["This template has no separate printed text area."]}
+            )
+        if printed_rules is not None and len(printed_text) > printed_rules["max_length"]:
+            raise serializers.ValidationError(
+                {
+                    "printed_text": [
+                        f"This area fits up to {printed_rules['max_length']} characters."
+                    ]
+                }
+            )
         gated = templates.template_problems(key, rarity)
         if gated:
             raise serializers.ValidationError({"template_key": gated})
-        # Freeze a complete config even when the client sends partial values.
-        full = {**templates.default_config(key), **config}
+        full = {**templates.default_config(key), **templates.current_config(config)}
         problems = templates.config_problems(key, full, rarity)
         if problems:
             raise serializers.ValidationError({"template_config": problems})
@@ -135,7 +182,17 @@ class CardSetSerializer(serializers.ModelSerializer):
     like_count = serializers.IntegerField(read_only=True, default=0)
     opening_count = serializers.IntegerField(read_only=True, default=0)
     liked = serializers.BooleanField(read_only=True, default=False)
+    suggested_set_code = serializers.SerializerMethodField()
+    printed_set_code = serializers.SerializerMethodField()
     render_back = serializers.SerializerMethodField()
+
+    def get_suggested_set_code(self, obj: CardSet) -> str:
+        return suggest_set_code(obj.title)
+
+    def get_printed_set_code(self, obj: CardSet) -> str:
+        if obj.set_code_suffix:
+            return obj.printed_code
+        return obj.set_code or suggest_set_code(obj.title)
 
     def get_render_back(self, obj: CardSet):
         if obj.status == CardSet.Status.DRAFT:
@@ -202,6 +259,9 @@ class CardSetSerializer(serializers.ModelSerializer):
             "pack_subtitle",
             "pack_text",
             "pack_size",
+            "set_code",
+            "suggested_set_code",
+            "printed_set_code",
             "status",
             "creator",
             "card_count",
@@ -245,7 +305,15 @@ class CardSetWriteSerializer(serializers.ModelSerializer):
             "pack_subtitle",
             "pack_text",
             "pack_size",
+            "set_code",
         ]
+
+    def validate_set_code(self, value: str) -> str:
+        value = value.strip().upper()
+        found = set_code_problems(value)
+        if found:
+            raise serializers.ValidationError(found)
+        return value
 
     def validate_cover_id(self, value):
         if value is None:
@@ -294,5 +362,6 @@ class TemplateSerializer(serializers.Serializer):
     version = serializers.IntegerField()
     name = serializers.CharField()
     description = serializers.CharField()
+    text = serializers.DictField()
     unlocks = serializers.CharField(required=False)
     options = serializers.DictField()

@@ -118,7 +118,7 @@
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 .chipRarity {
-  background: linear-gradient(135deg, #3f8f88 0 25%, #b48a2c 25% 50%, #7b5fa3 50% 75%, #c9a24a 75%);
+  background: linear-gradient(135deg, #7a8085 0 25%, #3f6ea8 25% 50%, #7b5fa3 50% 75%, #c9a24a 75%);
 }
 
 .popover {
@@ -139,25 +139,15 @@
   right: 0;
 }
 
-.families {
-  display: flex;
-  gap: 12px;
-}
-.family {
+/* A matrix, not a run: a row per hue family, each light to dark. No headings,
+   because the rows are the structure. */
+.swatchRows {
   display: flex;
   flex-direction: column;
   gap: 5px;
 }
-.familyLabel {
-  color: var(--faint);
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
 .swatches {
   display: flex;
-  flex-direction: column;
   gap: 5px;
 }
 .swatch {

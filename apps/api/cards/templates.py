@@ -15,95 +15,112 @@ from typing import Any
 from .identity import FONTS
 from .rarity import RARITIES
 
-# Keep removed tokens renderable for published snapshots.
-INKS = [
-    "rarity",
-    "ink",
-    "charcoal",
+# One palette, in one order, wherever a colour is picked: the board, the border
+# ink, the accent and the set mark all offer the same list. A token names a hue;
+# what it resolves to depends on whether it is being printed with or printed on.
+COLOURS = [
+    "white",
+    "haze",
+    "ash",
+    "silver",
+    "graphite",
     "slate",
-    "teal",
-    "green",
-    "forest",
-    "blue",
-    "ocean",
-    "indigo",
-    "purple",
-    "violet",
-    "plum",
-    "rose",
-    "red",
-    "crimson",
-    "rust",
-    "ember",
+    "steel",
+    "charcoal",
+    "ink",
+    "bone",
+    "cream",
+    "butter",
+    "linen",
+    "sand",
+    "straw",
+    "ochre",
     "gold",
     "bronze",
+    "shell",
+    "peach",
+    "apricot",
+    "melon",
     "copper",
-    "ochre",
-    "silver",
+    "ember",
+    "umber",
+    "rust",
+    "cocoa",
+    "blush",
+    "salmon",
+    "coral",
+    "red",
+    "brick",
+    "crimson",
+    "garnet",
+    "wine",
+    "oxblood",
+    "petal",
+    "powder",
+    "peony",
+    "blossom",
+    "magenta",
+    "rose",
+    "fuchsia",
+    "mulberry",
+    "plum",
+    "lavender",
+    "thistle",
+    "lilac",
+    "wisteria",
+    "amethyst",
+    "purple",
+    "damson",
+    "violet",
+    "aubergine",
+    "sky",
+    "sea",
+    "cornflower",
+    "blue",
+    "azure",
+    "ocean",
+    "indigo",
+    "navy",
+    "teal",
+    "mint",
     "sage",
-    "cream",
-    "white",
+    "fern",
+    "jade",
+    "olive",
+    "green",
+    "forest",
+    "moss",
+    "pine",
 ]
 
-STOCKS_LIGHT = [
-    "cream",
-    "bone",
-    "white",
-    "sand",
-    "linen",
-    "ash",
-    "blush",
-    "sky",
-    "mint",
-    "butter",
-    "peach",
-    "lavender",
-    "sage",
-    "lilac",
-]
-STOCKS_DARK = [
-    "slate",
-    "charcoal",
-    "ink",
-    "dark",
-    "forest",
-    "oxblood",
-    "navy",
-    "plum",
-    "moss",
-    "teal",
-    "wine",
-    "bronze",
-    "cocoa",
-    "aubergine",
-]
-STOCKS_ALL = STOCKS_LIGHT + STOCKS_DARK
+INKS = ["rarity", *COLOURS]
+STOCKS_ALL = COLOURS
 
 TEXTURES = ["linen", "canvas", "grain", "felt", "smooth", "brushed"]
 TEXTURE_UNLOCKS = {"brushed": "rare"}
 
 CORNERS = ["round", "soft", "sharp"]
 
-BORDER_WEIGHTS = ["fine", "standard", "bold", "heavy"]
+BORDER_WIDTHS = ["hairline", "thin", "medium", "thick"]
 
 TINTS = ["none", "warm", "cool", "punch", "faded", "sepia", "mono"]
 
-WINDOWS = ["line", "none", "mat", "inset"]
+WINDOWS = ["rule", "none", "mat", "inset"]
 
-SHAPES = ["square", "arch", "circle", "diamond", "hex"]
-
-PAPERS = ["plain", "label", "inset", "tinted", "transparent", "aged", "ruled", "grid", "dot"]
+SHAPES = ["square", "arch", "circle", "diamond"]
 
 FINISHES = ["matte", "satin", "gloss", "pearl", "metallic"]
 FINISH_UNLOCKS = {"pearl": "rare", "metallic": "rare"}
 
-RELIEFS = ["none", "spot", "emboss", "deboss"]
-RELIEF_UNLOCKS = {"spot": "uncommon", "emboss": "rare", "deboss": "rare"}
-
 TREATMENTS = ["none", "foil", "holo"]
-TREATMENT_UNLOCKS = {"foil": "legendary", "holo": "legendary"}
+TREATMENT_UNLOCKS = {"foil": "epic", "holo": "legendary"}
 
-COVERAGES = ["art", "frame", "full"]
+COVERAGES = ["spot", "reverse", "full"]
+
+# How the foil surface is worked. Mirrors SPOT_PATTERNS in
+# packages/shared/src/cardMaterial.ts.
+FOIL_PATTERNS = ["linear", "mirror", "cosmos", "rainbow"]
+FOIL_PATTERN_UNLOCKS = {"rainbow": "legendary"}
 
 TYPEFACES = FONTS
 
@@ -132,153 +149,210 @@ def _opt(
 
 
 def _cut() -> dict[str, Any]:
-    return _opt("Corner cut", CORNERS, "round", "board")
+    return _opt("Corners", CORNERS, "round", "board")
 
 
 def _board(values: list[str], default: str, texture: str = "linen") -> dict[str, dict[str, Any]]:
-    """The board a card is printed on, its tooth, and how it is cut."""
+    """The board a card is printed on, its tooth, and how it is cut.
+
+    Every template offers every stock. A template is a layout, not a palette,
+    so what differs between them is only which board they start on.
+    """
     return {
-        "frame": _opt("Stock", values, default, "board", "swatch"),
-        "texture": _opt("Surface", TEXTURES, texture, "board", unlocks=TEXTURE_UNLOCKS),
+        "stock": _opt("Stock", values, default, "board", "swatch"),
+        "texture": _opt("Texture", TEXTURES, texture, "board", unlocks=TEXTURE_UNLOCKS),
         "corners": _cut(),
     }
 
 
 def _photo() -> dict[str, Any]:
-    return _opt("Photo", TINTS, "none", "print")
+    return _opt("Tint", TINTS, "none", "print")
 
 
 def _window() -> dict[str, Any]:
-    return _opt("Photo window", WINDOWS, "line", "print")
+    return _opt("Photo window", WINDOWS, "rule", "print")
 
 
 def _shape() -> dict[str, Any]:
     return _opt("Window shape", SHAPES, "square", "print")
 
 
-def _border(colour: str = "auto", weight: str = "auto") -> dict[str, dict[str, Any]]:
+def _border(colour: str = "auto", width: str = "thin") -> dict[str, dict[str, Any]]:
     return {
         "border": _opt("Border ink", ["auto", *INKS], colour, "board", "swatch"),
-        "weight": _opt("Border thickness", ["auto", *BORDER_WEIGHTS], weight, "board"),
+        "border_width": _opt("Border width", BORDER_WIDTHS, width, "board"),
     }
 
 
-def _font(default: str = "display") -> dict[str, Any]:
-    return _opt("Type", TYPEFACES, default, "type", "font")
+def _font(title: str = "display", body: str = "body") -> dict[str, dict[str, Any]]:
+    """The face the title is set in, and the face everything else is set in.
 
-
-def _accent(default: str) -> dict[str, Any]:
-    return _opt("Accent ink", INKS, default, "type", "swatch")
-
-
-def _press() -> dict[str, dict[str, Any]]:
-    """Production options shared by every template."""
+    The printed identifier is not either of them: it is the same small face on
+    every card, so a code reads the same wherever it is seen.
+    """
     return {
-        "finish": _opt("Coat", FINISHES, "matte", "press", unlocks=FINISH_UNLOCKS),
-        "relief": _opt("Relief", RELIEFS, "none", "press", unlocks=RELIEF_UNLOCKS),
-        "treatment": _opt("Chase", TREATMENTS, "none", "press", unlocks=TREATMENT_UNLOCKS),
-        "coverage": _opt("Chase covers", COVERAGES, "art", "press"),
+        "title_typeface": _opt("Title typeface", TYPEFACES, title, "type", "font"),
+        "body_typeface": _opt("Body typeface", TYPEFACES, body, "type", "font"),
+    }
+
+
+def _accent(default: str) -> dict[str, dict[str, Any]]:
+    """The card's second ink. The set mark is drawn in it too."""
+    return {"accent": _opt("Accent", INKS, default, "type", "swatch")}
+
+
+def _press(coverages: list[str] | None = None) -> dict[str, dict[str, Any]]:
+    """Production options shared by every template.
+
+    Relief is not here: the recessed image window and description panel are
+    part of every card, and the struck rim follows the tier. None of that is a
+    creator decision, so the renderer applies it rather than the config.
+
+    Coverage is the one press option a template narrows: reverse is everything
+    but the picture, which needs a card that has somewhere else to be.
+    """
+    return {
+        "finish": _opt("Finish", FINISHES, "matte", "press", unlocks=FINISH_UNLOCKS),
+        "treatment": _opt("Foil", TREATMENTS, "none", "press", unlocks=TREATMENT_UNLOCKS),
+        "coverage": _opt(
+            "Foil covers", coverages or COVERAGES, (coverages or COVERAGES)[0], "press"
+        ),
+        "pattern": _opt(
+            "Foil pattern", FOIL_PATTERNS, "linear", "press", unlocks=FOIL_PATTERN_UNLOCKS
+        ),
+    }
+
+
+def _text(
+    title_max: int,
+    title_min_scale: float,
+    printed_label: str | None = None,
+    printed_max: int = 0,
+    printed_min_scale: float = 1,
+    printed_lines: int = 1,
+    title_lines: int = 1,
+    printed_markup: str = "none",
+) -> dict[str, Any]:
+    """Printed text limits for one template, mirrored in packages/shared/src/cardText.ts.
+
+    A region shrinks to fit the width or the line budget it is given, down to
+    `min_scale`, and `max_length` is the point past which even the smallest
+    allowed size would not fit. `markup` says how much of the description
+    subset the region prints: nothing, bold and italics, or those plus bullets.
+    """
+    return {
+        "printed_label": printed_label,
+        "title": {
+            "max_length": title_max,
+            "min_scale": title_min_scale,
+            "lines": title_lines,
+            "markup": "none",
+        },
+        "printed": {
+            "max_length": printed_max,
+            "min_scale": printed_min_scale,
+            "lines": printed_lines,
+            "markup": printed_markup,
+        }
+        if printed_label
+        else None,
     }
 
 
 TEMPLATES: list[dict[str, Any]] = [
     {
-        "key": "classic",
-        "version": 2,
+        "key": "fieldnote",
+        "version": 1,
         "name": "Classic",
-        "description": "Framed photo, title bar, caption below.",
+        "description": "Photo above a note panel.",
+        "text": _text(30, 0.72, "Printed note", 210, 0.78, 5, printed_markup="block"),
         "options": {
-            **_board(STOCKS_ALL, "dark"),
+            **_board(STOCKS_ALL, "cream", "grain"),
             **_border(),
             "tint": _photo(),
             "window": _window(),
             "shape": _shape(),
-            "font": _font(),
-            "accent": _accent("gold"),
+            **_font("marcellus", "spectral"),
+            **_accent("green"),
+            **_press(),
+        },
+    },
+    {
+        "key": "classic",
+        "version": 1,
+        "name": "Minimal",
+        "description": "Framed photo, title bar, caption below.",
+        "text": _text(30, 0.72, "Caption", 92, 0.78, 2, printed_markup="inline"),
+        "options": {
+            **_board(STOCKS_ALL, "bone"),
+            **_border(),
+            "tint": _photo(),
+            "window": _window(),
+            "shape": _shape(),
+            **_font(),
+            **_accent("gold"),
             **_press(),
         },
     },
     {
         "key": "polaroid",
-        "version": 2,
+        "version": 1,
         "name": "Polaroid",
         "description": "Photo-first with a handwritten-style caption.",
+        "text": _text(50, 0.72, title_lines=2),
         "options": {
-            **_board(STOCKS_LIGHT, "white", "grain"),
+            **_board(STOCKS_ALL, "white", "grain"),
             **_border(),
             "tint": _photo(),
             "shape": _shape(),
-            "font": _font(),
-            **_press(),
-        },
-    },
-    {
-        "key": "minimal",
-        "version": 2,
-        "name": "Full Art",
-        "description": "Edge-to-edge photo with a subtle gradient and small type.",
-        "unlocks": "epic",
-        "options": {
-            "corners": _cut(),
-            **_border(),
-            "tint": _photo(),
-            "gradient": _opt("Scrim", ["bottom", "top", "none", "full"], "bottom", "print"),
-            "font": _font(),
-            "accent": _accent("blue"),
+            **_font("marcellus", "caveat"),
+            **_accent("ink"),
             **_press(),
         },
     },
     {
         "key": "bold",
-        "version": 2,
+        "version": 1,
         "name": "Bold",
         "description": "Big title, thick border, rarity colour everywhere.",
+        "text": _text(30, 0.7, "Subtitle", 100, 0.78, 2, printed_markup="inline"),
         "options": {
             **_board(STOCKS_ALL, "cream", "canvas"),
-            **_border("rarity", "bold"),
+            **_border("rarity", "medium"),
             "tint": _photo(),
             "shape": _shape(),
-            "font": _font(),
+            **_font("archivo", "cabin"),
+            **_accent("rarity"),
             **_press(),
         },
     },
     {
-        "key": "fieldnote",
-        "version": 2,
-        "name": "Field Note",
-        "description": "Photo above a ruled note panel holding the full description.",
+        "key": "minimal",
+        "version": 1,
+        "name": "Full Art",
+        "description": "Edge-to-edge photo with a subtle gradient and small type.",
+        "text": _text(27, 0.72, "Subtitle", 84, 0.78, 2, printed_markup="inline"),
+        "unlocks": "epic",
         "options": {
-            **_board(STOCKS_LIGHT, "cream", "grain"),
+            **_board(STOCKS_ALL, "ink", "smooth"),
             **_border(),
             "tint": _photo(),
-            "window": _window(),
-            "shape": _shape(),
-            "paper": _opt("Description panel", PAPERS, "plain", "print"),
-            "font": _font(),
-            "accent": _accent("green"),
-            **_press(),
-        },
-    },
-    {
-        "key": "dossier",
-        "version": 2,
-        "name": "Dossier",
-        "description": "Dark card, framed photo and a boxed description panel.",
-        "options": {
-            **_board(STOCKS_DARK, "ink", "felt"),
-            **_border(),
-            "tint": _photo(),
-            "window": _window(),
-            "shape": _shape(),
-            "paper": _opt("Description panel", PAPERS, "plain", "print"),
-            "font": _font(),
-            "accent": _accent("gold"),
-            **_press(),
+            "gradient": _opt("Scrim", ["bottom", "top", "none", "full"], "bottom", "print"),
+            **_font("cinzel", "jost"),
+            **_accent("blue"),
+            **_press(["full"]),
         },
     },
 ]
 
+CATALOGUE = [t for t in TEMPLATES if not t.get("retired")]
+
 TEMPLATES_BY_KEY = {t["key"]: t for t in TEMPLATES}
+
+
+# Published snapshots are never rewritten; compatibility translations belong here.
+def current_config(config: dict[str, Any]) -> dict[str, Any]:
+    return dict(config)
 
 
 def default_config(key: str) -> dict[str, str]:
@@ -321,6 +395,4 @@ def config_problems(key: str, config: dict[str, Any], rarity: str | None = None)
                 problems.append(
                     f"{option['label']} '{value}' needs a {needed} card. This card is {rarity}."
                 )
-    if rarity == "legendary" and config.get("treatment", "none") == "none":
-        problems.append("A legendary card needs a legendary treatment.")
     return problems

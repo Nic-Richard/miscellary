@@ -1,4 +1,12 @@
 .card {
+  --baked-ambient: radial-gradient(
+    140% 110% at calc(50% - (var(--lit-shift-x, 22)) * 0.9%)
+      calc(50% + (var(--lit-shift-y, -14)) * 0.9%),
+    rgba(255, 253, 246, 0.3),
+    rgba(255, 253, 246, 0.06) 38%,
+    rgba(22, 14, 4, 0.1) 74%,
+    rgba(22, 14, 4, 0.26) 100%
+  );
   position: relative;
   width: 100%;
   max-width: var(--card-max, var(--card-default-max, none));
@@ -26,37 +34,52 @@
 }
 
 .finish,
-.chaseField,
-.chaseBand {
+.spotField,
+.spotBand {
   position: absolute;
   inset: 0;
   border-radius: var(--baked-corner-x) / var(--baked-corner-y);
   pointer-events: none;
 }
 
+/* The baked face carries the print work. What is left to the scene is the coat
+   the card is lit through and the spot material laid over its own region. */
 .finish {
-  background: var(--baked-coat);
-  mix-blend-mode: soft-light;
+  background: var(--baked-coat), var(--baked-ambient);
+  background-size:
+    210% 210%,
+    100% 100%;
+  background-position:
+    clamp(0%, calc(50% + (var(--ry, 0) * 1.4 + var(--lit-shift-x, 22)) * 0.55%), 100%)
+      clamp(0%, calc(50% + (var(--rx, 0) * 1.4 + var(--lit-shift-y, -14)) * 0.55%), 100%),
+    center;
+  background-repeat: no-repeat;
+  mix-blend-mode: var(--baked-coat-blend, soft-light);
   opacity: calc(var(--baked-sheen) * var(--lit-strength, 1));
 }
 
-.chaseField,
-.chaseBand {
+.spotField,
+.spotBand {
   -webkit-mask: var(--baked-mask) center / 100% 100% no-repeat;
   mask: var(--baked-mask) center / 100% 100% no-repeat;
 }
 
-.chaseField {
+.spotField {
   background: var(--baked-field);
+  background-size: var(--baked-grain-size, auto);
   mix-blend-mode: var(--baked-field-blend);
   opacity: var(--baked-field-opacity);
 }
 
-.chaseBand {
+.spotBand {
   background: var(--baked-band);
   background-size: var(--baked-band-size) var(--baked-band-size);
-  background-position: calc(50% + (var(--ry, 0) + var(--lit-shift-x, 22)) * 1.5%)
-    calc(50% + (var(--rx, 0) + var(--lit-shift-y, -14)) * 1.5%);
+  background-position: clamp(
+      0%,
+      calc(50% + (var(--ry, 0) * 1.2 + var(--lit-shift-x, 22) - 14) * 1%),
+      100%
+    )
+    clamp(0%, calc(50% + (var(--rx, 0) * 1.2 + var(--lit-shift-y, -14) + 4) * 1%), 100%);
   mix-blend-mode: var(--baked-band-blend);
   opacity: calc(var(--baked-band-opacity) * var(--lit-strength, 1));
 }

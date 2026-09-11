@@ -1,17 +1,19 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useState } from 'react';
 import type { FormEvent } from 'react';
 import Field from '@/components/Field';
 import { ApiRequestError } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
+import { returnPath, swapAuthHref } from '@/lib/returnTo';
 import styles from '@/components/AuthForm.module.css';
 
-export default function RegisterPage() {
+function RegisterForm() {
   const { register } = useAuth();
   const router = useRouter();
+  const search = useSearchParams();
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -26,7 +28,7 @@ export default function RegisterPage() {
     setFields({});
     try {
       await register({ email, username, password });
-      router.push('/account');
+      router.replace(returnPath(search));
     } catch (err) {
       if (err instanceof ApiRequestError) {
         setError(err.message);
@@ -76,8 +78,16 @@ export default function RegisterPage() {
         {busy ? 'Creating…' : 'Sign up'}
       </button>
       <p className={styles.alt}>
-        Already have an account? <Link href="/login">Log in</Link>
+        Already have an account? <Link href={swapAuthHref('/login', search)}>Log in</Link>
       </p>
     </form>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={null}>
+      <RegisterForm />
+    </Suspense>
   );
 }

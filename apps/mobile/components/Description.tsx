@@ -32,6 +32,12 @@ function Inline({
               {n.value}
             </Text>
           );
+        if (n.type === 'underline')
+          return (
+            <Text key={i} style={{ textDecorationLine: 'underline' }}>
+              {n.value}
+            </Text>
+          );
         if (n.type === 'break') return '\n';
         return n.value;
       })}

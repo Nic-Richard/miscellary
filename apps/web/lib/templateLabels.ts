@@ -3,92 +3,23 @@ import type { OptionGroup } from '@miscellary/shared';
 export const GROUP_LABELS: Record<OptionGroup, string> = {
   board: 'Board',
   print: 'Print',
-  type: 'Type and ink',
+  type: 'Font and ink',
   press: 'Press',
 };
 
-export const GROUP_NOTES: Record<OptionGroup, string> = {
-  board: 'What the card is printed on and how it is cut.',
-  print: 'How the photograph is reproduced and mounted.',
-  type: 'The face it is set in and the ink it is printed with.',
-  press: 'Coatings and specialty work applied after printing.',
+export const GROUP_NOTES: Partial<Record<OptionGroup, string>> = {
+  press: 'Applied after printing.',
 };
 
+/* Labels for tokens whose stored value is not suitable display copy.
+   needed where a token cannot be a phrase. Everything else is title-cased. */
 const VALUE_LABELS: Record<string, Record<string, string>> = {
-  frame: {
-    dark: 'Pine',
-    ink: 'Ink',
-    light: 'Bone',
-  },
-  weight: {
-    auto: 'Template',
-    fine: 'Fine',
-    standard: 'Standard',
-    bold: 'Bold',
-    heavy: 'Heavy',
-  },
-  shape: {
-    square: 'Square',
-    arch: 'Arch',
-    circle: 'Round',
-    diamond: 'Diamond',
-    hex: 'Hexagon',
-  },
-  accent: {
-    rarity: 'Rarity colour',
-    ink: 'Ink black',
-  },
-  border: {
-    auto: 'Template edge',
-    rarity: 'Rarity colour',
-    ink: 'Ink black',
-  },
-  texture: {
-    smooth: 'Smooth',
-  },
-  corners: {
-    round: 'Rounded',
-    soft: 'Soft',
-    sharp: 'Square',
-  },
-  tint: {
-    none: 'As shot',
-    punch: 'Punchy',
-    mono: 'Black and white',
-  },
-  window: {
-    line: 'Rule',
-    none: 'Bare',
-    mat: 'Mount',
-    inset: 'Sunk',
-  },
-  paper: {
-    dot: 'Dotted',
-    label: 'Paper label',
-    inset: 'Inset panel',
-    tinted: 'Color wash',
-    transparent: 'On the stock',
-    plain: 'Clean panel',
-  },
-  gradient: {
-    none: 'No scrim',
-    full: 'Whole face',
-  },
-  relief: {
-    none: 'None',
-    spot: 'Spot varnish',
-    emboss: 'Embossed',
-    deboss: 'Debossed',
-  },
-  treatment: {
-    none: 'None',
-    holo: 'Holographic',
-  },
-  coverage: {
-    art: 'Over the photo',
-    frame: 'Struck border',
-    full: 'Whole card',
-  },
+  border: { auto: 'Auto', rarity: 'Rarity metal' },
+  accent: { rarity: 'Rarity' },
+  tint: { mono: 'Black and white' },
+  coverage: { spot: 'Spot', reverse: 'Reverse', full: 'Full card' },
+  pattern: { linear: 'Linear', mirror: 'Mirror', cosmos: 'Cosmos', rainbow: 'Rainbow' },
+  gradient: { none: 'No scrim', full: 'Whole face' },
 };
 
 function titleCase(token: string): string {

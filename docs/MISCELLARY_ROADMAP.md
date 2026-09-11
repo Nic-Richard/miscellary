@@ -14,12 +14,15 @@ Items are ordered roughly by current priority. The order can change as dependenc
 
 ## 1. Card editor overhaul: In progress
 
-The main overhaul was implemented. Phone review reopened the creative-control follow-up:
-Full Art borders, better description panels, automatic technical production choices, and restored
-demo variety are being addressed alongside Android batch 2. These changes still need visual review.
+The main editor overhaul is implemented and the current renderer, material system, and mobile-adapted
+shared editor are established. The remaining work is a final product pass rather than another broad
+visual rewrite. It should follow the launch-content build so creating many realistic sets can expose
+which controls, text limits, and template decisions still feel awkward in normal use.
 
-### Completed in the follow-up
+### Completed
 
+- Reorganized the editor around more intentional card-design controls.
+- Expanded stocks, photo treatments, borders, inks, surfaces, and material choices.
 - Added peach, lavender, sage, lilac, cocoa, and aubergine stock colors.
 - Corrected stock swatches to match the rendered board colors.
 - Exposed **Window shape** as visual choices on all five framed templates, including Polaroid.
@@ -28,22 +31,52 @@ demo variety are being addressed alongside Android batch 2. These changes still 
 - Grouped border controls with the board and displayed thickness choices as visual samples.
 - Fixed stock and rarity edges overriding selected border ink, including on existing seeded cards.
 - Kept Full Art edge-to-edge, light stocks on Polaroid/Field Note, and dark stocks on Dossier.
-- Kept template versions unchanged; published reads still returned stored configurations without applying editor defaults.
-- Verified the controls in the web editor, shared renderer, binder, and inspector in desktop Chromium.
-
-Remaining responsive, cross-browser, and real-device QA belongs to the later QA passes.
-
-### Completed in the overhaul
-
-- Reorganized the editor around more intentional card-design controls.
-- Expanded stocks, photo treatments, borders, relief, and material choices.
-- Kept ordinary creative freedom available across rarities.
-- Made rarity unlock specialty production treatments rather than base card quality.
-- Kept Epic Full Art and Legendary chase-treatment rules.
-- Removed the printed rarity badge from the card face.
-- Removed the old baked-in top-left card shine.
-- Removed automatic foil/holo travelling animation from normal card rendering.
+- Kept ordinary creative freedom available across rarities while reserving specialty production treatments for higher tiers.
+- Removed the printed rarity badge, baked-in top-left shine, and automatic travelling foil/holo animation.
 - Moved card lighting responsibility to the surrounding scene.
+- Kept published snapshots frozen and verified the shared editor/renderer across web and mobile surfaces.
+- Made printed card copy part of the physical layout. Each template owns its usable text regions and
+  enforces limits measured against the rendered card.
+- Moved printed-copy editing onto the live proof, so the creator types into the card itself.
+- Fitted printed text against the rendered card rather than by character count, so a title uses the
+  whole width of its region before the type shrinks, and stops at a hard limit rather than overflowing.
+- Gave captions, subtitles, and printed description boxes line and length budgets from their template
+  geometry. Printed regions wrap inside that budget instead of scrolling or clipping.
+- Opened the printed note panels to bold, italics and bullets through the shared description parser,
+  and rewrote the seeded printed copy to carry a few grounded facts instead of a single caption.
+- Separated the long-form description from printed copy and moved it below the card in the inspector.
+- Added the small printed set/card identifier, such as `CAM-01 12/36`, below the bottom-right of the
+  image box and at the bottom right of a Full Art face. It names the card definition, not an owned copy.
+- Made the three-character set code creator-editable on a draft with a title-derived suggestion, and
+  had publication allocate the next free two-character suffix under a unique constraint. The code, the
+  card order and the published card count all freeze at publication.
+- Removed the large printed card number the identifier replaces.
+- Narrowed the desktop editor's control column so the live proof has room to be edited directly.
+- Fixed the Full Art full-face scrim, which the photo had been covering, so titles and the printed
+  identifier stay legible on bright images.
+- Made relief automatic rather than a control. The image window and the description panel are
+  recessed on every card, spot work belongs to uncommon and above and the struck rim to rare and
+  above, and none of it reaches the option catalogue or a stored config.
+- Widened spot work from varnish alone to varnish, pearl, foil and holo, resolved from the card's own
+  coat and chase, and made a spot treatment read as a treatment applied to a region rather than a
+  weaker version of the full-surface one.
+- Rebuilt the lighting pass around a directional key light: an oversized coat gradient positioned by
+  the light, a grazing edge highlight, an offset tooth pass on the stock texture, and per-coat
+  blending, so matte, satin, gloss, pearl, foil and holo separate at a glance.
+- Removed the description-panel paper choices, so a note box is plain apart from its relief and the
+  card's own material.
+- Returned people to what they were doing after signing in, through one internal-only return and
+  continuation mechanism rather than a redirect per feature.
+
+### Remaining editor finalization
+
+- Audit the editor option catalogue as one system before making more piecemeal changes. Confirm which
+  controls belong on each template, which are automatic production decisions, how rarity unlocks are
+  communicated, and whether any current options are redundant or contradictory.
+- Use the realistic launch sets as the editor stress test. The goal is coherent sets with intentional
+  variation, not maximum option usage on every card.
+
+Responsive, cross-browser, accessibility, and real-device QA still belong to the later QA passes.
 
 ## 2. Binder lighting and card presentation: Complete
 
@@ -183,33 +216,67 @@ The detailed implementation plan is [MOBILE_BUILDOUT_PLAN.md](MOBILE_BUILDOUT_PL
 
 ## 10. Production-quality seed / launch content: Remaining
 
-The current demo seed is useful for development, but launch should not feel like an empty database or an obviously fake demo.
+The next major product batch is a production-quality bootstrap catalogue. The current demo seed is
+useful for development, but most of it should not be treated as launch content. Rework the strongest
+grounded subjects such as rocks/minerals, records, and film cameras, and replace weaker or overly
+whimsical sets with subjects that feel like things real collectors and hobbyists would actually make.
 
-### Goal
+### Demo-account transparency
 
-Start with roughly 50 believable public sets from creators who look like real users.
+- Production bootstrap creators may be synthetic, but they must be clearly identified as demo accounts.
+- Show a small robot icon or similarly compact **Demo** indicator beside their name wherever account
+  identity is presented. Provide an accessible label such as "Demo account" rather than relying on the
+  icon alone.
+- Demo accounts can have realistic names, bios, interests, collections, and activity, but the product
+  must never imply that they are real users.
 
-### Seed quality
+### Set quality
 
-- Use varied creator names, usernames, bios, avatars, and interests.
-- Avoid obviously generated naming patterns.
-- Give creators different levels of activity.
-- Vary set sizes, rarity distributions, styles, binder colors, pack identities, descriptions, reactions, comments, and collections.
-- Include a realistic mix of polished and ordinary sets rather than making every creator look like a professional designer.
-- Seed followers / following relationships where useful.
-- Seed enough owned cards and trades for the social/collection surfaces to feel alive.
-- Make discovery/search useful immediately.
+- Start with roughly 50 believable public sets across a range of ordinary interests and collection
+  types. Grounded examples include minerals, records, film cameras, birds, houseplants, sneakers,
+  watches, guitars, game consoles, transit, and other subjects a real hobbyist might catalogue.
+- Prefer larger, useful collections rather than tiny showcase demos. Roughly 20-40 cards is a good
+  normal range, with smaller or larger sets when the subject justifies it.
+- Give every set a natural title and description. Avoid whimsical naming for its own sake, polished
+  marketing language, lore-like copy, and meta wording such as "this collection explores" or comments
+  about how the set was generated.
+- Make the editor choices intentional. Each set should have a recognizable visual direction while its
+  cards still vary enough to feel collected rather than duplicated. Use the available templates,
+  stocks, inks, image treatments, windows, finishes, and rarity treatments where they fit the subject,
+  not merely to demonstrate features.
+- Vary pack sizes, set sizes, rarity distributions, binder colors, pack identities, and creator style.
+  Rarity should remain balanced enough for pack opening while not looking mechanically identical across
+  every set.
+- Use the launch-content build as a practical stress test for the editor. Record controls or template
+  decisions that fight normal set creation and feed those findings into the editor-finalization pass.
+
+### Photography and source records
+
+- Every launch card image needs a deliberate open-source, public-domain, or otherwise appropriately
+  licensed source with durable source and license metadata kept by the seed/bootstrap tooling.
+- Choose images subject by subject rather than relying on broad search results or accepting weak matches.
+- Preserve source URLs, author/photographer attribution, license information, and any required adaptation
+  notes in seed metadata or other internal records.
+- Do not print image-source URLs, license notes, crop notices, or other sourcing metadata on the card
+  face or in the card's user-facing description. Attribution obligations should be satisfied in an
+  appropriate product/legal/source surface without making the collectible itself read like seed data.
+- Preserve the original image bytes where practical and let the renderer perform the intended crop.
+
+### Social activity
+
+- Seed follows and likes in varied amounts so discovery, profiles, and counters do not look empty.
+- Comments are optional and should be used selectively rather than on every set. When present, keep them
+  short, ordinary, and specific enough to sound like something a person would actually say.
+- Vary activity levels. Some demo creators can be quiet while others collect, follow, like, trade, or
+  comment more often. Avoid perfectly distributed engagement that makes the data look generated.
+- Seed enough owned cards and trades for collection and social surfaces to feel alive without implying
+  real-user activity.
 
 ### Persistence
 
-Launch seed content should persist in production and should not behave like the destructive local `seed_demo` command.
-
-Create a clear distinction between:
-
-- local/demo seeding
-- one-time production/bootstrap content
-
-Production startup should not automatically recreate seed users.
+Launch seed content should persist in production and should not behave like the destructive local
+`seed_demo` command. Production bootstrap accounts and content need a clear lifecycle separate from
+local development data, and production startup must not automatically recreate them.
 
 ## 11. Production deployment and live URL: Remaining
 
@@ -280,7 +347,7 @@ These were not all in the initial messy list, but they should be tracked before 
 
 The initial 3D inspector is good enough for the first build, but still needs final product testing later:
 
-- real-device touch test
+- repeat real-device touch/performance checks after any renderer or loading changes
 - reduced-motion test
 - responsive/narrow viewport test
 - bright Full Art title/scrim contrast
@@ -406,10 +473,10 @@ Observability should stay lightweight and proportional to a portfolio project.
 
 # Suggested remaining order of work
 
-1. Android shared-renderer integration and baked-card delivery.
-2. Production-quality launch content.
-3. Responsive, accessibility, empty-state, and inspector QA.
-4. Smoothness and performance pass.
+1. Production-quality launch content and transparent demo-account identity.
+2. Card editor finalization using the launch sets as the stress test.
+3. Production-like web/Android performance measurement and targeted smoothness fixes.
+4. Responsive, accessibility, empty-state, and inspector QA.
 5. Image/upload, auth, moderation, browser, and real-device QA.
 6. SEO/sharing and lightweight production observability.
 7. Deployment and production configuration.

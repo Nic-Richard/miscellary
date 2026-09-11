@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { useAuth } from '@/lib/auth';
+import { loginHref, registerHref } from '@/lib/returnTo';
 import styles from './Nav.module.css';
 
 type IconName = 'home' | 'binders' | 'cards' | 'trades' | 'studio' | 'profile' | 'search' | 'plus';
@@ -56,18 +57,14 @@ export default function Nav() {
     if (q.trim().length >= 2) router.push(`/search?q=${encodeURIComponent(q.trim())}`);
   }
 
-  const profileHref = user ? `/users/${user.profile.username}` : '/login';
+  const gated = (href: string) => (user ? href : loginHref(href));
+  const profileHref = user ? `/users/${user.profile.username}` : loginHref('/account');
   const links: { href: string; label: string; icon: IconName; match: string }[] = [
     { href: '/', label: 'Home', icon: 'home', match: '/' },
     { href: '/sets', label: 'Binders', icon: 'binders', match: '/sets' },
-    {
-      href: user ? '/collection' : '/login',
-      label: 'My cards',
-      icon: 'cards',
-      match: '/collection',
-    },
-    { href: user ? '/trades' : '/login', label: 'Trades', icon: 'trades', match: '/trades' },
-    { href: user ? '/studio' : '/login', label: 'Studio', icon: 'studio', match: '/studio' },
+    { href: gated('/collection'), label: 'My cards', icon: 'cards', match: '/collection' },
+    { href: gated('/trades'), label: 'Trades', icon: 'trades', match: '/trades' },
+    { href: gated('/studio'), label: 'Studio', icon: 'studio', match: '/studio' },
     { href: profileHref, label: 'Profile', icon: 'profile', match: '/users' },
   ];
 
@@ -127,10 +124,10 @@ export default function Nav() {
             </>
           ) : (
             <>
-              <Link href="/login" className={styles.secondary}>
+              <Link href={loginHref(pathname)} className={styles.secondary}>
                 Log in
               </Link>
-              <Link href="/register" className={styles.primary}>
+              <Link href={registerHref(pathname)} className={styles.primary}>
                 Sign up
               </Link>
             </>

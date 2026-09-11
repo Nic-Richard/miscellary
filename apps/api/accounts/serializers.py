@@ -10,6 +10,7 @@ class ProfileSerializer(serializers.ModelSerializer[Profile]):
     username = serializers.CharField(source="user.username", read_only=True)
     created_at = serializers.DateTimeField(source="user.created_at", read_only=True)
     avatar_url = serializers.CharField(read_only=True)
+    is_demo = serializers.BooleanField(source="user.is_demo", read_only=True)
 
     class Meta:
         model = Profile
@@ -20,6 +21,7 @@ class ProfileSerializer(serializers.ModelSerializer[Profile]):
             "showcase_title",
             "binder_colour",
             "avatar_url",
+            "is_demo",
             "created_at",
         ]
 

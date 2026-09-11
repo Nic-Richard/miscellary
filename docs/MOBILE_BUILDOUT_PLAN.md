@@ -89,7 +89,9 @@ development data and running the commands again is the intended path. There is n
 3. Exercise pending and failed image loads, slow networks, cache reuse, reduced motion, and accessible
    labels.
 4. Repeat binder, inspector, pack, and editor phone checks after any performance changes.
-5. Add automated production generation only when deployment needs are concrete. Keep publication
+5. Use the production-quality launch sets as a shared editor stress test before more editor option
+   changes; record mobile-specific keyboard, focus, sizing, or touch problems without forking the editor.
+6. Add automated production generation only when deployment needs are concrete. Keep publication
    independent and do not introduce queue or worker infrastructure prematurely.
 
 ## Existing native foundation
@@ -110,7 +112,9 @@ development data and running the commands again is the intended path. There is n
 - Verify shared binder navigation and inspection in portrait and landscape.
 - Verify pack tear gestures, card sequencing, duplicate labels, close, and Android back behavior.
 - Verify the card and pack editor pinned previews, camera and gallery uploads, keyboard and focus,
-  saving, cancellation, and draft recovery.
+  saving, cancellation, and draft recovery. The upcoming shared editor finalization must keep web and
+  mobile on the same text constraints, direct-preview editing behavior, long-form description model,
+  and printed set/card identifier rather than introducing platform-specific editor rules.
 - Exercise a second discovery page with enough real data, offline retry, and session recovery.
 - Verify accessibility, release exports, auth refresh, and SecureStore behavior.
 - Keep ownership, trade holds, rarity restrictions, and published immutability authoritative in the

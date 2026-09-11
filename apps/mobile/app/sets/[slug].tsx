@@ -1,8 +1,9 @@
+import { cardCode } from '@miscellary/shared';
 import type { Card, CardSetDetail, OwnedCard, PackOpening, PackStatus } from '@miscellary/shared';
 import Feather from '@expo/vector-icons/Feather';
 import { Link, router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Alert,
   Modal,
@@ -17,10 +18,12 @@ import BinderPages from '@/components/BinderPages';
 import CardInspector from '@/components/CardInspector';
 import CardPreview from '@/components/CardPreview';
 import Description from '@/components/Description';
+import DemoBadge from '@/components/DemoBadge';
 import PackPreview from '@/components/PackPreview';
 import PackReveal from '@/components/PackReveal';
 import PointGain from '@/components/PointGain';
 import { useAuth } from '@/lib/auth';
+import { CONTINUE_PARAM, loginRoute } from '@/lib/returnTo';
 import {
   getPackStatus,
   getPublicSet,
@@ -34,6 +37,8 @@ import {
 import { colors, fonts } from '@/lib/theme';
 import { Button, Chip, ErrorText, Loading, Muted, Tag, Title } from '@/components/ui';
 
+const PACK_ACTION = 'pack';
+
 function stack(owned: OwnedCard[]): OwnedCard[] {
   const seen = new Map<string, OwnedCard>();
   for (const copy of owned) {
@@ -44,7 +49,8 @@ function stack(owned: OwnedCard[]): OwnedCard[] {
 }
 
 export default function BinderScreen() {
-  const { slug } = useLocalSearchParams<{ slug: string }>();
+  const params = useLocalSearchParams<{ slug: string; do?: string }>();
+  const { slug } = params;
   const insets = useSafeAreaInsets();
   const { width: viewportWidth } = useWindowDimensions();
   const { user, loading } = useAuth();
@@ -80,30 +86,42 @@ export default function BinderScreen() {
       });
   }, [owned, slug, tab, user]);
 
-  async function open(usePoints: boolean) {
-    setBusy(true);
-    setError(null);
-    try {
-      const result = await openPack(slug, usePoints);
-      setOpening(result);
-      setStatus(result.status);
-      setOwned(null);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not open the pack.');
-    } finally {
-      setBusy(false);
-    }
-  }
+  const open = useCallback(
+    async (usePoints: boolean) => {
+      setBusy(true);
+      setError(null);
+      try {
+        const result = await openPack(slug, usePoints);
+        setOpening(result);
+        setStatus(result.status);
+        setOwned(null);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Could not open the pack.');
+      } finally {
+        setBusy(false);
+      }
+    },
+    [slug],
+  );
 
-  function openFromPack() {
+  const openFromPack = useCallback(() => {
     if (!user) {
-      router.push('/login');
+      router.push(loginRoute(`/sets/${slug}`, PACK_ACTION));
       return;
     }
     if (!status || busy) return;
     if (status.free_available) void open(false);
     else if (status.points >= status.pack_cost) void open(true);
-  }
+  }, [user, status, busy, slug, open]);
+
+  const continued = useRef(false);
+  useEffect(() => {
+    if (continued.current || params[CONTINUE_PARAM] !== PACK_ACTION) return;
+    if (!user || !status || busy) return;
+    continued.current = true;
+    router.setParams({ [CONTINUE_PARAM]: undefined });
+    openFromPack();
+  }, [busy, openFromPack, params, status, user]);
 
   async function recycle(copy: OwnedCard) {
     setRecycling(copy.id);
@@ -216,6 +234,7 @@ export default function BinderScreen() {
         <Link href={{ pathname: '/users/[username]', params: { username: set.creator.username } }}>
           <Text style={{ color: colors.accent }}>@{set.creator.username}</Text>
         </Link>
+        {set.creator.is_demo ? <DemoBadge /> : null}
         <Muted>
           {' '}
           · {set.card_count} cards · {set.opening_count} packs opened
@@ -326,12 +345,13 @@ export default function BinderScreen() {
                   width={cardWidth}
                   title={card.title}
                   description={card.description}
+                  printedText={card.printed_text}
                   mark={set.mark}
                   rarity={card.rarity}
                   imageUrl={card.image.url}
                   templateKey={card.template_key}
                   templateConfig={card.template_config}
-                  number={card.position + 1}
+                  code={cardCode(card.printed_set_code, card.position, card.set_total)}
                   render={card.render}
                 />
               </Pressable>
@@ -368,12 +388,17 @@ export default function BinderScreen() {
                       width={cardWidth}
                       title={copy.card.title}
                       description={copy.card.description}
+                      printedText={copy.card.printed_text}
                       mark={set.mark}
                       rarity={copy.card.rarity}
                       imageUrl={copy.card.image.url}
                       templateKey={copy.card.template_key}
                       templateConfig={copy.card.template_config}
-                      number={copy.card.position + 1}
+                      code={cardCode(
+                        copy.card.printed_set_code,
+                        copy.card.position,
+                        copy.card.set_total,
+                      )}
                       render={copy.card.render}
                     />
                   </Pressable>

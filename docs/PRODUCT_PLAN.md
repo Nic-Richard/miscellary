@@ -43,9 +43,48 @@ Templates provide framing, typography, image masks, stock textures, color contro
 treatments. Template settings are saved as a snapshot so a published card keeps the appearance
 its creator approved.
 
+The choices a creator makes are the ones that change the card: borders, colours, textures, the image
+window, and the material finish. Relief is not among them. The image window and the description panel
+are recessed on every card, the picture carries spot work from uncommon up, and the rim is struck
+from rare up, all as optical shading the renderer applies rather than a control. Which spot material
+a card gets follows the coat it was already given: foil on a metallic card, pearl on a pearl one,
+clear varnish otherwise, and a chosen foil in place of all three. A description or note
+panel stays plain apart from that relief and the card's own material, with no ruled, gridded or
+patterned paper to choose between.
+
 Sets also define their cover, mark, pack colors and finish, pack artwork layers, badge, free text,
 and pack size. These settings give each set a recognizable identity across its binder, card backs,
 and packs.
+
+### Printed card copy and detail descriptions
+
+Text printed on the physical card is separate from the longer description shown with it. Printed text
+belongs to the template geometry and must fit the space available; the longer description is metadata
+shown below the card in inspection/detail views.
+
+- Printed titles, captions, subtitles, and description boxes have template-specific space constraints.
+- The editor shows printed copy directly against the live card while it is being written.
+- Text is fitted against the rendered card rather than by counting characters, so a region uses the
+  whole width or line budget it has before the type shrinks. Every region also has a hard limit
+  chosen so it is genuinely full at the smallest allowed size. The renderer must not solve overflow
+  by making text unreadably small, by scrolling a printed region, or by clipping it.
+- Larger printed regions carry a few useful lines rather than one caption, and take the same small
+  formatting subset the description does: bold, italics and bullet points where the template has room
+  for them. Printed copy stays grounded in the subject rather than narrating what a photo may not show.
+- The longer card description is separate metadata and is not forced onto the printed face.
+- Published cards carry a small printed identifier below the bottom-right of the image box, or at the
+  bottom right of the face on Full Art. It combines the set code with the card definition's position
+  and the set's card total, for example `CAM-01 12/36`. It is not a serial number for an owned copy
+  and must not imply finite supply.
+- A set code is a three-character base the creator chooses, and a two-character suffix the platform
+  assigns at publication as the next one free for that base. The pair is unique across every published
+  set, and it freezes with the card order and the published card count, so one card art always carries
+  the same identifier and no two arts in a set share one.
+
+The final editor option catalogue should be reviewed as one coherent system. Options should represent
+meaningful design or production decisions, rarity should continue to gate specialty production rather
+than ordinary creative quality, and automatic technical choices should not be exposed merely because
+the renderer can vary them.
 
 ## Rarity and packs
 
@@ -62,10 +101,11 @@ value. Rarity is also a design capability: it widens the catalogue a creator may
 rather than dictating how a card looks. Common and uncommon have the full ordinary catalogue of
 layout, stock, colour, typography, imagery, framing and surface, so a common can be as
 well-designed as anything else. Higher tiers additionally unlock specialty production treatments -
-pearlescent and metallic finishes and a brushed surface at rare, the Full Art template at epic -
-and none of them are compulsory. Relief and cut edge are not creator choices: they are small
-enough that the renderer applies whatever suits the tier. Legendary is the one tier with a required choice: it must carry a chase treatment,
-picked by the creator, on an axis separate from its ordinary finish.
+pearlescent and metallic finishes and a brushed surface at rare, the Full Art template and foil at
+epic, holo and the rainbow pattern at legendary -
+and none of them are compulsory. Relief and cut edge are not creator choices: they are small enough
+that the renderer applies whatever suits the tier. No tier is required to carry a foil, and foil sits
+on an axis separate from a card's ordinary finish.
 
 Gating applies only when a card is saved. A published card renders from its stored snapshot and is
 never re-validated, so changing the unlock rules later cannot alter a card a collector already
@@ -95,9 +135,10 @@ The daily free-pack rule is also enforced by a database constraint.
 
 ## Profiles and social features
 
-Profiles include identity, biography, created sets, collection counts, follows, and a six-card
-showcase with a custom title. Public discovery includes people, sets, and cards. Users can follow
-profiles, like sets and cards, comment on sets, and report public content or behavior.
+Profiles include identity, biography, created sets, collection counts, follows, and a public personal
+binder with up to 40 owned cards chosen by the collector. Public discovery includes people, sets, and
+cards. Users can follow profiles, like sets and cards, comment on sets, and report public content or
+behavior.
 
 Comments support replies. Authors and set creators can remove comments, while comments with
 replies remain as tombstones so conversations retain their structure.
@@ -111,6 +152,20 @@ replies remain as tombstones so conversations retain their structure.
   affected pending trades.
 - Public sets, cards, comments, and profiles support reporting.
 - Uploaders are responsible for having the right to use submitted text and images.
+
+## Bootstrap and demo accounts
+
+Production bootstrap content may use synthetic creators to make discovery and collecting useful on day
+one, but those accounts must be visibly identified as demo accounts, such as with a small robot icon
+and accessible "Demo account" label beside their name. Their profiles and activity can be realistic,
+but the product must not present them as real people.
+
+Bootstrap sets should use grounded subjects, deliberate licensed or public-domain imagery, natural
+titles and descriptions, coherent editor choices, varied pack sizes and rarities, and enough cards to
+feel like real collections. Source/license metadata belongs in internal seed records or an appropriate
+attribution surface, not in card copy. Seeded likes, follows, collections, trades, and occasional comments
+may make the product feel active, but activity should be varied and restrained rather than uniformly
+distributed.
 
 ## Architecture
 

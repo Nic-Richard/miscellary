@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
+import { cardCode } from '@miscellary/shared';
 import type {
   Card,
   CardSetDetail,
@@ -108,10 +109,11 @@ function Surface({ mode, data }: Props) {
                 title={card.title}
                 rarity={card.rarity}
                 description={card.description}
+                printedText={card.printed_text}
                 imageUrl={card.image.url}
                 templateKey={card.template_key}
                 templateConfig={card.template_config}
-                number={card.position + 1}
+                code={cardCode(card.printed_set_code, card.position, card.set_total)}
                 mark={set.mark}
                 render={card.render}
               />
@@ -207,7 +209,9 @@ window.miscellaryRender = (props) => {
                 }),
             ),
           );
-          resolve();
+          // Printed copy is fitted after layout, so give those effects a frame
+          // to settle before a capture is taken.
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
         });
       }),
     );

@@ -1,0 +1,48 @@
+/* A dark bench, like the inspector's. A specular has nothing to be brighter
+   than on a pale page, which is most of why a coat reads flat there. */
+.stage {
+  display: flex;
+  justify-content: center;
+  padding: 22px 18px;
+  border-radius: 14px;
+  background:
+    radial-gradient(120% 90% at 26% 8%, rgba(255, 247, 226, 0.16), transparent 60%),
+    rgba(16, 12, 7, 0.92);
+  perspective: 1600px;
+  perspective-origin: 50% 44%;
+  /* Vertical panning still scrolls the page; turning is the horizontal drag. */
+  touch-action: pan-y;
+  cursor: grab;
+  outline: none;
+  user-select: none;
+}
+
+.stage:active {
+  cursor: grabbing;
+}
+
+/* Selecting the words is how they get formatted, so the fields opt back in. */
+.stage input,
+.stage textarea {
+  cursor: text;
+  user-select: text;
+}
+
+.stage:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.slab {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  transform: rotateX(calc(var(--rx, 0) * 1deg)) rotateY(calc(var(--ry, 0) * 1deg));
+  transform-style: preserve-3d;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slab {
+    transform: none;
+  }
+}

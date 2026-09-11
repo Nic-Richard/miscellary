@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
+import { cardCode } from '@miscellary/shared';
 import type { Card, CardSetDetail, CardTemplate } from '@miscellary/shared';
 import CardGrid, { CardCell } from '@/components/CardGrid';
 import PackDesigner from '@/components/studio/PackDesigner';
@@ -32,6 +33,7 @@ export default function SetEditorPage() {
   const [templates, setTemplates] = useState<CardTemplate[]>([]);
   const [editing, setEditing] = useState<Card | 'new' | null>(null);
   const [problems, setProblems] = useState<string[] | null>(null);
+  const [packOpen, setPackOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -99,6 +101,7 @@ export default function SetEditorPage() {
   if (!set) return <p className={styles.muted}>Loading…</p>;
 
   const isDraft = set.status === 'draft';
+  const setCode = set.printed_set_code;
 
   return (
     <section>
@@ -191,16 +194,24 @@ export default function SetEditorPage() {
 
       {isDraft ? (
         <div className={`${ui.panel} ${styles.identity}`}>
-          <h2 className={ui.panelTitle}>Pack and identity</h2>
-          <p className={styles.identityNote}>
-            Choose the foil, printed details, set mark, and empty-sleeve treatment before
-            publishing.
-          </p>
-          <PackDesigner
-            set={set}
-            onDraft={(patch) => setSet({ ...set, ...patch })}
-            onSave={saveIdentity}
-          />
+          <div className={styles.identityHead}>
+            <h2 className={ui.panelTitle}>Pack and identity</h2>
+            <button
+              className={ui.btnQuiet}
+              type="button"
+              aria-expanded={packOpen}
+              onClick={() => setPackOpen(!packOpen)}
+            >
+              {packOpen ? 'Close pack editor' : 'Open pack editor'}
+            </button>
+          </div>
+          {packOpen ? (
+            <PackDesigner
+              set={set}
+              onDraft={(patch) => setSet({ ...set, ...patch })}
+              onSave={saveIdentity}
+            />
+          ) : null}
         </div>
       ) : null}
 
@@ -215,11 +226,14 @@ export default function SetEditorPage() {
 
       {editing ? (
         <CardForm
-          // Remount when the target changes, so opening a card for editing
-          // while the new-card form is already open resets the fields.
           key={editing === 'new' ? 'new' : editing.id}
           setId={set.id}
           mark={set.mark}
+          code={cardCode(
+            setCode,
+            editing === 'new' ? set.cards.length : editing.position,
+            editing === 'new' ? set.cards.length + 1 : set.cards.length,
+          )}
           templates={templates}
           card={editing === 'new' ? null : editing}
           onDone={async () => {
@@ -231,7 +245,7 @@ export default function SetEditorPage() {
       ) : null}
 
       <CardGrid>
-        {set.cards.map((c, i) => (
+        {set.cards.map((c) => (
           <CardCell
             key={c.id}
             footer={
@@ -255,8 +269,9 @@ export default function SetEditorPage() {
               size="small"
               title={c.title}
               rarity={c.rarity}
-              number={i + 1}
+              code={cardCode(setCode, c.position, c.set_total || set.cards.length)}
               description={c.description}
+              printedText={c.printed_text}
               imageUrl={c.image.url}
               templateKey={c.template_key}
               templateConfig={c.template_config}

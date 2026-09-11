@@ -29,6 +29,7 @@ class Image(models.Model):
     width = models.PositiveIntegerField(default=0)
     height = models.PositiveIntegerField(default=0)
     ready = models.BooleanField(default=False)
+    source_metadata = models.JSONField(default=dict, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

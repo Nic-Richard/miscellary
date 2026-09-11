@@ -10,71 +10,74 @@
   --corner: 3cqw;
   --art-bg: rgba(0, 0, 0, 0.06);
   --core: #efe7d6;
-  --grain: 0.4;
-  --sheen: 0.62;
+  --window-relief:
+    inset 0 0 0 0.9px rgba(30, 20, 8, 0.3), inset 0 0 0.5cqw rgba(20, 14, 6, 0.2),
+    inset 0 1.4cqw 2.4cqw rgba(20, 14, 6, 0.2), inset 0 -0.5cqw 1cqw rgba(255, 255, 255, 0.12);
+  --title-bg: rgba(255, 253, 247, 0.07);
+  --title-relief:
+    inset 0.3cqw 0.3cqw 0.45cqw rgba(255, 255, 255, 0.32),
+    inset -0.3cqw -0.3cqw 0.5cqw rgba(20, 14, 6, 0.15), 0 0.2cqw 0.45cqw rgba(20, 14, 6, 0.12);
+  --panel-bg: rgba(255, 253, 247, 0.24);
+  --panel-relief:
+    inset 0 0 0 0.9px rgba(30, 20, 8, 0.24), inset 0 1.1cqw 2cqw rgba(20, 14, 6, 0.14),
+    inset 0 -0.4cqw 0.9cqw rgba(255, 255, 255, 0.5);
+  --grain: 0.56;
+  --sheen: 0.5;
   --finish: var(--coat-matte);
   --finish-blend: soft-light;
+  --spec-x: clamp(0%, calc(50% + (var(--ry, 0) * 1.4 + var(--lit-shift-x, 22)) * 0.55%), 100%);
+  --spec-y: clamp(0%, calc(50% + (var(--rx, 0) * 1.4 + var(--lit-shift-y, -14)) * 0.55%), 100%);
+  --coat-ambient: radial-gradient(
+    140% 110% at calc(50% - (var(--lit-shift-x, 22)) * 0.9%)
+      calc(50% + (var(--lit-shift-y, -14)) * 0.9%),
+    rgba(255, 253, 246, 0.3),
+    rgba(255, 253, 246, 0.06) 38%,
+    rgba(22, 14, 4, 0.1) 74%,
+    rgba(22, 14, 4, 0.26) 100%
+  );
   --coat-matte: linear-gradient(
     var(--lit-angle, 104deg),
-    rgba(255, 255, 255, 0) 26%,
-    rgba(255, 255, 255, 0.05) 50%,
-    rgba(255, 255, 255, 0) 74%
+    rgba(255, 255, 255, 0) 30%,
+    rgba(255, 252, 244, 0.07) 50%,
+    rgba(255, 255, 255, 0) 70%
   );
   --coat-gloss: linear-gradient(
     var(--lit-angle, 104deg),
-    rgba(255, 255, 255, 0) 14%,
-    rgba(255, 255, 255, 0.06) 34%,
+    rgba(255, 255, 255, 0) 38%,
     rgba(255, 255, 255, 0.2) 46%,
-    rgba(255, 255, 255, 0.05) 58%,
-    rgba(255, 255, 255, 0) 82%
+    rgba(255, 255, 255, 0.86) 50%,
+    rgba(255, 255, 255, 0.2) 54%,
+    rgba(255, 255, 255, 0) 62%,
+    rgba(255, 255, 255, 0.09) 72%,
+    rgba(255, 255, 255, 0) 80%
   );
   --coat-satin: linear-gradient(
     var(--lit-angle, 104deg),
-    rgba(255, 255, 255, 0) 18%,
-    rgba(255, 255, 255, 0.12) 46%,
-    rgba(255, 255, 255, 0) 78%
+    rgba(255, 255, 255, 0) 20%,
+    rgba(255, 253, 246, 0.14) 38%,
+    rgba(255, 255, 255, 0.26) 50%,
+    rgba(255, 253, 246, 0.14) 62%,
+    rgba(255, 255, 255, 0) 80%
   );
   --coat-pearl: linear-gradient(
     var(--lit-angle, 104deg),
-    rgba(198, 178, 255, 0.2) 6%,
-    rgba(255, 255, 255, 0.16) 28%,
-    rgba(170, 214, 255, 0.16) 48%,
-    rgba(255, 255, 255, 0.12) 68%,
-    rgba(212, 176, 255, 0.2) 92%
+    rgba(255, 255, 255, 0) 14%,
+    rgba(196, 172, 255, 0.34) 30%,
+    rgba(255, 255, 255, 0.6) 43%,
+    rgba(158, 220, 255, 0.38) 53%,
+    rgba(255, 232, 190, 0.32) 66%,
+    rgba(214, 176, 255, 0.24) 80%,
+    rgba(255, 255, 255, 0) 92%
   );
   --coat-metal: linear-gradient(
     var(--lit-angle, 104deg),
-    rgba(255, 190, 142, 0.1) 4%,
-    rgba(255, 240, 222, 0.3) 20%,
-    rgba(196, 118, 70, 0.08) 34%,
-    rgba(255, 246, 232, 0.34) 52%,
-    rgba(196, 118, 70, 0.08) 66%,
-    rgba(255, 236, 214, 0.24) 82%,
-    rgba(255, 190, 142, 0.1) 96%
-  );
-  --coat-holo: linear-gradient(
-    var(--lit-angle, 104deg),
-    rgba(255, 120, 165, 0.16) 6%,
-    rgba(255, 214, 110, 0.15) 24%,
-    rgba(120, 236, 176, 0.13) 42%,
-    rgba(110, 196, 255, 0.15) 60%,
-    rgba(186, 140, 255, 0.16) 78%,
-    rgba(255, 140, 185, 0.14) 94%
-  );
-  --coat-foil: linear-gradient(
-    var(--lit-angle, 104deg),
-    rgba(255, 224, 160, 0.14) 8%,
-    rgba(255, 248, 214, 0.22) 26%,
-    rgba(186, 140, 58, 0.1) 44%,
-    rgba(255, 244, 202, 0.2) 64%,
-    rgba(255, 224, 160, 0.14) 88%
-  );
-  --coat-sweep: linear-gradient(
-    135deg,
-    transparent 38%,
-    rgba(255, 250, 226, 0.55) 47%,
-    rgba(201, 162, 74, 0.34) 51%,
-    transparent 60%
+    rgba(26, 16, 4, 0.2) 16%,
+    rgba(255, 238, 206, 0.52) 32%,
+    rgba(52, 34, 8, 0.3) 43%,
+    rgba(255, 250, 232, 0.82) 51%,
+    rgba(52, 34, 8, 0.28) 60%,
+    rgba(255, 232, 194, 0.44) 71%,
+    rgba(26, 16, 4, 0.18) 88%
   );
   position: relative;
   width: 100%;
@@ -90,7 +93,7 @@
   z-index: 5;
   border-radius: var(--corner);
   background: url('/materials/tex-grain.png') center / 58px;
-  opacity: var(--grain);
+  opacity: calc(var(--grain) * 0.6);
   mix-blend-mode: overlay;
   pointer-events: none;
 }
@@ -125,6 +128,8 @@
     inset 0 0 0 0.2cqw color-mix(in srgb, var(--core) 55%, transparent),
     var(--relief, 0 0 rgba(0, 0, 0, 0)),
     inset 0 0 2.2cqw rgba(46, 33, 14, 0.08),
+    inset calc(var(--lit-shift-x, 22) * 0.03cqw) calc(var(--lit-shift-y, -14) * 0.03cqw) 2.4cqw
+      rgba(255, 252, 240, calc(0.2 * var(--lit-strength, 1))),
     inset 0 0.4cqw 0 rgba(255, 252, 244, 0.3),
     0 0 0 0.14cqw color-mix(in srgb, var(--core) 80%, transparent),
     0 0.3cqw 0.5cqw rgba(46, 33, 14, 0.26),
@@ -143,12 +148,31 @@
   pointer-events: none;
 }
 
+.tooth {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: var(--tex, var(--paper)) center / var(--tex-size, 256px);
+  background-position: calc(50% + var(--lit-shift-x, 22) * 0.05cqw)
+    calc(50% + var(--lit-shift-y, -14) * 0.05cqw);
+  opacity: calc(var(--grain) * 0.7 * var(--lit-strength, 1));
+  mix-blend-mode: overlay;
+}
+
 .stock::after {
   content: '';
   position: absolute;
   inset: 0;
   z-index: 3;
-  background: var(--finish);
+  background: var(--finish), var(--coat-ambient);
+  background-size:
+    var(--spec-size, 210%) var(--spec-size, 210%),
+    100% 100%;
+  background-position:
+    var(--spec-x) var(--spec-y),
+    center;
+  background-repeat: no-repeat;
   mix-blend-mode: var(--finish-blend);
   opacity: calc(var(--sheen) * var(--lit-strength, 1));
   pointer-events: none;
@@ -157,24 +181,28 @@
 .head {
   position: relative;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 3cqw;
   min-height: 12cqw;
   padding-bottom: 2.5cqw;
 }
-.num {
-  font: 400 10.5cqw / 1 var(--face, var(--display));
-  letter-spacing: 0.04em;
+.name,
+.bigTitle,
+.polaroid .caption {
+  width: 100%;
+  max-width: 100%;
+  padding: 1.1cqw 1.8cqw;
+  border-radius: 1cqw;
+  background: var(--title-bg);
+  box-shadow: var(--title-relief);
 }
 .name {
   font-family: var(--face, inherit);
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 5.6cqw;
-  font-weight: 600;
+  font-size: calc(5.6cqw * var(--text-scale, 1));
+  font-weight: 400;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -182,7 +210,7 @@
   width: 9cqw;
   height: 9cqw;
   fill: none;
-  stroke: var(--accent);
+  stroke: var(--ac);
   stroke-width: 1.6;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -193,25 +221,9 @@
   flex: 1;
   min-height: 0;
   background: #d9d0be;
-  border: var(--window-w, 0.6cqw) solid var(--window-c, #bfb29a);
+  border: var(--window-w, 0.6cqw) solid var(--window-c, var(--ac));
   border-radius: 1.5cqw;
   overflow: hidden;
-}
-.varnish {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  border-radius: inherit;
-  background: linear-gradient(
-    var(--lit-angle, 104deg),
-    rgba(255, 255, 255, 0) 22%,
-    rgba(255, 255, 255, 0.26) 44%,
-    rgba(255, 255, 255, 0.06) 58%,
-    rgba(255, 255, 255, 0) 82%
-  );
-  mix-blend-mode: screen;
-  opacity: calc(0.8 * var(--lit-strength, 1));
 }
 .art img {
   display: block;
@@ -242,11 +254,7 @@
   z-index: 2;
   pointer-events: none;
   border-radius: inherit;
-  box-shadow:
-    inset 0 0 0 0.9px rgba(30, 20, 8, 0.3),
-    inset 0 0 0.5cqw rgba(20, 14, 6, 0.2),
-    inset 0 1.4cqw 2.4cqw rgba(20, 14, 6, 0.2),
-    inset 0 -0.5cqw 1cqw rgba(255, 255, 255, 0.12);
+  box-shadow: var(--window-relief);
 }
 .placeholder {
   display: grid;
@@ -263,6 +271,27 @@
   );
 }
 
+.code {
+  align-self: flex-end;
+  margin-top: 1.1cqw;
+  padding-right: 0.2cqw;
+  font:
+    400 3.6cqw / 1 var(--font-display),
+    Impact,
+    sans-serif;
+  letter-spacing: 0.16em;
+  color: color-mix(in srgb, var(--ac) 72%, var(--ink-muted));
+}
+.minimal .code {
+  position: absolute;
+  right: 5cqw;
+  bottom: 2.6cqw;
+  z-index: 2;
+  margin: 0;
+  color: var(--ink);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.65);
+}
+
 .foot {
   position: relative;
   display: flex;
@@ -273,59 +302,134 @@
   text-align: center;
 }
 .caption {
+  font-family: var(--body-face, inherit);
   max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 5.6cqw;
+  font-size: calc(5.6cqw * var(--text-scale, 1));
+  line-height: 1.16;
   color: var(--ink);
 }
 .bigTitle {
   display: block;
   max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
-  font: 400 9.5cqw / 1 var(--face, var(--display));
+  font: 400 calc(9.5cqw * var(--text-scale, 1)) / 1 var(--face, var(--display));
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--rc);
 }
-.desc {
+.copyInput {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0.4cqw 0.8cqw;
+  border: 0.35cqw dashed color-mix(in srgb, currentColor 42%, transparent);
+  border-radius: 0.8cqw;
+  outline: none;
+  background: none;
+  color: inherit;
+  letter-spacing: inherit;
+  text-align: inherit;
+  text-transform: inherit;
+}
+.copyWrap {
   position: relative;
-  max-height: 18cqw;
-  margin-top: 1cqw;
+  display: block;
+  width: 100%;
+}
+.markBar {
+  position: absolute;
+  top: 0.5cqw;
+  right: 0.5cqw;
+  z-index: 20;
+  display: none;
+  gap: 0.5cqw;
+  padding: 0.5cqw;
+  border-radius: 1cqw;
+  background: rgba(26, 22, 18, 0.92);
+  box-shadow: 0 0.6cqw 1.6cqw rgba(0, 0, 0, 0.35);
+}
+.markBar[data-open] {
+  display: flex;
+}
+.markBtn {
+  min-width: 5cqw;
+  padding: 0.4cqw 1cqw;
+  border: 0;
+  border-radius: 0.7cqw;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fdf8ec;
+  font-family: var(--body);
+  font-size: 3.4cqw;
+  line-height: 1.3;
+  cursor: pointer;
+}
+.markBtn:hover {
+  background: rgba(255, 255, 255, 0.26);
+}
+.markBtn:nth-child(1) {
+  font-weight: 700;
+}
+.markBtn:nth-child(2) {
+  font-style: italic;
+}
+.markBtn:nth-child(3) {
+  text-decoration: underline;
+}
+.copyPrinted {
+  cursor: text;
+  border-radius: 0.8cqw;
+  outline: 0.35cqw dashed transparent;
+  outline-offset: 0.3cqw;
+}
+.copyPrinted:hover,
+.copyPrinted:focus-visible {
+  outline-color: color-mix(in srgb, currentColor 40%, transparent);
+}
+
+.markBtn:nth-child(4) {
+  font-size: 4.2cqw;
+  line-height: 1;
+}
+
+.card .copyWrap {
+  z-index: 20;
+}
+
+.name.copyInput,
+.bigTitle.copyInput,
+.polaroid .caption.copyInput {
+  background: var(--title-bg);
+}
+.copyInput::placeholder {
+  color: currentColor;
+  opacity: 0.52;
+}
+.copyInput:focus {
+  border-style: solid;
+  box-shadow: 0 0 0 0.55cqw color-mix(in srgb, var(--ac) 35%, transparent);
+}
+textarea.copyInput {
+  display: block;
+  resize: none;
   overflow: hidden;
-  font-size: 5cqw;
-  line-height: 1.4;
-  color: var(--ink-muted);
-}
-.desc p,
-.desc ul {
-  margin: 0 0 1cqw;
-}
-.desc ul {
-  padding-left: 5cqw;
 }
 .large .art {
   flex: 1 1 52%;
 }
 .minimal,
-.dossier,
-.card[data-frame='slate'],
-.card[data-frame='charcoal'],
-.card[data-frame='ink'],
-.card[data-frame='dark'],
-.card[data-frame='forest'],
-.card[data-frame='oxblood'],
-.card[data-frame='navy'],
-.card[data-frame='plum'],
-.card[data-frame='moss'],
-.card[data-frame='teal'],
-.card[data-frame='wine'],
-.card[data-frame='bronze'],
-.card[data-frame='cocoa'],
-.card[data-frame='aubergine'] {
+.card[data-stock='slate'],
+.card[data-stock='charcoal'],
+.card[data-stock='ink'],
+.card[data-stock='forest'],
+.card[data-stock='oxblood'],
+.card[data-stock='navy'],
+.card[data-stock='plum'],
+.card[data-stock='moss'],
+.card[data-stock='teal'],
+.card[data-stock='wine'],
+.card[data-stock='bronze'],
+.card[data-stock='cocoa'],
+.card[data-stock='aubergine'] {
   --coat-pearl: linear-gradient(
     var(--lit-angle, 104deg),
     rgba(206, 226, 255, 0.16) 8%,
@@ -344,20 +448,19 @@
   );
 }
 
-.card[data-frame='slate'] .mark,
-.card[data-frame='charcoal'] .mark,
-.card[data-frame='ink'] .mark,
-.card[data-frame='dark'] .mark,
-.card[data-frame='forest'] .mark,
-.card[data-frame='oxblood'] .mark,
-.card[data-frame='navy'] .mark,
-.card[data-frame='plum'] .mark,
-.card[data-frame='moss'] .mark,
-.card[data-frame='teal'] .mark,
-.card[data-frame='wine'] .mark,
-.card[data-frame='bronze'] .mark,
-.card[data-frame='cocoa'] .mark,
-.card[data-frame='aubergine'] .mark {
+.card[data-stock='slate'] .mark,
+.card[data-stock='charcoal'] .mark,
+.card[data-stock='ink'] .mark,
+.card[data-stock='forest'] .mark,
+.card[data-stock='oxblood'] .mark,
+.card[data-stock='navy'] .mark,
+.card[data-stock='plum'] .mark,
+.card[data-stock='moss'] .mark,
+.card[data-stock='teal'] .mark,
+.card[data-stock='wine'] .mark,
+.card[data-stock='bronze'] .mark,
+.card[data-stock='cocoa'] .mark,
+.card[data-stock='aubergine'] .mark {
   stroke: color-mix(in srgb, var(--ac) 55%, #e9f0ec);
 }
 
@@ -369,15 +472,12 @@
   --window-w: 2.8cqw;
   --window-c: var(--core);
 }
-.card[data-window='inset'] .art::after {
-  box-shadow:
-    inset 0 0 0 0.9px rgba(30, 20, 8, 0.34),
-    inset 0 0 1cqw rgba(20, 14, 6, 0.3),
-    inset 0 2.6cqw 3.6cqw rgba(20, 14, 6, 0.3),
-    inset 0 -0.8cqw 1.4cqw rgba(255, 255, 255, 0.14);
+.card[data-window='inset'] {
+  --window-relief:
+    inset 0 0 0 0.9px rgba(30, 20, 8, 0.34), inset 0 0 1cqw rgba(20, 14, 6, 0.3),
+    inset 0 2.6cqw 3.6cqw rgba(20, 14, 6, 0.3), inset 0 -0.8cqw 1.4cqw rgba(255, 255, 255, 0.14);
 }
 
-/* Photo treatments replace, rather than stack with, the base press curve. */
 .card[data-tint='warm'] {
   --img-print: sepia(0.26) saturate(1.22) contrast(1.04);
 }
@@ -397,125 +497,249 @@
   --img-print: grayscale(1) contrast(1.09);
 }
 
-.card[data-relief='emboss'] {
-  --relief: inset 0 0 0 0.5cqw rgba(255, 248, 226, 0.24), inset 0 0 1.4cqw rgba(40, 24, 8, 0.28);
-}
-.card[data-relief='deboss'] {
-  --relief: inset 0 0 0 0.5cqw rgba(40, 24, 8, 0.26), inset 0 0 1.4cqw rgba(255, 248, 226, 0.2);
-}
-
-.card[data-font='display'] {
+.card[data-title-typeface='display'] {
   --face: var(--font-display), Impact, sans-serif;
 }
-.card[data-font='body'] {
-  --face: var(--font-body), system-ui, sans-serif;
+.card[data-body-typeface='display'] {
+  --body-face: var(--font-display), Impact, sans-serif;
 }
-.card[data-font='playfair'] {
-  --face: var(--font-playfair), Georgia, serif;
+.card[data-title-typeface='oswald'] {
+  --face: var(--font-oswald), Impact, sans-serif;
 }
-.card[data-font='cinzel'] {
-  --face: var(--font-cinzel), Georgia, serif;
+.card[data-body-typeface='oswald'] {
+  --body-face: var(--font-oswald), Impact, sans-serif;
 }
-.card[data-font='archivo'] {
+.card[data-title-typeface='archivo'] {
   --face: var(--font-archivo), Impact, sans-serif;
 }
-.card[data-font='spacemono'] {
+.card[data-body-typeface='archivo'] {
+  --body-face: var(--font-archivo), Impact, sans-serif;
+}
+.card[data-title-typeface='alfa'] {
+  --face: var(--font-alfa), Georgia, serif;
+}
+.card[data-body-typeface='alfa'] {
+  --body-face: var(--font-alfa), Georgia, serif;
+}
+.card[data-title-typeface='marcellus'] {
+  --face: var(--font-marcellus), Georgia, serif;
+}
+.card[data-body-typeface='marcellus'] {
+  --body-face: var(--font-marcellus), Georgia, serif;
+}
+.card[data-title-typeface='cinzel'] {
+  --face: var(--font-cinzel), Georgia, serif;
+}
+.card[data-body-typeface='cinzel'] {
+  --body-face: var(--font-cinzel), Georgia, serif;
+}
+.card[data-title-typeface='playfair'] {
+  --face: var(--font-playfair), Georgia, serif;
+}
+.card[data-body-typeface='playfair'] {
+  --body-face: var(--font-playfair), Georgia, serif;
+}
+.card[data-title-typeface='garamond'] {
+  --face: var(--font-garamond), Georgia, serif;
+}
+.card[data-body-typeface='garamond'] {
+  --body-face: var(--font-garamond), Georgia, serif;
+}
+.card[data-title-typeface='spectral'] {
+  --face: var(--font-spectral), Georgia, serif;
+}
+.card[data-body-typeface='spectral'] {
+  --body-face: var(--font-spectral), Georgia, serif;
+}
+.card[data-title-typeface='body'] {
+  --face: var(--font-body), system-ui, sans-serif;
+}
+.card[data-body-typeface='body'] {
+  --body-face: var(--font-body), system-ui, sans-serif;
+}
+.card[data-title-typeface='cabin'] {
+  --face: var(--font-cabin), system-ui, sans-serif;
+}
+.card[data-body-typeface='cabin'] {
+  --body-face: var(--font-cabin), system-ui, sans-serif;
+}
+.card[data-title-typeface='jost'] {
+  --face: var(--font-jost), system-ui, sans-serif;
+}
+.card[data-body-typeface='jost'] {
+  --body-face: var(--font-jost), system-ui, sans-serif;
+}
+.card[data-title-typeface='spacemono'] {
   --face: var(--font-spacemono), ui-monospace, monospace;
 }
-.card[data-font='caveat'] {
+.card[data-body-typeface='spacemono'] {
+  --body-face: var(--font-spacemono), ui-monospace, monospace;
+}
+.card[data-title-typeface='caveat'] {
   --face: var(--font-caveat), cursive;
 }
-.card[data-font='alfa'] {
-  --face: var(--font-alfa), Georgia, serif;
+.card[data-body-typeface='caveat'] {
+  --body-face: var(--font-caveat), cursive;
 }
 
 .card[data-finish='matte'] {
   --finish: var(--coat-matte);
   --finish-blend: soft-light;
-  --grain: 0.4;
-  --sheen: 0.62;
+  --grain: 0.56;
+  --sheen: 0.5;
+  --spec-size: 260%;
 }
 .card[data-finish='satin'] {
   --finish: var(--coat-satin);
-  --grain: 0.3;
-  --sheen: 0.74;
+  --finish-blend: soft-light;
+  --grain: 0.34;
+  --sheen: 0.72;
+  --spec-size: 230%;
 }
 .card[data-finish='gloss'] {
   --finish: var(--coat-gloss);
-  --grain: 0.22;
-  --sheen: 0.86;
+  --finish-blend: overlay;
+  --grain: 0.14;
+  --sheen: 0.92;
+  --spec-size: 190%;
 }
 .card[data-finish='pearl'] {
   --finish: var(--coat-pearl);
-  --grain: 0.24;
-  --sheen: 0.9;
+  --finish-blend: soft-light;
+  --grain: 0.2;
+  --sheen: 0.84;
+  --spec-size: 220%;
 }
 .card[data-finish='metallic'] {
   --finish: var(--coat-metal);
-  --grain: 0.18;
-  --sheen: 1;
+  --finish-blend: overlay;
+  --grain: 0.1;
+  --sheen: 0.96;
+  --spec-size: 200%;
 }
 
-/* Preserve relief for older published snapshots without a stored choice. */
-.card:not([data-relief])[data-rarity='epic'],
-.card:not([data-relief])[data-rarity='legendary'] {
-  --relief: inset 0 0 0 0.5cqw rgba(255, 248, 226, 0.2), inset 0 0 1.3cqw rgba(40, 24, 8, 0.26);
+.card[data-rarity='rare'],
+.card[data-rarity='epic'],
+.card[data-rarity='legendary'] {
+  --relief: inset 0 0 0 0.5cqw rgba(255, 248, 226, 0.24), inset 0 0 1.4cqw rgba(40, 24, 8, 0.28);
 }
 
-/* Separate chase layers must blend directly against the card. */
-.chase {
+.spot {
   position: absolute;
   inset: 0;
   z-index: 4;
   pointer-events: none;
 }
-/* The specular does not travel on its own. Where it falls is the environment's
-   business: the inspector feeds the slab's rotation in through --rx/--ry, and
-   a still context leaves the band parked slightly off centre. */
-.chaseBand {
+.spotBand {
   z-index: 5;
-  background-position: calc(50% + (var(--ry, 0) + var(--lit-shift-x, 22)) * 1.5%)
-    calc(50% + (var(--rx, 0) + var(--lit-shift-y, -14)) * 1.5%);
+  background-position: clamp(
+      0%,
+      calc(50% + (var(--ry, 0) * 1.2 + var(--lit-shift-x, 22) - 14) * 1%),
+      100%
+    )
+    clamp(0%, calc(50% + (var(--rx, 0) * 1.2 + var(--lit-shift-y, -14) + 4) * 1%), 100%);
 }
-.card[data-treatment='foil'] .head,
-.card[data-treatment='foil'] .foot,
-.card[data-treatment='foil'] .panel,
-.card[data-treatment='holo'] .head,
-.card[data-treatment='holo'] .foot,
-.card[data-treatment='holo'] .panel {
+.card[data-spot] .head,
+.card[data-spot] .foot,
+.card[data-spot] .panel,
+.card[data-spot] .code {
   position: relative;
   z-index: 6;
 }
-.art .chase {
+.minimal[data-spot] .code {
+  position: absolute;
+}
+.art .spot {
   border-radius: inherit;
 }
 
-.chaseFrame {
-  -webkit-mask-image: linear-gradient(#000, #000), linear-gradient(#000, #000);
-  mask-image: linear-gradient(#000, #000), linear-gradient(#000, #000);
-  -webkit-mask-size:
-    100% 100%,
-    calc(100% - 9cqw) calc(100% - 9cqw);
-  mask-size:
-    100% 100%,
-    calc(100% - 9cqw) calc(100% - 9cqw);
-  -webkit-mask-position: center;
-  mask-position: center;
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
+.card[data-spot-area='spot'] .art .spotField {
+  box-shadow:
+    inset 0 0 0 0.3cqw rgba(255, 255, 255, 0.22),
+    inset 0 0 1.4cqw rgba(255, 255, 255, 0.1);
 }
 
-.card[data-treatment='foil'] .chaseField {
+.card[data-spot='varnish'] .spotField {
+  --grain-default: repeating-linear-gradient(
+    104deg,
+    rgba(255, 255, 255, 0) 0 0.45cqw,
+    rgba(255, 255, 255, 0.05) 0.45cqw,
+    rgba(255, 255, 255, 0) 0.9cqw
+  );
   background:
-    repeating-linear-gradient(
-      100deg,
-      rgba(255, 250, 228, 0) 0 0.22cqw,
-      rgba(255, 252, 236, 0.55) 0.4cqw,
-      rgba(78, 56, 12, 0.4) 0.68cqw,
-      rgba(255, 250, 228, 0) 1.1cqw
-    ),
+    var(--spot-grain, var(--grain-default)),
+    linear-gradient(
+      var(--lit-angle, 104deg),
+      rgba(255, 255, 255, 0.06),
+      rgba(255, 255, 255, 0.3) 50%,
+      rgba(255, 255, 255, 0.06)
+    );
+  background-size: var(--spot-grain-size, auto), auto;
+  background-position: var(--spot-grain-drift, center), center;
+  mix-blend-mode: screen;
+  opacity: 0.22;
+}
+.card[data-spot='varnish'] .spotBand {
+  background: linear-gradient(
+    var(--lit-angle, 104deg),
+    transparent 30%,
+    rgba(255, 255, 255, 0.3) 42%,
+    rgba(255, 255, 255, 0.95) 50%,
+    rgba(255, 255, 255, 0.3) 58%,
+    transparent 70%
+  );
+  background-size: 170% 170%;
+  mix-blend-mode: screen;
+  opacity: calc(0.56 * var(--lit-strength, 1));
+}
+
+.card[data-spot='pearl'] .spotField {
+  --grain-default: repeating-linear-gradient(
+    96deg,
+    rgba(255, 255, 255, 0) 0 0.7cqw,
+    rgba(255, 255, 255, 0.16) 0.7cqw,
+    rgba(120, 96, 190, 0.12) 1.1cqw,
+    rgba(255, 255, 255, 0) 1.6cqw
+  );
+  background:
+    var(--spot-grain, var(--grain-default)),
+    linear-gradient(
+      var(--lit-angle, 104deg),
+      rgba(206, 178, 255, 0.34) 4%,
+      rgba(255, 250, 240, 0.4) 26%,
+      rgba(150, 216, 255, 0.34) 48%,
+      rgba(255, 228, 186, 0.32) 70%,
+      rgba(214, 176, 255, 0.34) 96%
+    );
+  background-size: var(--spot-grain-size, auto), auto;
+  mix-blend-mode: overlay;
+  opacity: 0.86;
+}
+.card[data-spot='pearl'] .spotBand {
+  background: linear-gradient(
+    var(--lit-angle, 104deg),
+    transparent 28%,
+    rgba(212, 186, 255, 0.42) 38%,
+    rgba(255, 255, 255, 0.72) 48%,
+    rgba(164, 224, 255, 0.46) 56%,
+    rgba(255, 232, 196, 0.36) 66%,
+    transparent 76%
+  );
+  background-size: 190% 190%;
+  mix-blend-mode: screen;
+  opacity: calc(0.55 * var(--lit-strength, 1));
+}
+
+.card[data-spot='foil'] .spotField {
+  --grain-default: repeating-linear-gradient(
+    100deg,
+    rgba(255, 250, 228, 0) 0 0.22cqw,
+    rgba(255, 252, 236, 0.55) 0.4cqw,
+    rgba(78, 56, 12, 0.4) 0.68cqw,
+    rgba(255, 250, 228, 0) 1.1cqw
+  );
+  background:
+    var(--spot-grain, var(--grain-default)),
     linear-gradient(
       var(--lit-angle, 104deg),
       #7a5a1d 3%,
@@ -529,18 +753,11 @@
       #d9b65f 90%,
       #6b4f18 99%
     );
+  background-size: var(--spot-grain-size, auto), auto;
   mix-blend-mode: overlay;
   opacity: 0.62;
 }
-.card[data-treatment='foil'] .chaseField.chaseFrame {
-  mix-blend-mode: normal;
-  opacity: 1;
-  box-shadow:
-    inset 0 0.14cqw 0 rgba(255, 252, 238, 0.7),
-    inset 0 -0.14cqw 0 rgba(60, 40, 8, 0.55),
-    inset 0 0 0.8cqw rgba(48, 32, 6, 0.4);
-}
-.card[data-treatment='foil'] .chaseBand {
+.card[data-spot='foil'] .spotBand {
   background: linear-gradient(
     var(--lit-angle, 104deg),
     transparent 41%,
@@ -550,22 +767,19 @@
   );
   background-size: 260% 260%;
   mix-blend-mode: hard-light;
-  opacity: calc(0.7 * var(--lit-strength, 1));
-}
-.card[data-treatment='foil'] .chaseBand.chaseFrame {
-  mix-blend-mode: screen;
-  opacity: calc(0.85 * var(--lit-strength, 1));
+  opacity: calc(0.56 * var(--lit-strength, 1));
 }
 
-.card[data-treatment='holo'] .chaseField {
+.card[data-spot='holo'] .spotField {
+  --grain-default: repeating-linear-gradient(
+    73deg,
+    rgba(255, 255, 255, 0) 0 0.55cqw,
+    rgba(255, 255, 255, 0.3) 0.95cqw,
+    rgba(40, 20, 90, 0.2) 1.35cqw,
+    rgba(255, 255, 255, 0) 2cqw
+  );
   background:
-    repeating-linear-gradient(
-      73deg,
-      rgba(255, 255, 255, 0) 0 0.55cqw,
-      rgba(255, 255, 255, 0.3) 0.95cqw,
-      rgba(40, 20, 90, 0.2) 1.35cqw,
-      rgba(255, 255, 255, 0) 2cqw
-    ),
+    var(--spot-grain, var(--grain-default)),
     linear-gradient(
       var(--lit-angle, 104deg),
       rgba(120, 205, 255, 0.3),
@@ -573,10 +787,11 @@
       rgba(160, 255, 205, 0.26) 68%,
       rgba(150, 160, 255, 0.3)
     );
+  background-size: var(--spot-grain-size, auto), auto;
   mix-blend-mode: overlay;
   opacity: 0.34;
 }
-.card[data-treatment='holo'] .chaseBand {
+.card[data-spot='holo'] .spotBand {
   background: linear-gradient(
     var(--lit-angle, 104deg),
     transparent 20%,
@@ -596,18 +811,16 @@
   );
   background-size: 250% 250%;
   mix-blend-mode: hard-light;
-  opacity: calc(0.62 * var(--lit-strength, 1));
+  opacity: calc(0.5 * var(--lit-strength, 1));
 }
 
-.dossier[data-treatment='holo'] .chaseBand,
-.card[data-frame='slate'][data-treatment='holo'] .chaseBand,
-.card[data-frame='charcoal'][data-treatment='holo'] .chaseBand,
-.card[data-frame='ink'][data-treatment='holo'] .chaseBand,
-.card[data-frame='dark'][data-treatment='holo'] .chaseBand,
-.card[data-frame='forest'][data-treatment='holo'] .chaseBand,
-.card[data-frame='oxblood'][data-treatment='holo'] .chaseBand,
-.card[data-frame='navy'][data-treatment='holo'] .chaseBand,
-.card[data-frame='plum'][data-treatment='holo'] .chaseBand {
+.card[data-stock='slate'][data-spot='holo'] .spotBand,
+.card[data-stock='charcoal'][data-spot='holo'] .spotBand,
+.card[data-stock='ink'][data-spot='holo'] .spotBand,
+.card[data-stock='forest'][data-spot='holo'] .spotBand,
+.card[data-stock='oxblood'][data-spot='holo'] .spotBand,
+.card[data-stock='navy'][data-spot='holo'] .spotBand,
+.card[data-stock='plum'][data-spot='holo'] .spotBand {
   background: linear-gradient(
     var(--lit-angle, 104deg),
     transparent 22%,
@@ -621,46 +834,123 @@
     transparent 78%
   );
   background-size: 250% 250%;
-  opacity: calc(0.72 * var(--lit-strength, 1));
+  opacity: calc(0.58 * var(--lit-strength, 1));
 }
 
-.card[data-treatment][data-coverage='full'] .chaseBand {
-  background-size:
-    540% 540%,
-    540% 540%;
-  opacity: calc(0.52 * var(--lit-strength, 1));
+.card[data-pattern='mirror'] {
+  --spot-grain: none;
+  --spot-grain-size: auto;
+}
+.card[data-pattern='mirror'] .spotBand {
+  background-size: 140% 140%;
+  opacity: calc(0.95 * var(--lit-strength, 1));
+}
+.card[data-pattern='mirror'] .spotField {
+  opacity: 0.14;
+}
+.card[data-pattern='cosmos'] {
+  --spot-grain:
+    radial-gradient(circle at 30% 22%, rgba(255, 255, 255, 1) 0 0.36cqw, transparent 0.95cqw),
+    radial-gradient(circle at 72% 58%, rgba(255, 255, 255, 0.9) 0 0.24cqw, transparent 0.7cqw),
+    radial-gradient(circle at 44% 84%, rgba(255, 255, 255, 0.7) 0 0.5cqw, transparent 1.25cqw),
+    radial-gradient(circle at 86% 28%, rgba(206, 232, 255, 0.85) 0 0.28cqw, transparent 0.8cqw);
+  --spot-grain-size: 14cqw 18cqw, 21cqw 13cqw, 29cqw 25cqw, 18cqw 21cqw;
+  --spot-grain-drift:
+    calc(50% + var(--ry, 0) * 0.9%) calc(50% + var(--rx, 0) * 0.9%),
+    calc(50% - var(--ry, 0) * 0.6%) calc(50% - var(--rx, 0) * 0.6%),
+    calc(50% + var(--ry, 0) * 1.5%) calc(50% + var(--rx, 0) * 1.5%),
+    calc(50% - var(--ry, 0) * 1.1%) calc(50% - var(--rx, 0) * 1.1%);
+}
+.card[data-pattern='cosmos'] .spotField::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--spot-grain);
+  background-size: var(--spot-grain-size);
+  background-position: var(--spot-grain-drift);
+  mix-blend-mode: screen;
+  opacity: calc(0.2 + var(--lit-strength, 1) * 0.55);
+  filter: blur(0.12cqw);
+}
+.card[data-pattern='linear'] .spotField {
+  --spot-grain: repeating-linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0) 0 0.5cqw,
+    rgba(255, 255, 255, 0.5) 0.72cqw,
+    rgba(10, 8, 4, 0.34) 0.95cqw,
+    rgba(255, 255, 255, 0) 1.5cqw
+  );
+  --spot-grain-size: auto;
+}
+
+.card[data-pattern='rainbow'] {
+  --spot-grain: none;
+  --spot-grain-size: auto;
+}
+.card[data-pattern='rainbow'] .spotBand {
+  background: linear-gradient(
+    var(--lit-angle, 104deg),
+    rgba(255, 170, 210, 0.5) 4%,
+    rgba(255, 214, 160, 0.46) 20%,
+    rgba(246, 246, 158, 0.44) 36%,
+    rgba(166, 240, 190, 0.46) 52%,
+    rgba(158, 216, 255, 0.48) 68%,
+    rgba(196, 174, 255, 0.5) 84%,
+    rgba(255, 176, 224, 0.5) 100%
+  );
+  background-size: 150% 150%;
+  mix-blend-mode: overlay;
+  opacity: calc(0.95 * var(--lit-strength, 1));
+}
+.card[data-pattern='rainbow'] .spotField {
+  opacity: 0.16;
+}
+
+.card[data-spot-area='reverse'] .spot {
+  z-index: 1;
+}
+.card[data-spot-area='reverse'] .art {
+  position: relative;
+  z-index: 2;
+}
+.card[data-spot-area='reverse'] .spotBand {
+  z-index: 1;
+}
+
+.card[data-spot-area='full'] .spotField {
+  opacity: 0.3;
+}
+.card[data-spot-area='full'] .spotBand {
+  background-size: 560% 560%;
+  opacity: calc(0.34 * var(--lit-strength, 1));
+}
+.card[data-spot='varnish'][data-spot-area='full'] .spotBand,
+.card[data-spot='pearl'][data-spot-area='full'] .spotBand {
+  mix-blend-mode: soft-light;
+}
+.card[data-pattern='cosmos'][data-spot-area='full'] .spotField {
+  opacity: 0.62;
+}
+.card[data-pattern='cosmos'] .spotBand {
+  opacity: calc(0.34 * var(--lit-strength, 1));
 }
 
 .card:not([data-finish])[data-rarity='rare'] {
   --finish: var(--coat-pearl);
-  --grain: 0.24;
-  --sheen: 0.72;
+  --finish-blend: soft-light;
+  --grain: 0.2;
+  --sheen: 0.7;
+  --spec-size: 220%;
 }
 .card:not([data-finish])[data-rarity='epic'] {
   --finish: var(--coat-metal);
-  --grain: 0.18;
-  --sheen: 0.82;
-}
-.card:not([data-treatment])[data-rarity='legendary'] .stock::after {
-  background: var(--coat-sweep), var(--coat-holo), var(--finish);
-  background-size:
-    300% 300%,
-    100% 100%,
-    100% 100%;
-  background-position:
-    calc(50% + (var(--ry, 0) + var(--lit-shift-x, 22)) * 1.5%)
-      calc(50% + (var(--rx, 0) + var(--lit-shift-y, -14)) * 1.5%),
-    center,
-    center;
-  mix-blend-mode: screen;
+  --finish-blend: overlay;
+  --grain: 0.1;
+  --sheen: 0.8;
+  --spec-size: 200%;
 }
 
-.classic .head {
-  border-bottom: 1px solid color-mix(in srgb, var(--ink) 18%, transparent);
-}
-.classic {
-  --window-c: var(--ac);
-}
 .classic .art {
   background: var(--art-bg);
 }
@@ -670,10 +960,6 @@
 }
 .polaroid .name {
   display: none;
-}
-.polaroid .num {
-  font-size: 7cqw;
-  color: var(--ink-muted);
 }
 .polaroid {
   --window-w: 0;
@@ -692,16 +978,13 @@
 }
 .polaroid .caption {
   flex: 1;
-  font:
-    italic 600 8.2cqw / 1.05 Georgia,
-    'Times New Roman',
-    serif;
+  font-family: var(--body-face, Georgia, 'Times New Roman', serif);
+  font-size: calc(8.2cqw * var(--text-scale, 1));
+  font-weight: 600;
+  font-style: italic;
+  line-height: 1.05;
   letter-spacing: 0;
-  white-space: normal;
-  text-overflow: clip;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+  display: block;
 }
 .minimal .stock {
   padding: 0;
@@ -718,21 +1001,24 @@
 .minimal .foot {
   position: relative;
   z-index: 1;
+}
+.minimal .foot {
   padding-left: 5cqw;
   padding-right: 5cqw;
 }
 .minimal .head {
   padding-top: 4cqw;
+  padding-right: 5cqw;
   padding-bottom: 12cqw;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  padding-left: 3.2cqw;
 }
 .minimal .mark {
-  stroke: var(--ink);
+  stroke: var(--ac);
 }
 .minimal .foot {
   margin-top: auto;
   padding-top: 16cqw;
-  padding-bottom: 5cqw;
+  padding-bottom: 9cqw;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
 }
 .minimal .caption {
@@ -746,29 +1032,23 @@
 .minimal[data-gradient='top'] .head {
   background: linear-gradient(to bottom, rgba(12, 14, 12, 0.85), rgba(12, 14, 12, 0));
 }
-.minimal .desc {
-  position: relative;
-  z-index: 1;
-  padding: 0 5cqw 4cqw;
-  background: rgba(12, 14, 12, 0.85);
-}
 .bold .head .name {
   display: none;
 }
 .bold .head {
   min-height: 10cqw;
 }
-.bold .num {
-  color: var(--bc);
-}
 .bold .art {
   border-radius: 2cqw;
 }
-.card[data-shape='circle'] .art {
+.card[data-shape='circle'] .art,
+.card[data-shape='diamond'] .art {
   flex: none;
-  width: 74%;
-  margin: 1cqw auto 0;
+  margin: auto;
   aspect-ratio: 1;
+}
+.card[data-shape='circle'] .art {
+  width: 86%;
   border-radius: 50%;
 }
 .card[data-shape='arch'] .art {
@@ -779,14 +1059,11 @@
   padding-top: 3.5cqw;
 }
 .bold .caption {
-  font-size: 5cqw;
+  font-size: calc(5cqw * var(--text-scale, 1));
   color: var(--ink-muted);
 }
 
 .fieldnote .art,
-.dossier .art {
-  flex: 0 0 47%;
-}
 .panel {
   position: relative;
   flex: 1;
@@ -798,10 +1075,12 @@
   padding: 2.6cqw 3cqw;
   border-radius: 1.4cqw;
   overflow: hidden;
+  background: var(--panel-bg, transparent);
+  box-shadow: var(--panel-relief);
 }
 .panelBody {
-  overflow: hidden;
-  font-size: 5cqw;
+  font-family: var(--body-face, inherit);
+  font-size: calc(5cqw * var(--text-scale, 1));
   line-height: 1.42;
   color: var(--ink);
 }
@@ -809,87 +1088,33 @@
 .panelBody ul {
   margin: 0 0 1cqw;
 }
+.panelBody > :last-child {
+  margin-bottom: 0;
+}
 .panelBody ul {
   padding-left: 4.5cqw;
 }
+.panelBody li::marker {
+  color: var(--ac);
+}
 .panelEmpty {
+  font-family: var(--body-face, inherit);
   font-size: 5cqw;
   font-style: italic;
   color: var(--ink-muted);
 }
 
-.card[data-paper='label'] .panel {
-  background: #f7f0df;
-  --ink: #3a2f26;
-  border: 0.6cqw solid #c8baa0;
-  border-radius: 0;
-}
-.card[data-paper='inset'] .panel {
-  background: color-mix(in srgb, var(--stock) 90%, #000);
-  box-shadow: inset 0 0.8cqw 1.8cqw #0003;
-  border: 0.3cqw solid color-mix(in srgb, var(--ink) 25%, transparent);
-}
-.card[data-paper='tinted'] .panel {
-  background: color-mix(in srgb, var(--stock) 85%, var(--ac));
-  border-left: 1cqw solid var(--ac);
-}
-.card[data-paper='transparent'] .panel {
-  background: none;
-  box-shadow: none;
-  padding-left: 0;
-  padding-right: 0;
-}
 .fieldnote .foot,
-.dossier .foot {
-  padding-top: 2.6cqw;
-  padding-bottom: 0;
-}
-
-.fieldnote {
-  --rule: rgba(96, 132, 146, 0.28);
-}
-
-.fieldnote .panel {
-  background: #fffdf6;
-  box-shadow:
-    inset 0 0 0 1px rgba(120, 104, 74, 0.22),
-    inset 0 0.5cqw 1cqw rgba(90, 72, 40, 0.09);
-}
-
-.card[data-paper='ruled'] .panel {
-  background-image: repeating-linear-gradient(transparent 0 6.4cqw, var(--rule) 6.4cqw 6.9cqw);
-  background-position: 0 2.2cqw;
-}
-.card[data-paper='grid'] .panel {
-  background-image:
-    repeating-linear-gradient(transparent 0 5cqw, var(--rule) 5cqw 5.4cqw),
-    repeating-linear-gradient(90deg, transparent 0 5cqw, var(--rule) 5cqw 5.4cqw);
-}
-.card[data-paper='dot'] .panel {
-  background-image: radial-gradient(var(--rule) 0.55cqw, transparent 0.55cqw);
-  background-size: 5cqw 5cqw;
-  background-position: 1.5cqw 2.4cqw;
-}
-.dossier {
-  --rule: rgba(178, 206, 214, 0.26);
-}
-
-.dossier .panel {
-  background: rgba(0, 0, 0, 0.26);
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.12),
-    inset 0 0.6cqw 1.4cqw rgba(0, 0, 0, 0.35);
-}
-.dossier .name {
-  color: var(--ink);
-}
-
-.minimal[data-gradient='full'] .stock {
-  background-image: linear-gradient(
-    rgba(18, 22, 24, 0.5),
-    rgba(18, 22, 24, 0.22) 45%,
-    rgba(18, 22, 24, 0.62)
+.minimal[data-gradient='full'] .stock::before {
+  display: block;
+  z-index: 1;
+  background: linear-gradient(
+    rgba(18, 22, 24, 0.55),
+    rgba(18, 22, 24, 0.24) 45%,
+    rgba(18, 22, 24, 0.66)
   );
+  opacity: 1;
+  mix-blend-mode: normal;
 }
 .minimal[data-gradient='full'] .head,
 .minimal[data-gradient='full'] .foot {
@@ -897,52 +1122,42 @@
 }
 
 .card[data-shape='diamond'] .art {
-  flex: none;
-  width: 74%;
-  margin: 2cqw auto 0;
-  aspect-ratio: 1;
+  width: 96%;
   border-radius: 2cqw;
-  transform: rotate(45deg) scale(0.76);
+  transform: rotate(45deg) scale(0.74);
 }
 .card[data-shape='diamond'] .art img {
   transform: rotate(-45deg) scale(1.42);
 }
-.card[data-shape='hex'] .art {
-  border-radius: 1cqw;
-  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+
+.fieldnote[data-shape='circle'] .art,
+.fieldnote[data-shape='diamond'] .art {
+  flex: 0 0 47%;
+  width: auto;
+  height: 100%;
+  margin: 0 auto;
+}
+.fieldnote[data-shape='diamond'] .art {
+  flex-basis: 42%;
+  transform: rotate(45deg) scale(0.72);
 }
 
-.fieldnote[data-paper='aged'] .panel {
-  background-color: #f8efd9;
-  background-image:
-    radial-gradient(ellipse at 18% 12%, rgba(150, 116, 60, 0.16), transparent 55%),
-    radial-gradient(ellipse at 82% 84%, rgba(150, 116, 60, 0.14), transparent 58%);
-  box-shadow:
-    inset 0 0 0 1px rgba(140, 112, 62, 0.3),
-    inset 0 0.5cqw 1.4cqw rgba(110, 84, 40, 0.14);
-}
-.dossier[data-paper='aged'] .panel {
-  background-color: rgba(0, 0, 0, 0.38);
-  background-image:
-    radial-gradient(ellipse at 20% 14%, rgba(198, 168, 108, 0.14), transparent 56%),
-    radial-gradient(ellipse at 80% 86%, rgba(120, 148, 150, 0.12), transparent 58%);
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.1),
-    inset 0 0.6cqw 1.6cqw rgba(0, 0, 0, 0.45);
-}
-
-.card[data-lit][data-treatment='holo'] .chaseField {
+.card[data-lit][data-spot='holo'] .spotField {
   filter: hue-rotate(calc(var(--ry, 0) * 0.3deg));
 }
 .card[data-lit] {
-  --lit-angle: calc(104deg + var(--ry, 0) * 0.55deg);
+  --lit-angle: calc(104deg + var(--ry, 0) * 1.2deg);
+  --lit-shift-x: calc(var(--ry, 0) * 0.35);
+  --lit-shift-y: calc(var(--rx, 0) * 0.35);
+  --lit-strength: 1.2;
 }
 
 .card[data-render='static'] .stock::after {
   display: none;
 }
 
-.materialMask {
+.materialMask,
+.materialHole {
   display: none;
 }
 
@@ -963,7 +1178,8 @@
 .card[data-render='mask'] .head,
 .card[data-render='mask'] .panel,
 .card[data-render='mask'] .foot,
-.card[data-render='mask'] .desc {
+.card[data-render='mask'] .code,
+.card[data-render='mask'] .tooth {
   visibility: hidden;
 }
 
@@ -972,27 +1188,19 @@
   background: transparent;
 }
 
+.card[data-render='mask'] .materialHole {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: block;
+  border-radius: inherit;
+  clip-path: inherit;
+  background: #000;
+}
 .card[data-render='mask'] .materialMask {
   position: absolute;
   inset: 0;
   display: block;
   border-radius: inherit;
   background: #fff;
-}
-
-.card[data-render='mask'] .materialMaskFrame {
-  -webkit-mask-image: linear-gradient(#000, #000), linear-gradient(#000, #000);
-  mask-image: linear-gradient(#000, #000), linear-gradient(#000, #000);
-  -webkit-mask-size:
-    100% 100%,
-    calc(100% - 9cqw) calc(100% - 9cqw);
-  mask-size:
-    100% 100%,
-    calc(100% - 9cqw) calc(100% - 9cqw);
-  -webkit-mask-position: center;
-  mask-position: center;
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
 }

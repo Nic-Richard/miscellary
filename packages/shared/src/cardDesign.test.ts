@@ -4,31 +4,36 @@ import { prepareCardDesign } from './cardDesign';
 describe('automatic draft production settings', () => {
   it('preserves creative options and does not mutate its input', () => {
     const config = {
-      frame: 'peach',
+      stock: 'peach',
       border: 'copper',
-      weight: 'bold',
-      paper: 'label',
+      border_width: 'medium',
       treatment: 'holo',
+      coverage: 'full',
     };
-    expect(prepareCardDesign('fieldnote', config, 'common')).toMatchObject({
-      frame: 'peach',
+    const prepared = prepareCardDesign('fieldnote', config);
+    expect(prepared).toMatchObject({
+      stock: 'peach',
       border: 'copper',
-      weight: 'bold',
-      paper: 'label',
-      relief: 'none',
-      treatment: 'none',
+      border_width: 'medium',
+      treatment: 'holo',
+      coverage: 'full',
     });
+    expect(prepared).not.toHaveProperty('relief');
     expect(config.treatment).toBe('holo');
   });
-  it('matches a legendary treatment and Full Art contrast to the draft', () => {
-    expect(prepareCardDesign('minimal', { finish: 'pearl' }, 'legendary')).toMatchObject({
-      treatment: 'holo',
-      coverage: 'art',
+  it('forces no treatment on any tier, and Full Art contrast on the draft', () => {
+    expect(prepareCardDesign('minimal', { finish: 'pearl' })).toMatchObject({
+      treatment: 'none',
+      coverage: 'spot',
       gradient: 'full',
     });
-    expect(prepareCardDesign('classic', { finish: 'matte' }, 'legendary')).toMatchObject({
-      treatment: 'foil',
-      coverage: 'frame',
+    expect(prepareCardDesign('classic', { finish: 'matte' })).toMatchObject({
+      treatment: 'none',
+      coverage: 'spot',
+    });
+    expect(prepareCardDesign('classic', { treatment: 'holo', coverage: 'reverse' })).toMatchObject({
+      treatment: 'holo',
+      coverage: 'reverse',
     });
   });
 });

@@ -3,9 +3,11 @@
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
+import { cardCode } from '@miscellary/shared';
 import type { SearchResults } from '@miscellary/shared';
 import BinderCover from '@/components/BinderCover';
 import CardPreview from '@/components/CardPreview';
+import DemoBadge from '@/components/DemoBadge';
 import Sheet, { Empty } from '@/components/Sheet';
 import coverStyles from '@/components/BinderCover.module.css';
 import { search } from '@/lib/social';
@@ -75,6 +77,7 @@ function Results() {
               <li key={u.username}>
                 <Link href={`/users/${u.username}`}>@{u.username}</Link>{' '}
                 <span className={styles.meta}>{u.display_name}</span>
+                {u.is_demo ? <DemoBadge compact /> : null}
               </li>
             ))}
           </ul>
@@ -102,7 +105,9 @@ function Results() {
                   size="small"
                   title={c.title}
                   rarity={c.rarity}
+                  code={cardCode(c.printed_set_code, c.position, c.set_total)}
                   description=""
+                  printedText={c.printed_text}
                   imageUrl={c.image.url}
                   templateKey={c.template_key}
                   templateConfig={c.template_config}

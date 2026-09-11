@@ -9,16 +9,23 @@ interface Props {
   title: string;
   rarity: Rarity;
   description?: string;
+  printedText?: string;
   imageUrl: string | null;
   templateKey: string;
   templateConfig: TemplateConfig;
   width?: number;
-  number?: number;
+  code?: string;
   mark?: string;
   render?: CardRenderAssets | null | undefined;
 }
 
-export default function CardPreview({ width = 160, description = '', render, ...data }: Props) {
+export default function CardPreview({
+  width = 160,
+  description = '',
+  printedText = '',
+  render,
+  ...data
+}: Props) {
   const [failed, setFailed] = useState(false);
   const source = render?.thumbnail?.url;
   useEffect(() => setFailed(false), [source]);
@@ -40,7 +47,7 @@ export default function CardPreview({ width = 160, description = '', render, ...
     return (
       <SharedSurface
         mode="card"
-        data={{ description, ...data }}
+        data={{ description, printedText, ...data }}
         width={width}
         height={width * 1.4}
         passive

@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/auth';
 import { sendReport, setFollow } from '@/lib/endpoints';
 import { colors } from '@/lib/theme';
 import CardInspector from './CardInspector';
+import DemoBadge from './DemoBadge';
 import SharedSurface from './SharedSurface';
 import { Button, Muted } from './ui';
 
@@ -68,6 +69,7 @@ export default function ProfileView({
           <Text style={{ color: colors.text, fontSize: 22, fontWeight: '700' }}>
             {profile.display_name || profile.username}
           </Text>
+          {profile.is_demo ? <DemoBadge /> : null}
           <Muted>@{profile.username}</Muted>
         </View>
       </View>

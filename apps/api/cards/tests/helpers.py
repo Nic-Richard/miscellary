@@ -28,6 +28,7 @@ def make_card(card_set, rarity="common", **overrides) -> CardDefinition:
         "title": f"Card {card_set.cards.count() + 1}",
         "rarity": rarity,
         "description": "",
+        "printed_text": "",
         "template_key": "classic",
         "template_version": 1,
         "template_config": default_config("classic"),

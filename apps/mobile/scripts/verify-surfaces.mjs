@@ -79,6 +79,10 @@ try {
         {
           title: card.title,
           description: card.description,
+          printedText: card.printed_text,
+          code: card.printed_set_code
+            ? `${card.printed_set_code} ${card.position + 1}/${card.set_total}`
+            : '',
           rarity: card.rarity,
           imageUrl: card.image.url,
           templateKey: card.template_key,
@@ -101,7 +105,7 @@ try {
     }
   }
   await mkdir('tmp/surface-review', { recursive: true });
-  const set = sets.find((set) => set.title === 'Shutter Shelf');
+  const set = sets.find((set) => set.cards.length >= 8) ?? sets[0];
   for (const [half, width, height] of [
     [true, 390, 600],
     [false, 844, 514],

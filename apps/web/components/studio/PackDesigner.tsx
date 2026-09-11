@@ -8,6 +8,7 @@ import BinderColourPicker from '../BinderColourPicker';
 import SetMark from '../SetMark';
 import { ChoiceMenu, ColourMenu, Field, Section, Slider } from '../controls';
 import ui from '../ui.module.css';
+import { normaliseSetCode, SET_CODE_LENGTH, setCodeProblems } from '@miscellary/shared';
 import {
   EMBLEM_LAYOUTS,
   EMBLEM_LAYOUT_LABELS,
@@ -16,7 +17,6 @@ import {
   EMBLEM_TEXT_NAMES,
   MARK_LABELS,
   PACK_SUBTITLE_MAX_LENGTH,
-  PACK_COLOUR_FAMILIES,
   PACK_COLOUR_NAMES,
   PACK_FINISHES,
   SCALE_MAX,
@@ -54,15 +54,11 @@ export default function PackDesigner({ set, onDraft, onSave }: PackDesignerProps
   return (
     <div className={styles.root}>
       <div className={styles.controls}>
-        <Section
-          title="Foil"
-          note="The wrapper is one photograph recoloured, so any colour needs no new artwork."
-        >
+        <Section title="Foil">
           <Field label="Colour">
             <ColourMenu
               value={set.pack_colour || 'mint'}
               values={PACK_COLOUR_NAMES}
-              families={PACK_COLOUR_FAMILIES}
               swatchFor={packSwatchStyle}
               onChange={(v) => onSave({ pack_colour: v })}
             />
@@ -77,10 +73,7 @@ export default function PackDesigner({ set, onDraft, onSave }: PackDesignerProps
           </Field>
         </Section>
 
-        <Section
-          title="Front"
-          note="Everything printed on the pack, painted bottom first. The set's own badge is a layer like any other, so it can sit over your artwork or under it."
-        >
+        <Section title="Front" note="Painted bottom first.">
           <PackLayerEditor
             layers={set.pack_layers}
             onDraft={(pack_layers: PackLayer[]) => onDraft({ pack_layers })}
@@ -89,10 +82,7 @@ export default function PackDesigner({ set, onDraft, onSave }: PackDesignerProps
         </Section>
 
         {hasEmblem ? (
-          <Section
-            title="Badge"
-            note="How the set's own badge is drawn. Its overall size is set on its layer, above."
-          >
+          <Section title="Badge">
             <Field label="Layout">
               <ChoiceMenu
                 value={set.emblem_layout || 'seal'}
@@ -161,11 +151,7 @@ export default function PackDesigner({ set, onDraft, onSave }: PackDesignerProps
           </Section>
         ) : null}
 
-        <Section
-          title="Text"
-          note="Your own words, anywhere on the pack, in any of the typefaces. Works over the built-in lockup and over your own artwork alike."
-          defaultOpen={false}
-        >
+        <Section title="Text" defaultOpen={false}>
           <PackTextEditor
             layers={set.pack_text}
             onDraft={(pack_text: PackTextLayer[]) => onDraft({ pack_text })}
@@ -173,10 +159,7 @@ export default function PackDesigner({ set, onDraft, onSave }: PackDesignerProps
           />
         </Section>
 
-        <Section
-          title="Mark"
-          note="The small symbol printed on this set's cards, its pack and its empty sleeves."
-        >
+        <Section title="Mark" note="Printed on this set's cards, pack and sleeves.">
           <Field label="Symbol">
             <div className={styles.marks}>
               {[...SET_MARKS, 'none'].map((m) => (
@@ -201,9 +184,34 @@ export default function PackDesigner({ set, onDraft, onSave }: PackDesignerProps
         </Section>
 
         <Section
-          title="Binder"
-          note="The cover this set's public page is bound in. Collectors see it behind every card."
+          title="Card code"
+          note="Three characters, printed with each card's position. Blank takes it from the title."
         >
+          <Field label="Code">
+            <input
+              className={`${ui.input} ${styles.code}`}
+              value={set.set_code}
+              placeholder={set.suggested_set_code}
+              maxLength={SET_CODE_LENGTH}
+              aria-label="Set code"
+              onChange={(event) => onDraft({ set_code: normaliseSetCode(event.target.value) })}
+              onBlur={(event) => {
+                const next = normaliseSetCode(event.target.value);
+                if (!setCodeProblems(next).length) onSave({ set_code: next });
+              }}
+            />
+          </Field>
+          {setCodeProblems(set.set_code).map((problem) => (
+            <p key={problem} className={styles.codeNote}>
+              {problem}
+            </p>
+          ))}
+          <p className={styles.codePreview}>
+            Prints <b>{set.printed_set_code}</b>. Publishing adds a two-character number.
+          </p>
+        </Section>
+
+        <Section title="Binder">
           <Field label="Cover">
             <BinderColourPicker
               value={set.binder_colour || 'teal'}
@@ -212,7 +220,7 @@ export default function PackDesigner({ set, onDraft, onSave }: PackDesignerProps
           </Field>
         </Section>
 
-        <Section title="Packs" note="How many cards a pack of this set holds." defaultOpen={false}>
+        <Section title="Packs" defaultOpen={false}>
           <Field label="Pack size">
             <Slider
               value={set.pack_size}

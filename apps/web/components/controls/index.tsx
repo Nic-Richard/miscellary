@@ -2,14 +2,7 @@
 
 import { createContext, useContext, useEffect, useId, useRef, useState } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
-import {
-  INK_FAMILIES,
-  STOCK_COLOURS,
-  STOCK_FAMILIES,
-  groupValues,
-  swatchColour,
-} from '@/lib/palette';
-import type { Family } from '@/lib/palette';
+import { colourRows, swatchColour } from '@/lib/palette';
 import styles from './Controls.module.css';
 
 const FieldLabelContext = createContext<string | undefined>(undefined);
@@ -95,16 +88,11 @@ function Swatch({ token, swatchFor }: { token: string; swatchFor: SwatchFor }) {
 export type SwatchFor = (token: string) => CSSProperties;
 
 const hexSwatch: SwatchFor = (token) => ({ background: swatchColour(token) });
-const stockSwatch: SwatchFor = (token) => ({
-  background: STOCK_COLOURS[token] ?? swatchColour(token),
-});
 
 export interface MenuProps {
   value: string;
   values: string[];
   onChange: (value: string) => void;
-  palette?: 'ink' | 'stock';
-  families?: Family[];
   swatchFor?: SwatchFor;
   labels?: Record<string, string>;
   locks?: Record<string, string>;
@@ -115,8 +103,6 @@ export function ColourMenu({
   value,
   values,
   onChange,
-  palette = 'ink',
-  families: given,
   swatchFor: givenSwatch,
   labels,
   locks,
@@ -125,12 +111,8 @@ export function ColourMenu({
   const fieldLabel = useContext(FieldLabelContext);
   const [open, setOpen] = useState(false);
   const ref = useDismiss(open, () => setOpen(false));
-  const swatchFor = givenSwatch ?? (palette === 'stock' ? stockSwatch : hexSwatch);
-  const base: Family[] = given ?? (palette === 'stock' ? STOCK_FAMILIES : INK_FAMILIES);
-  const families = groupValues(
-    values.filter((v) => v !== 'auto'),
-    base,
-  );
+  const swatchFor = givenSwatch ?? hexSwatch;
+  const rows = colourRows(values);
   const hasRarity = values.includes('rarity');
   const name = (v: string) => named(labels, v);
 
@@ -173,31 +155,28 @@ export function ColourMenu({
               Follow the rarity colour
             </button>
           ) : null}
-          <div className={styles.families}>
-            {families.map((family) => (
-              <div key={family.label} className={styles.family}>
-                <span className={styles.familyLabel}>{family.label}</span>
-                <div className={styles.swatches}>
-                  {family.values.map((v) => {
-                    const shut = locks?.[v];
-                    const title = shut ? `${name(v)} - needs ${shut}` : name(v);
-                    return (
-                      <button
-                        key={v}
-                        type="button"
-                        title={title}
-                        aria-label={title}
-                        aria-pressed={value === v}
-                        disabled={!!shut}
-                        className={`${styles.swatch} ${value === v ? styles.swatchOn : ''} ${
-                          shut ? styles.swatchShut : ''
-                        }`}
-                        style={swatchFor(v)}
-                        onClick={() => pick(v)}
-                      />
-                    );
-                  })}
-                </div>
+          <div className={styles.swatchRows}>
+            {rows.map((row, index) => (
+              <div key={index} className={styles.swatches}>
+                {row.map((v) => {
+                  const shut = locks?.[v];
+                  const title = shut ? `${name(v)} - needs ${shut}` : name(v);
+                  return (
+                    <button
+                      key={v}
+                      type="button"
+                      title={title}
+                      aria-label={title}
+                      aria-pressed={value === v}
+                      disabled={!!shut}
+                      className={`${styles.swatch} ${value === v ? styles.swatchOn : ''} ${
+                        shut ? styles.swatchShut : ''
+                      }`}
+                      style={swatchFor(v)}
+                      onClick={() => pick(v)}
+                    />
+                  );
+                })}
               </div>
             ))}
           </div>

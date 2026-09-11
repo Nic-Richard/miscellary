@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { CardSetSummary } from '@miscellary/shared';
 import { binderClothStyle } from '@/lib/setIdentity';
+import DemoBadge from './DemoBadge';
 import styles from './BinderCover.module.css';
 
 export default function BinderCover({
@@ -28,6 +29,7 @@ export default function BinderCover({
         <small>
           {meta ?? `${set.card_count} cards · ♥ ${set.like_count} · @${set.creator.username}`}
         </small>
+        {set.creator.is_demo ? <DemoBadge compact /> : null}
       </span>
     </Link>
   );

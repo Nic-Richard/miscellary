@@ -2,6 +2,7 @@ export * from './rarity';
 export * from './packs';
 export * from './markdown';
 export * from './api';
+export * from './cardConfig';
 export * from './cardDesign';
 export * from './cardFixtures';
 export * from './cardMaterial';

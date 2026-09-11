@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { PACK_SIZE, RARITIES } from '@miscellary/shared';
+import { cardCode, PACK_SIZE, RARITIES } from '@miscellary/shared';
 import type { Card, CardSetDetail, CardSetSummary } from '@miscellary/shared';
 import Binder from '@/components/binder/Binder';
 import BinderCover from '@/components/BinderCover';
@@ -137,8 +137,13 @@ export default function HomePage() {
                   size="small"
                   title={pick.card.title}
                   rarity={pick.card.rarity}
-                  number={pick.card.position + 1}
+                  code={cardCode(
+                    pick.card.printed_set_code,
+                    pick.card.position,
+                    pick.card.set_total,
+                  )}
                   description={pick.card.description}
+                  printedText={pick.card.printed_text}
                   imageUrl={pick.card.image.url}
                   templateKey={pick.card.template_key}
                   templateConfig={pick.card.template_config}
@@ -186,8 +191,9 @@ export default function HomePage() {
                     size="small"
                     title={card.title}
                     rarity={card.rarity}
-                    number={i + 1}
+                    code={cardCode(card.printed_set_code, card.position, card.set_total)}
                     description={card.description}
+                    printedText={card.printed_text}
                     imageUrl={card.image.url}
                     templateKey={card.template_key}
                     templateConfig={card.template_config}

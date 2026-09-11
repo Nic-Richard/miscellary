@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useMemo, useState } from 'react';
+import { cardCode } from '@miscellary/shared';
 import type { OwnedCard } from '@miscellary/shared';
 import CardPreview from '@/components/CardPreview';
 import Sheet, { Empty } from '@/components/Sheet';
@@ -120,7 +121,13 @@ function Side({
                         size="small"
                         title={stack.title}
                         rarity={first.card.rarity}
+                        code={cardCode(
+                          first.card.printed_set_code,
+                          first.card.position,
+                          first.card.set_total,
+                        )}
                         description=""
+                        printedText={first.card.printed_text}
                         imageUrl={first.card.image.url}
                         templateKey={first.card.template_key}
                         templateConfig={first.card.template_config}

@@ -3,7 +3,7 @@ import { Stack } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle, Defs, RadialGradient, Rect, Stop, Mask } from 'react-native-svg';
 import { useCallback, useEffect, useState } from 'react';
-import { CARD_FIXTURES, RECYCLE_VALUE } from '@miscellary/shared';
+import { CARD_FIXTURES, cardCode, RECYCLE_VALUE } from '@miscellary/shared';
 import type { Card, CardSetDetail, PackOpening } from '@miscellary/shared';
 import CardInspector from '@/components/CardInspector';
 import CardPreview from '@/components/CardPreview';
@@ -75,10 +75,11 @@ function RealCards() {
                 title={card.title}
                 rarity={card.rarity}
                 description={card.description}
+                printedText={card.printed_text}
                 imageUrl={card.image.url}
                 templateKey={card.template_key}
                 templateConfig={card.template_config}
-                number={card.position + 1}
+                code={cardCode(card.printed_set_code, card.position, card.set_total)}
                 mark={mark}
                 render={card.render}
               />
@@ -89,10 +90,11 @@ function RealCards() {
             title={card.title}
             rarity={card.rarity}
             description={card.description}
+            printedText={card.printed_text}
             imageUrl={card.image.url}
             templateKey={card.template_key}
             templateConfig={card.template_config}
-            number={card.position + 1}
+            code={cardCode(card.printed_set_code, card.position, card.set_total)}
             mark={mark}
             render={card.render}
           />
@@ -110,6 +112,7 @@ function InspectorGallery() {
     title: 'After the Signal',
     rarity: fixture.rarity,
     description: 'A final transmission caught between stations.\nGold ink, midnight stock.',
+    printed_text: 'Gold ink, midnight stock.',
     image: {
       id: 'inspector-image',
       kind: 'card',
@@ -122,6 +125,8 @@ function InspectorGallery() {
     template_version: 1,
     template_config: fixture.config,
     position: 6,
+    printed_set_code: 'SIG-01',
+    set_total: 24,
     like_count: 0,
   };
 

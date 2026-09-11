@@ -1,5 +1,5 @@
 // Card descriptions allow a deliberately tiny Markdown subset:
-// **bold**, *italic*, "- " bullet lines, and line breaks. Everything else is
+// **bold**, *italic*, __underline__, "- " bullet lines, and line breaks. Everything else is
 // treated as literal text. The API enforces the same rules in
 // apps/api/cards/markdown.py so a description renders identically everywhere.
 
@@ -26,20 +26,22 @@ export type DescriptionNode =
   | { type: 'text'; value: string }
   | { type: 'bold'; value: string }
   | { type: 'italic'; value: string }
+  | { type: 'underline'; value: string }
   | { type: 'break' };
 
 export type DescriptionBlock =
   { type: 'paragraph'; children: DescriptionNode[] } | { type: 'list'; items: DescriptionNode[][] };
 
-function parseInline(line: string): DescriptionNode[] {
+export function parseInline(line: string): DescriptionNode[] {
   const nodes: DescriptionNode[] = [];
-  const pattern = /(\*\*([^*]+)\*\*|\*([^*]+)\*)/g;
+  const pattern = /(\*\*([^*]+)\*\*|\*([^*]+)\*|__([^_]+)__)/g;
   let last = 0;
   for (const match of line.matchAll(pattern)) {
     const index = match.index ?? 0;
     if (index > last) nodes.push({ type: 'text', value: line.slice(last, index) });
     if (match[2] !== undefined) nodes.push({ type: 'bold', value: match[2] });
     else if (match[3] !== undefined) nodes.push({ type: 'italic', value: match[3] });
+    else if (match[4] !== undefined) nodes.push({ type: 'underline', value: match[4] });
     last = index + match[0].length;
   }
   if (last < line.length) nodes.push({ type: 'text', value: line.slice(last) });

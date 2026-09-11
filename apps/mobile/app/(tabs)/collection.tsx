@@ -1,3 +1,4 @@
+import { cardCode } from '@miscellary/shared';
 import type { OwnedCard, SetPointsBalance } from '@miscellary/shared';
 import { Link, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
@@ -109,12 +110,17 @@ function Collection() {
                     width={150}
                     title={owned.card.title}
                     description={owned.card.description}
+                    printedText={owned.card.printed_text}
                     mark={owned.set_mark}
                     rarity={owned.card.rarity}
                     imageUrl={owned.card.image.url}
                     templateKey={owned.card.template_key}
                     templateConfig={owned.card.template_config}
-                    number={owned.card.position + 1}
+                    code={cardCode(
+                      owned.card.printed_set_code,
+                      owned.card.position,
+                      owned.card.set_total,
+                    )}
                     render={owned.card.render}
                   />
                 </Pressable>

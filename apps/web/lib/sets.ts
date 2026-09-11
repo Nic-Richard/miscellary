@@ -36,6 +36,7 @@ export interface SetWrite {
   pack_subtitle: string;
   pack_text: PackTextLayer[];
   pack_size: number;
+  set_code: string;
 }
 
 export const updateSet = (id: string, body: Partial<SetWrite>) =>

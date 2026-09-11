@@ -58,6 +58,18 @@ def test_only_one_free_pack_per_set_per_day(user, published):
     actions.open_free_pack(user, other)
 
 
+def test_demo_accounts_can_open_repeated_free_packs(user, published, settings):
+    user.is_demo = True
+    user.save(update_fields=["is_demo"])
+    settings.UNLIMITED_PACKS_FOR_DEMO_ACCOUNTS = True
+
+    actions.open_free_pack(user, published)
+    actions.open_free_pack(user, published)
+
+    assert actions.free_pack_available(user, published)
+    assert OwnedCard.objects.filter(owner=user).count() == actions.PACK_SIZE * 2
+
+
 def test_free_pack_resets_on_the_next_utc_date(user, published):
     first_day = datetime(2026, 1, 10, 23, 59, tzinfo=UTC)
     with patch("packs.actions.timezone.now", return_value=first_day):

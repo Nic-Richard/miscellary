@@ -129,13 +129,19 @@ PACK_SIZE_DEFAULT = 10
 # Mirrored in apps/web/lib/fonts.ts, which owns font loading.
 FONTS = [
     "display",
-    "body",
-    "playfair",
-    "cinzel",
+    "oswald",
     "archivo",
+    "alfa",
+    "marcellus",
+    "cinzel",
+    "playfair",
+    "garamond",
+    "spectral",
+    "body",
+    "cabin",
+    "jost",
     "spacemono",
     "caveat",
-    "alfa",
 ]
 FONT_CHOICES = [(f, f.title()) for f in FONTS]
 
@@ -151,3 +157,58 @@ TEXT_TRACKING_MIN = -5
 TEXT_TRACKING_MAX = 60
 
 PACK_SUBTITLE_MAX_LENGTH = 40
+
+# The printed set code is a creator-chosen base and a platform-assigned suffix,
+# as in the CAM-01 of "CAM-01 12/36". 00 is reserved, so suffixes run 01 to ZZ.
+SET_CODE_LENGTH = 3
+SET_SUFFIX_LENGTH = 2
+SET_SUFFIX_DIGITS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+SET_SUFFIX_FIRST = 1
+SET_SUFFIX_LAST = len(SET_SUFFIX_DIGITS) ** SET_SUFFIX_LENGTH - 1
+_SET_CODE_STOPWORDS = {"a", "an", "and", "at", "for", "in", "my", "of", "on", "the", "to"}
+
+
+def set_code_problems(value: str) -> list[str]:
+    if not value:
+        return []
+    if len(value) != SET_CODE_LENGTH:
+        return [f"A set code is exactly {SET_CODE_LENGTH} characters."]
+    if not value.isascii() or not value.isalnum() or value.upper() != value:
+        return ["A set code uses capital letters and digits only."]
+    return []
+
+
+def suggest_set_code(title: str) -> str:
+    """A code drawn from the title: initials first, then its opening letters."""
+    words = [
+        word
+        for word in ("".join(c if c.isalnum() else " " for c in title)).split()
+        if word.lower() not in _SET_CODE_STOPWORDS
+    ]
+    initials = "".join(word[0] for word in words).upper()
+    if len(initials) >= SET_CODE_LENGTH:
+        return initials[:SET_CODE_LENGTH]
+    letters = "".join(words).upper()
+    return (letters + "SET")[:SET_CODE_LENGTH]
+
+
+def set_suffix(index: int) -> str:
+    """The base-36 suffix for a one-based position in the sequence."""
+    digits = ""
+    for _ in range(SET_SUFFIX_LENGTH):
+        index, remainder = divmod(index, len(SET_SUFFIX_DIGITS))
+        digits = SET_SUFFIX_DIGITS[remainder] + digits
+    return digits
+
+
+def next_set_suffix(taken: set[str]) -> str:
+    """The lowest suffix this base code has not used yet."""
+    for index in range(SET_SUFFIX_FIRST, SET_SUFFIX_LAST + 1):
+        suffix = set_suffix(index)
+        if suffix not in taken:
+            return suffix
+    raise ValueError("Every suffix for this set code is already taken.")
+
+
+def printed_set_code(code: str, suffix: str) -> str:
+    return f"{code}-{suffix}" if code and suffix else ""

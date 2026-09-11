@@ -24,6 +24,10 @@ import ImagePicker from './ImagePicker';
 import { ChoiceMenu, ColourMenu, Field, Section, Segmented, TileGrid } from './controls';
 import { FONT_LABELS } from '@/lib/fonts';
 import { borderTile, coatTile, shapeTile, textureTile } from '@/lib/palette';
+import MarkupBar from './MarkupBar';
+import RichTextArea from './RichTextArea';
+import TemplateThumb from './TemplateThumb';
+import TiltStage from './TiltStage';
 import { GROUP_LABELS, GROUP_NOTES, valueLabel, valueLabels } from '@/lib/templateLabels';
 import ui from './ui.module.css';
 import { ApiRequestError } from '@/lib/api';
@@ -33,24 +37,19 @@ import styles from './CardForm.module.css';
 interface CardFormProps {
   setId: string;
   mark?: string | undefined;
+  code?: string;
   templates: CardTemplate[];
   card: Card | null;
   onDone: () => Promise<void>;
   onCancel: () => void;
 }
 
-const TEXT_KEYS = new Set(['fieldnote', 'dossier']);
 const OPTION_TILES: Record<string, typeof textureTile> = {
   texture: textureTile,
   finish: coatTile,
   shape: shapeTile,
   weight: borderTile,
 };
-const TEMPLATE_GROUPS = [
-  { label: 'Photo first', match: (key: string) => !TEXT_KEYS.has(key) },
-  { label: 'With a description', match: (key: string) => TEXT_KEYS.has(key) },
-];
-
 const ISSUE_TEXT: Record<string, string> = {
   too_long: `Keep it under ${DESCRIPTION_MAX_LENGTH} characters.`,
   heading: 'Headings are not allowed.',
@@ -83,7 +82,7 @@ function ladder(template: CardTemplate | undefined): Map<Rarity, string[]> {
   const add = (tier: Rarity, what: string) => byTier.set(tier, [...(byTier.get(tier) ?? []), what]);
   if (template?.unlocks) add(template.unlocks, `the ${template.name} template`);
   for (const [name, opt] of Object.entries(template?.options ?? {})) {
-    if (['gradient', 'relief', 'treatment', 'coverage'].includes(name)) continue;
+    if (name === 'gradient') continue;
     for (const v of opt.values) {
       const needed = opt.unlocks?.[v];
       if (needed) add(needed, valueLabel(name, v).toLowerCase());
@@ -106,14 +105,13 @@ function settle(
       moved.push(valueLabel(name, value).toLowerCase());
     }
   }
-  const chase = next.treatment ?? 'none';
-  if (rarity === 'legendary' && chase === 'none') next.treatment = 'foil';
   return { config: next, moved };
 }
 
 export default function CardForm({
   setId,
   mark,
+  code,
   templates,
   card,
   onDone,
@@ -124,6 +122,7 @@ export default function CardForm({
   const [title, setTitle] = useState(card?.title ?? '');
   const [rarity, setRarity] = useState<Rarity>(card?.rarity ?? 'common');
   const [description, setDescription] = useState(card?.description ?? '');
+  const [printedText, setPrintedText] = useState(card?.printed_text ?? '');
   const [templateKey, setTemplateKey] = useState(
     card?.template_key ?? firstTemplate?.key ?? 'classic',
   );
@@ -146,6 +145,10 @@ export default function CardForm({
     if (!next) return;
     setTemplateKey(key);
     setConfig(settle(next, defaults(next), rarity).config);
+    setTitle((value) => value.slice(0, next.text.title.max_length));
+    setPrintedText((value) =>
+      next.text.printed ? value.slice(0, next.text.printed.max_length) : '',
+    );
     setNote(null);
   }
 
@@ -164,6 +167,10 @@ export default function CardForm({
       chosen = open;
       base = defaults(open);
       setTemplateKey(open.key);
+      setTitle((value) => value.slice(0, open.text.title.max_length));
+      setPrintedText((value) =>
+        open.text.printed ? value.slice(0, open.text.printed.max_length) : '',
+      );
     }
     const { config: fixed, moved } = settle(chosen, base, next);
     setConfig(fixed);
@@ -185,8 +192,9 @@ export default function CardForm({
       title,
       rarity,
       description,
+      printed_text: printedText,
       template_key: templateKey,
-      template_config: prepareCardDesign(templateKey, config, rarity),
+      template_config: prepareCardDesign(templateKey, config),
     };
     try {
       if (card) await updateCard(setId, card.id, body);
@@ -205,10 +213,7 @@ export default function CardForm({
   function control(name: string, opt: TemplateOption) {
     const value = config[name] ?? opt.default;
     const set = (v: string) => setConfig({ ...config, [name]: v });
-    const values =
-      name === 'treatment' && rarity === 'legendary'
-        ? opt.values.filter((v) => v !== 'none')
-        : opt.values;
+    const values = opt.values;
     const locks = locksFor(opt, rarity);
     const labels = opt.type === 'font' ? FONT_LABELS : valueLabels(name, values);
 
@@ -227,14 +232,7 @@ export default function CardForm({
     }
     if (opt.type === 'swatch') {
       return (
-        <ColourMenu
-          value={value}
-          values={values}
-          labels={labels}
-          locks={locks}
-          palette={name === 'frame' ? 'stock' : 'ink'}
-          onChange={set}
-        />
+        <ColourMenu value={value} values={values} labels={labels} locks={locks} onChange={set} />
       );
     }
     const inline =
@@ -249,16 +247,25 @@ export default function CardForm({
     );
   }
 
+  function noteFor(name: OptionGroup) {
+    const note = GROUP_NOTES[name];
+    return note ? { note } : {};
+  }
+
   function group(name: OptionGroup) {
     const options = Object.entries(template?.options ?? {}).filter(
       ([, opt]) => (opt.group ?? 'board') === name,
     );
+    const foiled = (config.treatment ?? 'none') !== 'none';
     const shown = options.filter(
-      ([key]) => !['gradient', 'relief', 'treatment', 'coverage'].includes(key),
+      ([key, opt]) =>
+        key !== 'gradient' &&
+        opt.values.length > 1 &&
+        (foiled || (key !== 'pattern' && key !== 'coverage')),
     );
     if (shown.length === 0) return null;
     return (
-      <Section key={name} title={GROUP_LABELS[name]} note={GROUP_NOTES[name]}>
+      <Section key={name} title={GROUP_LABELS[name]} {...noteFor(name)}>
         {shown.map(([key, opt]) => (
           <Field key={key} label={opt.label}>
             {control(key, opt)}
@@ -282,17 +289,34 @@ export default function CardForm({
           </p>
         ))}
 
-        <label className={ui.label} htmlFor="card-title">
-          Title
+        {fields.title?.map((m) => (
+          <p key={m} className={styles.error}>
+            {m}
+          </p>
+        ))}
+
+        <label className={ui.label} htmlFor="card-desc">
+          Longer description <span className={styles.hint}>not printed on the card</span>
         </label>
-        <input
-          id="card-title"
+        <MarkupBar />
+        <RichTextArea
+          id="card-desc"
           className={ui.input}
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          maxLength={60}
-          required
+          label="Longer description"
+          rows={4}
+          value={description}
+          onChange={setDescription}
         />
+        {issues.map((i) => (
+          <p key={i} className={styles.error}>
+            {ISSUE_TEXT[i]}
+          </p>
+        ))}
+        {fields.description?.map((m) => (
+          <p key={m} className={styles.error}>
+            {m}
+          </p>
+        ))}
 
         <span className={ui.label}>Rarity</span>
         <div className={styles.tiers} role="group" aria-label="Rarity">
@@ -309,35 +333,12 @@ export default function CardForm({
             </button>
           ))}
         </div>
-        <p className={styles.tierNote}>
-          {rarity === 'legendary'
-            ? 'A foil or holographic finish is matched automatically to your design.'
-            : nextTier
-              ? `${RARITY_LABELS[nextTier]} adds ${opens.get(nextTier)!.join(', ')}.`
-              : 'Every option on this template is open at this tier.'}
-        </p>
+        {nextTier ? (
+          <p className={styles.tierNote}>
+            {RARITY_LABELS[nextTier]} adds {opens.get(nextTier)!.join(', ')}.
+          </p>
+        ) : null}
         {note ? <p className={styles.note}>{note}</p> : null}
-
-        <label className={ui.label} htmlFor="card-desc">
-          Description <span className={styles.hint}>**bold**, *italic*, - bullets</span>
-        </label>
-        <textarea
-          id="card-desc"
-          className={ui.input}
-          rows={4}
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        />
-        {issues.map((i) => (
-          <p key={i} className={styles.error}>
-            {ISSUE_TEXT[i]}
-          </p>
-        ))}
-        {fields.description?.map((m) => (
-          <p key={m} className={styles.error}>
-            {m}
-          </p>
-        ))}
 
         <span className={ui.label}>Template</span>
         {fields.template_key?.map((m) => (
@@ -345,38 +346,26 @@ export default function CardForm({
             {m}
           </p>
         ))}
-        {TEMPLATE_GROUPS.map((tgroup) => {
-          const inGroup = templates.filter((t) => tgroup.match(t.key));
-          if (inGroup.length === 0) return null;
-          return (
-            <div key={tgroup.label} className={styles.templateGroup}>
-              <span className={styles.groupLabel}>{tgroup.label}</span>
-              <div className={styles.templates}>
-                {inGroup.map((t) => {
-                  const shut = !reached(t.unlocks, rarity);
-                  return (
-                    <button
-                      key={t.key}
-                      type="button"
-                      aria-pressed={t.key === templateKey}
-                      disabled={shut}
-                      className={`${styles.templateBtn} ${t.key === templateKey ? styles.templateActive : ''}`}
-                      onClick={() => pickTemplate(t.key)}
-                    >
-                      <strong>
-                        {t.name}
-                        {shut ? (
-                          <span className={styles.lockTag}>{RARITY_LABELS[t.unlocks!]}</span>
-                        ) : null}
-                      </strong>
-                      <small>{t.description}</small>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          );
-        })}
+        <div className={styles.templates}>
+          {templates.map((t) => {
+            const shut = !reached(t.unlocks, rarity);
+            return (
+              <button
+                key={t.key}
+                type="button"
+                aria-pressed={t.key === templateKey}
+                disabled={shut}
+                title={shut ? `${RARITY_LABELS[t.unlocks!]} and above` : t.name}
+                className={`${styles.templateBtn} ${t.key === templateKey ? styles.templateActive : ''}`}
+                onClick={() => pickTemplate(t.key)}
+              >
+                <TemplateThumb layout={t.key} />
+                <strong>{t.name}</strong>
+                {shut ? <span className={styles.lockTag}>{RARITY_LABELS[t.unlocks!]}</span> : null}
+              </button>
+            );
+          })}
+        </div>
 
         <div className={styles.groups}>{OPTION_GROUPS.map(group)}</div>
         {fields.template_config?.map((m) => (
@@ -396,17 +385,40 @@ export default function CardForm({
       </div>
 
       <div className={styles.preview}>
-        <div className={styles.proof}>
+        <div>
+          <span className={styles.copyHeading}>Printed card copy</span>
+          <p className={styles.copyNote}>Type on the card. Drag it to turn it under the light.</p>
+        </div>
+        <TiltStage className={styles.proof} label="Turn the proof under the light">
           <CardPreview
             title={title}
             rarity={rarity}
             description={description}
+            printedText={printedText}
             imageUrl={image?.url ?? null}
             templateKey={templateKey}
-            templateConfig={prepareCardDesign(templateKey, config, rarity)}
+            templateConfig={prepareCardDesign(templateKey, config)}
             mark={mark}
+            {...(code ? { code } : {})}
+            {...(template ? { textRules: template.text } : {})}
+            onTitleChange={setTitle}
+            onPrintedTextChange={setPrintedText}
+            lit
           />
-        </div>
+        </TiltStage>
+        {template ? (
+          <p className={styles.copyCount}>
+            Title {title.length}/{template.text.title.max_length}
+            {template.text.printed
+              ? ` · ${template.text.printed_label} ${printedText.length}/${template.text.printed.max_length}`
+              : ''}
+          </p>
+        ) : null}
+        {fields.printed_text?.map((m) => (
+          <p key={m} className={styles.error}>
+            {m}
+          </p>
+        ))}
       </div>
     </form>
   );

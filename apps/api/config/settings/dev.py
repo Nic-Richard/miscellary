@@ -9,13 +9,4 @@ STORAGES["staticfiles"] = {  # noqa: F405
 WHITENOISE_AUTOREFRESH = True
 
 # Seeded demo accounts can open packs repeatedly so the reveal is testable.
-UNLIMITED_PACK_EMAILS = [
-    "fieldnote@example.com",
-    "waverly@example.com",
-    "mabel@example.com",
-    "orla@example.com",
-    "kit@example.com",
-    "bex@example.com",
-    "sol@example.com",
-    "wren@example.com",
-]
+UNLIMITED_PACKS_FOR_DEMO_ACCOUNTS = True

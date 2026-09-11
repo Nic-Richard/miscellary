@@ -7,6 +7,12 @@
   --font-spacemono: 'Space Mono';
   --font-caveat: 'Caveat';
   --font-alfa: 'Alfa Slab One';
+  --font-oswald: 'Oswald';
+  --font-marcellus: 'Marcellus SC';
+  --font-garamond: 'EB Garamond';
+  --font-spectral: 'Spectral';
+  --font-cabin: 'Cabin';
+  --font-jost: 'Jost';
 }
 html,
 body {

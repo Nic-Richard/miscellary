@@ -1,17 +1,19 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useState } from 'react';
 import type { FormEvent } from 'react';
 import Field from '@/components/Field';
 import { ApiRequestError } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
+import { returnPath, swapAuthHref } from '@/lib/returnTo';
 import styles from '@/components/AuthForm.module.css';
 
-export default function LoginPage() {
+function LoginForm() {
   const { login } = useAuth();
   const router = useRouter();
+  const search = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -23,7 +25,7 @@ export default function LoginPage() {
     setError(null);
     try {
       await login({ email, password });
-      router.push('/account');
+      router.replace(returnPath(search));
     } catch (err) {
       setError(err instanceof ApiRequestError ? err.message : 'Login failed.');
     } finally {
@@ -57,8 +59,16 @@ export default function LoginPage() {
         {busy ? 'Logging in…' : 'Log in'}
       </button>
       <p className={styles.alt}>
-        No account? <Link href="/register">Sign up</Link>
+        No account? <Link href={swapAuthHref('/register', search)}>Sign up</Link>
       </p>
     </form>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
   );
 }

@@ -37,6 +37,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
     username = models.CharField(max_length=20, unique=True, validators=[USERNAME_VALIDATOR])
     email_verified = models.BooleanField(default=False)
+    is_demo = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
