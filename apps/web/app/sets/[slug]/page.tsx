@@ -75,7 +75,6 @@ function SetCard({
             card.position,
             card.set_total || detail.cards.length,
           )}
-          description={card.description}
           printedText={card.printed_text}
           imageUrl={card.image.url}
           templateKey={card.template_key}
@@ -290,6 +289,12 @@ export default function BinderPage() {
             {set.opening_count === 1 ? 'pack' : 'packs'} opened
           </p>
           {set.description ? <Description text={set.description} className={styles.desc} /> : null}
+          {set.creator.is_demo ? (
+            <p className={styles.demoNote}>
+              This set and its creator are fictional, and are here to demonstrate the product. The
+              photographs are real work by the people credited on each card.
+            </p>
+          ) : null}
           <div className={styles.creator}>
             <span>Created by</span>
             <Link href={`/users/${set.creator.username}`} className={styles.creatorLink}>
@@ -548,7 +553,7 @@ export default function BinderPage() {
               <ol className={styles.pulls}>
                 {popularCards.map((card) => (
                   <li key={card.id}>
-                    <img src={card.image.url} alt="" />
+                    <img src={card.image.url} alt="" draggable={false} />
                     <span>
                       <strong>{card.title}</strong>
                       <small data-rarity={card.rarity}>{card.rarity}</small>

@@ -15,10 +15,17 @@
 .copy {
   max-width: 580px;
 }
+@media (min-width: 1400px) {
+  .hero {
+    grid-template-columns: minmax(0, 580px) minmax(0, 1fr);
+  }
+}
 .title {
+  max-width: 21ch;
   margin: 8px 0 0;
-  font: 400 clamp(46px, 5.6vw, 88px) / 0.92 var(--display);
+  font: 400 clamp(46px, 5.6vw, 84px) / 0.92 var(--display);
   letter-spacing: 0.01em;
+  text-wrap: balance;
   text-transform: uppercase;
   color: #3a2f26;
 }
@@ -43,12 +50,13 @@
   color: var(--accent);
 }
 
-/* Keep overlapping hero objects inside the section. */
 .desk {
   position: relative;
   container-type: inline-size;
   width: 100%;
-  aspect-ratio: 5 / 3;
+  max-width: 1160px;
+  margin-inline: auto;
+  aspect-ratio: 7 / 4;
 }
 .lamp {
   position: absolute;
@@ -62,7 +70,7 @@
 }
 .deskCard {
   position: absolute;
-  width: 30cqw;
+  width: 21cqw;
   --card-max: none;
   transform: rotate(var(--tilt, 0deg));
   transform-origin: 50% 60%;
@@ -73,21 +81,6 @@
 .deskCard:focus-visible {
   transform: rotate(var(--tilt, 0deg)) translateY(-2.4cqw);
   z-index: 4;
-}
-.deskPack {
-  position: absolute;
-  left: 74%;
-  top: 30%;
-  z-index: 5;
-  display: block;
-  width: 22cqw;
-  transform: rotate(11deg);
-  filter: drop-shadow(0 2cqw 2cqw rgba(20, 60, 54, 0.3));
-  transition: transform var(--dur-med) var(--ease-out);
-}
-.deskPack:hover,
-.deskPack:focus-visible {
-  transform: rotate(11deg) translateY(-2cqw);
 }
 
 .sectionHead {
@@ -104,11 +97,30 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
+.packRow {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 22px 16px;
+}
+@media (max-width: 1180px) {
+  .packRow {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+@media (max-width: 760px) {
+  .packRow {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 480px) {
+  .packRow {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
 .sectionNote {
-  max-width: 62ch;
-  margin: 7px 0 0;
+  max-width: 52ch;
+  margin: 6px 0 0;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.5;
 }
 .more {
@@ -136,40 +148,6 @@
 .binderLink:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 6px;
-}
-
-.steps {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  max-width: 1080px;
-  margin: 0 auto;
-  padding: 0 10px;
-  border-top: 1px solid var(--bdr2);
-  border-bottom: 1px solid var(--bdr2);
-}
-.step {
-  padding: 22px 26px 24px;
-}
-.step + .step {
-  border-left: 1px solid var(--bdr);
-}
-.stepNo {
-  display: block;
-  color: var(--accent);
-  font: 400 15px / 1 var(--display);
-  letter-spacing: 0.22em;
-}
-.stepTitle {
-  margin: 10px 0 0;
-  font: 400 21px / 1 var(--display);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-.stepText {
-  max-width: 38ch;
-  margin: 8px 0 0;
-  color: var(--muted);
-  line-height: 1.55;
 }
 
 .shelfSection {
@@ -208,15 +186,6 @@
   .desk {
     max-width: 620px;
     margin: 0 auto;
-  }
-}
-@media (max-width: 760px) {
-  .steps {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .step + .step {
-    border-left: 0;
-    border-top: 1px solid var(--bdr);
   }
 }
 @media (max-width: 620px) {

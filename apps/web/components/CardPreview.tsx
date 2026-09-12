@@ -7,16 +7,16 @@ import {
 } from '@miscellary/shared';
 import type { CardRenderAssets, CardTextRules, Rarity, TemplateConfig } from '@miscellary/shared';
 import type { CSSProperties } from 'react';
-import BakedCard from './BakedCard';
+import BakedCard, { FlatCard } from './BakedCard';
 import { CopyField, PrintedCopy } from './CardCopy';
 import SetMark from './SetMark';
 import { resolveMark } from '@/lib/setIdentity';
+import { useSceneLit } from '@/lib/lighting';
 import styles from './CardPreview.module.css';
 
 export interface CardPreviewProps {
   title: string;
   rarity: Rarity;
-  description: string;
   printedText?: string;
   imageUrl: string | null;
   templateKey: string;
@@ -26,7 +26,7 @@ export interface CardPreviewProps {
   mark?: string | undefined;
   lit?: boolean | undefined;
   render?: CardRenderAssets | null | undefined;
-  renderMode?: 'static' | 'mask';
+  renderMode?: 'static' | 'mask' | 'flat';
   textRules?: CardTextRules;
   onTitleChange?: (value: string) => void;
   onPrintedTextChange?: (value: string) => void;
@@ -57,6 +57,8 @@ function cardVars(templateKey: string, config: TemplateConfig, rarity: Rarity): 
     '--rc': t.rarity,
     '--core': t.core,
   };
+  if (t.titleInk) vars['--title-ink'] = t.titleInk;
+  if (t.bodyInk) vars['--body-ink'] = t.bodyInk;
   if (t.glow) vars['--glow'] = t.glow;
   if (t.texture) {
     const { image, size, opacity, blend } = t.texture;
@@ -96,7 +98,20 @@ export default function CardPreview({
   onTitleChange,
   onPrintedTextChange,
 }: CardPreviewProps) {
+  const sceneLit = useSceneLit();
   const bakedImage = size === 'small' ? render?.thumbnail : render?.front;
+  const flat = render?.flat_thumbnail;
+  if (!renderMode && render && flat && size === 'small' && !lit && !sceneLit) {
+    return (
+      <FlatCard
+        image={flat}
+        title={title}
+        templateKey={templateKey}
+        rarity={rarity}
+        templateConfig={templateConfig}
+      />
+    );
+  }
   if (!renderMode && render && bakedImage) {
     return (
       <BakedCard
@@ -120,10 +135,9 @@ export default function CardPreview({
       />
     );
   }
+  // Render-only modes are used by the asset generator.
+  const composited = renderMode === undefined || renderMode === 'flat';
   const data: Record<string, string> = {};
-  // Option names are snake_case; data attributes are not. Spot work is resolved
-  // rather than stored, so its attributes come from the resolver below and not
-  // from whatever the config happens to carry.
   for (const [k, v] of Object.entries(currentConfig(templateConfig)))
     if (k !== 'pattern' && k !== 'coverage') data[`data-${k.replace(/_/g, '-')}`] = v;
   const shownTitle = title || 'Untitled';
@@ -185,7 +199,7 @@ export default function CardPreview({
         </header>
         <div className={styles.art}>
           {renderMode !== 'mask' && imageUrl ? (
-            <img src={imageUrl} alt="" />
+            <img src={imageUrl} alt="" draggable={false} />
           ) : renderMode !== 'mask' ? (
             <div className={styles.placeholder}>No photo yet</div>
           ) : null}
@@ -195,7 +209,7 @@ export default function CardPreview({
           {renderMode === 'mask' && spot?.area === 'reverse' ? (
             <i className={styles.materialHole} aria-hidden="true" />
           ) : null}
-          {!renderMode && spot?.area === 'spot' ? spotLayers(styles) : null}
+          {composited && spot?.area === 'spot' ? spotLayers(styles) : null}
         </div>
         {code ? <b className={styles.code}>{code}</b> : null}
 
@@ -220,7 +234,7 @@ export default function CardPreview({
           </footer>
         ) : null}
 
-        {!renderMode && spot && spot.area !== 'spot' ? spotLayers(styles) : null}
+        {composited && spot && spot.area !== 'spot' ? spotLayers(styles) : null}
         {renderMode === 'mask' && spot && spot.area !== 'spot' ? (
           <i className={styles.materialMask} aria-hidden="true" />
         ) : null}

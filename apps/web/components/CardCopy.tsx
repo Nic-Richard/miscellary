@@ -18,6 +18,20 @@ function lineHeightOf(element: HTMLElement): number {
   return parseFloat(style.lineHeight) || parseFloat(style.fontSize) * 1.25;
 }
 
+/* scrollWidth is measured against the padding box, so a line that spills into
+   the padding still reports as fitting. Measuring the text itself against the
+   content box is what leaves the gap the plate is padded for. */
+function inkWidth(element: HTMLElement): number {
+  const range = document.createRange();
+  range.selectNodeContents(element);
+  return range.getBoundingClientRect().width;
+}
+
+function contentWidth(element: HTMLElement): number {
+  const style = getComputedStyle(element);
+  return element.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+}
+
 function clipHeight(element: HTMLElement): number {
   const parent = element.parentElement;
   if (!parent) return Infinity;
@@ -46,12 +60,20 @@ function measure(element: HTMLElement, region: TextRegionRules): Fit {
   const budget = region.lines * lineHeightOf(element) + inset;
   const clip = single ? Infinity : Math.min(panel, box, boxed ? budget : Infinity);
   const fits = () => {
-    if (single) return element.scrollWidth <= element.clientWidth + 1;
+    if (single) {
+      // A field holds its value out of reach of a Range, so it keeps the
+      // box-level test; a printed region is measured by its own text.
+      const field = element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement;
+      if (field) return element.scrollWidth <= element.clientWidth;
+      return inkWidth(element) <= contentWidth(element);
+    }
     if (element.scrollHeight > clip + 1) return false;
     if (boxed) return true;
     return Math.round((element.scrollHeight - inset) / lineHeightOf(element)) <= region.lines;
   };
   if (fits()) return { scale: 1, fits: true };
+  apply(region.min_scale);
+  if (!fits()) return { scale: region.min_scale, fits: false };
   let low = region.min_scale;
   let high = 1;
   for (let step = 0; step < STEPS; step++) {

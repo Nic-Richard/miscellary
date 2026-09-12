@@ -4,36 +4,38 @@ import Link from 'next/link';
 import { cardCode } from '@miscellary/shared';
 import type { OwnedCard, TradeOffer } from '@miscellary/shared';
 import CardPreview from './CardPreview';
+import SwapArrow from './SwapArrow';
 import DemoBadge from './DemoBadge';
 import ui from './ui.module.css';
 import styles from './OfferCard.module.css';
 
-function Side({
+export function OfferSide({
   label,
   cards,
   onInspect,
+  big,
 }: {
   label: string;
   cards: OwnedCard[];
   onInspect?: ((owned: OwnedCard) => void) | undefined;
+  big?: boolean;
 }) {
   return (
     <div className={styles.side}>
       <span className={styles.sideLabel}>
         {label} <b>{cards.length}</b>
       </span>
-      <div className={styles.cards}>
+      <div className={`${styles.cards} ${big ? styles.cardsBig : ''}`}>
         {cards.length === 0 ? (
           <span className={styles.nothing}>nothing</span>
         ) : (
           cards.map((c) => {
             const card = (
               <CardPreview
-                size="small"
+                size={big ? 'large' : 'small'}
                 title={c.card.title}
                 rarity={c.card.rarity}
                 code={cardCode(c.card.printed_set_code, c.card.position, c.card.set_total)}
-                description=""
                 printedText={c.card.printed_text}
                 imageUrl={c.card.image.url}
                 templateKey={c.card.template_key}
@@ -42,9 +44,10 @@ function Side({
                 render={c.card.render}
               />
             );
+            const size = `${styles.card} ${big ? styles.cardBig : ''}`;
             if (!onInspect) {
               return (
-                <span key={c.id} className={styles.card}>
+                <span key={c.id} className={size}>
                   {card}
                 </span>
               );
@@ -53,7 +56,7 @@ function Side({
               <button
                 key={c.id}
                 type="button"
-                className={`${styles.card} ${styles.inspect}`}
+                className={`${size} ${styles.inspect}`}
                 onClick={() => onInspect(c)}
                 aria-label={`Inspect ${c.card.title}`}
               >
@@ -72,10 +75,21 @@ interface OfferCardProps {
   me: string;
   onAction: (action: 'accept' | 'reject' | 'cancel') => void;
   onInspect?: (owned: OwnedCard) => void;
+  onOpen?: (offer: TradeOffer) => void;
   busy?: boolean;
 }
 
-const STATUS_WORD: Record<string, string> = {
+export function readOffer(offer: TradeOffer, me: string) {
+  const incoming = offer.recipient.username === me;
+  return {
+    incoming,
+    other: incoming ? offer.sender : offer.recipient,
+    youGet: incoming ? offer.give : offer.want,
+    youGive: incoming ? offer.want : offer.give,
+  };
+}
+
+export const STATUS_WORD: Record<string, string> = {
   pending: 'Waiting',
   accepted: 'Accepted',
   rejected: 'Rejected',
@@ -83,13 +97,69 @@ const STATUS_WORD: Record<string, string> = {
   countered: 'Countered',
 };
 
-export default function OfferCard({ offer, me, onAction, onInspect, busy }: OfferCardProps) {
-  const incoming = offer.recipient.username === me;
-  const other = incoming ? offer.sender : offer.recipient;
-  // The offer is always written from the reader's point of view: the sender's
-  // "give" is the reader's "get" when it landed in their inbox.
-  const youGet = incoming ? offer.give : offer.want;
-  const youGive = incoming ? offer.want : offer.give;
+export function OfferActions({
+  offer,
+  me,
+  onAction,
+  busy,
+}: {
+  offer: TradeOffer;
+  me: string;
+  onAction: (action: 'accept' | 'reject' | 'cancel') => void;
+  busy?: boolean | undefined;
+}) {
+  const { incoming, other } = readOffer(offer, me);
+  if (offer.status !== 'pending') return null;
+  return (
+    <footer className={styles.actions}>
+      {incoming ? (
+        <>
+          <button
+            className={ui.btnPrimary}
+            type="button"
+            disabled={busy}
+            onClick={() => onAction('accept')}
+          >
+            Accept
+          </button>
+          <Link className={ui.btnOutline} href={`/trades/new?counter=${offer.id}`}>
+            Counter
+          </Link>
+          <button
+            className={styles.quietDanger}
+            type="button"
+            disabled={busy}
+            onClick={() => onAction('reject')}
+          >
+            Reject
+          </button>
+        </>
+      ) : (
+        <>
+          <span className={styles.await}>Waiting on @{other.username}</span>
+          <button
+            className={styles.quietDanger}
+            type="button"
+            disabled={busy}
+            onClick={() => onAction('cancel')}
+          >
+            Cancel offer
+          </button>
+        </>
+      )}
+    </footer>
+  );
+}
+
+export default function OfferCard({
+  offer,
+  me,
+  onAction,
+  onInspect,
+  onOpen,
+  busy,
+}: OfferCardProps) {
+  const { incoming, other, youGet, youGive } = readOffer(offer, me);
 
   return (
     <article className={styles.root}>
@@ -110,54 +180,18 @@ export default function OfferCard({ offer, me, onAction, onInspect, busy }: Offe
       {offer.message ? <p className={styles.message}>&ldquo;{offer.message}&rdquo;</p> : null}
 
       <div className={styles.deal}>
-        <Side label="You get" cards={youGet} onInspect={onInspect} />
-        <span className={styles.swap} aria-hidden="true">
-          <svg viewBox="0 0 24 24">
-            <path d="M4 9h14l-4-4M20 15H6l4 4" />
-          </svg>
-        </span>
-        <Side label="You give" cards={youGive} onInspect={onInspect} />
+        <OfferSide label="You get" cards={youGet} onInspect={onInspect} />
+        <SwapArrow className={styles.swap} />
+        <OfferSide label="You give" cards={youGive} onInspect={onInspect} />
       </div>
 
-      {offer.status === 'pending' ? (
-        <footer className={styles.actions}>
-          {incoming ? (
-            <>
-              <button
-                className={ui.btnPrimary}
-                type="button"
-                disabled={busy}
-                onClick={() => onAction('accept')}
-              >
-                Accept
-              </button>
-              <Link className={ui.btnOutline} href={`/trades/new?counter=${offer.id}`}>
-                Counter
-              </Link>
-              <button
-                className={styles.quietDanger}
-                type="button"
-                disabled={busy}
-                onClick={() => onAction('reject')}
-              >
-                Reject
-              </button>
-            </>
-          ) : (
-            <>
-              <span className={styles.await}>Waiting on @{other.username}</span>
-              <button
-                className={styles.quietDanger}
-                type="button"
-                disabled={busy}
-                onClick={() => onAction('cancel')}
-              >
-                Cancel offer
-              </button>
-            </>
-          )}
-        </footer>
+      {onOpen ? (
+        <button type="button" className={styles.open} onClick={() => onOpen(offer)}>
+          Open offer
+        </button>
       ) : null}
+
+      <OfferActions offer={offer} me={me} onAction={onAction} busy={busy} />
     </article>
   );
 }

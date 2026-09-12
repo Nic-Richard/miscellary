@@ -49,6 +49,11 @@ export const createCard = (setId: string, body: CardWrite) =>
   apiFetch<Card>(`/api/v1/me/sets/${setId}/cards/`, { method: 'POST', body });
 export const updateCard = (setId: string, cardId: string, body: Partial<CardWrite>) =>
   apiFetch<Card>(`/api/v1/me/sets/${setId}/cards/${cardId}/`, { method: 'PATCH', body });
+export const reorderCards = (setId: string, cardIds: string[]) =>
+  apiFetch<Card[]>(`/api/v1/me/sets/${setId}/cards/order/`, {
+    method: 'POST',
+    body: { card_ids: cardIds },
+  });
 export const deleteCard = (setId: string, cardId: string) =>
   apiFetch<void>(`/api/v1/me/sets/${setId}/cards/${cardId}/`, { method: 'DELETE' });
 

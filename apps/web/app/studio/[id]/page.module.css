@@ -126,13 +126,6 @@
   margin-bottom: 34px;
   padding: 22px 26px 26px;
 }
-.identityNote {
-  margin: 0;
-  max-width: 60ch;
-  color: var(--muted);
-  font-size: 13px;
-  line-height: 1.5;
-}
 
 .identityHead {
   display: flex;

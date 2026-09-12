@@ -7,7 +7,7 @@ const AUTH_PATHS = ['/login', '/register'];
 export function internalPath(value: string | null | undefined): string | null {
   if (!value || !value.startsWith('/')) return null;
   if (value.startsWith('//') || value.includes('\\')) return null;
-  if ([...value].some((character) => character <= ' ' || character === '')) return null;
+  if ([...value].some((character) => character <= ' ' || character === '\u007f')) return null;
   let url: URL;
   try {
     url = new URL(value, 'http://return.invalid');
@@ -26,17 +26,26 @@ function withParam(path: string, name: string, value: string): string {
   return `${url.pathname}${url.search}${url.hash}`;
 }
 
-export function loginHref(path: string, action?: string, extra?: Record<string, string>): string {
+function authHref(
+  to: '/login' | '/register',
+  path: string,
+  action?: string,
+  extra?: Record<string, string>,
+): string {
   let destination = action ? withParam(path, CONTINUE_PARAM, action) : path;
   for (const [name, value] of Object.entries(extra ?? {})) {
     destination = withParam(destination, name, value);
   }
   const target = internalPath(destination);
-  return target ? withParam('/login', RETURN_PARAM, target) : '/login';
+  return target ? withParam(to, RETURN_PARAM, target) : to;
+}
+
+export function loginHref(path: string, action?: string, extra?: Record<string, string>): string {
+  return authHref('/login', path, action, extra);
 }
 
 export function registerHref(path: string, action?: string): string {
-  return loginHref(path, action).replace('/login?', '/register?');
+  return authHref('/register', path, action);
 }
 
 export function returnPath(search: { get(name: string): string | null }): string {

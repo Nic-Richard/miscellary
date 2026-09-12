@@ -42,6 +42,14 @@ export interface LoginRequest {
 
 export type ImageKind = 'card' | 'cover' | 'avatar' | 'pack';
 
+/* Attribution the image's licence asks for. Null when nobody is named. */
+export interface ImageCredit {
+  author: string;
+  license: string;
+  license_url: string;
+  source_url: string;
+}
+
 export interface ImageRef {
   id: string;
   kind: ImageKind;
@@ -49,6 +57,7 @@ export interface ImageRef {
   width: number;
   height: number;
   ready: boolean;
+  credit?: ImageCredit | null;
 }
 
 export interface CardRenderImage {
@@ -64,10 +73,20 @@ export interface CardRenderAssets {
   /** The spot treatment this card is masked for, if it has one. */
   spot: { material: string; area: string } | null;
   thumbnail: CardRenderImage | null;
+  /** The finished card under the default key light, for views that never move it. */
+  flat_thumbnail: CardRenderImage | null;
   front: CardRenderImage | null;
   mask_thumbnail: CardRenderImage | null;
   mask: CardRenderImage | null;
   back: CardRenderImage | null;
+}
+
+/** A picture of the wrapper, for lists that cannot afford to draw it live. */
+export interface PackRender {
+  status: 'pending' | 'ready';
+  signature: string;
+  version: number;
+  image: CardRenderImage | null;
 }
 
 export interface CardBackRender {
@@ -212,6 +231,7 @@ export interface CardSetSummary {
   opening_count: number;
   liked: boolean;
   render_back?: CardBackRender | null;
+  render_pack?: PackRender | null;
   created_at: string;
   published_at: string | null;
 }

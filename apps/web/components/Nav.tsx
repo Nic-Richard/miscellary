@@ -1,11 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useState } from 'react';
 import type { FormEvent } from 'react';
 import { useAuth } from '@/lib/auth';
-import { loginHref, registerHref } from '@/lib/returnTo';
+import { loginHref, registerHref, swapAuthHref } from '@/lib/returnTo';
+import BrandMark from './BrandMark';
 import styles from './Nav.module.css';
 
 type IconName = 'home' | 'binders' | 'cards' | 'trades' | 'studio' | 'profile' | 'search' | 'plus';
@@ -30,22 +31,6 @@ export function NavIcon({ name }: { name: IconName }) {
   );
 }
 
-function BrandMark() {
-  return (
-    <svg viewBox="0 0 64 48" className={styles.brandMark} aria-hidden="true">
-      <g fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round">
-        <rect x="10" y="10" width="20" height="30" rx="2.5" transform="rotate(-16 20 25)" />
-        <rect x="34" y="10" width="20" height="30" rx="2.5" transform="rotate(16 44 25)" />
-        <rect x="22" y="6" width="20" height="32" rx="2.5" fill="var(--sur)" />
-      </g>
-      <path
-        d="m32 15 1.9 4 4.3.5-3.2 2.9.9 4.3-3.9-2.2-3.9 2.2.9-4.3-3.2-2.9 4.3-.5Z"
-        fill="currentColor"
-      />
-    </svg>
-  );
-}
-
 export default function Nav() {
   const { user, loading, logout } = useAuth();
   const router = useRouter();
@@ -57,11 +42,12 @@ export default function Nav() {
     if (q.trim().length >= 2) router.push(`/search?q=${encodeURIComponent(q.trim())}`);
   }
 
-  const gated = (href: string) => (user ? href : loginHref(href));
-  const profileHref = user ? `/users/${user.profile.username}` : loginHref('/account');
+  const gated = (href: string) => (user ? href : registerHref(href));
+  const profileHref = user ? `/users/${user.profile.username}` : registerHref('/account');
+
   const links: { href: string; label: string; icon: IconName; match: string }[] = [
     { href: '/', label: 'Home', icon: 'home', match: '/' },
-    { href: '/sets', label: 'Binders', icon: 'binders', match: '/sets' },
+    { href: '/sets', label: 'Sets', icon: 'binders', match: '/sets' },
     { href: gated('/collection'), label: 'My cards', icon: 'cards', match: '/collection' },
     { href: gated('/trades'), label: 'Trades', icon: 'trades', match: '/trades' },
     { href: gated('/studio'), label: 'Studio', icon: 'studio', match: '/studio' },
@@ -76,7 +62,7 @@ export default function Nav() {
   return (
     <header className={styles.root}>
       <Link href="/" className={styles.brand}>
-        <BrandMark />
+        <BrandMark className={styles.brandMark} />
         <span className={styles.wordmark}>Miscellary</span>
         <small>Collect · Trade · Create</small>
       </Link>
@@ -124,16 +110,43 @@ export default function Nav() {
             </>
           ) : (
             <>
-              <Link href={loginHref(pathname)} className={styles.secondary}>
-                Log in
-              </Link>
-              <Link href={registerHref(pathname)} className={styles.primary}>
-                Sign up
-              </Link>
+              <Suspense fallback={<AuthLinks pathname={pathname} />}>
+                <AuthLinksCarryingQuery pathname={pathname} />
+              </Suspense>
             </>
           )}
         </div>
       </div>
     </header>
+  );
+}
+
+function AuthLinks({
+  pathname,
+  to,
+}: {
+  pathname: string;
+  to?: { login: string; register: string };
+}) {
+  return (
+    <>
+      <Link href={to?.login ?? loginHref(pathname)} className={styles.secondary}>
+        Log in
+      </Link>
+      <Link href={to?.register ?? registerHref(pathname)} className={styles.primary}>
+        Sign up
+      </Link>
+    </>
+  );
+}
+
+function AuthLinksCarryingQuery({ pathname }: { pathname: string }) {
+  const search = useSearchParams();
+  if (pathname !== '/login' && pathname !== '/register') return <AuthLinks pathname={pathname} />;
+  return (
+    <AuthLinks
+      pathname={pathname}
+      to={{ login: swapAuthHref('/login', search), register: swapAuthHref('/register', search) }}
+    />
   );
 }

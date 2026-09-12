@@ -47,8 +47,6 @@
   text-transform: uppercase;
   cursor: pointer;
 }
-/* The dot is the tier colour a card actually prints with, so the ladder in the
-   editor and the cut edge on the card agree. */
 .tier::before {
   content: '';
   width: 9px;
@@ -98,17 +96,6 @@
   line-height: 1.45;
 }
 
-.templateGroup {
-  margin: 4px 0 12px;
-}
-.groupLabel {
-  display: block;
-  margin-bottom: 7px;
-  color: var(--faint);
-  font-size: 10px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-}
 .templates {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
@@ -210,35 +197,7 @@
   text-align: center;
 }
 .proof {
-  /* The proof is edited directly, so it gets the room the controls give up. */
   --card-max: 520px;
-}
-.scales {
-  display: flex;
-  align-self: center;
-  padding: 2px;
-  background: var(--sur2, #ebe3d1);
-  border: 1px solid var(--bdr2);
-  border-radius: var(--radius-pill, 999px);
-}
-.scale {
-  padding: 5px 13px;
-  background: none;
-  border: 0;
-  border-radius: var(--radius-pill, 999px);
-  color: var(--muted);
-  font-family: var(--display);
-  font-size: 12px;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  cursor: pointer;
-}
-.scale:not(.scaleOn):hover {
-  color: var(--accent);
-}
-.scaleOn {
-  background: var(--accent);
-  color: #fff;
 }
 .error {
   margin: 4px 0 0;
@@ -251,8 +210,6 @@
     grid-template-columns: 1fr;
     padding: 18px 16px 20px;
   }
-  /* On one column the proof comes first, so the controls under it are what a
-     scroll reaches next rather than being pushed off the screen. */
   .preview {
     position: sticky;
     top: 0;
@@ -263,7 +220,6 @@
     box-shadow: 0 6px 12px -10px rgba(0, 0, 0, 0.5);
   }
   .proof {
-    /* Small enough to leave the controls in view, large enough to type on. */
     --card-max: min(240px, 52vw);
   }
   .copyNote {

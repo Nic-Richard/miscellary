@@ -25,6 +25,13 @@
 .desc ul {
   margin: 0 0 6px;
 }
+.demoNote {
+  max-width: 560px;
+  margin: 10px 0 0;
+  color: #7a6f60;
+  font-size: 12px;
+  line-height: 1.45;
+}
 .creator {
   display: flex;
   flex-wrap: wrap;

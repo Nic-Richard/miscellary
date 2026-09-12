@@ -59,7 +59,11 @@ services:
       DATABASE_URL: postgres://miscellary:miscellary@db:5432/miscellary
       TEST_DATABASE_URL: postgres://miscellary:miscellary@db:5432/miscellary
       AWS_S3_ENDPOINT_URL: http://minio:9000
-      AWS_S3_PUBLIC_ENDPOINT_URL: http://localhost:9000
+      # Presigned URLs are signed over the host, so this has to be the address the
+      # client will actually call. A phone cannot reach localhost: point it at this
+      # machine on the LAN, the same host Metro reports.
+      # MEDIA_HOST=http://10.0.0.84:9000 docker compose up
+      AWS_S3_PUBLIC_ENDPOINT_URL: ${MEDIA_HOST:-http://localhost:9000}
     volumes:
       - .:/repo
       - api-venv:/repo/apps/api/.venv

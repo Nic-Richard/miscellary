@@ -15,6 +15,7 @@ import CardBack from '../../web/components/CardBack';
 import CardInspector from '../../web/components/CardInspector';
 import Binder from '../../web/components/binder/Binder';
 import PackPouch from '../../web/components/PackPouch';
+import PackStage from '../../web/components/PackStage';
 import PackReveal from '../../web/components/PackReveal';
 import ProfileBinder from '../../web/components/ProfileBinder';
 import PackDesigner from '../../web/components/studio/PackDesigner';
@@ -57,6 +58,8 @@ function Surface({ mode, data }: Props) {
     content = <CardPreview {...cardProps} size="large" renderMode="static" />;
   else if (mode === 'render-mask')
     content = <CardPreview {...cardProps} size="large" renderMode="mask" />;
+  else if (mode === 'render-flat')
+    content = <CardPreview {...cardProps} size="large" renderMode="flat" />;
   else if (mode === 'render-back')
     content = (
       <CardBack
@@ -67,6 +70,7 @@ function Surface({ mode, data }: Props) {
       />
     );
   else if (mode === 'pack') content = <PackPouch title={set.title} identity={set} />;
+  else if (mode === 'render-pack') content = <PackStage set={set} />;
   else if (mode === 'reveal')
     content = (
       <PackReveal
@@ -108,7 +112,6 @@ function Surface({ mode, data }: Props) {
                 size="small"
                 title={card.title}
                 rarity={card.rarity}
-                description={card.description}
                 printedText={card.printed_text}
                 imageUrl={card.image.url}
                 templateKey={card.template_key}

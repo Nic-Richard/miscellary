@@ -44,13 +44,12 @@ treatments. Template settings are saved as a snapshot so a published card keeps 
 its creator approved.
 
 The choices a creator makes are the ones that change the card: borders, colours, textures, the image
-window, and the material finish. Relief is not among them. The image window and the description panel
-are recessed on every card, the picture carries spot work from uncommon up, and the rim is struck
-from rare up, all as optical shading the renderer applies rather than a control. Which spot material
-a card gets follows the coat it was already given: foil on a metallic card, pearl on a pearl one,
-clear varnish otherwise, and a chosen foil in place of all three. A description or note
-panel stays plain apart from that relief and the card's own material, with no ruled, gridded or
-patterned paper to choose between.
+window, the material finish, and the foil. Relief is not among them. The image window and the
+description panel are recessed on every card and the rim is struck from rare up, both as optical
+shading the renderer applies rather than a control. Spot work is a choice: a card carries it only
+where its creator asked for foil or holo, and a card without one has none whatever its tier or its
+coat. A description or note panel stays plain apart from that relief and the card's own material,
+with no ruled, gridded or patterned paper to choose between.
 
 Sets also define their cover, mark, pack colors and finish, pack artwork layers, badge, free text,
 and pack size. These settings give each set a recognizable identity across its binder, card backs,
@@ -96,8 +95,9 @@ Miscellary uses five rarity tiers:
 - Epic
 - Legendary
 
-Rarity affects pull odds and visual treatment but does not represent a finite supply or monetary
-value. Rarity is also a design capability: it widens the catalogue a creator may pick from
+Rarity affects pull odds and the catalogue a creator may pick from, but does not represent a finite
+supply or monetary value. It never applies a treatment on its own: a tier opens options, and the
+creator decides whether to spend them. Rarity is also a design capability: it widens the catalogue a creator may pick from
 rather than dictating how a card looks. Common and uncommon have the full ordinary catalogue of
 layout, stock, colour, typography, imagery, framing and surface, so a common can be as
 well-designed as anything else. Higher tiers additionally unlock specialty production treatments -

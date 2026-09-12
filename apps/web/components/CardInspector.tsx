@@ -3,12 +3,13 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent, ReactNode } from 'react';
-import { cardCode, RARITY_LABELS, resolveCardTokens } from '@miscellary/shared';
+import { cardCode, creditLine, RARITY_LABELS, resolveCardTokens } from '@miscellary/shared';
 import type { Card, Creator, OwnedCard } from '@miscellary/shared';
 import CardBack from './CardBack';
 import CardPreview from './CardPreview';
 import Description from './Description';
 import DemoBadge from './DemoBadge';
+import { useDialog } from '@/lib/useDialog';
 import styles from './CardInspector.module.css';
 
 export interface CardInspectorProps {
@@ -67,6 +68,7 @@ export default function CardInspector({
   });
   const [facing, setFacing] = useState<'front' | 'back'>('front');
   const [still, setStill] = useState(false);
+  const credit = card.image.credit ?? null;
 
   useEffect(() => {
     const query = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -196,18 +198,7 @@ export default function CardInspector({
     }
   }
 
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose();
-    }
-    document.addEventListener('keydown', onKey);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.removeEventListener('keydown', onKey);
-      document.body.style.overflow = prev;
-    };
-  }, [onClose]);
+  useDialog(onClose);
 
   const corner = resolveCardTokens(card.template_key, card.template_config, card.rarity).corner;
 
@@ -252,7 +243,6 @@ export default function CardInspector({
                 title={card.title}
                 rarity={card.rarity}
                 code={cardCode(card.printed_set_code, card.position, card.set_total)}
-                description={card.description}
                 printedText={card.printed_text}
                 imageUrl={card.image.url}
                 templateKey={card.template_key}
@@ -321,6 +311,25 @@ export default function CardInspector({
             <Description text={card.description} className={styles.body} />
           ) : null}
           {actions ? <div className={styles.actions}>{actions}</div> : null}
+          {credit ? (
+            <p className={styles.credit}>
+              {credit.source_url ? (
+                <a href={credit.source_url} target="_blank" rel="noreferrer noopener">
+                  {creditLine(credit)}
+                </a>
+              ) : (
+                creditLine(credit)
+              )}
+              {credit.license_url ? (
+                <>
+                  {' · '}
+                  <a href={credit.license_url} target="_blank" rel="noreferrer noopener">
+                    Licence
+                  </a>
+                </>
+              ) : null}
+            </p>
+          ) : null}
         </div>
       </div>
     </div>

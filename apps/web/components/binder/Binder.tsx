@@ -2,9 +2,10 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent, ReactNode } from 'react';
+import BrandMark from '../BrandMark';
 import SetMark from '../SetMark';
 import { binderStyle, resolveMark } from '@/lib/setIdentity';
-import { slotLight } from '@/lib/lighting';
+import { SceneLight, slotLight } from '@/lib/lighting';
 import styles from './Binder.module.css';
 
 const COLUMNS = [5.18, 26.39, 55.57, 76.78];
@@ -54,10 +55,16 @@ function EmptySlot({
   label: string;
   onPick?: (() => void) | undefined;
 }) {
+  // A set's sleeves carry the set's mark. A profile binder holds cards from
+  // anywhere, so its empty sleeves carry the Miscellary mark instead.
   const inside = (
     <>
       <b>{String(index).padStart(3, '0')}</b>
-      <SetMark mark={resolveMark(mark)} className={styles.emptyMark} />
+      {mark === undefined ? (
+        <BrandMark className={styles.emptyMark} />
+      ) : (
+        <SetMark mark={resolveMark(mark)} className={styles.emptyMark} />
+      )}
     </>
   );
   if (!onPick) return <div className={styles.empty}>{inside}</div>;
@@ -183,7 +190,7 @@ export default function Binder({
           ...slotLight(slot.left + SLOT_WIDTH / 2, slot.top + SLOT_HEIGHT / 2),
         }}
       >
-        {content}
+        <SceneLight value={true}>{content}</SceneLight>
       </div>
     );
   }
@@ -226,8 +233,18 @@ export default function Binder({
         <div className={`${styles.turnStage} ${active ? styles.turning : ''}`}>
           <div className={`${styles.leaf} ${dir === 'next' ? styles.leafNext : styles.leafPrev}`}>
             <div className={styles.face}>
-              <img className={styles.leafSheet} src="/materials/binder.png" alt="" />
-              <img className={styles.leafCloth} src="/materials/binder-cloth.png" alt="" />
+              <img
+                className={styles.leafSheet}
+                src="/materials/binder.png"
+                alt=""
+                draggable={false}
+              />
+              <img
+                className={styles.leafCloth}
+                src="/materials/binder-cloth.png"
+                alt=""
+                draggable={false}
+              />
               <span className={styles.leafLamp} />
               {SLOTS.filter((slot) => slot.right === (dir === 'next')).map((slot) =>
                 place(slot, contentFor(outgoing.slots, outgoing.startIndex, slot, false)),
@@ -235,8 +252,18 @@ export default function Binder({
               <span className={styles.shade} />
             </div>
             <div className={styles.back}>
-              <img className={styles.leafSheet} src="/materials/binder.png" alt="" />
-              <img className={styles.leafCloth} src="/materials/binder-cloth.png" alt="" />
+              <img
+                className={styles.leafSheet}
+                src="/materials/binder.png"
+                alt=""
+                draggable={false}
+              />
+              <img
+                className={styles.leafCloth}
+                src="/materials/binder-cloth.png"
+                alt=""
+                draggable={false}
+              />
               <span className={styles.leafLamp} />
               {SLOTS.filter((slot) => slot.right === (dir === 'prev')).map((slot) =>
                 place(slot, contentFor(destination.slots, destination.startIndex, slot, false)),

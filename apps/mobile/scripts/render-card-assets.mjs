@@ -21,6 +21,10 @@ const { values: args } = parseArgs({
 const api = String(args.api ?? 'http://localhost:8000').replace(/\/$/, '');
 const chrome = String(args.chrome ?? 'http://127.0.0.1:9224').replace(/\/$/, '');
 const output = resolve(repo, String(args.output ?? 'tmp/card-renders'));
+
+// Mirrors CARD_RENDERER_VERSION in apps/api/cards/rendering.py. The import
+// refuses a manifest that does not match, so the two move together.
+const RENDERER_VERSION = 1;
 const bundle = JSON.parse(await readFile(resolve(mobile, 'generated/surfaces.json'), 'utf8'));
 const server = createServer((request, response) => {
   response.setHeader('Content-Type', 'text/html');
@@ -114,7 +118,19 @@ try {
   }
   if (!ready) throw new Error('The render surface did not become ready.');
 
-  async function render(mode, data, format, quality) {
+  const CARD_VIEW = { width: 1000, height: 1400 };
+  const PACK_VIEW = { width: 640, height: 800 };
+  let viewport = CARD_VIEW;
+
+  async function render(mode, data, format, quality, view = CARD_VIEW) {
+    if (view !== viewport) {
+      await call('Emulation.setDeviceMetricsOverride', {
+        ...view,
+        deviceScaleFactor: 1,
+        mobile: false,
+      });
+      viewport = view;
+    }
     await evaluate(`window.miscellaryRender(${JSON.stringify({ mode, data })})`);
     await evaluate('window.miscellaryReady');
     const failed = await evaluate(
@@ -149,7 +165,7 @@ try {
   }
 
   const sets = await catalogue();
-  const manifest = { renderer_version: 1, sets: [], cards: [] };
+  const manifest = { renderer_version: RENDERER_VERSION, sets: [], cards: [] };
   await mkdir(output, { recursive: true });
   for (const set of sets) {
     const backSignature = set.render_back?.signature;
@@ -163,10 +179,14 @@ try {
       92,
     );
     await writeFile(resolve(setDirectory, 'back.webp'), Buffer.from(back.data, 'base64'));
+    const pack = await render('render-pack', { set }, 'webp', 92, PACK_VIEW);
+    await writeFile(resolve(setDirectory, 'pack.webp'), Buffer.from(pack.data, 'base64'));
     manifest.sets.push({
       id: set.id,
       signature: backSignature,
       back: `set-${set.id}/back.webp`,
+      pack_signature: set.render_pack?.signature ?? '',
+      pack: `set-${set.id}/pack.webp`,
     });
 
     for (const card of set.cards) {
@@ -189,6 +209,12 @@ try {
       const thumbnail = await resize(front.data, 'webp', 0.9);
       await writeFile(resolve(directory, 'front.webp'), Buffer.from(front.data, 'base64'));
       await writeFile(resolve(directory, 'thumbnail.webp'), Buffer.from(thumbnail, 'base64'));
+      const flat = await render('render-flat', data, 'webp', 92);
+      const flatThumbnail = await resize(flat.data, 'webp', 0.9);
+      await writeFile(
+        resolve(directory, 'flat-thumbnail.webp'),
+        Buffer.from(flatThumbnail, 'base64'),
+      );
       let mask = null;
       let maskThumbnail = null;
       if (card.render?.spot) {
@@ -206,6 +232,7 @@ try {
         signature,
         front: `card-${card.id}/front.webp`,
         thumbnail: `card-${card.id}/thumbnail.webp`,
+        flat_thumbnail: `card-${card.id}/flat-thumbnail.webp`,
         mask: mask ? `card-${card.id}/mask.png` : null,
         mask_thumbnail: maskThumbnail ? `card-${card.id}/mask-thumbnail.png` : null,
       });

@@ -12,86 +12,8 @@ render the template from the key + config; the API only validates.
 
 from typing import Any
 
-from .identity import FONTS
+from .identity import COLOURS, FONTS
 from .rarity import RARITIES
-
-# One palette, in one order, wherever a colour is picked: the board, the border
-# ink, the accent and the set mark all offer the same list. A token names a hue;
-# what it resolves to depends on whether it is being printed with or printed on.
-COLOURS = [
-    "white",
-    "haze",
-    "ash",
-    "silver",
-    "graphite",
-    "slate",
-    "steel",
-    "charcoal",
-    "ink",
-    "bone",
-    "cream",
-    "butter",
-    "linen",
-    "sand",
-    "straw",
-    "ochre",
-    "gold",
-    "bronze",
-    "shell",
-    "peach",
-    "apricot",
-    "melon",
-    "copper",
-    "ember",
-    "umber",
-    "rust",
-    "cocoa",
-    "blush",
-    "salmon",
-    "coral",
-    "red",
-    "brick",
-    "crimson",
-    "garnet",
-    "wine",
-    "oxblood",
-    "petal",
-    "powder",
-    "peony",
-    "blossom",
-    "magenta",
-    "rose",
-    "fuchsia",
-    "mulberry",
-    "plum",
-    "lavender",
-    "thistle",
-    "lilac",
-    "wisteria",
-    "amethyst",
-    "purple",
-    "damson",
-    "violet",
-    "aubergine",
-    "sky",
-    "sea",
-    "cornflower",
-    "blue",
-    "azure",
-    "ocean",
-    "indigo",
-    "navy",
-    "teal",
-    "mint",
-    "sage",
-    "fern",
-    "jade",
-    "olive",
-    "green",
-    "forest",
-    "moss",
-    "pine",
-]
 
 INKS = ["rarity", *COLOURS]
 STOCKS_ALL = COLOURS
@@ -197,8 +119,17 @@ def _font(title: str = "display", body: str = "body") -> dict[str, dict[str, Any
 
 
 def _accent(default: str) -> dict[str, dict[str, Any]]:
-    """The card's second ink. The set mark is drawn in it too."""
-    return {"accent": _opt("Accent", INKS, default, "type", "swatch")}
+    """The inks a card is printed with.
+
+    The accent is its second colour, and the set mark is drawn in it. The title
+    and body inks are the type itself: 'auto' leaves each region the colour the
+    board gives it, which is what every card did before they could be picked.
+    """
+    return {
+        "accent": _opt("Accent", INKS, default, "type", "swatch"),
+        "title_ink": _opt("Title ink", ["auto", *INKS], "auto", "type", "swatch"),
+        "body_ink": _opt("Body ink", ["auto", *INKS], "auto", "type", "swatch"),
+    }
 
 
 def _press(coverages: list[str] | None = None) -> dict[str, dict[str, Any]]:
@@ -315,7 +246,7 @@ TEMPLATES: list[dict[str, Any]] = [
         "version": 1,
         "name": "Bold",
         "description": "Big title, thick border, rarity colour everywhere.",
-        "text": _text(30, 0.7, "Subtitle", 100, 0.78, 2, printed_markup="inline"),
+        "text": _text(30, 0.5, "Subtitle", 100, 0.78, 2, printed_markup="inline"),
         "options": {
             **_board(STOCKS_ALL, "cream", "canvas"),
             **_border("rarity", "medium"),
@@ -337,7 +268,7 @@ TEMPLATES: list[dict[str, Any]] = [
             **_board(STOCKS_ALL, "ink", "smooth"),
             **_border(),
             "tint": _photo(),
-            "gradient": _opt("Scrim", ["bottom", "top", "none", "full"], "bottom", "print"),
+            "gradient": _opt("Scrim", ["none", "bottom", "top", "full"], "bottom", "print"),
             **_font("cinzel", "jost"),
             **_accent("blue"),
             **_press(["full"]),

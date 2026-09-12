@@ -1,21 +1,21 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import type { CardSetSummary } from '@miscellary/shared';
-import BinderCover from '@/components/BinderCover';
-import coverStyles from '@/components/BinderCover.module.css';
+import SetTile from '@/components/SetTile';
+import tileStyles from '@/components/SetTile.module.css';
 import { useAuth } from '@/lib/auth';
-import { loginHref } from '@/lib/returnTo';
+import { useRequireAccount } from '@/lib/requireAccount';
 import { createSet, listMySets } from '@/lib/sets';
 import ui from '@/components/ui.module.css';
 import styles from './page.module.css';
 
 export default function StudioPage() {
   const { user, loading } = useAuth();
-  const pathname = usePathname();
+  useRequireAccount();
   const router = useRouter();
   const [sets, setSets] = useState<CardSetSummary[] | null>(null);
   const [title, setTitle] = useState('');
@@ -40,12 +40,7 @@ export default function StudioPage() {
   }
 
   if (loading) return <p className={ui.muted}>Loading…</p>;
-  if (!user)
-    return (
-      <p className={ui.muted}>
-        <Link href={loginHref(pathname)}>Log in</Link> to create sets.
-      </p>
-    );
+  if (!user) return <p className={ui.muted}>Taking you to create an account…</p>;
 
   return (
     <section>
@@ -75,10 +70,10 @@ export default function StudioPage() {
       {error ? <p className={ui.error}>{error}</p> : null}
 
       {sets?.length === 0 ? <p className={ui.muted}>No sets yet.</p> : null}
-      <ul className={coverStyles.shelf}>
+      <ul className={tileStyles.grid}>
         {sets?.map((s) => (
           <li key={s.id} className={styles.item}>
-            <BinderCover
+            <SetTile
               set={s}
               href={`/studio/${s.id}`}
               meta={`${s.card_count} cards · ${s.status}`}

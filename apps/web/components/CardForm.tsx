@@ -82,7 +82,6 @@ function ladder(template: CardTemplate | undefined): Map<Rarity, string[]> {
   const add = (tier: Rarity, what: string) => byTier.set(tier, [...(byTier.get(tier) ?? []), what]);
   if (template?.unlocks) add(template.unlocks, `the ${template.name} template`);
   for (const [name, opt] of Object.entries(template?.options ?? {})) {
-    if (name === 'gradient') continue;
     for (const v of opt.values) {
       const needed = opt.unlocks?.[v];
       if (needed) add(needed, valueLabel(name, v).toLowerCase());
@@ -259,9 +258,7 @@ export default function CardForm({
     const foiled = (config.treatment ?? 'none') !== 'none';
     const shown = options.filter(
       ([key, opt]) =>
-        key !== 'gradient' &&
-        opt.values.length > 1 &&
-        (foiled || (key !== 'pattern' && key !== 'coverage')),
+        opt.values.length > 1 && (foiled || (key !== 'pattern' && key !== 'coverage')),
     );
     if (shown.length === 0) return null;
     return (
@@ -393,7 +390,6 @@ export default function CardForm({
           <CardPreview
             title={title}
             rarity={rarity}
-            description={description}
             printedText={printedText}
             imageUrl={image?.url ?? null}
             templateKey={templateKey}

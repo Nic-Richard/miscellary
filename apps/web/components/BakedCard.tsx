@@ -1,6 +1,6 @@
 import { resolveCardMaterial, resolveCardTokens } from '@miscellary/shared';
 import { SPOT_PATTERNS } from '@miscellary/shared';
-import type { CardRenderAssets, Rarity, TemplateConfig } from '@miscellary/shared';
+import type { CardRenderAssets, CardRenderImage, Rarity, TemplateConfig } from '@miscellary/shared';
 import type { CSSProperties } from 'react';
 import styles from './BakedCard.module.css';
 
@@ -11,6 +11,38 @@ function stops(values: { color: string; at?: number }[], unit = '%'): string {
       return `${stop.color} ${at}${unit}`;
     })
     .join(', ');
+}
+
+export function FlatCard({
+  image,
+  title,
+  rarity,
+  templateKey,
+  templateConfig,
+}: {
+  image: CardRenderImage;
+  title: string;
+  rarity: Rarity;
+  templateKey: string;
+  templateConfig: TemplateConfig;
+}) {
+  const tokens = resolveCardTokens(templateKey, templateConfig, rarity);
+  const vars = {
+    '--baked-corner-x': `${tokens.corner}%`,
+    '--baked-corner-y': `${tokens.corner / 1.4}%`,
+  } as CSSProperties;
+  return (
+    <div className={`${styles.card} ${styles.small}`} style={vars} role="img" aria-label={title}>
+      <img
+        src={image.url}
+        alt=""
+        width={image.width}
+        height={image.height}
+        loading="lazy"
+        draggable={false}
+      />
+    </div>
+  );
 }
 
 export default function BakedCard({
@@ -79,7 +111,7 @@ export default function BakedCard({
       role="img"
       aria-label={title}
     >
-      <img src={image.url} alt="" />
+      <img src={image.url} alt="" draggable={false} />
       <i className={styles.finish} aria-hidden="true" />
       {spot && mask ? (
         <>

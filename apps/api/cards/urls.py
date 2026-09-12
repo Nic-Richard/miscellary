@@ -13,6 +13,11 @@ urlpatterns = [
     path("me/sets/<uuid:set_id>/publish/", views.PublishSetView.as_view(), name="publish"),
     path("me/sets/<uuid:set_id>/cards/", views.MyCardListView.as_view(), name="my-cards"),
     path(
+        "me/sets/<uuid:set_id>/cards/order/",
+        views.MyCardOrderView.as_view(),
+        name="my-card-order",
+    ),
+    path(
         "me/sets/<uuid:set_id>/cards/<uuid:card_id>/",
         views.MyCardDetailView.as_view(),
         name="my-card",

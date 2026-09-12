@@ -1,7 +1,6 @@
 'use client';
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import type { CurrentUser, OwnedCard, ShowcaseSlot } from '@miscellary/shared';
@@ -13,19 +12,19 @@ import { OwnedCardInspector } from '@/components/CardInspector';
 import ui from '@/components/ui.module.css';
 import { apiFetch } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
-import { loginHref } from '@/lib/returnTo';
+import { useRequireAccount } from '@/lib/requireAccount';
 import { listMyCards } from '@/lib/packs';
 import { getShowcase, saveShowcase } from '@/lib/social';
 import styles from './page.module.css';
 
 export default function AccountPage() {
   const { user, loading, refreshUser } = useAuth();
-  const pathname = usePathname();
+  useRequireAccount();
+  const router = useRouter();
   const [displayName, setDisplayName] = useState('');
   const [bio, setBio] = useState('');
   const [showcaseTitle, setShowcaseTitle] = useState('');
   const [binderColour, setBinderColour] = useState('teal');
-  const [saved, setSaved] = useState(false);
   const [cards, setCards] = useState<OwnedCard[]>([]);
   const [inspect, setInspect] = useState<OwnedCard | null>(null);
   const [slots, setSlots] = useState<(string | null)[]>(Array(SHOWCASE_SLOTS).fill(null));
@@ -67,7 +66,7 @@ export default function AccountPage() {
 
   async function saveProfile(e: FormEvent) {
     e.preventDefault();
-    setSaved(false);
+    const username = user?.profile.username;
     try {
       await apiFetch<CurrentUser>('/api/v1/auth/me/', {
         method: 'PATCH',
@@ -79,7 +78,7 @@ export default function AccountPage() {
         },
       });
       await refreshUser();
-      setSaved(true);
+      if (username) router.push(`/users/${username}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not save.');
     }
@@ -116,12 +115,7 @@ export default function AccountPage() {
   }
 
   if (loading) return <p className={styles.muted}>Loading…</p>;
-  if (!user)
-    return (
-      <p className={styles.muted}>
-        You need to <Link href={loginHref(pathname)}>log in</Link> to see your account.
-      </p>
-    );
+  if (!user) return <p className={styles.muted}>Taking you to create an account…</p>;
 
   const byId = new Map([...pinned, ...cards.map((c) => [c.id, c] as const)]);
 
@@ -169,7 +163,6 @@ export default function AccountPage() {
           <button className={ui.btnPrimary} type="submit">
             Save profile
           </button>
-          {saved ? <span className={styles.muted}>Saved.</span> : null}
           <span className={styles.muted}>
             {user.email}{' '}
             {user.email_verified ? '' : <span className={styles.badge}>unverified</span>}
@@ -237,7 +230,6 @@ export default function AccountPage() {
                     title={c.card.title}
                     rarity={c.card.rarity}
                     code={cardCode(c.card.printed_set_code, c.card.position, c.card.set_total)}
-                    description=""
                     printedText={c.card.printed_text}
                     imageUrl={c.card.image.url}
                     templateKey={c.card.template_key}

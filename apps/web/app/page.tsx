@@ -2,15 +2,14 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { cardCode, PACK_SIZE, RARITIES } from '@miscellary/shared';
+import { cardCode } from '@miscellary/shared';
 import type { Card, CardSetDetail, CardSetSummary } from '@miscellary/shared';
 import Binder from '@/components/binder/Binder';
-import BinderCover from '@/components/BinderCover';
+import SetTile from '@/components/SetTile';
 import CardPreview from '@/components/CardPreview';
-import PackPouch from '@/components/PackPouch';
-import { slotLight } from '@/lib/lighting';
+import { SceneLight, slotLight } from '@/lib/lighting';
 import { getPublicSet, listPublicSets } from '@/lib/sets';
-import coverStyles from '@/components/BinderCover.module.css';
+import tileStyles from '@/components/SetTile.module.css';
 import ui from '@/components/ui.module.css';
 import styles from './page.module.css';
 
@@ -19,17 +18,30 @@ interface Pick {
   set: CardSetSummary;
 }
 
-// Hero object positions are percentages of the stage.
+const PACK_ROW = 6;
+
+const HERO = [
+  { set: 'woodland-fungi', card: 'Fly Agaric' },
+  { set: 'film-cameras', card: 'Canon AE-1' },
+  { set: 'records-on-my-shelf', card: 'B-Side Blue' },
+  { set: 'pocket-geology', card: 'River Quartz' },
+  { set: 'garden-birds', card: 'European Robin' },
+];
+
+const SHOWCASE = 'film-cameras';
+
 const DESK = [
-  { left: 0, top: 15, rotate: -11 },
-  { left: 21, top: 3, rotate: -2 },
-  { left: 42, top: 11, rotate: 8 },
+  { left: 0, top: 24, rotate: -13 },
+  { left: 18, top: 11, rotate: -6 },
+  { left: 36, top: 17, rotate: 1 },
+  { left: 54, top: 8, rotate: 7 },
+  { left: 71, top: 20, rotate: 13 },
 ];
 
 export default function HomePage() {
   const [sets, setSets] = useState<CardSetSummary[]>([]);
   const [total, setTotal] = useState(0);
-  const [picks, setPicks] = useState<Pick[]>([]);
+  const [picks, setPicks] = useState<(Pick | null)[]>([]);
   const [featured, setFeatured] = useState<CardSetDetail | null>(null);
 
   useEffect(() => {
@@ -39,20 +51,24 @@ export default function HomePage() {
         if (!live) return;
         setSets(page.results);
         setTotal(page.count);
-        const chosen = page.results.slice(0, 4);
-        const whole = page.results.find((s) => s.card_count >= 8) ?? page.results[0];
-        const details = await Promise.all(
-          [...chosen, ...(whole && !chosen.includes(whole) ? [whole] : [])].map((s) =>
-            getPublicSet(s.slug).catch(() => null),
-          ),
+        const named = (prefix: string) => page.results.find((s) => s.slug.startsWith(prefix));
+        const wanted = [...new Set([...HERO.map((h) => h.set), SHOWCASE])];
+        const details = new Map<string, CardSetDetail>();
+        await Promise.all(
+          wanted.map(async (prefix) => {
+            const summary = named(prefix);
+            if (!summary) return;
+            const detail = await getPublicSet(summary.slug).catch(() => null);
+            if (detail) details.set(prefix, detail);
+          }),
         );
         if (!live) return;
-        setFeatured(details.find((d) => d?.slug === whole?.slug) ?? null);
+        setFeatured(details.get(SHOWCASE) ?? null);
         setPicks(
-          details.slice(0, chosen.length).flatMap((detail, i) => {
-            const set = chosen[i];
-            const best = detail?.cards.slice().sort((a, b) => rank(b) - rank(a))[0];
-            return best && set ? [{ card: best, set }] : [];
+          HERO.map(({ set, card }) => {
+            const summary = named(set);
+            const face = details.get(set)?.cards.find((c) => c.title === card);
+            return summary && face ? { card: face, set: summary } : null;
           }),
         );
       })
@@ -62,42 +78,20 @@ export default function HomePage() {
     };
   }, []);
 
-  const hero = sets[0];
-  const deck = picks.slice(0, 3);
-  const steps = [
-    {
-      n: '001',
-      title: 'Pick something',
-      text: 'Fungi, manhole covers, tape decks, garden birds. If someone catalogued it, there is a set.',
-    },
-    {
-      n: '002',
-      title: 'Open a pack',
-      text: `Every set gives you one free pack a day. ${PACK_SIZE} cards, torn open, one at a time.`,
-    },
-    {
-      n: '003',
-      title: 'Fill it in',
-      text: 'Pulls drop into the binder in order. Trade your doubles for the gaps that are left.',
-    },
-  ];
+  const packRow = sets.slice(0, PACK_ROW);
 
   return (
     <div className={styles.page}>
       <section className={styles.hero}>
         <div className={styles.copy}>
-          <p className={ui.eyebrow}>Miscellary</p>
-          <h1 className={styles.title}>
-            Everything can be
-            <br />a collection.
-          </h1>
+          <h1 className={styles.title}>Turn collections into trading cards.</h1>
           <p className={ui.lead}>
-            Turn anything you know too much about into a trading-card set. Publish it, open a free
-            pack from every set every day, and trade with the people collecting the rest.
+            Make your own trading-card set, open free packs every day, and trade for the ones
+            you&rsquo;re missing.
           </p>
           <div className={styles.actions}>
             <Link href="/sets" className={ui.btnPrimary}>
-              Browse binders
+              Browse sets
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M4 12h15m-6-6 6 6-6 6" />
               </svg>
@@ -108,16 +102,16 @@ export default function HomePage() {
           </div>
           {total ? (
             <p className={styles.stats}>
-              <b>{total}</b> {total === 1 ? 'set' : 'sets'} published · one free pack from every one
-              of them, every day
+              <b>{total}</b> published {total === 1 ? 'set' : 'sets'} to choose from so far
             </p>
           ) : null}
         </div>
 
         <div className={styles.desk}>
           <span className={styles.lamp} aria-hidden="true" />
-          {deck.map((pick, i) => {
-            const at = DESK[i]!;
+          {DESK.map((at, i) => {
+            const pick = picks[i];
+            if (!pick) return null;
             return (
               <Link
                 key={pick.card.id}
@@ -133,31 +127,27 @@ export default function HomePage() {
                 }
                 title={`${pick.card.title} · ${pick.set.title}`}
               >
-                <CardPreview
-                  size="small"
-                  title={pick.card.title}
-                  rarity={pick.card.rarity}
-                  code={cardCode(
-                    pick.card.printed_set_code,
-                    pick.card.position,
-                    pick.card.set_total,
-                  )}
-                  description={pick.card.description}
-                  printedText={pick.card.printed_text}
-                  imageUrl={pick.card.image.url}
-                  templateKey={pick.card.template_key}
-                  templateConfig={pick.card.template_config}
-                  mark={pick.set.mark}
-                  render={pick.card.render}
-                />
+                <SceneLight value={true}>
+                  <CardPreview
+                    size="small"
+                    title={pick.card.title}
+                    rarity={pick.card.rarity}
+                    code={cardCode(
+                      pick.card.printed_set_code,
+                      pick.card.position,
+                      pick.card.set_total,
+                    )}
+                    printedText={pick.card.printed_text}
+                    imageUrl={pick.card.image.url}
+                    templateKey={pick.card.template_key}
+                    templateConfig={pick.card.template_config}
+                    mark={pick.set.mark}
+                    render={pick.card.render}
+                  />
+                </SceneLight>
               </Link>
             );
           })}
-          {hero ? (
-            <Link href={`/sets/${hero.slug}`} className={styles.deskPack} title={hero.title}>
-              <PackPouch title={hero.title} identity={hero} />
-            </Link>
-          ) : null}
         </div>
       </section>
 
@@ -165,10 +155,9 @@ export default function HomePage() {
         <section className={styles.binderBand}>
           <div className={styles.sectionHead}>
             <div>
-              <h2 className={styles.h2}>Every set is a binder</h2>
+              <h2 className={styles.h2}>Inside a set</h2>
               <p className={styles.sectionNote}>
-                Cards sit in sleeves in the order they were published, and the gaps stay visible
-                until you pull them.
+                Every set is an interactive binder you can turn a page at a time.
               </p>
             </div>
             <Link href={`/sets/${featured.slug}`} className={styles.more}>
@@ -192,7 +181,6 @@ export default function HomePage() {
                     title={card.title}
                     rarity={card.rarity}
                     code={cardCode(card.printed_set_code, card.position, card.set_total)}
-                    description={card.description}
                     printedText={card.printed_text}
                     imageUrl={card.image.url}
                     templateKey={card.template_key}
@@ -207,33 +195,21 @@ export default function HomePage() {
         </section>
       ) : null}
 
-      <section className={styles.steps}>
-        {steps.map((step) => (
-          <div key={step.n} className={styles.step}>
-            <b className={styles.stepNo}>{step.n}</b>
-            <h3 className={styles.stepTitle}>{step.title}</h3>
-            <p className={styles.stepText}>{step.text}</p>
-          </div>
-        ))}
-      </section>
-
       {sets.length ? (
         <section className={styles.shelfSection}>
           <div className={styles.sectionHead}>
             <div>
-              <h2 className={styles.h2}>What people are collecting</h2>
-              <p className={styles.sectionNote}>
-                Published sets, newest pulls first. Anyone can open a pack from any of them.
-              </p>
+              <h2 className={styles.h2}>Open packs</h2>
+              <p className={styles.sectionNote}>Tear one open and flip to reveal your cards.</p>
             </div>
             <Link href="/sets" className={styles.more}>
               Every set →
             </Link>
           </div>
-          <ul className={coverStyles.shelf}>
-            {sets.slice(0, 5).map((s) => (
+          <ul className={`${tileStyles.grid} ${styles.packRow}`}>
+            {packRow.map((s) => (
               <li key={s.id}>
-                <BinderCover set={s} meta={`${s.card_count} cards · @${s.creator.username}`} />
+                <SetTile set={s} meta={`${s.card_count} cards · @${s.creator.username}`} />
               </li>
             ))}
           </ul>
@@ -242,25 +218,18 @@ export default function HomePage() {
 
       <section className={`${ui.ticket} ${styles.make}`}>
         <div>
-          <h2 className={styles.h2}>Make one of your own</h2>
-          <p className={styles.makeText}>
-            Photograph what you have, write the notes, choose the stock and the ink, and set the
-            rarities. Publish it and it becomes a binder anyone can collect.
-          </p>
+          <h2 className={styles.h2}>Start collecting and creating</h2>
+          <p className={styles.makeText}>Sign up free to create sets and open packs.</p>
         </div>
         <div className={styles.makeActions}>
           <Link href="/register" className={ui.btnPrimary}>
-            Start a set
+            Create an account
           </Link>
-          <Link href="/studio" className={ui.btnOutline}>
-            Open the studio
+          <Link href="/login" className={ui.btnOutline}>
+            Log in
           </Link>
         </div>
       </section>
     </div>
   );
-}
-
-function rank(card: Card): number {
-  return RARITIES.indexOf(card.rarity);
 }

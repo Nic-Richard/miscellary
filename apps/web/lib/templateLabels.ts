@@ -19,7 +19,9 @@ const VALUE_LABELS: Record<string, Record<string, string>> = {
   tint: { mono: 'Black and white' },
   coverage: { spot: 'Spot', reverse: 'Reverse', full: 'Full card' },
   pattern: { linear: 'Linear', mirror: 'Mirror', cosmos: 'Cosmos', rainbow: 'Rainbow' },
-  gradient: { none: 'No scrim', full: 'Whole face' },
+  gradient: { none: 'None', full: 'Full face' },
+  title_ink: { auto: 'Follow the board', rarity: 'Rarity' },
+  body_ink: { auto: 'Follow the board', rarity: 'Rarity' },
 };
 
 function titleCase(token: string): string {

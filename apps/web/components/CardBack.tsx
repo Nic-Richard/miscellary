@@ -35,7 +35,7 @@ export default function CardBack({
   if (imageUrl) {
     return (
       <div className={className} style={style} aria-hidden="true">
-        <img className={styles.baked} src={imageUrl} alt="" />
+        <img className={styles.baked} src={imageUrl} alt="" draggable={false} />
       </div>
     );
   }

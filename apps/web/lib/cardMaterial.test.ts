@@ -49,19 +49,12 @@ describe('card material matches the stylesheet', () => {
     }
   });
 
-  it('gives every struck tier a spot treatment the mask can follow', () => {
+  it('gives a foiled card a spot treatment the mask can follow, and others none', () => {
     expect(resolveCardSpot({}, 'common')).toBeNull();
-    expect(resolveCardSpot({}, 'uncommon')).toEqual({
-      material: 'varnish',
-      area: 'spot',
-      pattern: 'linear',
-    });
-    expect(resolveCardSpot({ finish: 'pearl' }, 'rare')).toEqual({
-      material: 'pearl',
-      area: 'spot',
-      pattern: 'linear',
-    });
-    expect(resolveCardSpot({ finish: 'metallic' }, 'epic')).toEqual({
+    expect(resolveCardSpot({}, 'uncommon')).toBeNull();
+    expect(resolveCardSpot({ finish: 'pearl' }, 'rare')).toBeNull();
+    expect(resolveCardSpot({ finish: 'metallic' }, 'epic')).toBeNull();
+    expect(resolveCardSpot({ treatment: 'foil', finish: 'metallic' }, 'epic')).toEqual({
       material: 'foil',
       area: 'spot',
       pattern: 'linear',

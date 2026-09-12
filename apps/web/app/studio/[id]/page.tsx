@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type { PointerEvent as ReactPointerEvent } from 'react';
 import { cardCode } from '@miscellary/shared';
 import type { Card, CardSetDetail, CardTemplate } from '@miscellary/shared';
 import CardGrid, { CardCell } from '@/components/CardGrid';
@@ -19,6 +20,7 @@ import {
   listTemplates,
   publishProblems,
   publishSet,
+  reorderCards,
   updateSet,
 } from '@/lib/sets';
 import type { SetWrite } from '@/lib/sets';
@@ -34,6 +36,13 @@ export default function SetEditorPage() {
   const [editing, setEditing] = useState<Card | 'new' | null>(null);
   const [problems, setProblems] = useState<string[] | null>(null);
   const [packOpen, setPackOpen] = useState(false);
+  /* Which card is being dragged. Held in a ref as well as in state, because a
+     pointer can move before React has re-rendered and the move needs to know
+     what it is carrying the moment it is asked. */
+  const held = useRef<string | null>(null);
+  const armed = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [dragging, setDragging] = useState<string | null>(null);
+  const [over, setOver] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -83,6 +92,83 @@ export default function SetEditorPage() {
     }
   }
 
+  function moveCard(fromId: string, toId: string) {
+    setSet((current) => {
+      if (!current) return current;
+      const cards = [...current.cards];
+      const from = cards.findIndex((c) => c.id === fromId);
+      const to = cards.findIndex((c) => c.id === toId);
+      if (from === -1 || to === -1 || from === to) return current;
+      const [moved] = cards.splice(from, 1);
+      cards.splice(to, 0, moved!);
+      return { ...current, cards: cards.map((c, position) => ({ ...c, position })) };
+    });
+  }
+
+  async function saveOrder() {
+    if (!set) return;
+    const order = await new Promise<string[]>((resolve) =>
+      setSet((current) => {
+        resolve((current?.cards ?? []).map((c) => c.id));
+        return current;
+      }),
+    );
+    try {
+      await reorderCards(set.id, order);
+    } catch (e) {
+      if (e instanceof ApiRequestError) setError(e.message);
+      await reload();
+    }
+  }
+
+  /* A mouse picks a card up straight away. A finger has to hold it first, or
+     every attempt to scroll the page would drag a card instead. */
+  function startReorder(id: string, event: ReactPointerEvent<HTMLDivElement>) {
+    if (event.button !== 0 && event.pointerType === 'mouse') return;
+    const pick = () => {
+      held.current = id;
+      setDragging(id);
+    };
+    if (event.pointerType === 'mouse') pick();
+    else armed.current = setTimeout(pick, 350);
+  }
+
+  useEffect(() => {
+    const move = (event: PointerEvent) => {
+      if (armed.current && !held.current) {
+        clearTimeout(armed.current);
+        armed.current = null;
+        return;
+      }
+      if (!held.current) return;
+      event.preventDefault();
+      const under = document
+        .elementFromPoint(event.clientX, event.clientY)
+        ?.closest('[data-card-id]');
+      const id = under?.getAttribute('data-card-id');
+      if (!id || id === held.current) return;
+      setOver(id);
+      moveCard(held.current, id);
+    };
+    const end = () => {
+      if (armed.current) clearTimeout(armed.current);
+      armed.current = null;
+      if (!held.current) return;
+      held.current = null;
+      setDragging(null);
+      setOver(null);
+      void saveOrder();
+    };
+    window.addEventListener('pointermove', move, { passive: false });
+    window.addEventListener('pointerup', end);
+    window.addEventListener('pointercancel', end);
+    return () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', end);
+      window.removeEventListener('pointercancel', end);
+    };
+  });
+
   async function onDeleteCard(card: Card) {
     if (!set || !window.confirm(`Delete "${card.title}"?`)) return;
     await deleteCard(set.id, card.id);
@@ -110,8 +196,6 @@ export default function SetEditorPage() {
       </Link>
 
       <div className={styles.header}>
-        {/* The cover is draft-only, like the title and description, so once the
-            set is published it is shown but not editable. */}
         <SetCover
           url={set.cover?.url ?? null}
           fallback={set.cards[0]?.image.url ?? null}
@@ -248,6 +332,17 @@ export default function SetEditorPage() {
         {set.cards.map((c) => (
           <CardCell
             key={c.id}
+            {...(isDraft
+              ? {
+                  reorder: {
+                    id: c.id,
+                    dragging: dragging === c.id,
+                    over: over === c.id && dragging !== c.id,
+                    onPointerDown: (event: ReactPointerEvent<HTMLDivElement>) =>
+                      startReorder(c.id, event),
+                  },
+                }
+              : {})}
             footer={
               isDraft ? (
                 <>
@@ -270,7 +365,6 @@ export default function SetEditorPage() {
               title={c.title}
               rarity={c.rarity}
               code={cardCode(setCode, c.position, c.set_total || set.cards.length)}
-              description={c.description}
               printedText={c.printed_text}
               imageUrl={c.image.url}
               templateKey={c.template_key}

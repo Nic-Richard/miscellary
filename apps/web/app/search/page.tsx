@@ -5,11 +5,11 @@ import { useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 import { cardCode } from '@miscellary/shared';
 import type { SearchResults } from '@miscellary/shared';
-import BinderCover from '@/components/BinderCover';
+import SetTile from '@/components/SetTile';
 import CardPreview from '@/components/CardPreview';
 import DemoBadge from '@/components/DemoBadge';
 import Sheet, { Empty } from '@/components/Sheet';
-import coverStyles from '@/components/BinderCover.module.css';
+import tileStyles from '@/components/SetTile.module.css';
 import { search } from '@/lib/social';
 import ui from '@/components/ui.module.css';
 import styles from './page.module.css';
@@ -86,10 +86,10 @@ function Results() {
 
       {results.sets.length ? (
         <Sheet className={styles.sheet} title="Sets" meta={`${results.sets.length} found`}>
-          <ul className={coverStyles.shelf}>
+          <ul className={tileStyles.grid}>
             {results.sets.map((s) => (
               <li key={s.id}>
-                <BinderCover set={s} meta={`${s.card_count} cards · @${s.creator.username}`} />
+                <SetTile set={s} meta={`${s.card_count} cards · @${s.creator.username}`} />
               </li>
             ))}
           </ul>
@@ -106,7 +106,6 @@ function Results() {
                   title={c.title}
                   rarity={c.rarity}
                   code={cardCode(c.printed_set_code, c.position, c.set_total)}
-                  description=""
                   printedText={c.printed_text}
                   imageUrl={c.image.url}
                   templateKey={c.template_key}

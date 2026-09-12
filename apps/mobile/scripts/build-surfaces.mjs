@@ -86,6 +86,21 @@ for (const variant of ['card', 'pack', 'full']) {
                 'async function browserUploadImage(',
               );
               source += `\nexport async function uploadImage(blob: Blob, kind: ImageKind): Promise<ImageRef> { const size = await dimensions(blob); const data = await new Promise<string>((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(String(reader.result).split(',')[1]); reader.onerror = reject; reader.readAsDataURL(blob); }); return request('upload', { data, kind, contentType: blob.type, ...size }) as Promise<ImageRef>; }`;
+              source = source.replace(
+                'export const hasNativePicker = false;',
+                'const browserHasNativePicker = false;',
+              );
+              source = source.replace(
+                'export async function pickNativeImage(',
+                'async function browserPickNativeImage(',
+              );
+              source +=
+                `
+export const hasNativePicker = true;` +
+                `
+export async function pickNativeImage(kind: ImageKind, aspect: number):` +
+                ` Promise<ImageRef | null> {` +
+                ` return request('pickImage', { kind, aspect }) as Promise<ImageRef | null>; }`;
             }
             return {
               contents: source,

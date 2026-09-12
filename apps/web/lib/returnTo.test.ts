@@ -34,6 +34,8 @@ describe('loginHref', () => {
     expect(loginHref('/sets/abc', 'pack')).toBe('/login?next=%2Fsets%2Fabc%3Fdo%3Dpack');
     expect(loginHref('/collection')).toBe('/login?next=%2Fcollection');
     expect(registerHref('/collection')).toBe('/register?next=%2Fcollection');
+    expect(registerHref('/login')).toBe('/register');
+    expect(loginHref('/register')).toBe('/login');
   });
 
   it('drops a destination it would not follow', () => {

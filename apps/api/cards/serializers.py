@@ -13,10 +13,12 @@ from .rarity import RARITIES
 from .rendering import (
     CARD_RENDERER_VERSION,
     FACE_SIZE,
+    PACK_SIZE_PX,
     THUMBNAIL_SIZE,
     back_render_signature,
     card_render_signature,
     card_spot,
+    pack_render_signature,
     render_url,
 )
 
@@ -45,6 +47,7 @@ class CardSerializer(serializers.ModelSerializer):
             obj.render_signature == signature
             and bool(obj.render_front_thumbnail_key)
             and bool(obj.render_front_key)
+            and bool(obj.render_flat_thumbnail_key)
             and (not spot or bool(obj.render_mask_thumbnail_key and obj.render_mask_key))
         )
         back_ready = obj.card_set.render_back_signature == back_signature and bool(
@@ -61,6 +64,9 @@ class CardSerializer(serializers.ModelSerializer):
             "signature": signature,
             "version": CARD_RENDERER_VERSION,
             "thumbnail": asset(obj.render_front_thumbnail_key, THUMBNAIL_SIZE)
+            if front_ready
+            else None,
+            "flat_thumbnail": asset(obj.render_flat_thumbnail_key, THUMBNAIL_SIZE)
             if front_ready
             else None,
             "front": asset(obj.render_front_key, FACE_SIZE) if front_ready else None,
@@ -185,6 +191,7 @@ class CardSetSerializer(serializers.ModelSerializer):
     suggested_set_code = serializers.SerializerMethodField()
     printed_set_code = serializers.SerializerMethodField()
     render_back = serializers.SerializerMethodField()
+    render_pack = serializers.SerializerMethodField()
 
     def get_suggested_set_code(self, obj: CardSet) -> str:
         return suggest_set_code(obj.title)
@@ -193,6 +200,25 @@ class CardSetSerializer(serializers.ModelSerializer):
         if obj.set_code_suffix:
             return obj.printed_code
         return obj.set_code or suggest_set_code(obj.title)
+
+    def get_render_pack(self, obj: CardSet):
+        """A picture of the wrapper, for lists that cannot afford to draw it."""
+        if obj.status == CardSet.Status.DRAFT:
+            return None
+        signature = pack_render_signature(obj)
+        ready = obj.render_pack_signature == signature and bool(obj.render_pack_key)
+        return {
+            "status": "ready" if ready else "pending",
+            "signature": signature,
+            "version": CARD_RENDERER_VERSION,
+            "image": {
+                "url": render_url(obj.render_pack_key),
+                "width": PACK_SIZE_PX[0],
+                "height": PACK_SIZE_PX[1],
+            }
+            if ready
+            else None,
+        }
 
     def get_render_back(self, obj: CardSet):
         if obj.status == CardSet.Status.DRAFT:
@@ -269,6 +295,7 @@ class CardSetSerializer(serializers.ModelSerializer):
             "opening_count",
             "liked",
             "render_back",
+            "render_pack",
             "created_at",
             "published_at",
         ]

@@ -6,9 +6,11 @@ import { useCallback, useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import type { OwnedCard, TradeOffer } from '@miscellary/shared';
 import OfferCard from '@/components/OfferCard';
+import OfferInspector from '@/components/OfferInspector';
 import Sheet, { Empty } from '@/components/Sheet';
 import { Segmented } from '@/components/controls';
 import { useAuth } from '@/lib/auth';
+import { useRequireAccount } from '@/lib/requireAccount';
 import { loginHref } from '@/lib/returnTo';
 import { actOnOffer, listOffers } from '@/lib/trades';
 import { OwnedCardInspector } from '@/components/CardInspector';
@@ -19,6 +21,7 @@ type Box = 'inbox' | 'outbox' | 'history';
 
 export default function TradesPage() {
   const { user, loading } = useAuth();
+  useRequireAccount();
   const pathname = usePathname();
   const router = useRouter();
   const [box, setBox] = useState<Box>('inbox');
@@ -27,6 +30,7 @@ export default function TradesPage() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [inspect, setInspect] = useState<OwnedCard | null>(null);
+  const [opened, setOpened] = useState<TradeOffer | null>(null);
 
   const reload = useCallback(async () => setOffers(await listOffers(box)), [box]);
 
@@ -40,6 +44,7 @@ export default function TradesPage() {
     setError(null);
     try {
       await actOnOffer(id, action);
+      setOpened(null);
       await reload();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Something went wrong.');
@@ -131,11 +136,23 @@ export default function TradesPage() {
                 busy={busy}
                 onAction={(a) => void act(o.id, a)}
                 onInspect={setInspect}
+                onOpen={setOpened}
               />
             ))}
           </div>
         )}
       </Sheet>
+
+      {opened ? (
+        <OfferInspector
+          offer={opened}
+          me={user.profile.username}
+          busy={busy}
+          onAction={(a) => void act(opened.id, a)}
+          onInspect={setInspect}
+          onClose={() => setOpened(null)}
+        />
+      ) : null}
 
       {inspect ? <OwnedCardInspector owned={inspect} onClose={() => setInspect(null)} /> : null}
     </section>

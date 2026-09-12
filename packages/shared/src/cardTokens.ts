@@ -18,6 +18,8 @@ export interface CardTokens {
   inkMuted: string;
   artBg: string;
   accent: string;
+  titleInk: string | null;
+  bodyInk: string | null;
   border: string;
   rarity: string;
   core: string;
@@ -268,13 +270,17 @@ const TEXTURE_SIZES: Record<string, number> = {
 
 /* Whether a board is dark enough to print light type on. Read from the colour
    rather than a list, so every stock in the palette answers for itself. */
-export function isDarkStock(hex: string): boolean {
+/** Relative luminance of a #rrggbb colour, for deciding what will read on it. */
+export function luminance(hex: string): number {
   const channel = (at: number) => {
     const c = parseInt(hex.slice(at, at + 2), 16) / 255;
     return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
   };
-  const luminance = 0.2126 * channel(1) + 0.7152 * channel(3) + 0.0722 * channel(5);
-  return luminance < 0.3;
+  return 0.2126 * channel(1) + 0.7152 * channel(3) + 0.0722 * channel(5);
+}
+
+export function isDarkStock(hex: string): boolean {
+  return luminance(hex) < 0.3;
 }
 
 const TEMPLATE_BOARDS: Record<string, { stock: string; edge: string }> = {
@@ -306,7 +312,6 @@ function inkFor(token: string | undefined, rarityColour: string): string | null 
 }
 
 function textureFor(
-  key: string,
   texture: string | undefined,
   board: { stock: string } | undefined,
 ): TextureTokens | null {
@@ -335,9 +340,11 @@ export function resolveCardTokens(key: string, stored: TemplateConfig, rarity: R
 
   const border = inkFor(config.border, rarityColour) ?? rarityColour;
   const accent = inkFor(config.accent, rarityColour) ?? INKS.gold!;
+  // Null keeps the template text colour.
+  const titleInk = inkFor(config.title_ink, rarityColour);
+  const bodyInk = inkFor(config.body_ink, rarityColour);
 
-  // Choosing 'rarity' as the edge ink is what brings the tier's metal and its
-  // width. Any other ink is that ink, and 'auto' leaves the board's own edge.
+  // 'rarity' selects the tier edge treatment; 'auto' keeps the board edge.
   const byRarity = config.border === 'rarity';
   const rarityEdge = byRarity ? RARITY_EDGES[rarity] : undefined;
   const explicitBorder = config.border && config.border !== 'auto' ? border : null;
@@ -349,8 +356,6 @@ export function resolveCardTokens(key: string, stored: TemplateConfig, rarity: R
   else if (key === 'bold') edge = { kind: 'solid', color: border };
   else edge = { kind: 'solid', color: BASE.edge };
 
-  // Width is the template's own or the one that was picked. The rarity supplies
-  // the metal when it is chosen as the ink, never a width on top of it.
   const weight = config.border_width ? WEIGHTS[config.border_width] : undefined;
   const edgeWidth = weight ?? (key === 'bold' ? 3 : BASE.edgeWidth);
 
@@ -371,11 +376,13 @@ export function resolveCardTokens(key: string, stored: TemplateConfig, rarity: R
     inkMuted: text.inkMuted,
     artBg: darkBoard ? 'rgba(0, 0, 0, 0.24)' : BASE.artBg,
     accent,
+    titleInk,
+    bodyInk,
     border,
     rarity: rarityColour,
     core: rarity === 'legendary' ? '#f4e7c4' : BASE.core,
     glow: RARITY_GLOWS[rarity] ?? null,
-    texture: textureFor(key, config.texture, board),
+    texture: textureFor(config.texture, board),
   };
 }
 

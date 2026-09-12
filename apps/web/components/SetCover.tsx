@@ -40,7 +40,7 @@ export default function SetCover({ url, fallback, title, onChange }: SetCoverPro
     <div className={styles.root}>
       <div className={styles.sleeve} aria-hidden={!editable}>
         <div className={styles.card}>
-          {shown ? <img src={shown} alt="" /> : <span>{title[0]}</span>}
+          {shown ? <img src={shown} alt="" draggable={false} /> : <span>{title[0]}</span>}
         </div>
       </div>
       {editable ? (

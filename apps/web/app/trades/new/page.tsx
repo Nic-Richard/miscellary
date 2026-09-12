@@ -3,9 +3,10 @@
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useMemo, useState } from 'react';
-import { cardCode } from '@miscellary/shared';
+import { cardCode, TRADE_MAX_PER_SIDE } from '@miscellary/shared';
 import type { OwnedCard } from '@miscellary/shared';
 import CardPreview from '@/components/CardPreview';
+import SwapArrow from '@/components/SwapArrow';
 import Sheet, { Empty } from '@/components/Sheet';
 import { useAuth } from '@/lib/auth';
 import { listMyCards } from '@/lib/packs';
@@ -33,7 +34,6 @@ function stacksOf(cards: OwnedCard[]): Stack[] {
         copies: [owned],
       });
   }
-  // A held copy cannot be offered, so the ones that can go first.
   for (const stack of by.values()) stack.copies.sort((a, b) => Number(a.held) - Number(b.held));
   return [...by.values()];
 }
@@ -49,6 +49,7 @@ function bySet(stacks: Stack[]): { setTitle: string; stacks: Stack[] }[] {
 }
 
 function Side({
+  full,
   title,
   meta,
   cards,
@@ -62,6 +63,7 @@ function Side({
   selected: Set<string>;
   onPick: (stack: Stack) => void;
   emptyText: string;
+  full: boolean;
 }) {
   const [filter, setFilter] = useState('');
   const stacks = useMemo(() => stacksOf(cards), [cards]);
@@ -76,7 +78,7 @@ function Side({
   return (
     <Sheet
       title={title}
-      meta={`${meta}${chosen ? ` · ${chosen} picked` : ''}`}
+      meta={`${meta}${chosen ? ` · ${chosen} of ${TRADE_MAX_PER_SIDE} picked` : ''}`}
       actions={
         stacks.length > 4 ? (
           <input
@@ -88,6 +90,11 @@ function Side({
         ) : null
       }
     >
+      {full ? (
+        <p className={styles.full}>
+          A side holds {TRADE_MAX_PER_SIDE} cards at most. Take one out to put another in.
+        </p>
+      ) : null}
       {stacks.length === 0 ? (
         <Empty icon="cards">{emptyText}</Empty>
       ) : shown.length === 0 ? (
@@ -126,7 +133,6 @@ function Side({
                           first.card.position,
                           first.card.set_total,
                         )}
-                        description=""
                         printedText={first.card.printed_text}
                         imageUrl={first.card.image.url}
                         templateKey={first.card.template_key}
@@ -167,7 +173,7 @@ function DealSide({ label, cards }: { label: string; cards: OwnedCard[] }) {
         ) : (
           cards.map((c) => (
             <span key={c.id} className={styles.dealCard} title={c.card.title}>
-              <img src={c.card.image.url} alt={c.card.title} />
+              <img src={c.card.image.url} alt={c.card.title} draggable={false} />
             </span>
           ))
         )}
@@ -197,7 +203,6 @@ function NewTrade() {
       try {
         let who = params.get('with') ?? '';
         if (counterId) {
-          // Countering: start from the original offer, sides flipped.
           const original = await getOffer(counterId);
           who = original.sender.username;
           setPartner(who);
@@ -216,10 +221,11 @@ function NewTrade() {
     })();
   }, [user, counterId, params]);
 
-  // Selecting past the final available copy resets the stack.
   function pick(selected: Set<string>, setter: (s: Set<string>) => void, stack: Stack) {
     const next = new Set(selected);
     const free = stack.copies.filter((c) => !c.held);
+    const picked = free.filter((c) => next.has(c.id)).length;
+    if (selected.size >= TRADE_MAX_PER_SIDE && picked < free.length) return;
     const unpicked = free.find((c) => !next.has(c.id));
     if (unpicked) next.add(unpicked.id);
     else for (const copy of stack.copies) next.delete(copy.id);
@@ -263,6 +269,7 @@ function NewTrade() {
           cards={theirs}
           selected={want}
           onPick={(s) => pick(want, setWant, s)}
+          full={want.size >= TRADE_MAX_PER_SIDE}
           emptyText={ready ? `@${partner} has no cards to trade yet.` : 'Loading their cards…'}
         />
         <Side
@@ -271,6 +278,7 @@ function NewTrade() {
           cards={mine}
           selected={give}
           onPick={(s) => pick(give, setGive, s)}
+          full={give.size >= TRADE_MAX_PER_SIDE}
           emptyText={
             ready
               ? 'You have no cards yet. Open a pack to start collecting.'
@@ -282,11 +290,7 @@ function NewTrade() {
       <div className={styles.deal}>
         <div className={styles.dealSides}>
           <DealSide label="You get" cards={wanted} />
-          <span className={styles.swap} aria-hidden="true">
-            <svg viewBox="0 0 24 24">
-              <path d="M4 9h14l-4-4M20 15H6l4 4" />
-            </svg>
-          </span>
+          <SwapArrow className={styles.swap} />
           <DealSide label="You give" cards={given} />
         </div>
         <div className={styles.dealSend}>

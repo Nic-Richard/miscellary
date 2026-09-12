@@ -6,7 +6,12 @@ from django.core.management.base import CommandError
 from django.urls import reverse
 
 from cards.publishing import publish_set
-from cards.rendering import CARD_RENDERER_VERSION, back_render_signature, card_render_signature
+from cards.rendering import (
+    CARD_RENDERER_VERSION,
+    back_render_signature,
+    card_render_signature,
+    pack_render_signature,
+)
 from cards.tests.helpers import fill_publishable, make_set
 
 pytestmark = pytest.mark.django_db
@@ -28,13 +33,22 @@ def test_published_card_reports_pending_then_ready(api_client, user):
     card.render_signature = card_render_signature(card)
     card.render_front_thumbnail_key = "renders/thumb.webp"
     card.render_front_key = "renders/front.webp"
-    card.save(update_fields=["render_signature", "render_front_thumbnail_key", "render_front_key"])
+    card.render_flat_thumbnail_key = "renders/flat.webp"
+    card.save(
+        update_fields=[
+            "render_signature",
+            "render_front_thumbnail_key",
+            "render_front_key",
+            "render_flat_thumbnail_key",
+        ]
+    )
 
     ready = api_client.get(reverse("cards:public-set", args=[card_set.slug])).json()
     assert ready["render_back"]["status"] == "ready"
     assert ready["cards"][0]["render"]["status"] == "ready"
     assert ready["cards"][0]["render"]["thumbnail"]["width"] == 300
     assert ready["cards"][0]["render"]["front"]["width"] == 1000
+    assert ready["cards"][0]["render"]["flat_thumbnail"]["width"] == 300
 
 
 def test_import_card_renders_uploads_current_manifest(tmp_path, monkeypatch, user):
@@ -42,7 +56,7 @@ def test_import_card_renders_uploads_current_manifest(tmp_path, monkeypatch, use
     fill_publishable(card_set)
     publish_set(card_set)
     card = card_set.cards.select_related("image", "card_set").first()
-    for name in ("back.webp", "front.webp", "thumbnail.webp"):
+    for name in ("back.webp", "pack.webp", "front.webp", "thumbnail.webp", "flat-thumbnail.webp"):
         (tmp_path / name).write_bytes(name.encode())
     manifest = {
         "renderer_version": CARD_RENDERER_VERSION,
@@ -51,6 +65,8 @@ def test_import_card_renders_uploads_current_manifest(tmp_path, monkeypatch, use
                 "id": str(card_set.id),
                 "signature": back_render_signature(card_set),
                 "back": "back.webp",
+                "pack_signature": pack_render_signature(card_set),
+                "pack": "pack.webp",
             }
         ],
         "cards": [
@@ -59,6 +75,7 @@ def test_import_card_renders_uploads_current_manifest(tmp_path, monkeypatch, use
                 "signature": card_render_signature(card),
                 "front": "front.webp",
                 "thumbnail": "thumbnail.webp",
+                "flat_thumbnail": "flat-thumbnail.webp",
                 "mask": None,
                 "mask_thumbnail": None,
             }
@@ -77,8 +94,10 @@ def test_import_card_renders_uploads_current_manifest(tmp_path, monkeypatch, use
     card_set.refresh_from_db()
     card.refresh_from_db()
     assert card_set.render_back_key.endswith("/back.webp")
+    assert card_set.render_pack_key.endswith("/pack.webp")
     assert card.render_front_thumbnail_key.endswith("/front-300.webp")
-    assert len(uploaded) == 3
+    assert card.render_flat_thumbnail_key.endswith("/flat-300.webp")
+    assert len(uploaded) == 5
 
 
 def test_import_card_renders_validates_manifest_before_uploading(tmp_path, monkeypatch, user):
@@ -93,6 +112,8 @@ def test_import_card_renders_validates_manifest_before_uploading(tmp_path, monke
                 "id": str(card_set.id),
                 "signature": back_render_signature(card_set),
                 "back": "back.webp",
+                "pack_signature": pack_render_signature(card_set),
+                "pack": "pack.webp",
             }
         ],
         "cards": [
@@ -101,6 +122,7 @@ def test_import_card_renders_validates_manifest_before_uploading(tmp_path, monke
                 "signature": "invalid",
                 "front": "missing.webp",
                 "thumbnail": "missing.webp",
+                "flat_thumbnail": "missing.webp",
                 "mask": None,
                 "mask_thumbnail": None,
             }

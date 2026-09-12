@@ -5,6 +5,7 @@ import { router } from 'expo-router';
 import * as FileSystem from 'expo-file-system';
 import type { CreateUploadResponse, ImageKind, ImageRef } from '@miscellary/shared';
 import { apiFetch } from '@/lib/api';
+import { pickAndUpload } from '@/lib/upload';
 import { ErrorText } from './ui';
 import bundle from '../generated/surfaces.json';
 
@@ -124,12 +125,21 @@ export default function SharedSurface({
                 router.push(message.data);
               return;
             }
-            if (message.type === 'request' || message.type === 'upload') {
+            if (
+              message.type === 'request' ||
+              message.type === 'upload' ||
+              message.type === 'pickImage'
+            ) {
               try {
                 if (!mode.endsWith('editor')) throw new Error('This surface is read-only.');
                 let result;
                 if (message.type === 'upload') result = await upload(message.data);
-                else {
+                else if (message.type === 'pickImage') {
+                  const { kind, aspect } = message.data ?? {};
+                  if (!['card', 'cover', 'avatar', 'pack'].includes(kind))
+                    throw new Error('Unsupported image.');
+                  result = await pickAndUpload(kind, Number(aspect));
+                } else {
                   const input = message.data;
                   const context = data as { setId?: string; set?: { id: string } };
                   const setId = context.setId ?? context.set?.id;

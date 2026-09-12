@@ -21,12 +21,13 @@ describe('automatic draft production settings', () => {
     expect(prepared).not.toHaveProperty('relief');
     expect(config.treatment).toBe('holo');
   });
-  it('forces no treatment on any tier, and Full Art contrast on the draft', () => {
+  it('forces nothing on any tier, including the Full Art scrim', () => {
     expect(prepareCardDesign('minimal', { finish: 'pearl' })).toMatchObject({
       treatment: 'none',
       coverage: 'spot',
-      gradient: 'full',
     });
+    expect(prepareCardDesign('minimal', { finish: 'pearl' })).not.toHaveProperty('gradient');
+    expect(prepareCardDesign('minimal', { gradient: 'top' })).toMatchObject({ gradient: 'top' });
     expect(prepareCardDesign('classic', { finish: 'matte' })).toMatchObject({
       treatment: 'none',
       coverage: 'spot',

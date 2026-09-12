@@ -10,6 +10,7 @@ from cards.rendering import (
     back_render_signature,
     card_render_signature,
     card_spot,
+    pack_render_signature,
 )
 from uploads import storage
 
@@ -47,9 +48,21 @@ class Command(BaseCommand):
             ).first()
             if card_set is None or item.get("signature") != back_render_signature(card_set):
                 raise CommandError(f"Set render input changed: {item.get('id', 'unknown')}")
+            pack_signature = pack_render_signature(card_set)
+            if item.get("pack_signature") != pack_signature:
+                raise CommandError(f"Pack render input changed: {item.get('id', 'unknown')}")
             key = f"renders/sets/{card_set.id}/{item['signature']}/back.webp"
+            pack_key = f"renders/sets/{card_set.id}/{pack_signature}/pack.webp"
             set_imports.append(
-                (card_set, item["signature"], key, self._path(root, item.get("back")))
+                (
+                    card_set,
+                    item["signature"],
+                    key,
+                    self._path(root, item.get("back")),
+                    pack_signature,
+                    pack_key,
+                    self._path(root, item.get("pack")),
+                )
             )
 
         for item in cards:
@@ -76,6 +89,11 @@ class Command(BaseCommand):
                     "image/webp",
                     self._path(root, item.get("front")),
                 ),
+                "render_flat_thumbnail_key": (
+                    f"{prefix}/flat-300.webp",
+                    "image/webp",
+                    self._path(root, item.get("flat_thumbnail")),
+                ),
             }
             if spot:
                 files.update(
@@ -94,17 +112,27 @@ class Command(BaseCommand):
                 )
             card_imports.append((card, item["signature"], files))
 
-        for _, _, key, path in set_imports:
+        for _, _, key, path, _, pack_key, pack_path in set_imports:
             storage.put_object(key, path.read_bytes(), "image/webp")
+            storage.put_object(pack_key, pack_path.read_bytes(), "image/webp")
         for _, _, files in card_imports:
             for key, content_type, path in files.values():
                 storage.put_object(key, path.read_bytes(), content_type)
 
         with transaction.atomic():
-            for card_set, signature, key, _ in set_imports:
+            for card_set, signature, key, _, pack_signature, pack_key, _ in set_imports:
                 card_set.render_back_signature = signature
                 card_set.render_back_key = key
-                card_set.save(update_fields=["render_back_signature", "render_back_key"])
+                card_set.render_pack_signature = pack_signature
+                card_set.render_pack_key = pack_key
+                card_set.save(
+                    update_fields=[
+                        "render_back_signature",
+                        "render_back_key",
+                        "render_pack_signature",
+                        "render_pack_key",
+                    ]
+                )
 
             for card, signature, files in card_imports:
                 values = {

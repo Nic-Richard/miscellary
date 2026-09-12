@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useState } from 'react';
 import { cardCode } from '@miscellary/shared';
 import type { OwnedCard, SetPointsBalance } from '@miscellary/shared';
@@ -10,7 +10,7 @@ import Sheet, { Empty } from '@/components/Sheet';
 import { OwnedCardInspector } from '@/components/CardInspector';
 import CardPreview from '@/components/CardPreview';
 import { useAuth } from '@/lib/auth';
-import { loginHref } from '@/lib/returnTo';
+import { useRequireAccount } from '@/lib/requireAccount';
 import { listMyCards, listMyPoints, recycleCard } from '@/lib/packs';
 import ui from '@/components/ui.module.css';
 import styles from './page.module.css';
@@ -28,7 +28,7 @@ function stack(owned: OwnedCard[]): OwnedCard[] {
 
 function Collection() {
   const { user, loading } = useAuth();
-  const pathname = usePathname();
+  useRequireAccount();
   const setSlug = useSearchParams().get('set') ?? undefined;
   const [cards, setCards] = useState<OwnedCard[] | null>(null);
   const [points, setPoints] = useState<SetPointsBalance[]>([]);
@@ -84,12 +84,7 @@ function Collection() {
   }
 
   if (loading) return <p className={ui.muted}>Loading…</p>;
-  if (!user)
-    return (
-      <p className={ui.muted}>
-        <Link href={loginHref(pathname)}>Log in</Link> to see your collection.
-      </p>
-    );
+  if (!user) return <p className={ui.muted}>Taking you to create an account…</p>;
 
   const bySet = new Map<string, OwnedCard[]>();
   for (const c of cards ?? []) {
@@ -130,6 +125,7 @@ function Collection() {
 
       {[...bySet.entries()].map(([slug, list]) => {
         const balance = points.find((p) => p.set_slug === slug)?.points ?? 0;
+        const stacked = stack(list);
         return (
           <Sheet
             key={slug}
@@ -139,12 +135,12 @@ function Collection() {
                 {list[0]?.set_title}
               </Link>
             }
-            meta={`${stack(list).length} ${stack(list).length === 1 ? 'card' : 'cards'} · ${
-              list.length
-            } ${list.length === 1 ? 'copy' : 'copies'} · ${balance} set points`}
+            meta={`${stacked.length} ${stacked.length === 1 ? 'card' : 'cards'} · ${list.length} ${
+              list.length === 1 ? 'copy' : 'copies'
+            } · ${balance} set points`}
           >
             <CardGrid>
-              {stack(list).map((owned) => (
+              {stacked.map((owned) => (
                 <CardCell
                   key={owned.card.id}
                   footer={
@@ -185,7 +181,6 @@ function Collection() {
                         owned.card.position,
                         owned.card.set_total,
                       )}
-                      description={owned.card.description}
                       printedText={owned.card.printed_text}
                       imageUrl={owned.card.image.url}
                       templateKey={owned.card.template_key}

@@ -29,7 +29,6 @@ def test_upload_flow(auth_client, user, bucket):
     image = Image.objects.get(id=body["image"]["id"])
     assert image.key.startswith("card/") and image.key.endswith(".png")
 
-    # Completing before the object exists fails.
     complete = reverse("uploads:complete", args=[image.id])
     response = auth_client.post(complete, {"width": 800, "height": 600}, format="json")
     assert response.status_code == 400
@@ -83,3 +82,59 @@ def test_cannot_complete_someone_elses_upload(auth_client, bucket):
         reverse("uploads:complete", args=[image.id]), {"width": 1, "height": 1}, format="json"
     )
     assert response.status_code == 404
+
+
+def test_credit_publishes_only_the_attribution_fields():
+    from uploads.serializers import ImageSerializer
+
+    image = Image(
+        kind="card",
+        key="card/credited.jpg",
+        content_type="image/jpeg",
+        source_metadata={
+            "source_url": "https://commons.wikimedia.org/wiki/File:Example.jpg",
+            "author": "Example photographer",
+            "license": "CC BY-SA 4.0",
+            "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+            "adaptation": "Cropped by the card renderer from the downloaded source.",
+            "internal_note": "not for publication",
+        },
+    )
+    credit = ImageSerializer(image).data["credit"]
+    assert credit == {
+        "author": "Example photographer",
+        "license": "CC BY-SA 4.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+        "source_url": "https://commons.wikimedia.org/wiki/File:Example.jpg",
+    }
+
+
+def test_credit_is_absent_when_nobody_is_named():
+    from uploads.serializers import ImageSerializer
+
+    bare = Image(kind="card", key="card/bare.jpg", content_type="image/jpeg")
+    assert ImageSerializer(bare).data["credit"] is None
+    blank = Image(
+        kind="card",
+        key="card/blank.jpg",
+        content_type="image/jpeg",
+        source_metadata={"author": "   ", "license": "CC0"},
+    )
+    assert ImageSerializer(blank).data["credit"] is None
+
+
+def test_presigned_host_follows_the_caller_in_development(settings):
+    settings.DEBUG = True
+    settings.AWS_S3_PUBLIC_ENDPOINT_URL = "http://localhost:9000"
+    assert storage.public_endpoint_for("10.0.0.84:8000") == "http://10.0.0.84:9000"
+    assert storage.public_endpoint_for("localhost:8000") == "http://localhost:9000"
+    assert storage.public_endpoint_for("127.0.0.1:8000") == "http://localhost:9000"
+    assert storage.public_endpoint_for(None) == "http://localhost:9000"
+
+
+def test_presigned_host_is_pinned_outside_development(settings):
+    settings.DEBUG = False
+    settings.AWS_S3_PUBLIC_ENDPOINT_URL = "https://media.example.com"
+    assert storage.public_endpoint_for("10.0.0.84:8000") == "https://media.example.com"
+    settings.AWS_S3_PUBLIC_ENDPOINT_URL = ""
+    assert storage.public_endpoint_for("10.0.0.84:8000") == ""

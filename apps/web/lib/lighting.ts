@@ -1,6 +1,16 @@
-// Resolves one fixed binder key light into per-slot material variables.
+'use client';
 
+import { createContext, useContext } from 'react';
 import type { CSSProperties } from 'react';
+
+// Scene-lit surfaces composite material layers instead of using the flat bake.
+const SceneLit = createContext(false);
+
+export const SceneLight = SceneLit.Provider;
+
+export function useSceneLit(): boolean {
+  return useContext(SceneLit);
+}
 
 export const KEY_LIGHT = { x: 26, y: 8 };
 const BASE_ANGLE = 104;

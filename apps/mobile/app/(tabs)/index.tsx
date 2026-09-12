@@ -14,7 +14,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import BinderCover from '@/components/BinderCover';
+import SetTile from '@/components/SetTile';
 import { Button, Chip, ErrorText, Input } from '@/components/ui';
 import { useDiscovery } from '@/lib/discovery';
 import type { DiscoverySort } from '@/lib/discovery';
@@ -121,7 +121,7 @@ export default function BrowseScreen() {
                 <Text style={styles.total}>
                   {shelf.loading
                     ? 'Finding your next curiosity'
-                    : `${shelf.count} ${shelf.count === 1 ? 'binder' : 'binders'} to explore`}
+                    : `${shelf.count} published ${shelf.count === 1 ? 'set' : 'sets'} to choose from`}
                 </Text>
               </View>
               <Feather name="bookmark" size={21} color={colors.gold} />
@@ -144,7 +144,7 @@ export default function BrowseScreen() {
         }
         ListEmptyComponent={
           shelf.loading ? (
-            <View accessibilityLabel="Loading binders" style={styles.loading}>
+            <View accessibilityLabel="Loading sets" style={styles.loading}>
               <ActivityIndicator color={colors.accent} />
               <Text style={styles.stateText}>Looking along the shelf…</Text>
             </View>
@@ -160,7 +160,7 @@ export default function BrowseScreen() {
               <Feather name="book-open" size={32} color={colors.cloth} />
               <Text style={styles.stateTitle}>Room for the first collection</Text>
               <Text style={styles.stateText}>
-                Published binders will appear here. Have a collection in mind?
+                Published sets will appear here. Have a collection in mind?
               </Text>
               <Button
                 title="Visit Studio"
@@ -172,24 +172,21 @@ export default function BrowseScreen() {
         }
         renderItem={({ item }) => (
           <View style={[styles.item, { width: itemWidth }]}>
-            <BinderCover set={item} />
+            <SetTile set={item} />
           </View>
         )}
         ListFooterComponent={
           shelf.sets.length > 0 ? (
             <View style={styles.footer}>
               {shelf.loadingMore ? (
-                <ActivityIndicator
-                  accessibilityLabel="Loading more binders"
-                  color={colors.accent}
-                />
+                <ActivityIndicator accessibilityLabel="Loading more sets" color={colors.accent} />
               ) : shelf.moreError ? (
                 <>
                   <ErrorText>{shelf.moreError}</ErrorText>
-                  <Button title="Retry more binders" kind="secondary" onPress={shelf.loadMore} />
+                  <Button title="Retry more sets" kind="secondary" onPress={shelf.loadMore} />
                 </>
               ) : shelf.hasMore ? (
-                <Button title="More binders" kind="secondary" onPress={shelf.loadMore} />
+                <Button title="More sets" kind="secondary" onPress={shelf.loadMore} />
               ) : (
                 <>
                   <Feather name="book-open" size={20} color={colors.cloth} />
@@ -197,7 +194,7 @@ export default function BrowseScreen() {
                 </>
               )}
               <Text style={styles.progress}>
-                {shelf.sets.length} of {shelf.count} binders
+                {shelf.sets.length} of {shelf.count} sets
               </Text>
             </View>
           ) : null

@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.db.models import Count, Exists, OuterRef, Prefetch, Value
 from django.shortcuts import get_object_or_404
 from rest_framework import permissions, status
@@ -185,6 +186,36 @@ class MyCardListView(APIView):
         return Response(CardSerializer(card).data, status=status.HTTP_201_CREATED)
 
 
+class MyCardOrderView(APIView):
+    """Set the order a draft's cards are printed in.
+
+    Position is what the printed identifier counts, so it has to stay a gapless
+    run. Every write goes through here or through a delete, and both renumber.
+    """
+
+    def post(self, request: Request, set_id) -> Response:
+        card_set = my_set(request, set_id)
+        require_draft(card_set)
+        body = request.data if isinstance(request.data, dict) else {}
+        wanted = body.get("card_ids")
+        if not isinstance(wanted, list):
+            raise ValidationError({"card_ids": ["Send the card ids in the order they belong."]})
+        cards = {str(card.id): card for card in card_set.cards.all()}
+        asked = [str(card_id) for card_id in wanted]
+        if sorted(asked) != sorted(cards):
+            raise ValidationError({"card_ids": ["Send every card in the set exactly once."]})
+        with transaction.atomic():
+            for position, card_id in enumerate(asked):
+                card = cards[card_id]
+                if card.position != position:
+                    card.position = position
+                    card.save(update_fields=["position"])
+        # The set was fetched with its cards prefetched, so read them back from
+        # the database rather than from a cache that predates the renumbering.
+        ordered = CardDefinition.objects.filter(card_set=card_set).order_by("position")
+        return Response(CardSerializer(ordered, many=True).data)
+
+
 class MyCardDetailView(APIView):
     def _card(self, request: Request, set_id, card_id) -> CardDefinition:
         card_set = my_set(request, set_id)
@@ -201,5 +232,13 @@ class MyCardDetailView(APIView):
         return Response(CardSerializer(card).data)
 
     def delete(self, request: Request, set_id, card_id) -> Response:
-        self._card(request, set_id, card_id).delete()
+        card = self._card(request, set_id, card_id)
+        card_set = card.card_set
+        with transaction.atomic():
+            card.delete()
+            remaining_cards = CardDefinition.objects.filter(card_set=card_set).order_by("position")
+            for position, remaining in enumerate(remaining_cards):
+                if remaining.position != position:
+                    remaining.position = position
+                    remaining.save(update_fields=["position"])
         return Response(status=status.HTTP_204_NO_CONTENT)

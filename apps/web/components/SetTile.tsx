@@ -1,10 +1,10 @@
 import Link from 'next/link';
 import type { CardSetSummary } from '@miscellary/shared';
-import { binderClothStyle } from '@/lib/setIdentity';
 import DemoBadge from './DemoBadge';
-import styles from './BinderCover.module.css';
+import PackStage from './PackStage';
+import styles from './SetTile.module.css';
 
-export default function BinderCover({
+export default function SetTile({
   set,
   href,
   meta,
@@ -14,15 +14,9 @@ export default function BinderCover({
   meta?: string | undefined;
 }) {
   return (
-    <Link href={href ?? `/sets/${set.slug}`} className={styles.cover}>
-      {/* Apply cover colour to the cloth layer only. */}
-      <span
-        className={styles.cloth}
-        style={binderClothStyle(set.binder_colour || 'teal')}
-        aria-hidden="true"
-      />
-      <span className={styles.window}>
-        {set.cover ? <img src={set.cover.url} alt="" /> : <i>{set.title[0]}</i>}
+    <Link href={href ?? `/sets/${set.slug}`} className={styles.tile}>
+      <span className={styles.stage}>
+        <PackStage set={set} />
       </span>
       <span className={styles.label}>
         <strong>{set.title}</strong>

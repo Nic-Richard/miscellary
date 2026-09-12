@@ -24,9 +24,11 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
 from accounts.models import User
-from cards.identity import BINDER_COLOURS
+from cards.identity import ART_SCALE_MAX, BINDER_COLOURS
 from cards.markdown import description_issues
 from cards.models import CardDefinition, CardSet
+from cards.packlayers import DEFAULTS as PACK_LAYER_DEFAULTS
+from cards.packtext import DEFAULTS as PACK_TEXT_DEFAULTS
 from cards.publishing import publish_set
 from cards.templates import TEMPLATES_BY_KEY, config_problems, default_config, template_problems
 from packs.actions import open_free_pack
@@ -70,6 +72,98 @@ SPECIALTY_BY_RARITY: dict[str, list[dict[str, str]]] = {
         {"treatment": "foil", "finish": "gloss", "coverage": "spot"},
     ],
 }
+# Pack art entries are painted in order under the lockup. A line is
+# (text, colour, size, y, tracking, font).
+PACK_FRONTS: dict[str, dict[str, Any]] = {
+    "Woodland Fungi": {
+        "art": [],
+        "emblem_y": -2,
+        "emblem_scale": 106,
+        "lines": [
+            ("FOUND ON THE WOODLAND FLOOR", "cream", 2.9, -40, 24, "body"),
+            ("{pack} CARDS PER PACK", "cream", 4.0, 39, 30, "body"),
+        ],
+    },
+    "Planets and Moons": {
+        "keyed": "planets-and-moons",
+        "art": [
+            {"pick": "legendary", "fit": "flood", "opacity": 26},
+            {"cutout": True, "scale": 58, "y": -11, "rotate": 0},
+        ],
+        "emblem_y": 19,
+        "emblem_scale": 82,
+        "lines": [
+            ("EVERY WORLD WE HAVE PHOTOGRAPHED", "cream", 2.8, -40, 22, "body"),
+            ("{pack} CARDS PER PACK", "cream", 4.0, 39, 30, "body"),
+        ],
+    },
+    "Pocket Geology": {
+        "keyed": "pocket-geology",
+        "art": [{"cutout": True, "scale": 46, "y": -12, "rotate": -4}],
+        "emblem_y": 19,
+        "emblem_scale": 82,
+        "lines": [
+            ("PICKED UP AND KEPT", "ink", 2.9, -40, 24, "body"),
+            ("{pack} CARDS PER PACK", "ink", 4.0, 39, 30, "body"),
+        ],
+    },
+    "Film Cameras": {
+        "keyed": "film-cameras",
+        "art": [{"cutout": True, "scale": 72, "y": -11, "rotate": -3}],
+        "emblem_y": 19,
+        "emblem_scale": 84,
+        "lines": [
+            ("THIRTY FIVE MILLIMETRE", "cream", 2.9, -40, 26, "body"),
+            ("{pack} CARDS PER PACK", "cream", 4.0, 39, 30, "body"),
+        ],
+    },
+    "Garden Birds": {
+        "cutout": "Passer montanus.png",
+        "art": [{"cutout": True, "scale": 74, "y": -10, "rotate": -3}],
+        "emblem_y": 19,
+        "emblem_scale": 84,
+        "lines": [
+            ("FROM THE KITCHEN WINDOW", "ink", 2.9, -40, 26, "body"),
+            ("{pack} CARDS PER PACK", "ink", 4.0, 39, 30, "body"),
+        ],
+    },
+    "Plants Along the Trail": {
+        "cutout": "Glechoma hederacea.png",
+        "art": [{"cutout": True, "scale": 52, "y": -12, "rotate": 4}],
+        "emblem_y": 19,
+        "emblem_scale": 84,
+        "lines": [
+            ("PRESSED ON THE WAY ROUND", "cream", 2.9, -40, 26, "body"),
+            ("{pack} CARDS PER PACK", "cream", 4.0, 39, 30, "body"),
+        ],
+    },
+    "Records on My Shelf": {
+        "keyed": "records-on-my-shelf",
+        "art": [{"cutout": True, "scale": 66, "y": -11, "rotate": 0}],
+        "emblem_y": 20,
+        "emblem_scale": 82,
+        "lines": [
+            ("SEVEN INCH AND TWELVE", "cream", 3.0, -40, 26, "body"),
+            ("{pack} CARDS PER PACK", "cream", 4.0, 39, 30, "body"),
+        ],
+    },
+}
+
+PACK_FRONTS_DEFAULT: dict[str, Any] = {
+    "art": [{"pick": "legendary", "scale": 60, "y": -13, "rotate": -2}],
+    "emblem_y": 19,
+    "emblem_scale": 84,
+    "lines": [("{pack} CARDS PER PACK", "cream", 4.0, 39, 30, "body")],
+}
+
+CUTOUT_DIR = Path(__file__).resolve().parents[1] / "cutouts"
+CUTOUT_SOURCES: dict[str, str] = json.loads(
+    (CUTOUT_DIR / "sources.json").read_text(encoding="utf-8")
+)
+
+# Pack artwork is measured against the wrapper, which is 530 x 886.
+PACK_COVER_RATIO = 886 / 530
+
 DEMO_CORNER_CUTS = ("round", "round", "soft", "sharp")
 
 
@@ -196,7 +290,7 @@ LAUNCH_EXPANSIONS = {
             "Sea Holly",
             "epic",
             "minimal",
-            {"gradient": "full", "accent": "gold", "finish": "pearl"},
+            {"gradient": "bottom", "accent": "gold", "body_ink": "linen", "finish": "pearl"},
             copy(
                 "*Eryngium maritimum*. Waxy blue-grey leaves hold water on open shingle.",
                 "One low sea holly plant out among the shingle, with the beach running back to the "
@@ -447,7 +541,7 @@ LAUNCH_EXPANSIONS = {
             "Cutting Lathe",
             "epic",
             "minimal",
-            {"gradient": "full", "accent": "gold", "finish": "metallic"},
+            {"gradient": "bottom", "accent": "gold", "body_ink": "linen", "finish": "metallic"},
             copy(
                 "The cutter head writes one spiral groove into a lacquer master.",
                 "A record-cutting lathe with the cutter head over a blank disc and its controls "
@@ -833,6 +927,1209 @@ LAUNCH_EXPANSIONS = {
     ],
 }
 
+# Module-level so photo preflight and seeding use the same set specs.
+EXTRA_SETS = [
+    (
+        "orla",
+        "Garden Birds",
+        "Whatever lands on the feeder, catalogued from the kitchen window.",
+        ((120, 150, 190), (40, 60, 90)),
+        {
+            "set_code": "BRD",
+            "mark": "feather",
+            "pack_colour": "sky",
+            "pack_finish": "gloss",
+            "pack_size": 3,
+            "emblem_layout": "seal",
+            "emblem_shape": "disc",
+            "emblem_style": "filled",
+            "emblem_text": "ocean",
+            "surface": "linen",
+        },
+        [
+            (
+                "European Robin",
+                "common",
+                "classic",
+                {"stock": "cream"},
+                copy(
+                    "*Erithacus rubecula*. Juveniles are spotted brown; the red front "
+                    "arrives with the moult.",
+                    "A young robin still in spotted brown plumage, on bare ground, before "
+                    "the red breast comes through.",
+                ),
+                "search:European robin bird",
+            ),
+            (
+                "Blue Tit",
+                "common",
+                "polaroid",
+                {"tint": "cool"},
+                copy(
+                    "",
+                    "A blue tit seen from behind on a lichened branch, showing the blue "
+                    "wing and the long blue-grey tail.",
+                ),
+                "search:Eurasian blue tit",
+            ),
+            (
+                "Goldfinch",
+                "common",
+                "classic",
+                {"stock": "butter", "accent": "ochre"},
+                copy(
+                    "*Carduelis carduelis*. A fine bill for teasing seed out of thistles "
+                    "and teasels.",
+                    "A goldfinch on a hazel branch hung with catkins, its red face and "
+                    "gold wing bar clear.",
+                ),
+                "search:European goldfinch",
+            ),
+            (
+                "Long-tailed Tit",
+                "uncommon",
+                "classic",
+                {"stock": "bone"},
+                copy(
+                    "*Aegithalos caudatus*. Travels in family parties and roosts in a "
+                    "huddle on cold nights.",
+                    "A long-tailed tit on a bare branch, round-bodied with a tail longer "
+                    "than the rest of it.",
+                ),
+                "search:long-tailed tit",
+            ),
+            (
+                "Wren",
+                "rare",
+                "fieldnote",
+                {},
+                copy(
+                    "**Troglodytes troglodytes**\n- Among the smallest birds here, and the "
+                    "loudest\n- Feeds low down, in cover\n- The male builds several nests "
+                    "for the female to pick",
+                    "A wren on a sawn log end, tail cocked, with the barring showing on its wings.",
+                ),
+                "search:eurasian wren bird",
+            ),
+            (
+                "Kingfisher",
+                "legendary",
+                "bold",
+                {
+                    "shape": "circle",
+                    "border": "ocean",
+                    "treatment": "foil",
+                    "coverage": "reverse",
+                },
+                copy(
+                    "*Alcedo atthis*. Takes fish and larvae from a perch over water, and "
+                    "nests in a bank tunnel.",
+                    "A female kingfisher on a bare log, holding a dragonfly larva across her bill.",
+                ),
+                "search:common kingfisher",
+            ),
+        ],
+    ),
+    (
+        "bex",
+        "Film Cameras",
+        ("Film cameras from compact rangefinders to large folding field cameras."),
+        ((145, 110, 75), (35, 30, 25)),
+        {
+            "set_code": "CAM",
+            "mark": "orbit",
+            "pack_colour": "charcoal",
+            "pack_finish": "satin",
+            "pack_size": 7,
+            "emblem_layout": "badge",
+            "emblem_shape": "tablet",
+            "emblem_style": "filled",
+            "emblem_text": "cream",
+            "surface": "linen",
+        },
+        [
+            (
+                "Canon AE-1",
+                "common",
+                "bold",
+                {
+                    "stock": "charcoal",
+                    "shape": "square",
+                    "border": "copper",
+                    "border_width": "medium",
+                    "title_typeface": "display",
+                    "tint": "none",
+                },
+                copy(
+                    "1976. Shutter-priority SLR built around a microprocessor. FD mount, "
+                    "50mm f/1.8 as standard.",
+                    "A black AE-1 with the 50mm f/1.8 fitted, photographed square on "
+                    "against a plain ground.",
+                ),
+                "camera:canon-ae1",
+            ),
+            (
+                "Pentax K1000",
+                "common",
+                "fieldnote",
+                {
+                    "stock": "sand",
+                    "accent": "rust",
+                    "title_typeface": "spacemono",
+                    "tint": "none",
+                },
+                copy(
+                    "**Pentax K1000, 1976**\n- Fully mechanical; only the meter needs a "
+                    "battery\n- K bayonet mount\n- Sold for two decades as a first camera",
+                    "A silver K1000 carrying a zoom far larger than the body, with the "
+                    "shutter dial and prism in view.",
+                ),
+                "camera:pentax-k1000",
+            ),
+            (
+                "Nikon F",
+                "uncommon",
+                "fieldnote",
+                {
+                    "stock": "navy",
+                    "accent": "slate",
+                    "title_typeface": "spacemono",
+                    "tint": "none",
+                },
+                copy(
+                    "**Nikon F, 1959**\n- Nikon's first system SLR\n- Interchangeable "
+                    "prisms and focusing screens\n- Built on the F bayonet mount, still in "
+                    "use",
+                    "A silver Nikon F with a Nikkor lens fitted, the flat-topped prism "
+                    "giving it its familiar outline.",
+                ),
+                "camera:nikon-f",
+            ),
+            (
+                "Leica M3",
+                "rare",
+                "classic",
+                {
+                    "stock": "forest",
+                    "border": "silver",
+                    "border_width": "hairline",
+                    "title_typeface": "cinzel",
+                    "finish": "metallic",
+                    "tint": "none",
+                },
+                copy(
+                    "1954. Bayonet M mount, with rangefinder and viewfinder combined in "
+                    "one window.",
+                    "A chrome M3 with a 5cm Summicron, its three front windows set across "
+                    "the top plate. Photographed at the German Museum of Technology in "
+                    "Berlin.",
+                ),
+                "camera:leica-m3",
+            ),
+            (
+                "Polaroid SX-70",
+                "legendary",
+                "minimal",
+                {
+                    "gradient": "full",
+                    "accent": "gold",
+                    "border": "copper",
+                    "border_width": "medium",
+                    "title_typeface": "cinzel",
+                    "finish": "satin",
+                    "treatment": "foil",
+                    "coverage": "full",
+                    "tint": "none",
+                },
+                copy(
+                    "1972. A folding SLR that develops its print out in the light.",
+                    "A folding SX-70 in brown leather and brightwork, opened out to its "
+                    "working shape.",
+                ),
+                "camera:sx70",
+            ),
+        ],
+    ),
+    (
+        "kit",
+        "Planets and Moons",
+        "Every world out there that a spacecraft has sent back a decent portrait of.",
+        ((60, 70, 120), (12, 14, 30)),
+        {
+            "set_code": "SKY",
+            "mark": "star",
+            "pack_colour": "indigo",
+            "pack_finish": "holo",
+            "pack_size": 10,
+            "emblem_layout": "crest",
+            "emblem_shape": "disc",
+            "emblem_style": "filled",
+            "emblem_text": "cream",
+        },
+        [
+            (
+                "The Sun",
+                "legendary",
+                "minimal",
+                {
+                    "stock": "ink",
+                    "texture": "smooth",
+                    "border": "ember",
+                    "border_width": "hairline",
+                    "gradient": "bottom",
+                    "accent": "ember",
+                    "title_typeface": "alfa",
+                    "body_typeface": "oswald",
+                    "title_ink": "butter",
+                    "body_ink": "apricot",
+                    "finish": "gloss",
+                    "treatment": "holo",
+                    "coverage": "full",
+                    "pattern": "rainbow",
+                },
+                copy(
+                    "*SOHO, extreme ultraviolet.* A prominence stands clear of the disc.",
+                    "The Sun imaged in extreme ultraviolet by SOHO, with a huge "
+                    "handle-shaped prominence held out above the limb in cooler, denser "
+                    "plasma.",
+                ),
+                "nasa:PIA03149",
+            ),
+            (
+                "Mercury",
+                "common",
+                "fieldnote",
+                {
+                    "stock": "charcoal",
+                    "texture": "smooth",
+                    "border": "steel",
+                    "border_width": "hairline",
+                    "window": "inset",
+                    "accent": "silver",
+                    "title_typeface": "oswald",
+                    "body_typeface": "archivo",
+                    "title_ink": "haze",
+                },
+                copy(
+                    "**Closest in**\n- Smaller than Ganymede or Titan, and still a planet\n"
+                    "- Almost no atmosphere to move the heat around\n- Craters everywhere, "
+                    "because nothing has erased them",
+                    "A MESSENGER global view of Mercury, the sunlit face covered edge to "
+                    "edge with craters laid over craters.",
+                ),
+                "nasa:PIA15162",
+            ),
+            (
+                "Venus",
+                "common",
+                "fieldnote",
+                {
+                    "stock": "ink",
+                    "texture": "smooth",
+                    "border": "ochre",
+                    "border_width": "thin",
+                    "window": "none",
+                    "accent": "ochre",
+                    "title_typeface": "oswald",
+                    "body_typeface": "archivo",
+                    "title_ink": "straw",
+                },
+                copy(
+                    "**Under the cloud**\n- Cloud hides the ground from any ordinary "
+                    "camera\n- Magellan mapped the surface by radar instead\n- The colour "
+                    "here was chosen, not photographed",
+                    "A computer-built globe of the northern hemisphere of Venus, assembled "
+                    "from Magellan radar and coloured in the tan the mission chose for it.",
+                ),
+                "nasa:PIA00271",
+            ),
+            (
+                "Earth",
+                "common",
+                "classic",
+                {
+                    "stock": "navy",
+                    "texture": "smooth",
+                    "border": "sky",
+                    "border_width": "thin",
+                    "window": "rule",
+                    "accent": "sky",
+                    "title_typeface": "jost",
+                    "body_typeface": "jost",
+                    "title_ink": "powder",
+                },
+                copy(
+                    "*Blue Marble.* Four orbits of VIIRS data, stitched into one face.",
+                    "The Suomi NPP Blue Marble composite, centred on North America, with "
+                    "Pacific cloud systems turning across the left of the disc.",
+                ),
+                "nasa:PIA18033",
+            ),
+            (
+                "The Moon",
+                "common",
+                "classic",
+                {
+                    "stock": "charcoal",
+                    "texture": "smooth",
+                    "border": "silver",
+                    "border_width": "hairline",
+                    "window": "mat",
+                    "tint": "mono",
+                    "accent": "silver",
+                    "title_typeface": "jost",
+                    "body_typeface": "jost",
+                    "title_ink": "white",
+                },
+                copy(
+                    "*Clementine mosaic.* Fifty thousand frames, put together as one face.",
+                    "A Clementine mosaic of the lunar nearside, the dark maria filling the "
+                    "middle of the disc and the rays of Tycho reaching up from the bottom.",
+                ),
+                "nasa:PIA00302",
+            ),
+            (
+                "Mars",
+                "common",
+                "fieldnote",
+                {
+                    "stock": "oxblood",
+                    "texture": "smooth",
+                    "border": "rust",
+                    "border_width": "medium",
+                    "window": "rule",
+                    "accent": "rust",
+                    "title_typeface": "oswald",
+                    "body_typeface": "archivo",
+                    "title_ink": "apricot",
+                },
+                copy(
+                    "**Global colour view**\n- Polar caps of water ice and frozen carbon "
+                    "dioxide\n- Dust storms that can close over the whole planet\n- Two "
+                    "small moons, both irregular",
+                    "A global colour view of Mars, the north polar cap bright at the top "
+                    "and the dark surface markings running in a band below it.",
+                ),
+                "nasa:PIA00407",
+            ),
+            (
+                "Phobos",
+                "common",
+                "polaroid",
+                {
+                    "stock": "slate",
+                    "texture": "smooth",
+                    "border": "ash",
+                    "border_width": "thin",
+                    "tint": "mono",
+                    "accent": "ash",
+                    "title_typeface": "cabin",
+                    "body_typeface": "cabin",
+                    "title_ink": "haze",
+                },
+                copy(
+                    "",
+                    "Phobos from about 5,800 kilometres, lit from one side, with its "
+                    "largest crater breaking the outline near the edge of the disc.",
+                ),
+                "nasa:PIA10367",
+            ),
+            (
+                "Vesta",
+                "common",
+                "fieldnote",
+                {
+                    "stock": "graphite",
+                    "texture": "smooth",
+                    "border": "sand",
+                    "border_width": "hairline",
+                    "window": "inset",
+                    "accent": "sand",
+                    "title_typeface": "oswald",
+                    "body_typeface": "archivo",
+                    "title_ink": "linen",
+                },
+                copy(
+                    "**Second heaviest in the belt**\n- Dawn held orbit around it for a "
+                    "year\n- Three craters in a row, called the snowman\n- Pieces of it "
+                    "reach Earth as meteorites",
+                    "A Dawn mosaic of Vesta, too small to have pulled itself round, with "
+                    "the three linked craters known as the snowman near the top.",
+                ),
+                "nasa:PIA15678",
+            ),
+            (
+                "Ceres",
+                "uncommon",
+                "classic",
+                {
+                    "stock": "slate",
+                    "texture": "smooth",
+                    "border": "haze",
+                    "border_width": "thin",
+                    "window": "none",
+                    "accent": "haze",
+                    "title_typeface": "jost",
+                    "body_typeface": "jost",
+                    "title_ink": "white",
+                },
+                copy(
+                    "*Occator crater.* The bright deposits are salts left by briny water.",
+                    "The Dawn view into Occator crater on Ceres, built from a short "
+                    "exposure for the bright deposits and a normal one for the ground "
+                    "around them.",
+                ),
+                "nasa:PIA19889",
+            ),
+            (
+                "Jupiter",
+                "epic",
+                "minimal",
+                {
+                    "stock": "ink",
+                    "texture": "smooth",
+                    "border": "ochre",
+                    "border_width": "thin",
+                    "gradient": "bottom",
+                    "accent": "ochre",
+                    "title_typeface": "cinzel",
+                    "body_typeface": "marcellus",
+                    "title_ink": "butter",
+                    "finish": "metallic",
+                    "treatment": "foil",
+                    "coverage": "full",
+                    "pattern": "mirror",
+                },
+                copy(
+                    "*Cassini, 2000.* The dark dot on the belt is the shadow of Europa.",
+                    "A true-colour globe of Jupiter built from four Cassini frames, the "
+                    "Great Red Spot in the southern belts and the shadow of Europa falling "
+                    "on the cloud tops.",
+                ),
+                "nasa:PIA02873",
+            ),
+            (
+                "Io",
+                "uncommon",
+                "bold",
+                {
+                    "stock": "ink",
+                    "texture": "smooth",
+                    "border": "straw",
+                    "border_width": "thick",
+                    "tint": "punch",
+                    "accent": "straw",
+                    "title_typeface": "archivo",
+                    "body_typeface": "spacemono",
+                    "title_ink": "butter",
+                },
+                copy(
+                    "The most volcanic body we know of. It repaves itself faster than "
+                    "craters can form.",
+                    "The Galileo view of Io, the whole disc mottled yellow and white by "
+                    "the sulphur compounds its volcanoes lay down.",
+                ),
+                "nasa:PIA00282",
+            ),
+            (
+                "Europa",
+                "rare",
+                "classic",
+                {
+                    "stock": "navy",
+                    "texture": "brushed",
+                    "border": "powder",
+                    "border_width": "thin",
+                    "window": "rule",
+                    "accent": "powder",
+                    "title_typeface": "jost",
+                    "body_typeface": "jost",
+                    "title_ink": "white",
+                    "finish": "pearl",
+                },
+                copy(
+                    "*Galileo, reprocessed.* Ice crust, cracked through, ocean underneath.",
+                    "A reprocessed Galileo colour view of Europa, the ice shell crossed in "
+                    "every direction by long reddish fractures.",
+                ),
+                "nasa:PIA19048",
+            ),
+            (
+                "Ganymede",
+                "uncommon",
+                "fieldnote",
+                {
+                    "stock": "cocoa",
+                    "texture": "smooth",
+                    "border": "linen",
+                    "border_width": "thin",
+                    "window": "rule",
+                    "accent": "linen",
+                    "title_typeface": "oswald",
+                    "body_typeface": "archivo",
+                    "title_ink": "cream",
+                },
+                copy(
+                    "**Largest moon in the system**\n- Bigger than Mercury, and the only "
+                    "moon with a magnetic field\n- Dark ground is old and cratered\n- Pale "
+                    "ground is younger and grooved",
+                    "A natural-colour Galileo view of Ganymede, the older dark terrain set "
+                    "against the paler, grooved ground that replaced it.",
+                ),
+                "nasa:PIA00716",
+            ),
+            (
+                "Callisto",
+                "common",
+                "bold",
+                {
+                    "stock": "charcoal",
+                    "texture": "smooth",
+                    "border": "haze",
+                    "border_width": "thick",
+                    "accent": "haze",
+                    "title_typeface": "archivo",
+                    "body_typeface": "spacemono",
+                    "title_ink": "white",
+                },
+                copy(
+                    "Every bright scar is an impact. Nothing has resurfaced it in billions "
+                    "of years.",
+                    "The Galileo global view of Callisto, its dark surface covered in "
+                    "bright impact scars with no smooth ground anywhere on the disc.",
+                ),
+                "nasa:PIA03456",
+            ),
+            (
+                "Saturn",
+                "epic",
+                "minimal",
+                {
+                    "stock": "ink",
+                    "texture": "smooth",
+                    "border": "gold",
+                    "border_width": "thin",
+                    "gradient": "none",
+                    "accent": "gold",
+                    "title_typeface": "playfair",
+                    "body_typeface": "playfair",
+                    "title_ink": "butter",
+                    "body_ink": "straw",
+                    "finish": "pearl",
+                    "treatment": "foil",
+                    "coverage": "full",
+                    "pattern": "cosmos",
+                },
+                copy(
+                    "*Cassini.* The rings are mostly water ice, and only metres thick.",
+                    "Saturn from Cassini with the rings opened wide, the banding on the "
+                    "planet pale and soft-edged behind them.",
+                ),
+                "nasa:PIA06077",
+            ),
+            (
+                "Titan",
+                "rare",
+                "classic",
+                {
+                    "stock": "cocoa",
+                    "texture": "smooth",
+                    "border": "butter",
+                    "border_width": "thin",
+                    "window": "rule",
+                    "accent": "butter",
+                    "title_typeface": "playfair",
+                    "body_typeface": "garamond",
+                    "title_ink": "straw",
+                    "finish": "pearl",
+                },
+                copy(
+                    "*Natural colour.* Thick nitrogen air, and rain that falls as methane.",
+                    "Titan passing in front of Saturn in natural colour, its haze layer "
+                    "giving the moon a soft orange edge against the bands of the planet.",
+                ),
+                "nasa:PIA14922",
+            ),
+            (
+                "Enceladus",
+                "uncommon",
+                "polaroid",
+                {
+                    "stock": "white",
+                    "texture": "smooth",
+                    "border": "powder",
+                    "border_width": "thin",
+                    "tint": "cool",
+                    "accent": "ocean",
+                    "title_typeface": "cabin",
+                    "body_typeface": "cabin",
+                },
+                copy(
+                    "",
+                    "Cassini approaching Enceladus, cratered ground across the top of the "
+                    "disc giving way to fractured, wrinkled terrain below it.",
+                ),
+                "nasa:PIA17202",
+            ),
+            (
+                "Uranus",
+                "uncommon",
+                "bold",
+                {
+                    "stock": "ocean",
+                    "texture": "smooth",
+                    "border": "mint",
+                    "border_width": "medium",
+                    "tint": "none",
+                    "accent": "mint",
+                    "title_typeface": "archivo",
+                    "body_typeface": "spacemono",
+                    "title_ink": "white",
+                    "body_ink": "powder",
+                },
+                copy(
+                    "Voyager 2, 1986. The only visit anything has made, and almost no "
+                    "cloud to see.",
+                    "Uranus from Voyager 2 in 1986, an almost featureless pale blue-green "
+                    "disc with no banding the camera could resolve.",
+                ),
+                "nasa:PIA18182",
+            ),
+            (
+                "Neptune",
+                "rare",
+                "fieldnote",
+                {
+                    "stock": "indigo",
+                    "texture": "brushed",
+                    "border": "cornflower",
+                    "border_width": "thin",
+                    "window": "rule",
+                    "accent": "cornflower",
+                    "title_typeface": "oswald",
+                    "body_typeface": "archivo",
+                    "title_ink": "powder",
+                    "finish": "metallic",
+                },
+                copy(
+                    "**Voyager 2, 1989**\n- The Great Dark Spot, with a bright companion "
+                    "cloud\n- A fast white feature the team named Scooter\n- Winds faster "
+                    "than anywhere else out here",
+                    "Neptune from the last whole-planet frames Voyager 2 took, showing the "
+                    "Great Dark Spot with its bright companion and the streak called "
+                    "Scooter.",
+                ),
+                "nasa:PIA01492",
+            ),
+            (
+                "Triton",
+                "uncommon",
+                "classic",
+                {
+                    "stock": "aubergine",
+                    "texture": "smooth",
+                    "border": "blush",
+                    "border_width": "thin",
+                    "window": "rule",
+                    "accent": "blush",
+                    "title_typeface": "jost",
+                    "body_typeface": "jost",
+                    "title_ink": "peach",
+                    "finish": "satin",
+                },
+                copy(
+                    "*Voyager 2, 1989.* Nitrogen ice, and geysers going off when it passed.",
+                    "A Voyager 2 colour mosaic of Triton, the pink southern cap meeting "
+                    "darker, rougher ground along a ragged line.",
+                ),
+                "nasa:PIA00317",
+            ),
+        ],
+    ),
+    (
+        "wren",
+        "Woodland Fungi",
+        "Damp woodland, mostly from October onward, and mostly from turning things over.",
+        ((90, 105, 70), (35, 40, 28)),
+        {
+            "set_code": "MYC",
+            "mark": "bloom",
+            "pack_colour": "forest",
+            "pack_finish": "matte",
+            "pack_size": 8,
+            "emblem_layout": "stacked",
+            "emblem_shape": "tablet",
+            "emblem_style": "filled",
+            "emblem_text": "forest",
+        },
+        [
+            (
+                "Fly Agaric",
+                "common",
+                "fieldnote",
+                {
+                    "stock": "cream",
+                    "texture": "felt",
+                    "border": "brick",
+                    "border_width": "medium",
+                    "window": "rule",
+                    "accent": "brick",
+                    "title_typeface": "garamond",
+                    "body_typeface": "spectral",
+                    "title_ink": "oxblood",
+                },
+                copy(
+                    "**Amanita muscaria**\n- The flecks are veil remains, and wash off\n"
+                    "- Grows with birch and pine, never on its own\n- Poisonous, and a "
+                    "long way from edible",
+                    "A fly agaric in moss, the orange-red cap still domed and flecked with "
+                    "white above a thick white stem.",
+                ),
+                "AD2009Sep20 Amanita muscaria 02.jpg",
+            ),
+            (
+                "Sulphur Tuft",
+                "common",
+                "fieldnote",
+                {
+                    "stock": "straw",
+                    "texture": "felt",
+                    "border": "olive",
+                    "border_width": "thin",
+                    "window": "rule",
+                    "accent": "olive",
+                    "title_typeface": "garamond",
+                    "body_typeface": "spectral",
+                    "title_ink": "forest",
+                },
+                copy(
+                    "**Hypholoma fasciculare**\n- Always in tight clumps on dead wood\n"
+                    "- Gills turn green as the spores ripen\n- Bitter enough that little "
+                    "will eat it",
+                    "A tight clump of sulphur tuft on rotting wood and needle litter, the "
+                    "caps pale yellow and darker towards the middle.",
+                ),
+                "Hypholoma fasciculare LC0091.jpg",
+            ),
+            (
+                "Turkey Tail",
+                "common",
+                "classic",
+                {
+                    "stock": "sand",
+                    "texture": "felt",
+                    "border": "cocoa",
+                    "border_width": "thin",
+                    "window": "mat",
+                    "accent": "cocoa",
+                    "title_typeface": "spectral",
+                    "body_typeface": "cinzel",
+                    "title_ink": "umber",
+                },
+                copy(
+                    "*Trametes versicolor.* Banded brackets, in rosettes, on dead wood.",
+                    "A rosette of turkey tail brackets on a cut log, each one banded in "
+                    "rings of brown, cream and rust.",
+                ),
+                "Trametes versicolor 2025 G1.jpg",
+            ),
+            (
+                "Shaggy Inkcap",
+                "common",
+                "polaroid",
+                {
+                    "stock": "bone",
+                    "texture": "felt",
+                    "border": "slate",
+                    "border_width": "thin",
+                    "accent": "slate",
+                    "title_typeface": "caveat",
+                    "body_typeface": "caveat",
+                },
+                copy(
+                    "",
+                    "Two shaggy inkcaps in rough grass, the caps still tall and scaled, "
+                    "before they start to blacken from the rim.",
+                ),
+                "Shaggy inkcaps (Coprinus comatus).JPG",
+            ),
+            (
+                "Birch Polypore",
+                "common",
+                "classic",
+                {
+                    "stock": "linen",
+                    "texture": "felt",
+                    "border": "umber",
+                    "border_width": "thin",
+                    "window": "inset",
+                    "tint": "sepia",
+                    "accent": "umber",
+                    "title_typeface": "spectral",
+                    "body_typeface": "cinzel",
+                    "title_ink": "cocoa",
+                },
+                copy(
+                    "*Fomitopsis betulina.* Only on birch, and usually on a dying one.",
+                    "A smooth pale bracket set against the dark trunk of a birch, its "
+                    "underside turned down towards the ground.",
+                ),
+                "Fomitopsis betulina 117742765.jpg",
+            ),
+            (
+                "Common Puffball",
+                "common",
+                "polaroid",
+                {
+                    "stock": "haze",
+                    "texture": "felt",
+                    "border": "moss",
+                    "border_width": "thin",
+                    "accent": "moss",
+                    "title_typeface": "caveat",
+                    "body_typeface": "caveat",
+                },
+                copy(
+                    "",
+                    "One common puffball on leaf litter, the head covered in short spines "
+                    "and the stem tapering away below it.",
+                ),
+                "Single lycoperdon perlatum.jpg",
+            ),
+            (
+                "Candlesnuff",
+                "common",
+                "fieldnote",
+                {
+                    "stock": "charcoal",
+                    "texture": "felt",
+                    "border": "bone",
+                    "border_width": "hairline",
+                    "window": "none",
+                    "accent": "bone",
+                    "title_typeface": "garamond",
+                    "body_typeface": "spectral",
+                    "title_ink": "linen",
+                },
+                copy(
+                    "**Xylaria hypoxylon**\n- White tips carry one kind of spore, the "
+                    "black base another\n- Stays on the wood all winter\n- Antler shapes, "
+                    "rarely more than a few centimetres",
+                    "A line of candlesnuff along the cut end of a log, each one black at "
+                    "the base and white and forked at the tip.",
+                ),
+                "Xylaria hypoxylon (candlestick fungus) location, Val Sinestra. "
+                "14-10-2024. (actm.) 01.jpg",
+            ),
+            (
+                "King Alfred's Cakes",
+                "common",
+                "classic",
+                {
+                    "stock": "cocoa",
+                    "texture": "felt",
+                    "border": "straw",
+                    "border_width": "thin",
+                    "window": "rule",
+                    "accent": "straw",
+                    "title_typeface": "spectral",
+                    "body_typeface": "cinzel",
+                    "title_ink": "butter",
+                },
+                copy(
+                    "*Daldinia concentrica.* Cut one across and it is ringed like a tree.",
+                    "Hard rounded lumps of Daldinia under a fallen branch, brown where "
+                    "they are young and black where they are not.",
+                ),
+                "Daldinia concentrica 166975777.jpg",
+            ),
+            (
+                "Jelly Ear",
+                "common",
+                "polaroid",
+                {
+                    "stock": "blush",
+                    "texture": "felt",
+                    "border": "wine",
+                    "border_width": "thin",
+                    "accent": "wine",
+                    "title_typeface": "caveat",
+                    "body_typeface": "caveat",
+                },
+                copy(
+                    "",
+                    "Jelly ear on a fallen branch, the lobes folded over like an ear and "
+                    "translucent where the light comes through.",
+                ),
+                "Jelly Ear, Auricularia auricula-judae, UK 2.jpg",
+            ),
+            (
+                "Beefsteak Fungus",
+                "common",
+                "bold",
+                {
+                    "stock": "oxblood",
+                    "texture": "felt",
+                    "border": "salmon",
+                    "border_width": "thick",
+                    "accent": "salmon",
+                    "title_typeface": "body",
+                    "body_typeface": "alfa",
+                    "title_ink": "blush",
+                },
+                copy(
+                    "Bleeds red when it is cut, which is where the name comes from.",
+                    "A beefsteak fungus on an oak trunk, one thick reddish-tan bracket "
+                    "pushing straight out of the bark.",
+                ),
+                "Fistulina hepatica, Beefsteak Fungus, UK.jpg",
+            ),
+            (
+                "Amethyst Deceiver",
+                "uncommon",
+                "classic",
+                {
+                    "stock": "lavender",
+                    "texture": "felt",
+                    "border": "plum",
+                    "border_width": "thin",
+                    "window": "rule",
+                    "accent": "plum",
+                    "title_typeface": "spectral",
+                    "body_typeface": "cinzel",
+                    "title_ink": "damson",
+                },
+                copy(
+                    "*Laccaria amethystina.* Deep purple fresh, and it fades as it dries.",
+                    "A single amethyst deceiver on a thin stem, the cap deep violet, "
+                    "standing clear of a soft green background.",
+                ),
+                "Amethyst Deceiver - Laccaria amethystea - Violetter Lacktrichterling - "
+                "Laccaria amethystina - 01.jpg",
+            ),
+            (
+                "Scarlet Elf Cup",
+                "common",
+                "polaroid",
+                {
+                    "stock": "bone",
+                    "texture": "felt",
+                    "border": "crimson",
+                    "border_width": "thin",
+                    "tint": "punch",
+                    "accent": "crimson",
+                    "title_typeface": "caveat",
+                    "body_typeface": "caveat",
+                },
+                copy(
+                    "",
+                    "A scarlet elf cup open on the leaf litter, bright red inside and pale "
+                    "and felted around the rim.",
+                ),
+                "GT Scarlet Elf Cup fungus - Sarcoscypha austriaca.jpg",
+            ),
+            (
+                "Wood Blewit",
+                "uncommon",
+                "fieldnote",
+                {
+                    "stock": "thistle",
+                    "texture": "felt",
+                    "border": "damson",
+                    "border_width": "thin",
+                    "window": "rule",
+                    "shape": "arch",
+                    "accent": "damson",
+                    "title_typeface": "garamond",
+                    "body_typeface": "spectral",
+                    "title_ink": "aubergine",
+                },
+                copy(
+                    "**Lepista nuda**\n- Lilac all through when young, fading with age\n"
+                    "- Comes up late, often after the first frosts\n- Edible, but only "
+                    "cooked",
+                    "A wood blewit tipped over on leaf litter, showing the pale gills and "
+                    "the lilac wash running down the stem.",
+                ),
+                "Clitocybe Nuda, AKA Lepista Nuda, AKA Wood Blewit.jpg",
+            ),
+            (
+                "Green Elfcup",
+                "common",
+                "classic",
+                {
+                    "stock": "sage",
+                    "texture": "felt",
+                    "border": "teal",
+                    "border_width": "thin",
+                    "window": "inset",
+                    "accent": "teal",
+                    "title_typeface": "spectral",
+                    "body_typeface": "cinzel",
+                    "title_ink": "forest",
+                },
+                copy(
+                    "*Chlorociboria.* The wood stains green long before the cups show.",
+                    "Weathered wood stained blue-green by Chlorociboria, with a few of the "
+                    "small cups open on the surface.",
+                ),
+                "Green Elfcup - Chlorociboria aeruginascens (44271232505).jpg",
+            ),
+            (
+                "Porcelain Fungus",
+                "rare",
+                "fieldnote",
+                {
+                    "stock": "white",
+                    "texture": "felt",
+                    "border": "sage",
+                    "border_width": "thin",
+                    "window": "mat",
+                    "accent": "sage",
+                    "title_typeface": "garamond",
+                    "body_typeface": "spectral",
+                    "title_ink": "moss",
+                    "finish": "pearl",
+                },
+                copy(
+                    "**Oudemansiella mucida**\n- Nearly always on beech, well up the "
+                    "trunk\n- The cap carries a slime that never dries\n- Almost "
+                    "translucent while it is fresh",
+                    "Porcelain fungus high on a mossy beech trunk, the caps white and "
+                    "glistening and thin enough to see light through.",
+                ),
+                "Oudemansiella mucida, Porcelain Fungus, Enfield, UK.jpg",
+            ),
+            (
+                "Collared Earthstar",
+                "rare",
+                "classic",
+                {
+                    "stock": "sand",
+                    "texture": "felt",
+                    "border": "umber",
+                    "border_width": "medium",
+                    "window": "rule",
+                    "shape": "diamond",
+                    "tint": "sepia",
+                    "accent": "umber",
+                    "title_typeface": "spectral",
+                    "body_typeface": "cinzel",
+                    "title_ink": "cocoa",
+                    "finish": "pearl",
+                },
+                copy(
+                    "*Geastrum triplex.* The outer wall splits into rays and lifts the sac clear.",
+                    "A collared earthstar opened on leaf litter, the rays folded back "
+                    "under a round spore sac sitting in its collar.",
+                ),
+                "Collared Earthstar Geastrum triplex at Gunnersbury Triangle.JPG",
+            ),
+            (
+                "Chicken of the Woods",
+                "rare",
+                "bold",
+                {
+                    "stock": "butter",
+                    "texture": "brushed",
+                    "border": "ochre",
+                    "border_width": "thick",
+                    "accent": "ochre",
+                    "title_typeface": "body",
+                    "body_typeface": "alfa",
+                    "title_ink": "rust",
+                    "finish": "metallic",
+                },
+                copy(
+                    "Tiers of soft brackets straight out of the trunk, bright while young.",
+                    "Overlapping brackets of Laetiporus stacked up a pale trunk, each "
+                    "shelf wavy-edged and darkening towards brown.",
+                ),
+                "Laetiporus sulphureus 2017 G01.jpg",
+            ),
+            (
+                "Violet Coral",
+                "epic",
+                "minimal",
+                {
+                    "stock": "ink",
+                    "texture": "smooth",
+                    "border": "violet",
+                    "border_width": "thin",
+                    "gradient": "bottom",
+                    "accent": "violet",
+                    "title_typeface": "garamond",
+                    "body_typeface": "display",
+                    "title_ink": "thistle",
+                    "finish": "pearl",
+                    "treatment": "foil",
+                    "coverage": "full",
+                    "pattern": "mirror",
+                },
+                copy(
+                    "*Clavaria zollingeri.* Lilac fingers, unbranched, in old grassland.",
+                    "A dense stand of violet coral among moss and fallen leaves, each "
+                    "lilac finger blunt at the tip.",
+                ),
+                "Clavaria zollingeri 90973.jpg",
+            ),
+            (
+                "Devil's Fingers",
+                "epic",
+                "bold",
+                {
+                    "stock": "ink",
+                    "texture": "smooth",
+                    "border": "crimson",
+                    "border_width": "thick",
+                    "accent": "crimson",
+                    "title_typeface": "body",
+                    "body_typeface": "display",
+                    "title_ink": "coral",
+                    "finish": "gloss",
+                    "treatment": "foil",
+                    "coverage": "reverse",
+                    "pattern": "linear",
+                },
+                copy(
+                    "Rises from a white egg, then opens red arms that smell of rot to draw flies.",
+                    "Clathrus archeri just open on the forest floor, red arms lifting out "
+                    "of the white egg they grew from.",
+                ),
+                "Clathrus archeri, (devils fingers) (26273567937).jpg",
+            ),
+            (
+                "Bitter Oysterling",
+                "legendary",
+                "minimal",
+                {
+                    "stock": "ink",
+                    "texture": "smooth",
+                    "border": "fern",
+                    "border_width": "hairline",
+                    "gradient": "bottom",
+                    "accent": "fern",
+                    "title_typeface": "garamond",
+                    "body_typeface": "display",
+                    "title_ink": "mint",
+                    "body_ink": "jade",
+                    "finish": "satin",
+                    "treatment": "holo",
+                    "coverage": "full",
+                    "pattern": "cosmos",
+                },
+                copy(
+                    "*Panellus stipticus.* It glows, faintly, and long exposures show it.",
+                    "Panellus stipticus photographed in the dark on a fallen log, the "
+                    "gills giving off a steady green light.",
+                ),
+                "PanellusStipticusAug12 2009.jpg",
+            ),
+        ],
+    ),
+]
+
+
 CACHE_DIR = Path(__file__).resolve().parents[5] / "tmp" / "seed-photos"
 PHOTO_MANIFEST = Path(__file__).resolve().parents[1] / "seed_photos.json"
 CURATED_PHOTOS = json.loads(PHOTO_MANIFEST.read_text(encoding="utf-8"))
@@ -873,17 +2170,6 @@ BASE_SEED_PHOTOS = (
     "Vinyl groove macro.jpg",
     "Jaume Pujagut and his vinyl records sleeve collection.jpg",
     "Chi Mai 45 rpm vinyl single label detail.jpg",
-    "search:European robin bird",
-    "search:Eurasian blue tit",
-    "search:European goldfinch",
-    "search:long-tailed tit",
-    "search:eurasian wren bird",
-    "search:common kingfisher",
-    "camera:sx70",
-    "camera:pentax-k1000",
-    "camera:nikon-f",
-    "camera:canon-ae1",
-    "camera:leica-m3",
     "Yi peng sky lantern festival San Sai Thailand.jpg",
     "Thai people setting their candle-lit krathongs in the Ping river at night during "
     "Loy Krathong 2015-10 (22715933524).jpg",
@@ -892,8 +2178,12 @@ BASE_SEED_PHOTOS = (
 
 
 def required_photo_specs() -> tuple[str, ...]:
+    """Every photo the seed needs, so a bad source aborts before anything is deleted."""
     expanded = (card[5] for cards in LAUNCH_EXPANSIONS.values() for card in cards)
-    return tuple(dict.fromkeys((*BASE_SEED_PHOTOS, *expanded)))
+    extra = (card[5] for plan in EXTRA_SETS for card in plan[5])
+    cutouts = (front["cutout"] for front in PACK_FRONTS.values() if front.get("cutout"))
+    keyed = (CUTOUT_SOURCES[front["keyed"]] for front in PACK_FRONTS.values() if front.get("keyed"))
+    return tuple(dict.fromkeys((*BASE_SEED_PHOTOS, *expanded, *extra, *cutouts, *keyed)))
 
 
 def _lerp(a: int, b: int, t: float) -> int:
@@ -1182,7 +2472,6 @@ class Command(BaseCommand):
             self.stdout.write(f"Prepared {len(required)} seed photos; database unchanged.")
             return
 
-        # Delete protected dependencies before users.
         demo_users = User.objects.filter(email__in=DEMO_EMAILS)
         OwnedCard.objects.filter(owner__in=demo_users).delete()
         CardSet.objects.filter(creator__in=demo_users).delete()
@@ -1378,8 +2667,8 @@ class Command(BaseCommand):
             pack_size=6,
             emblem_layout="stacked",
             emblem_shape="tablet",
-            emblem_style="outline",
-            emblem_text="slate",
+            emblem_style="filled",
+            emblem_text="ink",
             surface="canvas",
             description="Stones and minerals collected from riverbeds and roadcuts.",
             palette=((120, 112, 98), (58, 52, 44)),
@@ -1521,7 +2810,7 @@ class Command(BaseCommand):
             title="Records on My Shelf",
             set_code="REC",
             mark="record",
-            pack_colour="violet",
+            pack_colour="black",
             pack_finish="holo",
             pack_size=5,
             emblem_layout="wordmark",
@@ -1532,18 +2821,6 @@ class Command(BaseCommand):
             ),
             palette=((70, 55, 90), (20, 16, 28)),
             cards=[
-                (
-                    "Late Night Pressing",
-                    "common",
-                    "classic",
-                    {"accent": "purple"},
-                    copy(
-                        "A twelve-inch LP runs at 33 rpm and holds around twenty minutes a side.",
-                        "A record on the platter with the arm resting across it, and the mixer on "
-                        "a shelf above the deck.",
-                    ),
-                    "Kazantip, Popovka, Crimea, Technics turntable, Vinyl turntable.jpg",
-                ),
                 (
                     "B-Side Blue",
                     "common",
@@ -1556,6 +2833,18 @@ class Command(BaseCommand):
                         "so the vinyl glows.",
                     ),
                     "True Blue vinyl record.jpg",
+                ),
+                (
+                    "Late Night Pressing",
+                    "common",
+                    "classic",
+                    {"accent": "purple"},
+                    copy(
+                        "A twelve-inch LP runs at 33 rpm and holds around twenty minutes a side.",
+                        "A record on the platter with the arm resting across it, and the mixer on "
+                        "a shelf above the deck.",
+                    ),
+                    "Kazantip, Popovka, Crimea, Technics turntable, Vinyl turntable.jpg",
                 ),
                 (
                     "First Cut",
@@ -1762,237 +3051,11 @@ class Command(BaseCommand):
 
     def _make_more_sets(self, fieldnote, waverly, mabel, extras) -> list:
         """Additional grounded sets for catalogue and interaction testing."""
-        plans = [
-            (
-                extras["orla"],
-                "Garden Birds",
-                "Whatever lands on the feeder, catalogued from the kitchen window.",
-                ((120, 150, 190), (40, 60, 90)),
-                {
-                    "set_code": "BRD",
-                    "mark": "feather",
-                    "pack_colour": "sky",
-                    "pack_finish": "gloss",
-                    "pack_size": 3,
-                    "emblem_layout": "seal",
-                    "emblem_shape": "disc",
-                    "emblem_style": "filled",
-                    "emblem_text": "ocean",
-                    "surface": "linen",
-                },
-                [
-                    (
-                        "European Robin",
-                        "common",
-                        "classic",
-                        {"stock": "cream"},
-                        copy(
-                            "*Erithacus rubecula*. Juveniles are spotted brown; the red front "
-                            "arrives with the moult.",
-                            "A young robin still in spotted brown plumage, on bare ground, before "
-                            "the red breast comes through.",
-                        ),
-                        "search:European robin bird",
-                    ),
-                    (
-                        "Blue Tit",
-                        "common",
-                        "polaroid",
-                        {"tint": "cool"},
-                        copy(
-                            "",
-                            "A blue tit seen from behind on a lichened branch, showing the blue "
-                            "wing and the long blue-grey tail.",
-                        ),
-                        "search:Eurasian blue tit",
-                    ),
-                    (
-                        "Goldfinch",
-                        "common",
-                        "classic",
-                        {"stock": "butter", "accent": "ochre"},
-                        copy(
-                            "*Carduelis carduelis*. A fine bill for teasing seed out of thistles "
-                            "and teasels.",
-                            "A goldfinch on a hazel branch hung with catkins, its red face and "
-                            "gold wing bar clear.",
-                        ),
-                        "search:European goldfinch",
-                    ),
-                    (
-                        "Long-tailed Tit",
-                        "uncommon",
-                        "classic",
-                        {"stock": "bone"},
-                        copy(
-                            "*Aegithalos caudatus*. Travels in family parties and roosts in a "
-                            "huddle on cold nights.",
-                            "A long-tailed tit on a bare branch, round-bodied with a tail longer "
-                            "than the rest of it.",
-                        ),
-                        "search:long-tailed tit",
-                    ),
-                    (
-                        "Wren",
-                        "rare",
-                        "fieldnote",
-                        {},
-                        copy(
-                            "**Troglodytes troglodytes**\n- Among the smallest birds here, and the "
-                            "loudest\n- Feeds low down, in cover\n- The male builds several nests "
-                            "for the female to pick",
-                            "A wren on a sawn log end, tail cocked, with the barring showing on "
-                            "its wings.",
-                        ),
-                        "search:eurasian wren bird",
-                    ),
-                    (
-                        "Kingfisher",
-                        "legendary",
-                        "bold",
-                        {
-                            "shape": "circle",
-                            "border": "ocean",
-                            "treatment": "foil",
-                            "coverage": "reverse",
-                        },
-                        copy(
-                            "*Alcedo atthis*. Takes fish and larvae from a perch over water, and "
-                            "nests in a bank tunnel.",
-                            "A female kingfisher on a bare log, holding a dragonfly larva across "
-                            "her bill.",
-                        ),
-                        "search:common kingfisher",
-                    ),
-                ],
-            ),
-            (
-                extras["bex"],
-                "Film Cameras",
-                ("Film cameras from compact rangefinders to large folding field cameras."),
-                ((145, 110, 75), (35, 30, 25)),
-                {
-                    "set_code": "CAM",
-                    "mark": "orbit",
-                    "pack_colour": "charcoal",
-                    "pack_finish": "satin",
-                    "pack_size": 7,
-                    "emblem_layout": "badge",
-                    "emblem_shape": "tablet",
-                    "emblem_style": "outline",
-                    "emblem_text": "cream",
-                    "surface": "linen",
-                },
-                [
-                    (
-                        "Canon AE-1",
-                        "common",
-                        "bold",
-                        {
-                            "stock": "charcoal",
-                            "shape": "square",
-                            "border": "copper",
-                            "border_width": "medium",
-                            "title_typeface": "display",
-                            "tint": "none",
-                        },
-                        copy(
-                            "1976. Shutter-priority SLR built around a microprocessor. FD mount, "
-                            "50mm f/1.8 as standard.",
-                            "A black AE-1 with the 50mm f/1.8 fitted, photographed square on "
-                            "against a plain ground.",
-                        ),
-                        "camera:canon-ae1",
-                    ),
-                    (
-                        "Pentax K1000",
-                        "common",
-                        "fieldnote",
-                        {
-                            "stock": "sand",
-                            "accent": "rust",
-                            "title_typeface": "spacemono",
-                            "tint": "none",
-                        },
-                        copy(
-                            "**Pentax K1000, 1976**\n- Fully mechanical; only the meter needs a "
-                            "battery\n- K bayonet mount\n- Sold for two decades as a first camera",
-                            "A silver K1000 carrying a zoom far larger than the body, with the "
-                            "shutter dial and prism in view.",
-                        ),
-                        "camera:pentax-k1000",
-                    ),
-                    (
-                        "Nikon F",
-                        "uncommon",
-                        "fieldnote",
-                        {
-                            "stock": "navy",
-                            "accent": "slate",
-                            "title_typeface": "spacemono",
-                            "tint": "none",
-                        },
-                        copy(
-                            "**Nikon F, 1959**\n- Nikon's first system SLR\n- Interchangeable "
-                            "prisms and focusing screens\n- Built on the F bayonet mount, still in "
-                            "use",
-                            "A silver Nikon F with a Nikkor lens fitted, the flat-topped prism "
-                            "giving it its familiar outline.",
-                        ),
-                        "camera:nikon-f",
-                    ),
-                    (
-                        "Leica M3",
-                        "rare",
-                        "classic",
-                        {
-                            "stock": "forest",
-                            "border": "silver",
-                            "border_width": "hairline",
-                            "title_typeface": "cinzel",
-                            "finish": "metallic",
-                            "tint": "none",
-                        },
-                        copy(
-                            "1954. Bayonet M mount, with rangefinder and viewfinder combined in "
-                            "one window.",
-                            "A chrome M3 with a 5cm Summicron, its three front windows set across "
-                            "the top plate. Photographed at the German Museum of Technology in "
-                            "Berlin.",
-                        ),
-                        "camera:leica-m3",
-                    ),
-                    (
-                        "Polaroid SX-70",
-                        "legendary",
-                        "minimal",
-                        {
-                            "gradient": "full",
-                            "accent": "gold",
-                            "border": "copper",
-                            "border_width": "medium",
-                            "title_typeface": "cinzel",
-                            "finish": "satin",
-                            "treatment": "foil",
-                            "coverage": "full",
-                            "tint": "none",
-                        },
-                        copy(
-                            "1972. A folding SLR that develops its print out in the light.",
-                            "A folding SX-70 in brown leather and brightwork, opened out to its "
-                            "working shape.",
-                        ),
-                        "camera:sx70",
-                    ),
-                ],
-            ),
-        ]
-
         made = []
-        for creator, title, description, palette, identity, cards in plans:
+        for username, title, description, palette, identity, cards in EXTRA_SETS:
             made.append(
                 self._make_set(
-                    creator,
+                    extras[username],
                     title=title,
                     description=description,
                     palette=palette,
@@ -2001,6 +3064,96 @@ class Command(BaseCommand):
                 )
             )
         return made
+
+    def _print_pack(self, card_set) -> None:
+        """Lay out the front of the wrapper.
+
+        A photograph dropped over the whole pack hides the colour, foil and
+        texture that make it look like packaging in the first place. So a design
+        can wash a photograph back until the material reads through it, and set
+        a second one on top at an angle, the way something would be stuck on.
+        """
+        design = PACK_FRONTS.get(card_set.title, PACK_FRONTS_DEFAULT)
+        cards = list(card_set.cards.select_related("image").order_by("position"))
+
+        def pick(which: str):
+            if which in {"legendary", "epic", "rare"}:
+                chosen = next((c for c in cards if c.rarity == which), None)
+                if chosen:
+                    return chosen
+            return cards[0] if cards else None
+
+        cutout = None
+        if design.get("cutout"):
+            cutout = self._upload_art(
+                card_set.creator, design["cutout"], (120, 120, 120), (60, 60, 60), Image.Kind.PACK
+            )
+        elif design.get("keyed"):
+            cutout = self._upload_keyed(card_set.creator, design["keyed"])
+
+        layers: list[dict[str, Any]] = []
+        for spec in design.get("art", ()):
+            if spec.get("cutout"):
+                if not cutout:
+                    continue
+                layers.append(
+                    {
+                        **PACK_LAYER_DEFAULTS,
+                        "kind": "image",
+                        "image_id": str(cutout.id),
+                        "scale": spec.get("scale", 60),
+                        "x": spec.get("x", 0),
+                        "y": spec.get("y", -12),
+                        "rotate": spec.get("rotate", 0),
+                        "opacity": spec.get("opacity", 100),
+                    }
+                )
+                continue
+            card = pick(spec.get("pick", "first"))
+            if not card or not card.image_id:
+                continue
+            if spec.get("fit") == "flood":
+                image = card.image
+                wide = (image.width or 4) / (image.height or 5)
+                scale = min(ART_SCALE_MAX, round(PACK_COVER_RATIO * wide * 100) + 14)
+                y = 0
+            else:
+                scale = spec.get("scale", 60)
+                y = spec.get("y", -13)
+            layers.append(
+                {
+                    **PACK_LAYER_DEFAULTS,
+                    "kind": "image",
+                    "image_id": str(card.image_id),
+                    "scale": scale,
+                    "x": spec.get("x", 0),
+                    "y": y,
+                    "rotate": spec.get("rotate", 0),
+                    "opacity": spec.get("opacity", 100),
+                }
+            )
+        layers.append(
+            {
+                **PACK_LAYER_DEFAULTS,
+                "kind": "emblem",
+                "scale": design.get("emblem_scale", 100),
+                "y": design.get("emblem_y", 0),
+            }
+        )
+        card_set.pack_layers = layers
+        card_set.pack_text = [
+            {
+                **PACK_TEXT_DEFAULTS,
+                "text": text.format(pack=card_set.pack_size, code=card_set.set_code),
+                "colour": colour,
+                "size": size,
+                "y": y,
+                "tracking": tracking,
+                "font": font,
+            }
+            for text, colour, size, y, tracking, font in design.get("lines", ())
+        ]
+        card_set.save(update_fields=["pack_layers", "pack_text"])
 
     def _open_packs(self, users, sets) -> None:
         """Spread openings around, so opening counts and inventories differ."""
@@ -2068,10 +3221,10 @@ class Command(BaseCommand):
             "That was my last one too.",
         ]
         creator_replies = [
-            "That one took the longest to shoot. Waited three evenings for the light.",
+            "That one took the longest to get right. Third attempt before I was happy.",
             "Rarity is on purpose. It turns up as often as the others, just later in the run.",
             "Thanks. That card nearly did not make the cut.",
-            "Good eye. I reshot it twice before it worked.",
+            "Good eye. I redid that one twice before it worked.",
         ]
 
         for card_set in random.sample(sets, k=min(2, len(sets))):
@@ -2208,6 +3361,8 @@ class Command(BaseCommand):
                 definition = template["options"].get(option)
                 if option in config or definition is None:
                     continue
+                if option == "stock" and template_key == "minimal":
+                    continue
                 allowed = [value for value in choices if value in definition["values"]]
                 if allowed:
                     full_config[option] = allowed[variety % len(allowed)]
@@ -2217,7 +3372,6 @@ class Command(BaseCommand):
             spend = SPECIALTY_BY_RARITY.get(rarity)
             if spend:
                 for option, value in spend[zlib.crc32(name.encode()) % len(spend)].items():
-                    # A template can narrow an option, so only spend what it offers.
                     definition = template["options"].get(option)
                     if option in config or definition is None:
                         continue
@@ -2255,6 +3409,7 @@ class Command(BaseCommand):
         if first:
             card_set.cover = first.image
             card_set.save(update_fields=["cover"])
+        self._print_pack(card_set)
         if not publish:
             return card_set
         problems = publish_set(card_set)
@@ -2263,7 +3418,39 @@ class Command(BaseCommand):
         card_set.refresh_from_db()
         return card_set
 
-    def _upload_art(self, owner, photo, top, bottom) -> Image:
+    def _upload_keyed(self, owner, name: str) -> Image | None:
+        """Upload a cut-out that scripts/make-cutouts.py keyed out of a photo.
+
+        The credit belongs to whoever took the original, so its source record is
+        carried over with a note saying the background was removed.
+        """
+        path = CUTOUT_DIR / f"{name}.png"
+        if not path.exists():
+            return None
+        data = path.read_bytes()
+        width, height = struct.unpack(">II", data[16:24])
+        source = dict(PHOTO_SOURCES.get(CUTOUT_SOURCES.get(name, ""), {}))
+        source["adaptation"] = "Background keyed out for pack artwork."
+        key = f"pack/seed-{uuid.uuid4().hex}.png"
+        storage.client().put_object(
+            Bucket=settings.AWS_STORAGE_BUCKET_NAME,
+            Key=key,
+            Body=data,
+            ContentType="image/png",
+        )
+        return Image.objects.create(
+            owner=owner,
+            kind=Image.Kind.PACK,
+            key=key,
+            content_type="image/png",
+            size=len(data),
+            width=width,
+            height=height,
+            ready=True,
+            source_metadata=source,
+        )
+
+    def _upload_art(self, owner, photo, top, bottom, kind=Image.Kind.CARD) -> Image:
         data = fetch_photo(photo) if self.use_photos else None
         if data and data[:4] == PNG_MAGIC:
             # Sniff image type because Commons thumbnails are not always JPEGs.
@@ -2278,7 +3465,7 @@ class Command(BaseCommand):
             width, height = 700, 980
             data = make_gradient_png(width, height, top, bottom)
             content_type, ext = "image/png", "png"
-        key = f"card/seed-{uuid.uuid4().hex}.{ext}"
+        key = f"{kind}/seed-{uuid.uuid4().hex}.{ext}"
         storage.client().put_object(
             Bucket=settings.AWS_STORAGE_BUCKET_NAME,
             Key=key,
@@ -2287,7 +3474,7 @@ class Command(BaseCommand):
         )
         return Image.objects.create(
             owner=owner,
-            kind=Image.Kind.CARD,
+            kind=kind,
             key=key,
             content_type=content_type,
             size=len(data),

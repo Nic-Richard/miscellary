@@ -7,27 +7,43 @@ import { apiFetch } from './api';
 const CARD_ASPECT: [number, number] = [4, 5];
 const OUTPUT_WIDTH = 1200;
 
-// The system crop UI handles 4:5 framing; the image is resized before upload.
-export async function takePhoto(): Promise<ImagePicker.ImagePickerAsset | null> {
+// The system crop UI wants whole numbers, and every aspect the editor asks for
+// is a simple ratio, so a hundredth is finer than any of them need.
+function cropAspect(aspect: number): [number, number] {
+  if (!Number.isFinite(aspect) || aspect <= 0) return CARD_ASPECT;
+  return [Math.round(aspect * 100), 100];
+}
+
+// The system crop UI handles framing; the image is resized before upload.
+export async function takePhoto(
+  aspect: number = CARD_ASPECT[0] / CARD_ASPECT[1],
+): Promise<ImagePicker.ImagePickerAsset | null> {
   const permission = await ImagePicker.requestCameraPermissionsAsync();
   if (!permission.granted) throw new Error('Camera permission is needed to photograph your item.');
   const result = await ImagePicker.launchCameraAsync({
     mediaTypes: ['images'],
     allowsEditing: true,
-    aspect: CARD_ASPECT,
+    aspect: cropAspect(aspect),
     quality: 1,
   });
   return result.canceled ? null : (result.assets[0] ?? null);
 }
 
-export async function pickPhoto(): Promise<ImagePicker.ImagePickerAsset | null> {
+export async function pickPhoto(
+  aspect: number = CARD_ASPECT[0] / CARD_ASPECT[1],
+): Promise<ImagePicker.ImagePickerAsset | null> {
   const result = await ImagePicker.launchImageLibraryAsync({
     mediaTypes: ['images'],
     allowsEditing: true,
-    aspect: CARD_ASPECT,
+    aspect: cropAspect(aspect),
     quality: 1,
   });
   return result.canceled ? null : (result.assets[0] ?? null);
+}
+
+export async function pickAndUpload(kind: ImageKind, aspect: number): Promise<ImageRef | null> {
+  const asset = await pickPhoto(aspect);
+  return asset ? uploadAsset(asset, kind) : null;
 }
 
 export async function uploadAsset(

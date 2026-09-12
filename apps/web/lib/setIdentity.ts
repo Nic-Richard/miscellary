@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { CARD_COLOURS, swatchColour } from './palette';
 import {
   BINDER_COLOURS,
   PACK_COLOURS,
@@ -27,6 +28,22 @@ export const SET_MARKS = [
   'bloom',
   'orbit',
   'arrowhead',
+  'acorn',
+  'anchor',
+  'beetle',
+  'butterfly',
+  'cactus',
+  'cloud',
+  'cog',
+  'compass',
+  'fern',
+  'fish',
+  'honeycomb',
+  'lantern',
+  'mushroom',
+  'pine',
+  'snowflake',
+  'sprout',
 ] as const;
 
 export const MARK_LABELS: Record<string, string> = {
@@ -46,6 +63,22 @@ export const MARK_LABELS: Record<string, string> = {
   bloom: 'Bloom',
   orbit: 'Orbit',
   arrowhead: 'Arrowhead',
+  acorn: 'Acorn',
+  anchor: 'Anchor',
+  beetle: 'Beetle',
+  butterfly: 'Butterfly',
+  cactus: 'Cactus',
+  cloud: 'Cloud',
+  cog: 'Cog',
+  compass: 'Compass',
+  fern: 'Fern',
+  fish: 'Fish',
+  honeycomb: 'Honeycomb',
+  lantern: 'Lantern',
+  mushroom: 'Mushroom',
+  pine: 'Pine',
+  snowflake: 'Snowflake',
+  sprout: 'Sprout',
   none: 'No mark',
 };
 
@@ -73,8 +106,6 @@ export const EMBLEM_SHAPES = [
 export const EMBLEM_STYLES = ['filled', 'outline', 'transparent'] as const;
 
 export const PACK_FINISHES = ['gloss', 'satin', 'matte', 'holo'] as const;
-
-export const PACK_LAYER_KINDS = ['image', 'emblem'] as const;
 
 // Pack text coordinates are percentages from the pack centre.
 export interface PackTextLayer {
@@ -162,26 +193,11 @@ export function coversPack(layer: PackLayer): boolean {
   return widths >= 1 && heights >= 1;
 }
 
-export const EMBLEM_TEXT_COLOURS: Record<string, string> = {
-  ink: '#241f1a',
-  charcoal: '#43413c',
-  slate: '#5d6b70',
-  teal: '#2f8078',
-  forest: '#2b5b3c',
-  ocean: '#2f6690',
-  indigo: '#3a4482',
-  violet: '#6a4b93',
-  plum: '#7c3f63',
-  rose: '#b1587a',
-  crimson: '#9d2f3f',
-  rust: '#a8503a',
-  ember: '#c4622c',
-  gold: '#b8903a',
-  bronze: '#84603a',
-  cream: '#f0e6d2',
-  white: '#fbf7ef',
-};
-export const EMBLEM_TEXT_NAMES = Object.keys(EMBLEM_TEXT_COLOURS);
+export const EMBLEM_TEXT_NAMES = CARD_COLOURS;
+
+export function emblemInk(token: string | undefined): string {
+  return swatchColour(token || 'teal');
+}
 
 export const SCALE_MIN = 60;
 export const SCALE_MAX = 140;

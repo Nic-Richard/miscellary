@@ -192,13 +192,16 @@
 .polaroid .caption {
   width: 100%;
   max-width: 100%;
-  padding: 1.1cqw 1.8cqw;
+  /* The extra right padding is the gap the type stops short of, so a title that
+     only just fits is not measured hard against the edge of its plate. */
+  padding: 1.1cqw 3.2cqw 1.1cqw 1.8cqw;
   border-radius: 1cqw;
   background: var(--title-bg);
   box-shadow: var(--title-relief);
 }
 .name {
   font-family: var(--face, inherit);
+  color: var(--title-ink, var(--ink));
   min-width: 0;
   white-space: nowrap;
   font-size: calc(5.6cqw * var(--text-scale, 1));
@@ -221,7 +224,6 @@
   flex: 1;
   min-height: 0;
   background: #d9d0be;
-  border: var(--window-w, 0.6cqw) solid var(--window-c, var(--ac));
   border-radius: 1.5cqw;
   overflow: hidden;
 }
@@ -254,7 +256,10 @@
   z-index: 2;
   pointer-events: none;
   border-radius: inherit;
-  box-shadow: var(--window-relief);
+  box-shadow:
+    inset 0 0 0 var(--window-w, 0.6cqw) var(--window-c, var(--ac)),
+    inset 0 0 0 calc(var(--window-w, 0.6cqw) + var(--mount-w, 0px)) var(--mount-c, transparent),
+    var(--window-relief);
 }
 .placeholder {
   display: grid;
@@ -306,7 +311,7 @@
   max-width: 100%;
   font-size: calc(5.6cqw * var(--text-scale, 1));
   line-height: 1.16;
-  color: var(--ink);
+  color: var(--body-ink, var(--ink));
 }
 .bigTitle {
   display: block;
@@ -315,7 +320,7 @@
   font: 400 calc(9.5cqw * var(--text-scale, 1)) / 1 var(--face, var(--display));
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--rc);
+  color: var(--title-ink, var(--rc));
 }
 .copyInput {
   width: 100%;
@@ -977,6 +982,7 @@ textarea.copyInput {
   text-align: left;
 }
 .polaroid .caption {
+  color: var(--title-ink, var(--ink));
   flex: 1;
   font-family: var(--body-face, Georgia, 'Times New Roman', serif);
   font-size: calc(8.2cqw * var(--text-scale, 1));
@@ -1022,7 +1028,7 @@ textarea.copyInput {
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
 }
 .minimal .caption {
-  color: var(--ac);
+  color: var(--body-ink, var(--ac));
   font-weight: 600;
   letter-spacing: 0.02em;
 }
@@ -1060,7 +1066,7 @@ textarea.copyInput {
 }
 .bold .caption {
   font-size: calc(5cqw * var(--text-scale, 1));
-  color: var(--ink-muted);
+  color: var(--body-ink, var(--ink-muted));
 }
 
 .fieldnote .art,
@@ -1072,17 +1078,27 @@ textarea.copyInput {
   flex-direction: column;
   gap: 1.4cqw;
   margin-top: 2.6cqw;
-  padding: 2.6cqw 3cqw;
   border-radius: 1.4cqw;
   overflow: hidden;
   background: var(--panel-bg, transparent);
   box-shadow: var(--panel-relief);
 }
+.panel {
+  padding: 2.6cqw 3cqw;
+}
+/* Classic mounts its picture on the same tinted board the note panel uses.
+   Padding cannot hold that mount on a curved window, because the picture would
+   need the window's shape inset by the padding and no radius expresses that.
+   The mount is a ring instead, so it follows whatever shape the window has. */
+.fieldnote .art {
+  --mount-w: 2.6cqw;
+  --mount-c: color-mix(in srgb, #fffdf7 24%, var(--stock));
+}
 .panelBody {
   font-family: var(--body-face, inherit);
   font-size: calc(5cqw * var(--text-scale, 1));
   line-height: 1.42;
-  color: var(--ink);
+  color: var(--body-ink, var(--ink));
 }
 .panelBody p,
 .panelBody ul {

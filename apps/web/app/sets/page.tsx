@@ -3,9 +3,9 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import type { CardSetSummary } from '@miscellary/shared';
-import BinderCover from '@/components/BinderCover';
+import SetTile from '@/components/SetTile';
 import Sheet, { Empty } from '@/components/Sheet';
-import coverStyles from '@/components/BinderCover.module.css';
+import tileStyles from '@/components/SetTile.module.css';
 import { listPublicSets } from '@/lib/sets';
 import ui from '@/components/ui.module.css';
 import styles from './page.module.css';
@@ -26,8 +26,8 @@ export default function BrowsePage() {
       <div className={styles.header}>
         <div>
           <p className={ui.eyebrow}>Browse</p>
-          <h1 className={ui.title}>Binders</h1>
-          <p className={ui.subtitle}>Every published set, ready to open</p>
+          <h1 className={ui.title}>Sets</h1>
+          <p className={ui.subtitle}>Every published set, a pack away</p>
         </div>
         <div className={styles.sort} role="tablist" aria-label="Sort sets">
           {(['new', 'popular'] as const).map((s) => (
@@ -64,10 +64,10 @@ export default function BrowsePage() {
           </Empty>
         </Sheet>
       ) : (
-        <ul className={coverStyles.shelf}>
+        <ul className={tileStyles.grid}>
           {sets.map((s) => (
             <li key={s.id}>
-              <BinderCover set={s} />
+              <SetTile set={s} />
             </li>
           ))}
         </ul>

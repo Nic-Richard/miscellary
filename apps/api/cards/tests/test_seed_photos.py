@@ -48,7 +48,7 @@ def test_commons_photo_cache_retains_resolved_source(tmp_path, monkeypatch):
 
 def test_required_photo_list_covers_public_sets_and_draft():
     specs = seed_demo.required_photo_specs()
-    assert len(specs) == 103
+    assert len(specs) == 145
     assert len(set(specs)) == len(specs)
     assert all(card[5] in specs for cards in seed_demo.LAUNCH_EXPANSIONS.values() for card in cards)
 
@@ -94,14 +94,19 @@ def test_demo_corner_rotation_includes_each_cut():
     assert cuts.count("sharp") == 2
 
 
-def test_curated_camera_set_matches_publishing_contract(monkeypatch):
+def test_curated_extra_sets_match_publishing_contract(monkeypatch):
     command = seed_demo.Command()
     make_set = Mock()
     monkeypatch.setattr(command, "_make_set", make_set)
     extras = dict.fromkeys(["orla", "kit", "bex", "sol", "wren"])
     command._make_more_sets(None, None, None, extras)
     curated = [call.kwargs for call in make_set.call_args_list]
-    assert [card_set["title"] for card_set in curated] == ["Garden Birds", "Film Cameras"]
+    assert [card_set["title"] for card_set in curated] == [
+        "Garden Birds",
+        "Film Cameras",
+        "Planets and Moons",
+        "Woodland Fungi",
+    ]
     used = set()
     for card_set in curated:
         assert card_set["mark"] in SET_MARKS
@@ -119,9 +124,9 @@ def test_curated_camera_set_matches_publishing_contract(monkeypatch):
                 assert seed_demo.CURATED_PHOTOS[spec]["credit"] not in description
                 assert seed_demo.CURATED_PHOTOS[spec]["rights_url"] not in description
             used.add(spec)
-    assert {spec for spec in used if spec in seed_demo.CURATED_PHOTOS} == {
-        spec for spec in seed_demo.CURATED_PHOTOS if spec.startswith("camera:")
-    }
+    assert {spec for spec in used if spec in seed_demo.CURATED_PHOTOS} == set(
+        seed_demo.CURATED_PHOTOS
+    )
 
 
 def test_launch_expansions_fit_template_text_contracts():
@@ -147,11 +152,11 @@ def test_launch_expansions_fit_template_text_contracts():
 
 
 @pytest.mark.django_db
-def test_local_seed_builds_five_large_flagged_sets(monkeypatch):
-    def upload(_command, owner, photo, _top, _bottom):
+def test_local_seed_builds_seven_large_flagged_sets(monkeypatch):
+    def upload(_command, owner, photo, _top, _bottom, kind=Image.Kind.CARD):
         return Image.objects.create(
             owner=owner,
-            kind=Image.Kind.CARD,
+            kind=kind,
             key=f"card/test-{Image.objects.count()}.jpg",
             content_type="image/jpeg",
             size=100,
@@ -168,18 +173,25 @@ def test_local_seed_builds_five_large_flagged_sets(monkeypatch):
         )
 
     monkeypatch.setattr(seed_demo.Command, "_upload_art", upload)
+    monkeypatch.setattr(
+        seed_demo.Command,
+        "_upload_keyed",
+        lambda command, owner, name: upload(command, owner, name, None, None, Image.Kind.PACK),
+    )
     call_command("seed_demo", no_photos=True)
 
     published = CardSet.objects.filter(status=CardSet.Status.PUBLISHED).order_by("title")
     assert list(published.values_list("title", flat=True)) == [
         "Film Cameras",
         "Garden Birds",
+        "Planets and Moons",
         "Plants Along the Trail",
         "Pocket Geology",
         "Records on My Shelf",
+        "Woodland Fungi",
     ]
     assert {card_set.cards.count() for card_set in published} == {20}
-    assert set(published.values_list("pack_size", flat=True)) == {3, 4, 5, 6, 7}
+    assert set(published.values_list("pack_size", flat=True)) == {3, 4, 5, 6, 7, 8, 10}
     assert not published.filter(creator__is_demo=False).exists()
     for card in published.prefetch_related("cards"):
         for definition in card.cards.all():

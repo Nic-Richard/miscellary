@@ -1,7 +1,8 @@
 import { useId } from 'react';
 import type { ReactElement } from 'react';
+import { luminance } from '@miscellary/shared';
 import SetMark from './SetMark';
-import { EMBLEM_TEXT_COLOURS, coversPack, packStyle, resolveMark } from '@/lib/setIdentity';
+import { coversPack, emblemInk, packStyle, resolveMark } from '@/lib/setIdentity';
 import type { PackLayer, PackTextLayer, SetIdentity } from '@/lib/setIdentity';
 import { fontStack } from '@/lib/fonts';
 import styles from './PackPouch.module.css';
@@ -10,9 +11,10 @@ import styles from './PackPouch.module.css';
 const FACE = { cx: 265, cy: 440, r: 176 };
 
 // Pale ink uses a dark plate to maintain contrast.
-const PALE_INKS = new Set(['cream', 'white']);
 const PLATE_DARK = '#241f1a';
 const PLATE_LIGHT = '#f4eee0';
+
+const pale = (hex: string) => luminance(hex) > 0.6;
 
 // Only round plates can carry the curved seal text.
 const ROUND_SHAPES = new Set(['disc', 'hex', 'rosette']);
@@ -99,8 +101,8 @@ export function PackEmblem({
   const layout = identity.emblem_layout || 'seal';
   const shape = identity.emblem_shape || 'disc';
   const style = identity.emblem_style || 'filled';
-  const ink = EMBLEM_TEXT_COLOURS[identity.emblem_text || 'teal'] ?? EMBLEM_TEXT_COLOURS['teal']!;
-  const board = PALE_INKS.has(identity.emblem_text || '') ? PLATE_DARK : PLATE_LIGHT;
+  const ink = emblemInk(identity.emblem_text);
+  const board = pale(ink) ? PLATE_DARK : PLATE_LIGHT;
 
   const r = FACE.r * (scale / 100);
   const markScale = (identity.mark_scale ?? 100) / 100;
@@ -420,7 +422,7 @@ function TextLayer({ layer }: { layer: PackTextLayer }) {
         fontFamily: fontStack(layer.font),
         fontSize: `${layer.size}cqw`,
         letterSpacing: `${layer.tracking / 100}em`,
-        color: EMBLEM_TEXT_COLOURS[layer.colour] ?? EMBLEM_TEXT_COLOURS['cream'],
+        color: emblemInk(layer.colour || 'cream'),
       }}
     >
       {layer.text}
@@ -498,6 +500,7 @@ export default function PackPouch({
           src="/materials/pack-shading.png"
           alt=""
           aria-hidden="true"
+          draggable={false}
         />
       ) : null}
 
@@ -520,6 +523,7 @@ export default function PackPouch({
           src="/materials/pack-shading.png"
           alt=""
           aria-hidden="true"
+          draggable={false}
           style={{ opacity: relight }}
         />
       </span>

@@ -8,5 +8,6 @@ export * from './cardFixtures';
 export * from './cardMaterial';
 export * from './cardText';
 export * from './cardTokens';
+export * from './credit';
 export * from './setMarks';
 export * from './setIdentity';

@@ -4,6 +4,9 @@
   width: 100%;
   aspect-ratio: 1028 / 625;
   filter: drop-shadow(0 16px 20px rgba(52, 38, 18, 0.22));
+  /* The corner the binder is cut to in the artwork. Overlays that cover the
+     whole binder have to be held to it or they paint onto the page. */
+  --binder-corner: 2.3cqw;
 }
 .swipeable {
   touch-action: pan-y;
@@ -16,6 +19,7 @@
 .dragShade {
   position: absolute;
   inset: 0;
+  border-radius: var(--binder-corner);
   z-index: 5;
   background: linear-gradient(90deg, rgba(35, 23, 8, 0.36), transparent 18%, rgba(35, 23, 8, 0.28));
   opacity: var(--page-shadow, 0);
@@ -41,6 +45,7 @@
 .lamp {
   position: absolute;
   inset: 0;
+  border-radius: var(--binder-corner);
   z-index: 1;
   background:
     radial-gradient(74% 92% at 26% 8%, rgba(255, 249, 232, 0.78), transparent 70%),

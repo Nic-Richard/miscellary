@@ -15,10 +15,11 @@ describe('resolveCardMaterial', () => {
     expect(resolveCardMaterial('classic', { finish: 'metallic' }, 'common').grain).toBe(0.1);
   });
 
-  it('inherits a finish from rarity only when none is chosen', () => {
-    expect(resolveCardMaterial('classic', {}, 'rare').sheen).toBe(0.7);
-    expect(resolveCardMaterial('classic', {}, 'epic').sheen).toBe(0.8);
+  it('takes the coat from the card and never from its tier', () => {
+    expect(resolveCardMaterial('classic', {}, 'rare').sheen).toBe(0.5);
+    expect(resolveCardMaterial('classic', {}, 'epic').sheen).toBe(0.5);
     expect(resolveCardMaterial('classic', { finish: 'matte' }, 'epic').sheen).toBe(0.5);
+    expect(resolveCardMaterial('classic', { finish: 'pearl' }, 'common').sheen).toBe(0.84);
   });
 
   it('gives dark boards a colder pearl', () => {
@@ -38,18 +39,28 @@ describe('resolveCardMaterial', () => {
     expect(resolveCardMaterial('classic', { relief: 'deboss' }, 'common').relief).toBeNull();
   });
 
-  it('gives no spot work to a common, and one to every tier above', () => {
-    expect(resolveCardSpot({}, 'common')).toBeNull();
-    for (const rarity of ['uncommon', 'rare', 'epic', 'legendary'] as const) {
-      expect(resolveCardSpot({}, rarity)?.material, rarity).toBe('varnish');
+  it('gives no spot work to a card that was never given a foil', () => {
+    for (const rarity of ['common', 'uncommon', 'rare', 'epic', 'legendary'] as const) {
+      expect(resolveCardSpot({}, rarity), rarity).toBeNull();
+      expect(resolveCardSpot({ treatment: 'none' }, rarity), rarity).toBeNull();
     }
   });
 
-  it('echoes the material the card is already made of', () => {
-    expect(resolveCardSpot({ finish: 'pearl' }, 'rare')?.material).toBe('pearl');
-    expect(resolveCardSpot({ finish: 'metallic' }, 'epic')?.material).toBe('foil');
-    expect(resolveCardSpot({ finish: 'gloss' }, 'rare')?.material).toBe('varnish');
+  it('takes the spot material from the chosen foil, not from the coat', () => {
+    expect(resolveCardSpot({ finish: 'pearl' }, 'rare')).toBeNull();
+    expect(resolveCardSpot({ finish: 'metallic' }, 'epic')).toBeNull();
+    expect(resolveCardSpot({ treatment: 'foil', finish: 'pearl' }, 'epic')?.material).toBe('foil');
     expect(resolveCardSpot({ treatment: 'holo' }, 'legendary')?.material).toBe('holo');
+  });
+
+  it('only reads a pattern off a card that carries a foil', () => {
+    expect(resolveCardSpot({ pattern: 'cosmos' }, 'legendary')).toBeNull();
+    expect(resolveCardSpot({ treatment: 'foil', pattern: 'cosmos' }, 'epic')?.pattern).toBe(
+      'cosmos',
+    );
+    expect(resolveCardSpot({ treatment: 'foil', pattern: 'moire' }, 'epic')?.pattern).toBe(
+      'linear',
+    );
   });
 
   it('spots a region unless the foil covers the whole face', () => {
@@ -66,12 +77,11 @@ describe('resolveCardMaterial', () => {
     expect(resolveCardSpot({ treatment: 'foil', coverage: 'full' }, 'legendary')?.area).toBe(
       'full',
     );
-    expect(resolveCardSpot({ finish: 'pearl' }, 'rare')?.area).toBe('spot');
   });
 
   it('carries the layers the chosen spot material prints with', () => {
     expect(resolveCardMaterial('classic', {}, 'common').spot).toBeNull();
-    expect(resolveCardMaterial('classic', {}, 'uncommon').spot?.layers.band.blend).toBe('screen');
+    expect(resolveCardMaterial('classic', {}, 'uncommon').spot).toBeNull();
     expect(
       resolveCardMaterial('classic', { treatment: 'foil' }, 'legendary').spot?.layers.band.blend,
     ).toBe('hard-light');

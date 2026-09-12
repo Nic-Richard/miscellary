@@ -31,16 +31,19 @@
   text-transform: uppercase;
   text-align: center;
 }
-.empty {
-  display: grid;
-  place-items: center;
-  aspect-ratio: 5 / 7;
-  border: 1.5px dashed #c2b59c;
-  border-radius: 5px;
-  background: rgba(255, 255, 255, 0.3);
-  color: #9a8e7c;
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  text-align: center;
+
+.draggable {
+  cursor: grab;
+  touch-action: none;
+}
+.draggable:active {
+  cursor: grabbing;
+}
+.dragging {
+  opacity: 0.4;
+}
+.over .card {
+  outline: 2px dashed var(--accent);
+  outline-offset: 4px;
+  border-radius: 6px;
 }

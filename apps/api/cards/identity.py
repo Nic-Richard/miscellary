@@ -1,12 +1,80 @@
-"""Set identity: how a set's pack and cards are branded.
+"""Set identity constants and validation."""
 
-Everything here is cosmetic and creator-chosen. It lives on the set rather than
-on each card, so changing it re-skins the set's pack and sleeves without
-touching a published card snapshot. Blank values preserve the platform default.
-
-The same lists are mirrored in apps/web/lib/setIdentity.ts, which owns the
-artwork and the colour maths.
-"""
+# Mirrored by COLOUR_ROWS in apps/web/lib/palette.ts.
+COLOURS = [
+    "white",
+    "haze",
+    "ash",
+    "silver",
+    "graphite",
+    "slate",
+    "steel",
+    "charcoal",
+    "ink",
+    "bone",
+    "cream",
+    "butter",
+    "linen",
+    "sand",
+    "straw",
+    "ochre",
+    "gold",
+    "bronze",
+    "shell",
+    "peach",
+    "apricot",
+    "melon",
+    "copper",
+    "ember",
+    "umber",
+    "rust",
+    "cocoa",
+    "blush",
+    "salmon",
+    "coral",
+    "red",
+    "brick",
+    "crimson",
+    "garnet",
+    "wine",
+    "oxblood",
+    "petal",
+    "powder",
+    "peony",
+    "blossom",
+    "magenta",
+    "rose",
+    "fuchsia",
+    "mulberry",
+    "plum",
+    "lavender",
+    "thistle",
+    "lilac",
+    "wisteria",
+    "amethyst",
+    "purple",
+    "damson",
+    "violet",
+    "aubergine",
+    "sky",
+    "sea",
+    "cornflower",
+    "blue",
+    "azure",
+    "ocean",
+    "indigo",
+    "navy",
+    "teal",
+    "mint",
+    "sage",
+    "fern",
+    "jade",
+    "olive",
+    "green",
+    "forest",
+    "moss",
+    "pine",
+]
 
 SET_MARKS = [
     "waves",
@@ -25,6 +93,22 @@ SET_MARKS = [
     "bloom",
     "orbit",
     "arrowhead",
+    "acorn",
+    "anchor",
+    "beetle",
+    "butterfly",
+    "cactus",
+    "cloud",
+    "cog",
+    "compass",
+    "fern",
+    "fish",
+    "honeycomb",
+    "lantern",
+    "mushroom",
+    "pine",
+    "snowflake",
+    "sprout",
 ]
 MARK_CHOICES = [(m, m.title()) for m in SET_MARKS] + [("none", "No mark")]
 
@@ -85,25 +169,7 @@ EMBLEM_SHAPE_CHOICES = [(s, s.title()) for s in EMBLEM_SHAPES]
 EMBLEM_STYLES = ["filled", "outline", "transparent"]
 EMBLEM_STYLE_CHOICES = [(s, s.title()) for s in EMBLEM_STYLES]
 
-EMBLEM_TEXT_COLOURS = [
-    "ink",
-    "charcoal",
-    "slate",
-    "teal",
-    "forest",
-    "ocean",
-    "indigo",
-    "violet",
-    "plum",
-    "rose",
-    "crimson",
-    "rust",
-    "ember",
-    "gold",
-    "bronze",
-    "cream",
-    "white",
-]
+EMBLEM_TEXT_COLOURS = COLOURS
 EMBLEM_TEXT_CHOICES = [(c, c.title()) for c in EMBLEM_TEXT_COLOURS]
 
 SCALE_MIN = 60
@@ -158,8 +224,7 @@ TEXT_TRACKING_MAX = 60
 
 PACK_SUBTITLE_MAX_LENGTH = 40
 
-# The printed set code is a creator-chosen base and a platform-assigned suffix,
-# as in the CAM-01 of "CAM-01 12/36". 00 is reserved, so suffixes run 01 to ZZ.
+# 00 is reserved, so published suffixes run from 01 through ZZ.
 SET_CODE_LENGTH = 3
 SET_SUFFIX_LENGTH = 2
 SET_SUFFIX_DIGITS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"

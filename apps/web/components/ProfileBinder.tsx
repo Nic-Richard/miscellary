@@ -58,7 +58,6 @@ function Sleeved({
       title={owned.card.title}
       rarity={owned.card.rarity}
       code={cardCode(owned.card.printed_set_code, owned.card.position, owned.card.set_total)}
-      description={owned.card.description}
       printedText={owned.card.printed_text}
       imageUrl={owned.card.image.url}
       templateKey={owned.card.template_key}

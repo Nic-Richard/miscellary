@@ -7,6 +7,7 @@ import CardBack from './CardBack';
 import CardPreview from './CardPreview';
 import PackTear from './PackTear';
 import ui from './ui.module.css';
+import { useDialog } from '@/lib/useDialog';
 import styles from './PackReveal.module.css';
 
 function rank(r: Rarity) {
@@ -48,6 +49,7 @@ export default function PackReveal({
     }
   }, [opening]);
 
+  useDialog(onClose);
   useEffect(() => {
     const previousFocus =
       document.activeElement instanceof HTMLElement ? document.activeElement : null;
@@ -84,9 +86,6 @@ export default function PackReveal({
       aria-label="Pack opening"
       aria-modal="true"
       tabIndex={-1}
-      onKeyDown={(event) => {
-        if (event.key === 'Escape') onClose();
-      }}
     >
       <div className={styles.header} data-pack-reveal="header">
         <p className={styles.eyebrow}>
@@ -177,7 +176,6 @@ export default function PackReveal({
                   current.card.position,
                   current.card.set_total,
                 )}
-                description={current.card.description}
                 printedText={current.card.printed_text}
                 imageUrl={current.card.image.url}
                 templateKey={current.card.template_key}
@@ -211,7 +209,6 @@ export default function PackReveal({
                   title={o.card.title}
                   rarity={o.card.rarity}
                   code={cardCode(o.card.printed_set_code, o.card.position, o.card.set_total)}
-                  description=""
                   printedText={o.card.printed_text}
                   imageUrl={o.card.image.url}
                   templateKey={o.card.template_key}

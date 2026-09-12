@@ -2,8 +2,18 @@ import { cardCode } from '@miscellary/shared';
 import type { CardSetDetail } from '@miscellary/shared';
 import Feather from '@expo/vector-icons/Feather';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { useCallback, useState } from 'react';
-import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useRef, useState } from 'react';
+import {
+  Alert,
+  Modal,
+  PanResponder,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+import type { LayoutRectangle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import SharedSurface from '@/components/SharedSurface';
 import CardPreview from '@/components/CardPreview';
@@ -14,6 +24,7 @@ import {
   getMySet,
   publishProblems,
   publishSet,
+  reorderCards,
   updateSet,
 } from '@/lib/endpoints';
 import { colors, fonts } from '@/lib/theme';
@@ -27,6 +38,91 @@ export default function SetEditorScreen() {
   const [description, setDescription] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [designingPack, setDesigningPack] = useState(false);
+  const [dragging, setDragging] = useState<string | null>(null);
+
+  /* Long press to pick a card up, then drag it into place. Held in refs because
+     a pan responder is created once and would otherwise close over stale state.
+     Cell rectangles come from onLayout, so the hit test is against what was
+     actually drawn rather than an assumed grid geometry. */
+  const held = useRef<string | null>(null);
+  const cells = useRef<Record<string, LayoutRectangle>>({});
+  const gridTop = useRef(0);
+  const gridLeft = useRef(0);
+  const grid = useRef<View>(null);
+  const order = useRef<string[]>([]);
+
+  /* Hit testing is against the slots, not the cards in them. A card that has
+     just moved is under the finger, so testing against cards swaps it straight
+     back and the grid flickers. Slots hold still for the whole drag. */
+  const slots = useRef<LayoutRectangle[]>([]);
+
+  function slotAt(pageX: number, pageY: number): number {
+    const x = pageX - gridLeft.current;
+    const y = pageY - gridTop.current;
+    // Only a slot the finger is actually inside counts. Answering with whichever
+    // slot is nearest would flicker between two of them across every gap.
+    return slots.current.findIndex(
+      (box) => x >= box.x && x <= box.x + box.width && y >= box.y && y <= box.y + box.height,
+    );
+  }
+
+  function moveCard(fromId: string, to: number) {
+    setSet((current) => {
+      if (!current) return current;
+      const list = [...current.cards];
+      const from = list.findIndex((c) => c.id === fromId);
+      if (from === -1 || to < 0 || to >= list.length || from === to) return current;
+      const [moved] = list.splice(from, 1);
+      list.splice(to, 0, moved!);
+      const renumbered = list.map((c, position) => ({ ...c, position }));
+      order.current = renumbered.map((c) => c.id);
+      return { ...current, cards: renumbered };
+    });
+  }
+
+  /* The responder is built once, so it must not close over anything that a
+     later render replaces. Everything it needs is reached through a ref that is
+     refreshed below on every render. */
+  const now = useRef({ slotAt, moveCard, release: async () => {} });
+  now.current = { slotAt, moveCard, release };
+
+  function pickUp(cardId: string) {
+    held.current = cardId;
+    order.current = (set?.cards ?? []).map((c) => c.id);
+    slots.current = (set?.cards ?? [])
+      .map((c) => cells.current[c.id])
+      .filter((box): box is LayoutRectangle => Boolean(box));
+    setDragging(cardId);
+  }
+
+  const pan = useRef(
+    PanResponder.create({
+      /* Capture, not bubble: the grid sits inside a ScrollView, which claims the
+         move gesture first and would never hand it back. Only a card that has
+         already been picked up takes the gesture, so scrolling is untouched. */
+      onMoveShouldSetPanResponderCapture: () => Boolean(held.current),
+      onStartShouldSetPanResponder: () => false,
+      onPanResponderMove: (event) => {
+        if (!held.current) return;
+        const to = now.current.slotAt(event.nativeEvent.pageX, event.nativeEvent.pageY);
+        if (to >= 0) now.current.moveCard(held.current, to);
+      },
+      onPanResponderRelease: () => void now.current.release(),
+      onPanResponderTerminate: () => void now.current.release(),
+    }),
+  ).current;
+
+  async function release() {
+    const carried = held.current;
+    held.current = null;
+    setDragging(null);
+    if (!carried || order.current.length === 0) return;
+    try {
+      await reorderCards(id, order.current);
+    } catch {
+      await load();
+    }
+  }
   const insets = useSafeAreaInsets();
 
   const load = useCallback(async () => {
@@ -106,6 +202,7 @@ export default function SetEditorScreen() {
     <ScrollView
       style={{ backgroundColor: colors.bg }}
       contentContainerStyle={{ padding: 16, gap: 10, paddingBottom: 40 }}
+      scrollEnabled={!dragging}
     >
       <Tag>{set.status}</Tag>
       {isDraft ? (
@@ -211,22 +308,55 @@ export default function SetEditorScreen() {
           />
         ) : null}
       </View>
-      <View style={styles.grid}>
+      {isDraft && dragging ? <Muted>Drag it where you want it, then let go.</Muted> : null}
+      <View
+        style={styles.grid}
+        ref={grid}
+        onLayout={() =>
+          grid.current?.measureInWindow((x, y) => {
+            gridLeft.current = x;
+            gridTop.current = y;
+          })
+        }
+        {...(isDraft ? pan.panHandlers : {})}
+      >
         {set.cards.map((c) => (
-          <View key={c.id} style={{ alignItems: 'center', gap: 6 }}>
-            <CardPreview
-              width={150}
-              title={c.title}
-              rarity={c.rarity}
-              description={c.description}
-              printedText={c.printed_text}
-              code={cardCode(setCode, c.position, c.set_total || set.cards.length)}
-              mark={set.mark}
-              imageUrl={c.image.url}
-              templateKey={c.template_key}
-              templateConfig={c.template_config}
-              render={c.render}
-            />
+          <View
+            key={c.id}
+            onLayout={(event) => {
+              cells.current[c.id] = event.nativeEvent.layout;
+            }}
+            style={{ alignItems: 'center', gap: 6 }}
+          >
+            <Pressable
+              onLongPress={isDraft ? () => pickUp(c.id) : undefined}
+              delayLongPress={300}
+              style={{
+                transform: [{ scale: dragging === c.id ? 1.06 : 1 }],
+                opacity: dragging && dragging !== c.id ? 0.55 : 1,
+                borderRadius: 10,
+                borderWidth: 2,
+                borderColor: dragging === c.id ? colors.accent : 'transparent',
+                shadowColor: '#000',
+                shadowOpacity: dragging === c.id ? 0.35 : 0,
+                shadowRadius: 10,
+                shadowOffset: { width: 0, height: 6 },
+                elevation: dragging === c.id ? 8 : 0,
+              }}
+            >
+              <CardPreview
+                width={150}
+                title={c.title}
+                rarity={c.rarity}
+                printedText={c.printed_text}
+                code={cardCode(setCode, c.position, c.set_total || set.cards.length)}
+                mark={set.mark}
+                imageUrl={c.image.url}
+                templateKey={c.template_key}
+                templateConfig={c.template_config}
+                render={c.render}
+              />
+            </Pressable>
             {isDraft ? (
               <View style={styles.row}>
                 <Pressable

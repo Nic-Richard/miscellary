@@ -1,10 +1,11 @@
 'use client';
 
 import { useCallback, useState } from 'react';
+import type { ReactNode } from 'react';
 import Cropper from 'react-easy-crop';
 import type { Area } from 'react-easy-crop';
 import type { ImageKind, ImageRef } from '@miscellary/shared';
-import { cropToBlob, uploadImage } from '@/lib/upload';
+import { cropToBlob, hasNativePicker, pickNativeImage, uploadImage } from '@/lib/upload';
 import styles from './ImagePicker.module.css';
 
 interface ImagePickerProps {
@@ -34,6 +35,21 @@ export default function ImagePicker({ kind, aspect, value, onChange }: ImagePick
   }
 
   const onCropComplete = useCallback((_: Area, pixels: Area) => setArea(pixels), []);
+
+  // On a device the system picker crops and resizes the photograph before it is
+  // uploaded, so the full size image never has to be decoded in this page.
+  async function chooseOnDevice() {
+    setBusy(true);
+    setError(null);
+    try {
+      const picked = await pickNativeImage(kind, aspect);
+      if (picked) onChange(picked);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Upload failed.');
+    } finally {
+      setBusy(false);
+    }
+  }
 
   async function save() {
     if (!file || !area) return;
@@ -95,22 +111,53 @@ export default function ImagePicker({ kind, aspect, value, onChange }: ImagePick
           </div>
         </>
       ) : (
-        <label className={styles.drop}>
+        <Choose
+          native={hasNativePicker}
+          busy={busy}
+          onDevice={() => void chooseOnDevice()}
+          onFile={pick}
+        >
           {value ? (
             <img src={value.url} alt="" className={styles.thumb} />
           ) : (
-            <span>Choose a photo</span>
+            <span>{busy ? 'Uploading…' : 'Choose a photo'}</span>
           )}
-          <input
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            onChange={(e) => pick(e.target.files?.[0])}
-            hidden
-          />
           {value ? <span className={styles.change}>Change photo</span> : null}
-        </label>
+        </Choose>
       )}
       {error ? <p className={styles.error}>{error}</p> : null}
     </div>
+  );
+}
+
+function Choose({
+  native,
+  busy,
+  onDevice,
+  onFile,
+  children,
+}: {
+  native: boolean;
+  busy: boolean;
+  onDevice: () => void;
+  onFile: (file: File | undefined) => void;
+  children: ReactNode;
+}) {
+  if (native)
+    return (
+      <button type="button" className={styles.drop} onClick={onDevice} disabled={busy}>
+        {children}
+      </button>
+    );
+  return (
+    <label className={styles.drop}>
+      {children}
+      <input
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        onChange={(e) => onFile(e.target.files?.[0])}
+        hidden
+      />
+    </label>
   );
 }

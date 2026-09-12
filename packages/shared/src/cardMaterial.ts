@@ -178,11 +178,6 @@ const FINISHES: Record<string, { coat: string; grain: number; sheen: number }> =
   metallic: { coat: 'metal', grain: 0.1, sheen: 0.96 },
 };
 
-const RARITY_FINISHES: Partial<Record<Rarity, { coat: string; grain: number; sheen: number }>> = {
-  rare: { coat: 'pearl', grain: 0.2, sheen: 0.7 },
-  epic: { coat: 'metal', grain: 0.1, sheen: 0.8 },
-};
-
 const BASE_FINISH = { coat: 'matte', grain: 0.56, sheen: 0.5 };
 
 const COAT_BLENDS: Record<string, string> = {
@@ -297,9 +292,6 @@ const HOLO: Chase = {
   },
 };
 
-/* Clear varnish carries no colour of its own. What makes it read is a hard,
-   narrow specular against the matte board it sits on, and the edge where the
-   screen stops. */
 const VARNISH: Chase = {
   field: {
     stripes: {
@@ -339,8 +331,6 @@ const VARNISH: Chase = {
   },
 };
 
-/* Pearl ink shifts hue across the sweep rather than reflecting a light source,
-   so its band is wide and its field carries the interference. */
 const PEARL_SPOT: Chase = {
   field: {
     stripes: {
@@ -395,36 +385,20 @@ const SPOT_TIERS = new Set(['uncommon', 'rare', 'epic', 'legendary']);
 const SPOT_AREAS = new Set<SpotArea>(['spot', 'reverse', 'full']);
 const PATTERNS = new Set<SpotPattern>(['linear', 'mirror', 'cosmos', 'rainbow']);
 
-/**
- * The spot treatment a card is produced with. It echoes the material the card
- * is already made of, and every tier above common gets one. The chase a
- * legendary carries is the same work at whatever area it covers, so the same
- * material over the whole face is the full-surface variant rather than a spot.
- */
+/** Resolves the stored foil or holo treatment and its coverage. */
 export function resolveCardSpot(
   stored: TemplateConfig,
   rarity: Rarity,
 ): { material: SpotMaterial; area: SpotArea; pattern: SpotPattern } | null {
   if (!SPOT_TIERS.has(rarity)) return null;
   const config = currentConfig(stored);
-  const chosen = config.pattern as SpotPattern | undefined;
   const treatment = config.treatment;
-  if (treatment === 'foil' || treatment === 'holo') {
-    // A pattern is a working of the foil film, so it only means anything on a
-    // card that has one. Everything else takes the material's own ruling.
-    const pattern = chosen && PATTERNS.has(chosen) ? chosen : 'linear';
-    const coverage = config.coverage as SpotArea | undefined;
-    const area = coverage && SPOT_AREAS.has(coverage) ? coverage : 'spot';
-    return { material: treatment, area, pattern };
-  }
-  const pattern: SpotPattern = 'linear';
-  // Coverage is a placement decision, so it applies to the material a card is
-  // given automatically as well as to a chosen foil.
+  if (treatment !== 'foil' && treatment !== 'holo') return null;
+  const chosen = config.pattern as SpotPattern | undefined;
+  const pattern = chosen && PATTERNS.has(chosen) ? chosen : 'linear';
   const coverage = config.coverage as SpotArea | undefined;
   const area = coverage && SPOT_AREAS.has(coverage) ? coverage : 'spot';
-  if (config.finish === 'metallic') return { material: 'foil', area, pattern };
-  if (config.finish === 'pearl') return { material: 'pearl', area, pattern };
-  return { material: 'varnish', area, pattern };
+  return { material: treatment, area, pattern };
 }
 
 const DARK_TEMPLATES = new Set(['minimal']);
@@ -437,9 +411,7 @@ export function resolveCardMaterial(
   const config = currentConfig(stored);
   const board = config.stock ? CARD_COLOURS[config.stock] : undefined;
   const dark = DARK_TEMPLATES.has(key) || (!!board && isDarkStock(board));
-  const finish = config.finish
-    ? (FINISHES[config.finish] ?? BASE_FINISH)
-    : (RARITY_FINISHES[rarity] ?? BASE_FINISH);
+  const finish = FINISHES[config.finish ?? ''] ?? BASE_FINISH;
   const coat = (dark ? DARK_COATS[finish.coat] : undefined) ?? COATS[finish.coat] ?? COATS.matte!;
   const spot = resolveCardSpot(stored, rarity);
 

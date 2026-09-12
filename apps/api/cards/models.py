@@ -83,6 +83,8 @@ class CardSet(models.Model):
     deleted_at = models.DateTimeField(null=True, blank=True)
     render_back_signature = models.CharField(max_length=64, blank=True)
     render_back_key = models.CharField(max_length=255, blank=True)
+    render_pack_signature = models.CharField(max_length=64, blank=True)
+    render_pack_key = models.CharField(max_length=255, blank=True)
 
     class Meta:
         ordering = ["-created_at"]
@@ -117,7 +119,14 @@ class CardSet(models.Model):
                 status_requested = requested is None or "status" in requested
                 if status_requested and self.status not in allowed_statuses[current.status]:
                     raise PublishedCardError("Published set lifecycle can't be reversed.")
-                mutable = {"status", "deleted_at", "render_back_signature", "render_back_key"}
+                mutable = {
+                    "status",
+                    "deleted_at",
+                    "render_back_signature",
+                    "render_back_key",
+                    "render_pack_signature",
+                    "render_pack_key",
+                }
                 changed = [
                     field.attname
                     for field in self._meta.concrete_fields
@@ -186,6 +195,7 @@ class CardDefinition(models.Model):
     render_signature = models.CharField(max_length=64, blank=True)
     render_front_thumbnail_key = models.CharField(max_length=255, blank=True)
     render_front_key = models.CharField(max_length=255, blank=True)
+    render_flat_thumbnail_key = models.CharField(max_length=255, blank=True)
     render_mask_thumbnail_key = models.CharField(max_length=255, blank=True)
     render_mask_key = models.CharField(max_length=255, blank=True)
 

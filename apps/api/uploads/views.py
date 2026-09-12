@@ -30,7 +30,9 @@ class CreateUploadView(APIView):
         return Response(
             {
                 "image": ImageSerializer(image).data,
-                "upload_url": storage.presigned_put_url(image.key, content_type),
+                "upload_url": storage.presigned_put_url(
+                    image.key, content_type, request.get_host()
+                ),
                 "max_size": storage.MAX_SIZE,
             },
             status=status.HTTP_201_CREATED,

@@ -5,8 +5,8 @@ import { useParams, usePathname } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import type { OwnedCard, ProfilePage } from '@miscellary/shared';
 import { SHOWCASE_SLOTS } from '@miscellary/shared';
-import BinderCover from '@/components/BinderCover';
-import coverStyles from '@/components/BinderCover.module.css';
+import SetTile from '@/components/SetTile';
+import tileStyles from '@/components/SetTile.module.css';
 import Sheet, { Empty } from '@/components/Sheet';
 import { OwnedCardInspector } from '@/components/CardInspector';
 import ProfileBinder from '@/components/ProfileBinder';
@@ -184,10 +184,10 @@ export default function ProfilePageView() {
                 : `@${profile.username} has not published a set yet.`}
             </Empty>
           ) : (
-            <ul className={coverStyles.shelf}>
+            <ul className={tileStyles.grid}>
               {profile.sets.map((s) => (
                 <li key={s.id}>
-                  <BinderCover set={s} meta={`${s.card_count} cards · ♥ ${s.like_count}`} />
+                  <SetTile set={s} meta={`${s.card_count} cards · ♥ ${s.like_count}`} />
                 </li>
               ))}
             </ul>
