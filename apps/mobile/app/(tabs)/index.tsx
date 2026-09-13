@@ -1,6 +1,7 @@
-import { useRef, useState } from 'react';
-import type { CardSetSummary } from '@miscellary/shared';
-import { router } from 'expo-router';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { cardCode } from '@miscellary/shared';
+import type { CardSetDetail, CardSetSummary } from '@miscellary/shared';
+import { router, useFocusEffect } from 'expo-router';
 import Feather from '@expo/vector-icons/Feather';
 import {
   ActivityIndicator,
@@ -8,21 +9,30 @@ import {
   Keyboard,
   Pressable,
   RefreshControl,
+  ScrollView,
   StyleSheet,
   Text,
   useWindowDimensions,
   View,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import CardPreview from '@/components/CardPreview';
 import SetTile from '@/components/SetTile';
 import { Button, Chip, ErrorText, Input } from '@/components/ui';
+import { useAuth } from '@/lib/auth';
+import { getNotifications, getPublicSet, listPublicSets } from '@/lib/endpoints';
 import { useDiscovery } from '@/lib/discovery';
 import type { DiscoverySort } from '@/lib/discovery';
 import { colors, fonts } from '@/lib/theme';
 
+const FEATURED_SET = 'film-cameras';
+
 export default function BrowseScreen() {
+  const { user } = useAuth();
+  const [unread, setUnread] = useState(0);
   const [sort, setSort] = useState<DiscoverySort>('new');
   const [query, setQuery] = useState('');
+  const [featured, setFeatured] = useState<CardSetDetail | null>(null);
   const shelf = useDiscovery(sort);
   const list = useRef<FlatList<CardSetSummary>>(null);
   const { width, fontScale } = useWindowDimensions();
@@ -37,6 +47,38 @@ export default function BrowseScreen() {
     Keyboard.dismiss();
     router.push({ pathname: '/search', params: { q } });
   }
+
+  useEffect(() => {
+    let live = true;
+    listPublicSets('popular')
+      .then((page) => {
+        const pick =
+          page.results.find((set) => set.slug.startsWith(FEATURED_SET)) ?? page.results[0];
+        if (!pick) return null;
+        return getPublicSet(pick.slug);
+      })
+      .then((detail) => {
+        if (live && detail) setFeatured(detail);
+      })
+      .catch(() => {
+        if (live) setFeatured(null);
+      });
+    return () => {
+      live = false;
+    };
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!user) {
+        setUnread(0);
+        return;
+      }
+      getNotifications()
+        .then((page) => setUnread(page.unread))
+        .catch(() => setUnread(0));
+    }, [user]),
+  );
 
   function pickSort(next: DiscoverySort) {
     if (next === sort) return;
@@ -78,19 +120,37 @@ export default function BrowseScreen() {
                 <Feather name="book-open" size={25} color={colors.accent} />
                 <Text style={styles.wordmark}>MISCELLARY</Text>
               </View>
-              <Text style={styles.edition}>THE PUBLIC{'\n'}SHELF</Text>
+              {user ? (
+                <Pressable
+                  accessibilityRole="link"
+                  accessibilityLabel={unread ? `Notifications, ${unread} unread` : 'Notifications'}
+                  hitSlop={8}
+                  onPress={() => router.push('/notifications')}
+                  style={({ pressed }) => [styles.bell, pressed && { opacity: 0.7 }]}
+                >
+                  <Feather name="bell" size={20} color={colors.muted} />
+                  {unread > 0 ? (
+                    <View style={styles.badge}>
+                      <Text style={styles.badgeText}>{unread > 99 ? '99+' : unread}</Text>
+                    </View>
+                  ) : null}
+                </Pressable>
+              ) : (
+                <Text style={styles.edition}>COLLECT{'\n'}TRADE · CREATE</Text>
+              )}
             </View>
             <Text accessibilityRole="header" style={styles.heading}>
-              Everything can{'\n'}be a collection.
+              Turn collections{'\n'}into trading cards.
             </Text>
             <Text style={styles.intro}>
-              Small obsessions, carefully collected. Find a binder worth opening.
+              Make your own set, open a free pack from every set each day, and trade for the ones
+              you are missing.
             </Text>
             <View style={styles.search}>
               <Feather name="search" size={18} color={colors.muted} />
               <Input
-                accessibilityLabel="Search sets, cards, and people"
-                placeholder="Sets, cards, people…"
+                accessibilityLabel="Search sets, cards, subjects and users"
+                placeholder="Sets, cards, users…"
                 value={query}
                 onChangeText={setQuery}
                 returnKeyType="search"
@@ -113,27 +173,82 @@ export default function BrowseScreen() {
                 <Feather name="arrow-right" size={20} color={colors.accent} />
               </Pressable>
             </View>
-            <View style={styles.shelfHeader}>
-              <View>
-                <Text accessibilityRole="header" style={styles.shelfTitle}>
-                  On the shelf
+
+            {featured && featured.cards.length ? (
+              <View style={styles.band}>
+                <View style={styles.bandHead}>
+                  <View style={{ flexShrink: 1 }}>
+                    <Text accessibilityRole="header" style={styles.bandTitle}>
+                      Inside a set
+                    </Text>
+                    <Text style={styles.bandNote} numberOfLines={1}>
+                      {featured.title} · {featured.card_count} cards
+                    </Text>
+                  </View>
+                  <Pressable
+                    accessibilityRole="link"
+                    hitSlop={8}
+                    onPress={() =>
+                      router.push({ pathname: '/sets/[slug]', params: { slug: featured.slug } })
+                    }
+                  >
+                    <Text style={styles.bandLink}>Open it</Text>
+                  </Pressable>
+                </View>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.bandRow}
+                >
+                  {featured.cards.slice(0, 8).map((card) => (
+                    <Pressable
+                      key={card.id}
+                      accessibilityRole="link"
+                      accessibilityLabel={card.title}
+                      onPress={() =>
+                        router.push({ pathname: '/sets/[slug]', params: { slug: featured.slug } })
+                      }
+                      style={({ pressed }) => pressed && { opacity: 0.85 }}
+                    >
+                      <CardPreview
+                        width={96}
+                        title={card.title}
+                        rarity={card.rarity}
+                        printedText={card.printed_text}
+                        code={cardCode(card.printed_set_code, card.position, card.set_total)}
+                        imageUrl={card.image.url}
+                        templateKey={card.template_key}
+                        templateConfig={card.template_config}
+                        mark={featured.mark}
+                        render={card.render}
+                      />
+                    </Pressable>
+                  ))}
+                </ScrollView>
+              </View>
+            ) : null}
+
+            <View style={styles.sectionHead}>
+              <View style={{ flexShrink: 1 }}>
+                <Text accessibilityRole="header" style={styles.sectionTitle}>
+                  Sets
                 </Text>
                 <Text style={styles.total}>
                   {shelf.loading
-                    ? 'Finding your next curiosity'
-                    : `${shelf.count} published ${shelf.count === 1 ? 'set' : 'sets'} to choose from`}
+                    ? 'Looking for sets…'
+                    : `${shelf.count} published ${shelf.count === 1 ? 'set' : 'sets'}`}
                 </Text>
               </View>
-              <Feather name="bookmark" size={21} color={colors.gold} />
             </View>
             <View style={styles.filters}>
-              <Chip label="Just added" active={sort === 'new'} onPress={() => pickSort('new')} />
+              <Chip label="Newest" active={sort === 'new'} onPress={() => pickSort('new')} />
               <Chip
-                label="Collector favourites"
+                label="Popular"
                 active={sort === 'popular'}
                 onPress={() => pickSort('popular')}
               />
             </View>
+            <View style={styles.filterGap} />
             {shelf.error && shelf.sets.length > 0 ? (
               <View style={styles.notice}>
                 <ErrorText>{shelf.error}</ErrorText>
@@ -146,12 +261,12 @@ export default function BrowseScreen() {
           shelf.loading ? (
             <View accessibilityLabel="Loading sets" style={styles.loading}>
               <ActivityIndicator color={colors.accent} />
-              <Text style={styles.stateText}>Looking along the shelf…</Text>
+              <Text style={styles.stateText}>Looking for sets…</Text>
             </View>
           ) : shelf.error ? (
             <View style={styles.empty}>
               <Feather name="wifi-off" size={28} color={colors.muted} />
-              <Text style={styles.stateTitle}>The shelf is out of reach</Text>
+              <Text style={styles.stateTitle}>Cannot reach the catalogue</Text>
               <ErrorText>{shelf.error}</ErrorText>
               <Button title="Try again" onPress={shelf.retry} />
             </View>
@@ -190,7 +305,7 @@ export default function BrowseScreen() {
               ) : (
                 <>
                   <Feather name="book-open" size={20} color={colors.cloth} />
-                  <Text style={styles.stateText}>You’ve reached the end of this shelf.</Text>
+                  <Text style={styles.stateText}>That is every published set.</Text>
                 </>
               )}
               <Text style={styles.progress}>
@@ -218,6 +333,19 @@ const styles = StyleSheet.create({
     borderColor: colors.bdr2,
   },
   brand: { flexDirection: 'row', alignItems: 'center', gap: 9 },
+  bell: { padding: 6 },
+  badge: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    minWidth: 17,
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderRadius: 9,
+    backgroundColor: colors.accent,
+    alignItems: 'center',
+  },
+  badgeText: { color: colors.accentText, fontFamily: fonts.medium, fontSize: 10 },
   wordmark: { fontFamily: fonts.display, fontSize: 28, letterSpacing: 1.7, color: colors.text },
   edition: {
     fontFamily: fonts.medium,
@@ -260,15 +388,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   searchButton: { width: 48, minHeight: 48, alignItems: 'center', justifyContent: 'center' },
-  shelfHeader: {
+  band: { marginTop: 24 },
+  bandHead: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-end',
     justifyContent: 'space-between',
-    marginTop: 26,
+    gap: 12,
   },
-  shelfTitle: { fontFamily: fonts.display, fontSize: 29, color: colors.text },
+  bandTitle: { fontFamily: fonts.display, fontSize: 26, color: colors.text },
+  bandNote: { fontFamily: fonts.body, fontSize: 12, color: colors.muted, marginTop: 2 },
+  bandLink: {
+    fontFamily: fonts.medium,
+    fontSize: 12,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    color: colors.accent,
+  },
+  bandRow: { gap: 10, paddingVertical: 12, paddingRight: 4 },
+  sectionHead: { marginTop: 26 },
+  sectionTitle: { fontFamily: fonts.display, fontSize: 29, color: colors.text },
   total: { fontFamily: fonts.body, fontSize: 13, color: colors.muted, marginTop: 2 },
-  filters: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 14, marginBottom: 23 },
+  filters: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 14 },
+  filterGap: { height: 14 },
   row: { gap: 20 },
   item: {
     paddingBottom: 20,

@@ -1,14 +1,15 @@
-import { cardCode } from '@miscellary/shared';
+import { cardCode, RARITIES, RARITY_LABELS } from '@miscellary/shared';
 import type { OwnedCard, SetPointsBalance } from '@miscellary/shared';
 import { Link, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import CardInspector from '@/components/CardInspector';
 import CardPreview from '@/components/CardPreview';
+import FilterField from '@/components/FilterField';
 import LoginGate from '@/components/LoginGate';
 import PointGain from '@/components/PointGain';
-import { listMyCards, listMyPoints, recycleCard } from '@/lib/endpoints';
-import { colors } from '@/lib/theme';
+import { listAllMyCards, listMyPoints, recycleCard } from '@/lib/endpoints';
+import { colors, fonts, rarityColors } from '@/lib/theme';
 import { ErrorText, Muted, Tag, Title } from '@/components/ui';
 
 function stack(owned: OwnedCard[]): OwnedCard[] {
@@ -27,11 +28,12 @@ function Collection() {
   const [selected, setSelected] = useState<OwnedCard | null>(null);
   const [recycling, setRecycling] = useState<string | null>(null);
   const [gain, setGain] = useState<{ cardId: string; amount: number; key: number } | null>(null);
+  const [filter, setFilter] = useState('');
 
   const load = useCallback(async () => {
     try {
-      const [page, pts] = await Promise.all([listMyCards(), listMyPoints()]);
-      setCards(page.results);
+      const [owned, pts] = await Promise.all([listAllMyCards(), listMyPoints()]);
+      setCards(owned);
       setPoints(pts);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not load your cards.');
@@ -77,16 +79,88 @@ function Collection() {
   const bySet = new Map<string, OwnedCard[]>();
   for (const c of stackedCards) bySet.set(c.set_slug, [...(bySet.get(c.set_slug) ?? []), c]);
 
+  const needle = filter.trim().toLowerCase();
+  const groups = new Map<string, OwnedCard[]>();
+  for (const c of stackedCards) {
+    if (
+      needle &&
+      !c.card.title.toLowerCase().includes(needle) &&
+      !c.set_title.toLowerCase().includes(needle)
+    )
+      continue;
+    groups.set(c.set_slug, [...(groups.get(c.set_slug) ?? []), c]);
+  }
+
   return (
     <ScrollView
       style={{ backgroundColor: colors.bg }}
       contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
     >
-      <Tag>My cards</Tag>
+      <Tag>Collection</Tag>
       <Title>My cards</Title>
       <ErrorText>{error}</ErrorText>
+
+      {cards.length ? (
+        <View style={styles.summary}>
+          <View style={styles.summaryRow}>
+            <View style={styles.figure}>
+              <Text style={styles.figureValue}>{stackedCards.length}</Text>
+              <Text style={styles.figureLabel}>different</Text>
+            </View>
+            <View style={styles.figure}>
+              <Text style={styles.figureValue}>{cards.length}</Text>
+              <Text style={styles.figureLabel}>copies</Text>
+            </View>
+            <View style={styles.figure}>
+              <Text style={styles.figureValue}>{cards.length - stackedCards.length}</Text>
+              <Text style={styles.figureLabel}>spare</Text>
+            </View>
+            <View style={styles.figure}>
+              <Text style={styles.figureValue}>{bySet.size}</Text>
+              <Text style={styles.figureLabel}>sets</Text>
+            </View>
+          </View>
+          <View style={styles.tiers}>
+            {RARITIES.map((rarity) => {
+              const held = stackedCards.filter((c) => c.card.rarity === rarity).length;
+              const most = Math.max(
+                1,
+                ...RARITIES.map((r) => stackedCards.filter((c) => c.card.rarity === r).length),
+              );
+              return (
+                <View key={rarity} style={styles.tier}>
+                  <Text style={styles.tierName}>{RARITY_LABELS[rarity]}</Text>
+                  <View style={styles.tierTrack}>
+                    <View
+                      style={[
+                        styles.tierFill,
+                        { width: `${(held / most) * 100}%`, backgroundColor: rarityColors[rarity] },
+                      ]}
+                    />
+                  </View>
+                  <Text style={styles.tierValue}>{held}</Text>
+                </View>
+              );
+            })}
+          </View>
+        </View>
+      ) : null}
       {cards.length === 0 ? <Muted>Nothing yet. Open a pack from any published set.</Muted> : null}
-      {[...bySet.entries()].map(([slug, list]) => (
+
+      {stackedCards.length > 1 ? (
+        <FilterField
+          style={styles.filter}
+          value={filter}
+          onChange={setFilter}
+          placeholder="Filter by card or set"
+          label="Filter your collection by card or set"
+        />
+      ) : null}
+      {cards.length > 0 && groups.size === 0 ? (
+        <Muted>Nothing in your collection matches “{filter}”.</Muted>
+      ) : null}
+
+      {[...groups.entries()].map(([slug, list]) => (
         <View key={slug} style={styles.group}>
           <View style={styles.groupHeader}>
             <Link href={{ pathname: '/sets/[slug]', params: { slug } }}>
@@ -191,6 +265,40 @@ export default function CollectionScreen() {
 }
 
 const styles = StyleSheet.create({
+  summary: {
+    gap: 14,
+    padding: 14,
+    marginBottom: 18,
+    backgroundColor: colors.sur,
+    borderWidth: 1,
+    borderColor: colors.bdr,
+    borderRadius: 10,
+  },
+  summaryRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  figure: { alignItems: 'center', gap: 2 },
+  figureValue: { color: colors.text, fontFamily: fonts.display, fontSize: 26 },
+  figureLabel: { color: colors.faint, fontFamily: fonts.body, fontSize: 11 },
+  tiers: { gap: 7, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.bdr },
+  tier: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  tierName: { width: 72, color: colors.muted, fontFamily: fonts.body, fontSize: 11 },
+  tierTrack: {
+    flex: 1,
+    height: 7,
+    borderRadius: 3,
+    borderWidth: 1,
+    borderColor: colors.bdr2,
+    backgroundColor: colors.sur2,
+    overflow: 'hidden',
+  },
+  tierFill: { height: '100%' },
+  tierValue: {
+    width: 26,
+    textAlign: 'right',
+    color: colors.text,
+    fontFamily: fonts.display,
+    fontSize: 15,
+  },
+  filter: { marginTop: 18, marginBottom: 4 },
   group: { marginTop: 16 },
   groupHeader: {
     flexDirection: 'row',

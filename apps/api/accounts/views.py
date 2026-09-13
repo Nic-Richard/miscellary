@@ -2,7 +2,8 @@ import contextlib
 
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
-from django.db import transaction
+from django.db import IntegrityError, transaction
+from django.utils import timezone
 from django.utils.http import urlsafe_base64_decode
 from rest_framework import permissions, status
 from rest_framework.exceptions import AuthenticationFailed, ValidationError
@@ -13,7 +14,7 @@ from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from . import cookies, emails
-from .models import User
+from .models import ReservedUsername, User
 from .serializers import (
     ChangePasswordSerializer,
     CurrentUserSerializer,
@@ -23,6 +24,8 @@ from .serializers import (
     ProfileUpdateSerializer,
     RegisterSerializer,
     TokenSerializer,
+    UsernameChangeSerializer,
+    cooldown_error,
 )
 from .tokens import password_reset_tokens, read_email_verification_token
 
@@ -110,6 +113,42 @@ class MeView(APIView):
         serializer = ProfileUpdateSerializer(user.profile, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
+        return Response(CurrentUserSerializer(user).data)
+
+
+class ChangeUsernameView(APIView):
+    """Take a new username, and keep the old one from being claimed.
+
+    The vacated name is reserved for this account rather than returned to the
+    pool, because profile links carry usernames. The reservation lasts until the
+    next change replaces it, so one account holds one former name.
+    """
+
+    throttle_scope = "auth.username"
+
+    def post(self, request: Request) -> Response:
+        serializer = UsernameChangeSerializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        wanted = serializer.validated_data["username"]
+        current = _current_user(request)
+        try:
+            with transaction.atomic():
+                # Recheck the cooldown under the row lock.
+                user = User.objects.select_for_update().get(pk=current.pk)
+                cooldown_error(user)
+                previous = user.username
+                if previous == wanted:
+                    raise ValidationError({"username": ["That is already your username."]})
+                ReservedUsername.objects.filter(user=user).delete()
+                user.username = wanted
+                user.username_changed_at = timezone.now()
+                user.save(update_fields=["username", "username_changed_at"])
+                ReservedUsername.objects.create(user=user, username=previous)
+        except IntegrityError:
+            raise ValidationError({"username": ["That username was just taken."]}) from None
+        # Keep request.user in sync with the locked row.
+        current.username = user.username
+        current.username_changed_at = user.username_changed_at
         return Response(CurrentUserSerializer(user).data)
 
 

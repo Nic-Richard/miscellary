@@ -1,5 +1,5 @@
 from django.db import transaction
-from django.db.models import Count, Exists, OuterRef, Prefetch, Value
+from django.db.models import Count, Exists, OuterRef, Prefetch, Q, Value
 from django.shortcuts import get_object_or_404
 from rest_framework import permissions, status
 from rest_framework.exceptions import ValidationError
@@ -8,8 +8,9 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from . import tags as tagging
 from . import templates
-from .models import CardDefinition, CardSet
+from .models import CardDefinition, CardSet, CardTag, SetTag, Tag
 from .publishing import publish_problems, publish_set
 from .serializers import (
     CardSerializer,
@@ -17,6 +18,8 @@ from .serializers import (
     CardSetSerializer,
     CardSetWriteSerializer,
     CardWriteSerializer,
+    TagSerializer,
+    TagWriteSerializer,
     TemplateSerializer,
 )
 
@@ -26,28 +29,31 @@ class SetPagination(PageNumberPagination):
 
 
 def with_counts(queryset, user=None):
-    """Sets with card/like counts, cards with like counts, and whether `user` liked the set."""
-    from social.models import Reaction  # here, not at the top: import cycle
+    """Sets with their counts and tags, and whether `user` liked or follows them."""
+    from social.models import Reaction, SetFollow  # here, not at the top: import cycle
 
     # Meta.ordering is dropped on GROUP BY queries, so order explicitly.
     cards = (
         CardDefinition.objects.select_related("image")
+        .prefetch_related("card_tags__tag")
         .annotate(like_count=Count("reactions"))
         .order_by("position", "created_at")
     )
     queryset = (
         queryset.select_related("creator__profile", "cover")
-        .prefetch_related(Prefetch("cards", queryset=cards))
+        .prefetch_related(Prefetch("cards", queryset=cards), "set_tags__tag")
         .annotate(
             card_count=Count("cards", distinct=True),
             like_count=Count("reactions", distinct=True),
             opening_count=Count("pack_openings", distinct=True),
+            follower_count=Count("set_followers", distinct=True),
         )
     )
     if user is not None and user.is_authenticated:
         liked = Reaction.objects.filter(user=user, card_set=OuterRef("pk"))
-        return queryset.annotate(liked=Exists(liked))
-    return queryset.annotate(liked=Value(False))
+        followed = SetFollow.objects.filter(user=user, card_set=OuterRef("pk"))
+        return queryset.annotate(liked=Exists(liked), following=Exists(followed))
+    return queryset.annotate(liked=Value(False), following=Value(False))
 
 
 class TemplateListView(APIView):
@@ -67,6 +73,9 @@ class PublicSetListView(APIView):
         queryset = with_counts(
             CardSet.objects.filter(status=CardSet.Status.PUBLISHED), request.user
         )
+        tag = tagging.slugify_tag(request.query_params.get("tag", ""))
+        if tag:
+            queryset = queryset.filter(set_tags__tag__slug=tag)
         if request.query_params.get("sort") == "popular":
             queryset = queryset.order_by("-like_count", "-opening_count", "-published_at")
         else:
@@ -242,3 +251,96 @@ class MyCardDetailView(APIView):
                     remaining.position = position
                     remaining.save(update_fields=["position"])
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+# ---- tags ----
+
+
+def apply_tags(owner, labels: list[str], limit: int) -> None:
+    """Replace an object's tags with the submitted list, in the order given.
+
+    `owner` is a set or a card definition; both hold their tags in a join table
+    rather than on the row, which is what keeps them editable after publishing.
+    """
+    is_set = isinstance(owner, CardSet)
+    wanted = tagging.normalised(labels, limit)
+    with transaction.atomic():
+        # Replacing the list is a delete followed by inserts, so two writes for
+        # the same set or card would otherwise both clear it and then collide on
+        # the unique pair. Locking the owning row makes them take turns.
+        if is_set:
+            CardSet.objects.select_for_update().filter(pk=owner.pk).first()
+            SetTag.objects.filter(card_set=owner).delete()
+        else:
+            CardDefinition.objects.select_for_update().filter(pk=owner.pk).first()
+            CardTag.objects.filter(card=owner).delete()
+        for position, (slug, label) in enumerate(wanted):
+            tag, _ = Tag.objects.get_or_create(slug=slug, defaults={"label": label})
+            if is_set:
+                SetTag.objects.create(card_set=owner, tag=tag, position=position)
+            else:
+                CardTag.objects.create(card=owner, tag=tag, position=position)
+
+
+def tag_labels(request: Request) -> list[str]:
+    serializer = TagWriteSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    return [label for label in serializer.validated_data["tags"] if label.strip()]
+
+
+class TagListView(APIView):
+    """Tags for studio autocomplete and search."""
+
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request: Request) -> Response:
+        queryset = Tag.objects.annotate(
+            set_count=Count(
+                "set_tags", filter=Q(set_tags__card_set__status=CardSet.Status.PUBLISHED)
+            )
+        )
+        q = request.query_params.get("q", "").strip()[:40]
+        if q:
+            slug = tagging.slugify_tag(q)
+            queryset = queryset.filter(Q(slug__icontains=slug or q) | Q(label__icontains=q))
+        else:
+            queryset = queryset.filter(set_count__gt=0)
+        rows = queryset.order_by("-set_count", "slug")[:20]
+        return Response(
+            [{"slug": t.slug, "label": t.label, "set_count": t.set_count} for t in rows]
+        )
+
+
+class MySetTagsView(APIView):
+    """A set's tags, editable by its creator whether or not it is published."""
+
+    def put(self, request: Request, set_id) -> Response:
+        card_set = get_object_or_404(
+            CardSet.objects.exclude(status=CardSet.Status.REMOVED),
+            id=set_id,
+            creator_id=request.user.id,
+        )
+        labels = tag_labels(request)
+        found = tagging.problems(labels, tagging.SET_TAG_MAX)
+        if found:
+            raise ValidationError({"tags": found})
+        apply_tags(card_set, labels, tagging.SET_TAG_MAX)
+        ordered = Tag.objects.filter(set_tags__card_set=card_set).order_by("set_tags__position")
+        return Response(TagSerializer(ordered, many=True).data)
+
+
+class MyCardTagsView(APIView):
+    def put(self, request: Request, set_id, card_id) -> Response:
+        card_set = get_object_or_404(
+            CardSet.objects.exclude(status=CardSet.Status.REMOVED),
+            id=set_id,
+            creator_id=request.user.id,
+        )
+        card = get_object_or_404(card_set.cards, id=card_id)
+        labels = tag_labels(request)
+        found = tagging.problems(labels, tagging.CARD_TAG_MAX)
+        if found:
+            raise ValidationError({"tags": found})
+        apply_tags(card, labels, tagging.CARD_TAG_MAX)
+        ordered = Tag.objects.filter(card_tags__card=card).order_by("card_tags__position")
+        return Response(TagSerializer(ordered, many=True).data)

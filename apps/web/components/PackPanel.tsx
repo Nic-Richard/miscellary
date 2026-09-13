@@ -7,6 +7,7 @@ import type { PackOpening, PackStatus } from '@miscellary/shared';
 import { useAuth } from '@/lib/auth';
 import { getPackStatus, openPack } from '@/lib/packs';
 import { loginHref } from '@/lib/returnTo';
+import { countdown } from '@/lib/time';
 import { useContinuation } from '@/lib/useContinuation';
 import PackPouch from './PackPouch';
 import type { SetIdentity } from '@/lib/setIdentity';
@@ -23,14 +24,6 @@ function Arrow() {
 }
 
 export const PACK_ACTION = 'pack';
-
-function countdown(until: string, now: number): string {
-  const ms = Math.max(0, new Date(until).getTime() - now);
-  const h = Math.floor(ms / 3_600_000);
-  const m = Math.floor((ms % 3_600_000) / 60_000);
-  const s = Math.floor((ms % 60_000) / 1000);
-  return [h, m, s].map((n) => String(n).padStart(2, '0')).join(':');
-}
 
 export default function PackPanel({
   slug,

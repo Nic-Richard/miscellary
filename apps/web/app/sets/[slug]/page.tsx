@@ -16,19 +16,20 @@ import Description from '@/components/Description';
 import DemoBadge from '@/components/DemoBadge';
 import LikeButton from '@/components/LikeButton';
 import PackPanel from '@/components/PackPanel';
-import ReportButton from '@/components/ReportButton';
-import { getProfile, likeCard, likeSet, setFollow } from '@/lib/social';
+import SetActions from '@/components/SetActions';
+import TagList from '@/components/TagList';
+import { getProfile, likeCard, setFollow } from '@/lib/social';
 import { useAuth } from '@/lib/auth';
 import { loginHref } from '@/lib/returnTo';
 import { useContinuation } from '@/lib/useContinuation';
 import { getPublicSet } from '@/lib/sets';
 import { listMyCards, recycleCard } from '@/lib/packs';
 import ui from '@/components/ui.module.css';
+import wide from '@/components/pageWide.module.css';
 import SetCover from '@/components/SetCover';
 import styles from './page.module.css';
 
 const FOLLOW_ACTION = 'follow';
-const LIKE_SET_ACTION = 'like-set';
 const LIKE_CARD_ACTION = 'like-card';
 const LIKE_CARD_CARRIES = ['card'];
 
@@ -88,6 +89,7 @@ function SetCard({
           <LikeButton
             liked={detail.liked_card_ids.includes(card.id)}
             count={card.like_count}
+            label={card.title}
             onToggle={(like) => likeCard(card.id, like)}
             action={LIKE_CARD_ACTION}
             carries={{ card: card.id }}
@@ -217,16 +219,6 @@ export default function BinderPage() {
 
   useContinuation(FOLLOW_ACTION, () => void toggleFollow(), following === false);
   useContinuation(
-    LIKE_SET_ACTION,
-    () => {
-      if (!set || set.liked) return;
-      void likeSet(set.slug, true).then((result) =>
-        setSet({ ...set, liked: result.liked, like_count: result.like_count }),
-      );
-    },
-    Boolean(user && set),
-  );
-  useContinuation(
     LIKE_CARD_ACTION,
     (carried) => {
       const card = set?.cards.find((entry) => entry.id === carried.get('card'));
@@ -267,7 +259,7 @@ export default function BinderPage() {
   }
 
   return (
-    <section className={styles.root}>
+    <section className={`${wide.full} ${styles.root}`}>
       <div className={styles.header} id="set-overview">
         <SetCover
           url={set.cover?.url ?? null}
@@ -296,43 +288,35 @@ export default function BinderPage() {
             </p>
           ) : null}
           <div className={styles.creator}>
-            <span>Created by</span>
             <Link href={`/users/${set.creator.username}`} className={styles.creatorLink}>
               <span className={styles.monogram}>{creatorName[0]?.toUpperCase()}</span>
-              <strong>{creatorName}</strong>
-              {set.creator.is_demo ? <DemoBadge compact /> : null}
+              <span className={styles.creatorName}>
+                <strong>
+                  {creatorName}
+                  {set.creator.is_demo ? <DemoBadge compact /> : null}
+                </strong>
+                <small>@{set.creator.username}</small>
+              </span>
             </Link>
             {following !== null ? (
               <button
                 type="button"
-                className={`${following ? ui.btnOutline : ui.btnPrimary} ${ui.btnSmall}`}
+                className={`${ui.action} ${following ? ui.actionOn : ''}`}
                 onClick={() => void toggleFollow()}
               >
-                {following ? 'Following' : 'Follow'}
+                {following ? 'Following' : 'Follow creator'}
               </button>
             ) : !user && isPublished ? (
-              <Link
-                href={loginHref(pathname, FOLLOW_ACTION)}
-                className={`${ui.btnPrimary} ${ui.btnSmall}`}
-              >
-                Log in to follow
+              <Link href={loginHref(pathname, FOLLOW_ACTION)} className={ui.action}>
+                Follow creator
               </Link>
             ) : null}
           </div>
+
+          {isPublished ? <SetActions set={set} /> : null}
         </div>
 
         <div className={styles.side}>
-          {isPublished ? (
-            <div className={styles.social}>
-              <LikeButton
-                liked={set.liked}
-                count={set.like_count}
-                onToggle={(like) => likeSet(set.slug, like)}
-                action={LIKE_SET_ACTION}
-              />
-              <ReportButton target={{ set_slug: set.slug }} />
-            </div>
-          ) : null}
           {isPublished ? (
             <PackPanel
               slug={set.slug}
@@ -545,6 +529,12 @@ export default function BinderPage() {
                 </li>
               ) : null}
             </ul>
+            {set.tags.length ? (
+              <div className={styles.filed}>
+                <span className={ui.label}>Filed under</span>
+                <TagList tags={set.tags} size="small" label={`Tags on ${set.title}`} />
+              </div>
+            ) : null}
           </section>
 
           {popularCards.length > 0 ? (

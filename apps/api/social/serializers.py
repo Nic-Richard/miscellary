@@ -1,9 +1,10 @@
 from rest_framework import serializers
 
-from cards.serializers import CardSetSerializer, CreatorSerializer
+from cards.rendering import render_url
+from cards.serializers import CardSerializer, CardSetSerializer, CreatorSerializer
 from packs.serializers import OwnedCardSerializer
 
-from .models import COMMENT_MAX, SHOWCASE_SLOTS, Comment, Report, ShowcaseSlot
+from .models import COMMENT_MAX, SHOWCASE_SLOTS, Comment, Notification, Report, ShowcaseSlot
 
 
 class ShowcaseSlotSerializer(serializers.ModelSerializer):
@@ -38,7 +39,6 @@ class ProfilePageSerializer(serializers.Serializer):
 
 
 class ShowcaseWriteSerializer(serializers.Serializer):
-    # Replaces the complete ordered binder slot list.
     slots = serializers.ListField(
         child=serializers.DictField(child=serializers.CharField()), max_length=SHOWCASE_SLOTS
     )
@@ -110,3 +110,68 @@ class ReportWriteSerializer(serializers.Serializer):
                 "Report exactly one thing: a set, a card, a comment, or a user."
             )
         return attrs
+
+
+class PackEntrySerializer(serializers.Serializer):
+    card_set = CardSetSerializer()
+    free_available = serializers.BooleanField()
+    resets_at = serializers.DateTimeField()
+    points = serializers.IntegerField()
+    pack_cost = serializers.IntegerField()
+    owned_count = serializers.IntegerField()
+    card_count = serializers.IntegerField()
+    duplicate_count = serializers.IntegerField()
+    recent_cards = CardSerializer(many=True)
+    followed_at = serializers.DateTimeField()
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    """A notification carries enough to render and link itself without a second
+    request: who did it, and the title and slug of what they did it to."""
+
+    actor = CreatorSerializer(read_only=True)
+    set_slug = serializers.CharField(source="card_set.slug", default=None, read_only=True)
+    set_title = serializers.CharField(source="card_set.title", default=None, read_only=True)
+    card_title = serializers.CharField(source="card.title", default=None, read_only=True)
+    comment_body = serializers.SerializerMethodField()
+    card_image = serializers.SerializerMethodField()
+    set_pack_image = serializers.SerializerMethodField()
+    read = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Notification
+        fields = [
+            "id",
+            "kind",
+            "actor",
+            "set_slug",
+            "set_title",
+            "card_title",
+            "comment_body",
+            "card_image",
+            "set_pack_image",
+            "read",
+            "created_at",
+        ]
+        read_only_fields = fields
+
+    def get_card_image(self, obj: Notification) -> str | None:
+        card = obj.card
+        if card is None or not card.render_front_thumbnail_key:
+            return None
+        return render_url(card.render_front_thumbnail_key)
+
+    def get_set_pack_image(self, obj: Notification) -> str | None:
+        card_set = obj.card_set
+        if card_set is None or not card_set.render_pack_key:
+            return None
+        return render_url(card_set.render_pack_key)
+
+    def get_comment_body(self, obj: Notification) -> str:
+        comment = obj.comment
+        if comment is None or comment.removed:
+            return ""
+        return comment.body[:140]
+
+    def get_read(self, obj: Notification) -> bool:
+        return obj.read_at is not None

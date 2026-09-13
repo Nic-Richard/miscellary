@@ -1,6 +1,10 @@
 import type {
   Comment,
   CommentThread,
+  Creator,
+  NotificationList,
+  Paginated,
+  PacksPage,
   ProfilePage,
   ReportReason,
   SearchResults,
@@ -17,6 +21,11 @@ export const setFollow = (username: string, follow: boolean) =>
       method: follow ? 'POST' : 'DELETE',
     },
   );
+export const listFollows = (username: string, direction: 'followers' | 'following', page = 1) =>
+  apiFetch<Paginated<Creator>>(
+    `/api/v1/users/${encodeURIComponent(username)}/${direction}/?page=${page}`,
+    { auth: false },
+  );
 export const getShowcase = () => apiFetch<ShowcaseSlot[]>('/api/v1/me/showcase/');
 export const saveShowcase = (slots: { position: number; owned_card_id: string }[]) =>
   apiFetch<ShowcaseSlot[]>('/api/v1/me/showcase/', {
@@ -31,6 +40,18 @@ export const saveShowcase = (slots: { position: number; owned_card_id: string }[
 export const likeSet = (slug: string, like: boolean) =>
   apiFetch<{ liked: boolean; like_count: number }>(`/api/v1/sets/${slug}/like/`, {
     method: like ? 'POST' : 'DELETE',
+  });
+export const followSet = (slug: string, follow: boolean) =>
+  apiFetch<{ following: boolean; follower_count: number }>(`/api/v1/sets/${slug}/follow/`, {
+    method: follow ? 'POST' : 'DELETE',
+  });
+export const getMyPacks = () => apiFetch<PacksPage>('/api/v1/me/packs/');
+export const getNotifications = (page = 1) =>
+  apiFetch<NotificationList>(`/api/v1/me/notifications/?page=${page}`);
+export const markNotificationsRead = (id?: string) =>
+  apiFetch<{ unread: number }>('/api/v1/me/notifications/', {
+    method: 'POST',
+    body: id ? { id } : {},
   });
 export const likeCard = (id: string, like: boolean) =>
   apiFetch<{ liked: boolean; like_count: number }>(`/api/v1/cards/${id}/like/`, {

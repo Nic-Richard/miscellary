@@ -49,11 +49,9 @@ def test_follow_and_unfollow(auth_client, user):
     assert auth_client.post(url).json() == {"following": True, "follower_count": 1}
     assert auth_client.post(url).json()["follower_count"] == 1  # idempotent
     assert auth_client.post(reverse("social:follow", args=[user.username])).status_code == 400
-    names = [
-        u["username"]
-        for u in auth_client.get(reverse("social:follow-list", args=["other", "followers"])).json()
-    ]
-    assert names == [user.username]
+    page = auth_client.get(reverse("social:follow-list", args=["other", "followers"])).json()
+    assert [u["username"] for u in page["results"]] == [user.username]
+    assert page["count"] == 1
     assert auth_client.delete(url).json() == {"following": False, "follower_count": 0}
 
 
@@ -188,3 +186,21 @@ def test_creator_delete_keeps_copies(user, published):
     OwnedCard.objects.create(owner=alice, card=published.cards.first())
     published.soft_delete()
     assert OwnedCard.objects.filter(owner=alice).count() == 1
+
+
+def test_follower_lists_are_paged(auth_client, user):
+    target = make_user(username="popular")
+    followers = [make_user(username=f"fan{n:02d}") for n in range(60)]
+    Follow.objects.bulk_create([Follow(follower=f, following=target) for f in followers])
+
+    url = reverse("social:follow-list", args=["popular", "followers"])
+    first = auth_client.get(url).json()
+    assert first["count"] == 60
+    assert len(first["results"]) == 50
+    assert first["next"] is not None
+
+    second = auth_client.get(url, {"page": 2}).json()
+    assert len(second["results"]) == 10
+    assert second["next"] is None
+    seen = {u["username"] for u in first["results"]} | {u["username"] for u in second["results"]}
+    assert len(seen) == 60

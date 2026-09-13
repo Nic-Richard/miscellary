@@ -12,6 +12,7 @@ Interactive docs: `/api/v1/docs/` (OpenAPI at `/api/v1/schema/`).
 | POST   | `/auth/logout/`                 | cookie / `{refresh}` | blacklists, clears cookie → 204                                              |
 | GET    | `/auth/me/`                     | bearer               | current user + profile                                                       |
 | PATCH  | `/auth/me/`                     | bearer               | `{display_name?, bio?, showcase_title?, binder_colour?}`                     |
+| POST   | `/auth/username/`               | bearer               | `{username, current_password}` → user; 30-day cooldown, old name reserved    |
 | POST   | `/auth/password/change/`        | bearer               | `{current_password, new_password}` → 204                                     |
 | POST   | `/auth/verify-email/request/`   | bearer               | resend verification → 204                                                    |
 | POST   | `/auth/verify-email/confirm/`   | –                    | `{token}` → 204                                                              |
@@ -29,18 +30,21 @@ Send `X-Client-Platform: mobile` to receive refresh tokens in the body instead o
 
 ## Templates, sets, cards
 
-| Method           | Path                             | Auth     | Notes                                                                                 |
-| ---------------- | -------------------------------- | -------- | ------------------------------------------------------------------------------------- |
-| GET              | `/templates/`                    | –        | platform templates with their options                                                 |
-| GET              | `/sets/`                         | –        | published sets, paginated (`?page=`)                                                  |
-| GET              | `/sets/{slug}/`                  | optional | binder: set + cards. Drafts only for their creator                                    |
-| GET              | `/me/sets/`                      | bearer   | my sets                                                                               |
-| POST             | `/me/sets/`                      | bearer   | `{title, description?}` → 201 draft                                                   |
-| GET/PATCH/DELETE | `/me/sets/{id}/`                 | bearer   | PATCH drafts only; DELETE hard-deletes drafts and soft-deletes published sets         |
-| GET              | `/me/sets/{id}/publish/`         | bearer   | `{problems: []}`, showing what blocks publishing                                      |
-| POST             | `/me/sets/{id}/publish/`         | bearer   | publish; 400 `{error, problems}` if blocked                                           |
-| POST             | `/me/sets/{id}/cards/`           | bearer   | `{image_id, title, rarity, description, printed_text, template_key, template_config}` |
-| PATCH/DELETE     | `/me/sets/{id}/cards/{card_id}/` | bearer   | draft only                                                                            |
+| Method           | Path                                  | Auth     | Notes                                                                                 |
+| ---------------- | ------------------------------------- | -------- | ------------------------------------------------------------------------------------- |
+| GET              | `/templates/`                         | –        | platform templates with their options                                                 |
+| GET              | `/tags/?q=`                           | –        | tags with published-set counts; without `q`, the ones in use                          |
+| GET              | `/sets/`                              | –        | published sets, paginated (`?page=`), filtered by `?tag=`                             |
+| GET              | `/sets/{slug}/`                       | optional | binder: set + cards. Drafts only for their creator                                    |
+| GET              | `/me/sets/`                           | bearer   | my sets                                                                               |
+| POST             | `/me/sets/`                           | bearer   | `{title, description?}` → 201 draft                                                   |
+| GET/PATCH/DELETE | `/me/sets/{id}/`                      | bearer   | PATCH drafts only; DELETE hard-deletes drafts and soft-deletes published sets         |
+| GET              | `/me/sets/{id}/publish/`              | bearer   | `{problems: []}`, showing what blocks publishing                                      |
+| POST             | `/me/sets/{id}/publish/`              | bearer   | publish; 400 `{error, problems}` if blocked                                           |
+| POST             | `/me/sets/{id}/cards/`                | bearer   | `{image_id, title, rarity, description, printed_text, template_key, template_config}` |
+| PATCH/DELETE     | `/me/sets/{id}/cards/{card_id}/`      | bearer   | draft only                                                                            |
+| PUT              | `/me/sets/{id}/tags/`                 | bearer   | `{tags: [labels]}` → the set's tags; allowed after publication                        |
+| PUT              | `/me/sets/{id}/cards/{card_id}/tags/` | bearer   | `{tags: [labels]}` → the card's tags; allowed after publication                       |
 
 Each template option is `{label, values, default, type, group, unlocks?}`. `type` is how the value
 is picked (`choice`, `swatch`, `font`), `group` is the editor section it belongs to (`board`,
@@ -111,17 +115,20 @@ moved in the meantime the offer is cancelled instead.
 
 ## Social
 
-| Method      | Path                                          | Auth     | Notes                                                                                                                      |
-| ----------- | --------------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------- |
-| GET         | `/users/{username}/`                          | optional | profile: counts, `showcase_title`, `is_following`, `is_me`, showcase, published sets                                       |
-| POST/DELETE | `/users/{username}/follow/`                   | bearer   | → `{following, follower_count}`                                                                                            |
-| GET         | `/users/{username}/followers/`, `/following/` | –        | up to 200 people                                                                                                           |
-| GET/PUT     | `/me/showcase/`                               | bearer   | PUT `{slots: [{position, owned_card_id}]}` replaces up to 40; positions are 1 through 40 and only owned cards are accepted |
-| POST/DELETE | `/sets/{slug}/like/`, `/cards/{id}/like/`     | bearer   | → `{liked, like_count}`                                                                                                    |
-| GET/POST    | `/sets/{slug}/comments/`                      | optional | GET `{count, results}`; authenticated POST `{body, parent_id?}` creates a comment or reply                                 |
-| DELETE      | `/comments/{id}/`                             | bearer   | author or set creator; comments with replies remain as tombstones                                                          |
-| POST        | `/reports/`                                   | bearer   | exactly one of `set_slug`, `card_id`, `comment_id`, `username` + `reason` + `details?`                                     |
-| GET         | `/search/?q=`                                 | –        | `{users, sets, cards}`; Postgres full-text for sets/cards, name match for people                                           |
+| Method      | Path                                          | Auth     | Notes                                                                                                                                     |
+| ----------- | --------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| GET         | `/users/{username}/`                          | optional | profile: counts, `showcase_title`, `is_following`, `is_me`, showcase, published sets                                                      |
+| POST/DELETE | `/users/{username}/follow/`                   | bearer   | → `{following, follower_count}`                                                                                                           |
+| GET         | `/users/{username}/followers/`, `/following/` | –        | paginated, 50 a page (`?page=`)                                                                                                           |
+| GET/PUT     | `/me/showcase/`                               | bearer   | PUT `{slots: [{position, owned_card_id}]}` replaces up to 40; positions are 1 through 40 and only owned cards are accepted                |
+| POST/DELETE | `/sets/{slug}/like/`, `/cards/{id}/like/`     | bearer   | → `{liked, like_count}`                                                                                                                   |
+| POST/DELETE | `/sets/{slug}/follow/`                        | bearer   | follow a set → `{following, follower_count}`; this is what puts it on the packs page                                                      |
+| GET         | `/me/packs/`                                  | bearer   | the packs page: `{results: [{card_set, free_available, resets_at, points, pack_cost, owned_count, card_count, followed_at}], free_count}` |
+| GET/POST    | `/me/notifications/`                          | bearer   | GET paginated 30 a page, plus `unread` across all of them; POST `{id?}` marks one or all read                                             |
+| GET/POST    | `/sets/{slug}/comments/`                      | optional | GET `{count, results}`; authenticated POST `{body, parent_id?}` creates a comment or reply                                                |
+| DELETE      | `/comments/{id}/`                             | bearer   | author or set creator; comments with replies remain as tombstones                                                                         |
+| POST        | `/reports/`                                   | bearer   | exactly one of `set_slug`, `card_id`, `comment_id`, `username` + `reason` + `details?`                                                    |
+| GET         | `/search/?q=`                                 | –        | `{users, sets, cards, tags}`; full-text for sets/cards, name match for people, tags both as results and as a way in                       |
 
 Platform removal of a set (admin action) wipes every distributed copy and cancels pending trades
 that included them. A creator's own delete keeps collectors' copies.

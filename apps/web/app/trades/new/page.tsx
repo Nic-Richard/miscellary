@@ -9,7 +9,8 @@ import CardPreview from '@/components/CardPreview';
 import SwapArrow from '@/components/SwapArrow';
 import Sheet, { Empty } from '@/components/Sheet';
 import { useAuth } from '@/lib/auth';
-import { listMyCards } from '@/lib/packs';
+import SearchField from '@/components/SearchField';
+import { listAllMyCards } from '@/lib/packs';
 import { counterOffer, createOffer, getOffer, listUserCards } from '@/lib/trades';
 import ui from '@/components/ui.module.css';
 import styles from './page.module.css';
@@ -81,11 +82,12 @@ function Side({
       meta={`${meta}${chosen ? ` · ${chosen} of ${TRADE_MAX_PER_SIDE} picked` : ''}`}
       actions={
         stacks.length > 4 ? (
-          <input
-            className={`${ui.input} ${styles.filter}`}
-            placeholder="Filter by card or set"
+          <SearchField
+            className={styles.filter}
             value={filter}
-            onChange={(e) => setFilter(e.target.value)}
+            onChange={setFilter}
+            placeholder="Filter by card or set"
+            label="Filter these cards by card or set"
           />
         ) : null
       }
@@ -210,9 +212,9 @@ function NewTrade() {
           setWant(new Set(original.give.map((c) => c.id)));
         }
         if (!who) return;
-        const [t, m] = await Promise.all([listUserCards(who), listMyCards()]);
+        const [t, m] = await Promise.all([listUserCards(who), listAllMyCards()]);
         setTheirs(t.results);
-        setMine(m.results);
+        setMine(m);
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Could not load cards.');
       } finally {

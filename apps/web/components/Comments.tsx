@@ -7,24 +7,13 @@ import type { Comment } from '@miscellary/shared';
 import { deleteComment, getComments, postComment } from '@/lib/social';
 import { useAuth } from '@/lib/auth';
 import { loginHref } from '@/lib/returnTo';
+import { timeAgo } from '@/lib/time';
 import ReportButton from './ReportButton';
 import DemoBadge from './DemoBadge';
 import ui from './ui.module.css';
 import styles from './Comments.module.css';
 
 const MAX = 1000;
-
-function when(iso: string): string {
-  const secs = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
-  if (secs < 60) return 'just now';
-  const mins = secs / 60;
-  if (mins < 60) return `${Math.floor(mins)}m ago`;
-  const hours = mins / 60;
-  if (hours < 24) return `${Math.floor(hours)}h ago`;
-  const days = hours / 24;
-  if (days < 7) return `${Math.floor(days)}d ago`;
-  return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-}
 
 function Monogram({ name }: { name: string }) {
   return <span className={styles.monogram}>{name.charAt(0).toUpperCase() || '?'}</span>;
@@ -179,7 +168,7 @@ function Note({
           {comment.author?.is_demo ? <DemoBadge compact /> : null}
           {comment.is_creator ? <span className={styles.creatorTag}>Creator</span> : null}
           <time className={styles.when} dateTime={comment.created_at}>
-            {when(comment.created_at)}
+            {timeAgo(comment.created_at)}
           </time>
         </div>
 

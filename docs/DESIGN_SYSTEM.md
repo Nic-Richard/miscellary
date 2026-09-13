@@ -85,6 +85,37 @@ agree about where the light comes from.
 `apps/web/components/ui.module.css` defines common typography, button, panel, form, statistic,
 and ticket styles. Reusable form controls live under `apps/web/components/controls`.
 
+Three of those primitives carry the social and account surfaces:
+
+- `action` is the one control for everything a collector does to someone else's work - follow, like,
+  report. They appear together, so they are one shape with one on state (`actionOn`) rather than a
+  button designed per feature. `actionLiked` fills the heart instead of the frame, and `actionQuiet`
+  demotes the action nobody should reach for by accident.
+- `segments` switches between views of one thing you own, such as the account page's profile, binder
+  and sign-in sections. It is distinct from `FolderTabs`, which files the contents of a binder.
+- `rows` and `rowItem` lay a page of settings out as one sheet of hairline-ruled rows, each with its
+  explanation on the left and its controls on the right, rather than as a card per setting.
+
+- `search` is the one box you type into to find something, over `SearchField` on the web and
+  `FilterField` on mobile. Given a submit it asks the catalogue a question, as on the browse page;
+  without one it narrows what is already on screen, as on packs, my cards, the trade builder and the
+  binder's sleeve picker. Tags are a way into search rather than a filter menu.
+
+Content is held to a measure. `layout.module.css` caps the page beside the 208px navigation rail at
+1320px and centres it. `components/pageWide.module.css` holds the three compositions that step out
+of that measure:
+
+- `page` with `layout` is the wide three-part composition: the sets themselves small down one side
+  as a way through the page, a centre column, and a rail of what you are holding. Packs and my cards
+  are built on it.
+- `layoutPair` is the same page without sets to jump between, so one column and the rail, centred
+  rather than spread. Trades and notifications use it, and they set `--measure` alone. The grid is
+  only ever declared in `pageWide.module.css`: two modules declaring the same property on one
+  element resolve by stylesheet order, which differs between a direct load and a click through.
+- `full` runs the whole area beside the rail, for pages whose content is large objects rather than a
+  column. The homepage and a published set page use it, and nothing inside them may pull further
+  left or it disappears under the rail.
+
 `Sheet` provides the ruled page and header used for inventory-style grids. `CardGrid` provides a
 consistent responsive card layout. Empty sheets include a compact explanation and a relevant
 action so first-use states remain purposeful.
@@ -290,6 +321,25 @@ photograph recoloured by rotating its hue, so a cover costs no new artwork and t
 rings and sleeves stay put underneath. A collector can change their profile binder cover. A creator
 chooses the cover for a set's public binder before publishing, when it becomes frozen with the rest
 of the set.
+
+## Packs and notifications
+
+Packs is a vertically scrolling feed of the sets a collector follows, one substantial post each,
+attributed to the creator the way a post is. The pack itself is the hero: it leads the post at full
+size, and a free one is marked by a struck seal on the wrapper rather than by a label. Progress is a
+strip ticked once per card in the set, so a binder half full reads as sleeves rather than as a
+percentage, with the count set against it. A post offers exactly one action - open today's free pack,
+spend points on another, or the time until the next one, counted per set because availability is per
+set - and everything else, including unfollowing, sits behind an overflow menu on hover or focus.
+Packs open in place rather than sending the collector to the set page.
+
+The space either side is not held empty. The packs themselves run small down the left as a way into
+the feed, with a waiting one lit, and the right carries what a collector would otherwise have to
+count: free packs, set points, totals across the followed sets, and sets worth following.
+
+Notifications identify the person before the event: a collector's monogram carries a small struck
+badge for what they did, filled red for a like and drawn for a comment, reply or follow. Unread is a
+rule in the margin rather than a coloured block.
 
 ## Motion
 

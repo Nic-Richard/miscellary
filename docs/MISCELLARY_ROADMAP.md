@@ -417,6 +417,44 @@ Before real users upload content:
 - test portrait/landscape/extreme aspect ratios
 - ensure poor phone photos still print well on cards
 
+## Social and account layer: Complete
+
+The social layer was scoped around collecting, creators, sets, discovery and trades rather than
+around a general social network.
+
+Completed:
+
+- Added set following as the only save concept, and built Packs on it: a feed of the sets a collector
+  follows, the pack itself the hero of each post, with free-pack availability counted per set, the
+  point balance and collection progress, free packs first. Packs open in place.
+- Added discovery tags on sets and cards, editable by the creator after publication because they are
+  not part of the frozen snapshot. Search returns tags and uses them to find the sets and cards
+  carrying them, and a tag anywhere in the product runs that search.
+- Added notifications for set likes, card likes, set comments, comment replies and new followers,
+  written in the request that causes them. Nothing you do yourself notifies you, one unread row
+  stands for one actor and target, and undoing an action withdraws its unread notification.
+- Turned the account page into profile, binder and sign-in sections, with username, email
+  verification and password management, and room for subscription management later.
+- Allowed username changes on a 30-day cooldown, holding the vacated name in reserve for its owner
+  until their next change replaces it.
+- Gave followers and following real lists on profiles, using the endpoint that had none.
+- Brought mobile to parity: set following, the packs tab, notifications, the account screen, tag
+  display and editing, and the comment thread mobile had never had.
+- Unified the secondary controls (follow, like, report) into one shape with one on state, and
+  replaced the account page's binder tabs with a segmented control.
+- Gave the emptier pages a composition rather than a stretched column: a centre column with the sets
+  down one side and what you are holding down the other, held in `pageWide.module.css`. The homepage
+  and a published set page run the full width beside the rail instead, because their content is
+  large objects.
+- Made looking for something one control across the product: a search box on browse that asks the
+  catalogue, and the same box filtering in place on packs, my cards, the trade builder and the
+  binder's sleeve picker.
+- Paged the two lists that were capped: followers and following 50 a page, notifications 30, each
+  with a control that says how many are still behind it.
+
+Remaining: the narrow breakpoints on the rebuilt pages have not been checked on a real device, and
+the responsive, accessibility and performance passes below still cover these surfaces.
+
 ## Moderation / abuse UX
 
 Backend rules exist, but the public product should have complete UI flows for:
@@ -436,7 +474,7 @@ Before launch:
 - logout
 - expired session refresh
 - mobile token behavior
-- account deletion
+- account deletion (the only account-management flow still missing a UI)
 - error messages
 - production email delivery
 

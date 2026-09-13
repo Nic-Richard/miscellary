@@ -21,6 +21,8 @@ export interface CurrentUser {
   id: string;
   email: string;
   email_verified: boolean;
+  /** When the next username change is allowed. Null means now. */
+  username_change_available_at: string | null;
   profile: PublicProfile;
 }
 
@@ -170,6 +172,15 @@ export interface PackTextLayer {
   tracking: number;
 }
 
+export interface Tag {
+  slug: string;
+  label: string;
+}
+
+export interface TagSummary extends Tag {
+  set_count: number;
+}
+
 export type SetStatus = 'draft' | 'published' | 'deleted' | 'removed';
 
 export interface Creator {
@@ -194,6 +205,7 @@ export interface Card {
   printed_set_code: string;
   set_total: number;
   like_count: number;
+  tags: Tag[];
   /** Presentation cache for a published definition. Drafts return null. */
   render?: CardRenderAssets | null;
 }
@@ -230,6 +242,10 @@ export interface CardSetSummary {
   like_count: number;
   opening_count: number;
   liked: boolean;
+  /** Following a set is what puts it on the viewer's packs page. */
+  following: boolean;
+  follower_count: number;
+  tags: Tag[];
   render_back?: CardBackRender | null;
   render_pack?: PackRender | null;
   created_at: string;
@@ -334,6 +350,52 @@ export interface ProfilePage extends PublicProfile {
   sets: CardSetSummary[];
 }
 
+export interface PackEntry {
+  card_set: CardSetSummary;
+  free_available: boolean;
+  resets_at: string;
+  points: number;
+  pack_cost: number;
+  /** Distinct cards held from this set, against its total. */
+  owned_count: number;
+  card_count: number;
+  /** Spare copies: what can be recycled or traded away. */
+  duplicate_count: number;
+  /** The newest distinct pulls from this set, newest first. */
+  recent_cards: Card[];
+  followed_at: string;
+}
+
+export interface PacksPage {
+  results: PackEntry[];
+  free_count: number;
+}
+
+export type NotificationKind =
+  'set_like' | 'card_like' | 'set_comment' | 'comment_reply' | 'follow';
+
+export interface Notification {
+  id: string;
+  kind: NotificationKind;
+  actor: Creator;
+  set_slug: string | null;
+  set_title: string | null;
+  card_title: string | null;
+  /** Empty when the comment has since been removed. */
+  comment_body: string;
+  /** The baked face of the card this is about, when it is about one. */
+  card_image: string | null;
+  /** The set's baked wrapper for set notifications. */
+  set_pack_image: string | null;
+  read: boolean;
+  created_at: string;
+}
+
+export interface NotificationList extends Paginated<Notification> {
+  /** Across every notification, not just this page. */
+  unread: number;
+}
+
 export interface Comment {
   id: string;
   /** Null once the comment has been removed; the row stays to hold its replies. */
@@ -359,4 +421,5 @@ export interface SearchResults {
   users: Creator[];
   sets: CardSetSummary[];
   cards: (Card & { set_slug: string; set_title: string })[];
+  tags: TagSummary[];
 }

@@ -31,6 +31,22 @@ class Follow(models.Model):
         return f"{self.follower} follows {self.following}"
 
 
+class SetFollow(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="set_follows"
+    )
+    card_set = models.ForeignKey(CardSet, on_delete=models.CASCADE, related_name="set_followers")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        constraints = [models.UniqueConstraint(fields=["user", "card_set"], name="follow_set_once")]
+        indexes = [models.Index(fields=["user", "created_at"])]
+
+    def __str__(self) -> str:
+        return f"{self.user} follows {self.card_set}"
+
+
 class Reaction(models.Model):
     """A like on a set or a card. Exactly one target is set."""
 
@@ -154,3 +170,53 @@ class Report(models.Model):
 
     def __str__(self) -> str:
         return f"{self.reason} report by {self.reporter}"
+
+
+class Notification(models.Model):
+    """Something another collector did to your work, or to you.
+
+    Kinds are limited to the five things worth interrupting someone for. A set
+    being published or a pack resetting is not one of them: those belong on the
+    packs page, which is read when the collector chooses to look.
+    """
+
+    class Kind(models.TextChoices):
+        SET_LIKE = "set_like", "Liked a set"
+        CARD_LIKE = "card_like", "Liked a card"
+        SET_COMMENT = "set_comment", "Commented on a set"
+        COMMENT_REPLY = "comment_reply", "Replied to a comment"
+        FOLLOW = "follow", "Followed you"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    recipient = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="notifications"
+    )
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="+")
+    kind = models.CharField(max_length=20, choices=Kind.choices)
+    card_set = models.ForeignKey(
+        CardSet, null=True, blank=True, on_delete=models.CASCADE, related_name="+"
+    )
+    card = models.ForeignKey(
+        CardDefinition, null=True, blank=True, on_delete=models.CASCADE, related_name="+"
+    )
+    comment = models.ForeignKey(
+        Comment, null=True, blank=True, on_delete=models.CASCADE, related_name="+"
+    )
+    read_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        indexes = [models.Index(fields=["recipient", "read_at", "created_at"])]
+        constraints = [
+            # Follows have no target, so null targets must compare equal here.
+            models.UniqueConstraint(
+                fields=["recipient", "actor", "kind", "card_set", "card", "comment"],
+                condition=models.Q(read_at__isnull=True),
+                nulls_distinct=False,
+                name="one_unread_notification_per_target",
+            )
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.actor} {self.kind} -> {self.recipient}"

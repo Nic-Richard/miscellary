@@ -113,6 +113,7 @@ REST_FRAMEWORK = {
         "auth.login": "10/min",
         "auth.register": "5/min",
         "auth.email": "5/min",
+        "auth.username": "5/hour",
         "uploads": "60/min",
         "packs": "30/min",
         "reports": "10/hour",

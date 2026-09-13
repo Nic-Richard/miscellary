@@ -11,6 +11,7 @@ import { SceneLight, slotLight } from '@/lib/lighting';
 import { getPublicSet, listPublicSets } from '@/lib/sets';
 import tileStyles from '@/components/SetTile.module.css';
 import ui from '@/components/ui.module.css';
+import wide from '@/components/pageWide.module.css';
 import styles from './page.module.css';
 
 interface Pick {
@@ -81,7 +82,7 @@ export default function HomePage() {
   const packRow = sets.slice(0, PACK_ROW);
 
   return (
-    <div className={styles.page}>
+    <div className={`${wide.full} ${styles.page}`}>
       <section className={styles.hero}>
         <div className={styles.copy}>
           <h1 className={styles.title}>Turn collections into trading cards.</h1>

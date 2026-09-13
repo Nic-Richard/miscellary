@@ -30,7 +30,7 @@ export default function SearchScreen() {
     >
       <Title>{`“${results.query}”`}</Title>
       {empty ? <Muted>No matches.</Muted> : null}
-      {results.users.length ? <Text style={styles.h2}>People</Text> : null}
+      {results.users.length ? <Text style={styles.h2}>Users</Text> : null}
       {results.users.map((u) => (
         <Link
           key={u.username}

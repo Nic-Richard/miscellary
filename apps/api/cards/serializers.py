@@ -8,7 +8,7 @@ from uploads.serializers import ImageSerializer
 from . import packlayers, packtext, templates
 from .identity import set_code_problems, suggest_set_code
 from .markdown import ISSUE_MESSAGES, description_issues
-from .models import CardDefinition, CardSet
+from .models import CardDefinition, CardSet, Tag
 from .rarity import RARITIES
 from .rendering import (
     CARD_RENDERER_VERSION,
@@ -21,6 +21,22 @@ from .rendering import (
     pack_render_signature,
     render_url,
 )
+from .tags import CARD_TAG_MAX, SET_TAG_MAX, TAG_LABEL_MAX
+
+
+class TagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tag
+        fields = ["slug", "label"]
+        read_only_fields = fields
+
+
+class TagWriteSerializer(serializers.Serializer):
+    tags = serializers.ListField(
+        child=serializers.CharField(max_length=TAG_LABEL_MAX, allow_blank=True),
+        allow_empty=True,
+        max_length=max(SET_TAG_MAX, CARD_TAG_MAX) + 1,
+    )
 
 
 class CreatorSerializer(serializers.Serializer):
@@ -34,7 +50,11 @@ class CardSerializer(serializers.ModelSerializer):
     image = ImageSerializer(read_only=True)
     like_count = serializers.IntegerField(read_only=True, default=0)
     printed_set_code = serializers.CharField(source="card_set.printed_code", read_only=True)
+    tags = serializers.SerializerMethodField()
     render = serializers.SerializerMethodField()
+
+    def get_tags(self, obj: CardDefinition):
+        return [{"slug": t.tag.slug, "label": t.tag.label} for t in obj.card_tags.all()]
 
     def get_render(self, obj: CardDefinition):
         if obj.card_set.status == CardSet.Status.DRAFT:
@@ -94,6 +114,7 @@ class CardSerializer(serializers.ModelSerializer):
             "printed_set_code",
             "set_total",
             "like_count",
+            "tags",
             "render",
         ]
         read_only_fields = fields
@@ -188,7 +209,14 @@ class CardSetSerializer(serializers.ModelSerializer):
     like_count = serializers.IntegerField(read_only=True, default=0)
     opening_count = serializers.IntegerField(read_only=True, default=0)
     liked = serializers.BooleanField(read_only=True, default=False)
+    following = serializers.BooleanField(read_only=True, default=False)
+    follower_count = serializers.IntegerField(read_only=True, default=0)
+    tags = serializers.SerializerMethodField()
     suggested_set_code = serializers.SerializerMethodField()
+
+    def get_tags(self, obj: CardSet):
+        return [{"slug": t.tag.slug, "label": t.tag.label} for t in obj.set_tags.all()]
+
     printed_set_code = serializers.SerializerMethodField()
     render_back = serializers.SerializerMethodField()
     render_pack = serializers.SerializerMethodField()
@@ -294,6 +322,9 @@ class CardSetSerializer(serializers.ModelSerializer):
             "like_count",
             "opening_count",
             "liked",
+            "following",
+            "follower_count",
+            "tags",
             "render_back",
             "render_pack",
             "created_at",

@@ -109,6 +109,18 @@ SET_MARKS = [
     "pine",
     "snowflake",
     "sprout",
+    "coin",
+    "stamp",
+    "ticket",
+    "bottle",
+    "camera",
+    "spool",
+    "bell",
+    "egg",
+    "paw",
+    "clover",
+    "medal",
+    "pin",
 ]
 MARK_CHOICES = [(m, m.title()) for m in SET_MARKS] + [("none", "No mark")]
 

@@ -14,3 +14,21 @@
 .sheet {
   margin-top: 20px;
 }
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+}
+
+.search {
+  min-width: 330px;
+}
+
+@media (max-width: 700px) {
+  .search {
+    min-width: 0;
+    flex: 1;
+  }
+}

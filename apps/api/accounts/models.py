@@ -12,6 +12,8 @@ USERNAME_VALIDATOR = RegexValidator(
     "Usernames are 3-20 characters of lowercase letters, numbers, and underscores.",
 )
 
+USERNAME_COOLDOWN_DAYS = 30
+
 
 class UserManager(BaseUserManager["User"]):
     def create_user(self, email: str, username: str, password: str, **extra) -> "User":
@@ -40,6 +42,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_demo = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
+    username_changed_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     objects = UserManager()
@@ -69,3 +72,29 @@ class Profile(models.Model):
     @property
     def avatar_url(self) -> str | None:
         return None
+
+
+class ReservedUsername(models.Model):
+    """The name a collector last went by.
+
+    A changed username is not returned to the pool straight away: profile links
+    carry usernames, so releasing one immediately would let somebody else stand
+    where an old link points. The reservation is released by the owner's next
+    change, which replaces it, so each account holds exactly one former name.
+    """
+
+    username = models.CharField(max_length=20, unique=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="reserved_usernames")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self) -> str:
+        return f"{self.username} (was {self.user})"
+
+
+def username_taken(username: str, by_other_than: User | None = None) -> bool:
+    users = User.objects.filter(username=username)
+    reserved = ReservedUsername.objects.filter(username=username)
+    if by_other_than is not None:
+        users = users.exclude(pk=by_other_than.pk)
+        reserved = reserved.exclude(user=by_other_than)
+    return users.exists() or reserved.exists()

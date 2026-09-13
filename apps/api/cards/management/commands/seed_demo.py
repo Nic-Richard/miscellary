@@ -10,6 +10,7 @@ import json
 import random
 import re
 import struct
+import sys
 import time
 import urllib.error
 import urllib.parse
@@ -22,6 +23,7 @@ from typing import Any, cast
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
+from django.utils import timezone
 
 from accounts.models import User
 from cards.identity import ART_SCALE_MAX, BINDER_COLOURS
@@ -30,10 +32,20 @@ from cards.models import CardDefinition, CardSet
 from cards.packlayers import DEFAULTS as PACK_LAYER_DEFAULTS
 from cards.packtext import DEFAULTS as PACK_TEXT_DEFAULTS
 from cards.publishing import publish_set
+from cards.tags import CARD_TAG_MAX, SET_TAG_MAX
 from cards.templates import TEMPLATES_BY_KEY, config_problems, default_config, template_problems
+from cards.views import apply_tags
 from packs.actions import open_free_pack
 from packs.models import OwnedCard
-from social.models import SHOWCASE_SLOTS, Comment, Follow, Reaction, ShowcaseSlot
+from social.models import (
+    SHOWCASE_SLOTS,
+    Comment,
+    Follow,
+    Notification,
+    Reaction,
+    SetFollow,
+    ShowcaseSlot,
+)
 from trades.models import TradeOffer, TradeOfferItem
 from uploads import storage
 from uploads.models import Image
@@ -2447,6 +2459,11 @@ class Command(BaseCommand):
             action="store_true",
             help="Skip photo downloads and use gradient placeholders.",
         )
+        parser.add_argument(
+            "--yes",
+            action="store_true",
+            help="Skip the confirmation prompt. Required when stdin is not a terminal.",
+        )
 
     def handle(self, *args, **options):
         random.seed(20260909)
@@ -2473,6 +2490,7 @@ class Command(BaseCommand):
             return
 
         demo_users = User.objects.filter(email__in=DEMO_EMAILS)
+        self._confirm(demo_users, options["yes"])
         OwnedCard.objects.filter(owner__in=demo_users).delete()
         CardSet.objects.filter(creator__in=demo_users).delete()
         Image.objects.filter(owner__in=demo_users).delete()
@@ -3010,6 +3028,9 @@ class Command(BaseCommand):
         self._add_follows(everyone)
         self._make_showcases(everyone)
         self._add_comments(everyone, published)
+        self._add_tags(published)
+        self._follow_sets(everyone, published)
+        self._add_notifications([fieldnote, waverly, mabel])
         self._make_trades(fieldnote, mabel, extras)
 
         self.stdout.write(
@@ -3027,6 +3048,47 @@ class Command(BaseCommand):
             self.stdout.write(f"  /sets/{cs.slug}")
         self.stdout.write(f"  /users/{mabel.username}")
         self.stdout.write(f"  /studio/{draft.id}  (draft editor)")
+        self.stdout.write(
+            self.style.WARNING(
+                "\nEvery published card is unbaked: new card rows mean new render signatures, so "
+                "the previous renders no longer apply and published cards will not display.\n"
+                "Bake and import them, or use `pnpm reseed`, which runs the whole sequence."
+            )
+        )
+
+    def _confirm(self, demo_users, assume_yes: bool) -> None:
+        """Say what is about to be destroyed, and make someone agree to it.
+
+        Reseeding also strands every baked render: the new card rows carry new
+        ids and new images, so nothing that was baked for the old ones can be
+        matched to them again.
+        """
+        counts = {
+            "demo collectors": demo_users.count(),
+            "their sets": CardSet.objects.filter(creator__in=demo_users).count(),
+            "their cards": CardDefinition.objects.filter(card_set__creator__in=demo_users).count(),
+            "their collected copies": OwnedCard.objects.filter(owner__in=demo_users).count(),
+            "their uploaded images": Image.objects.filter(owner__in=demo_users).count(),
+        }
+        if not any(counts.values()):
+            return
+
+        self.stdout.write(self.style.WARNING("This deletes and recreates the demo catalogue."))
+        for label, count in counts.items():
+            self.stdout.write(f"  {count:>5}  {label}")
+        self.stdout.write(
+            "  Every baked card and pack render is stranded; published cards stop displaying\n"
+            "  until they are baked again. Accounts that are not demo accounts are untouched."
+        )
+        if assume_yes:
+            self.stdout.write("Continuing (--yes).")
+            return
+        if not sys.stdin.isatty():
+            raise CommandError(
+                "Refusing to reseed without confirmation. Re-run with --yes to continue."
+            )
+        if input('Type "reseed" to continue: ').strip() != "reseed":
+            raise CommandError("Left the database alone.")
 
     COLLECTORS = [
         ("orla", "Orla Finch", "Garden birds, mostly from the kitchen window."),
@@ -3247,6 +3309,83 @@ class Command(BaseCommand):
                         parent=top,
                         body=random.choice(creator_replies if creator else replies),
                     )
+
+    SET_TAGS = {
+        "Plants Along the Trail": ["plants", "wildflowers", "botany", "trail"],
+        "Pocket Geology": ["rocks", "minerals", "geology"],
+        "Records on My Shelf": ["records", "vinyl", "music"],
+        "Garden Birds": ["birds", "garden", "wildlife"],
+        "Film Cameras": ["cameras", "film", "objects"],
+        "Planets and Moons": ["space", "astronomy", "night sky"],
+        "Woodland Fungi": ["fungi", "woodland", "macro"],
+    }
+
+    def _add_tags(self, sets) -> None:
+        """Tag the published sets, and a few of their cards, so discovery by
+        subject has something behind it."""
+        for card_set in sets:
+            labels = self.SET_TAGS.get(card_set.title)
+            if not labels:
+                labels = [w for w in card_set.title.lower().split() if len(w) > 3][:3]
+            apply_tags(card_set, labels, SET_TAG_MAX)
+            cards = list(card_set.cards.all())
+            for card in random.sample(cards, k=min(len(cards), max(1, len(cards) // 3))):
+                subject = [w for w in card.title.split() if len(w) > 3][:2]
+                if subject:
+                    apply_tags(card, [*subject, card.rarity], CARD_TAG_MAX)
+
+    def _follow_sets(self, users, sets) -> None:
+        """Most collectors keep a few sets on their packs page, not all of them."""
+        follows = []
+        for user in users:
+            for card_set in sets:
+                if card_set.creator_id == user.id:
+                    continue
+                if random.random() < 0.45:
+                    follows.append(SetFollow(user=user, card_set=card_set))
+        SetFollow.objects.bulk_create(follows, ignore_conflicts=True)
+
+    def _add_notifications(self, recipients) -> None:
+        """Notifications generated from seeded likes, comments and follows."""
+        rows: list[Notification] = []
+        for user in recipients:
+            liked = Reaction.objects.filter(card_set__creator=user).exclude(user=user)
+            for reaction in liked.select_related("card_set")[:4]:
+                rows.append(
+                    Notification(
+                        recipient=user,
+                        actor_id=reaction.user_id,
+                        kind=Notification.Kind.SET_LIKE,
+                        card_set=reaction.card_set,
+                    )
+                )
+            commented = Comment.objects.filter(card_set__creator=user, parent__isnull=True).exclude(
+                author=user
+            )
+            for comment in commented.select_related("card_set")[:3]:
+                rows.append(
+                    Notification(
+                        recipient=user,
+                        actor_id=comment.author_id,
+                        kind=Notification.Kind.SET_COMMENT,
+                        card_set=comment.card_set,
+                        comment=comment,
+                    )
+                )
+            for follow in Follow.objects.filter(following=user)[:3]:
+                rows.append(
+                    Notification(
+                        recipient=user, actor_id=follow.follower_id, kind=Notification.Kind.FOLLOW
+                    )
+                )
+        Notification.objects.bulk_create(rows)
+        for user in recipients:
+            keep = list(
+                Notification.objects.filter(recipient=user).values_list("id", flat=True)[:2]
+            )
+            Notification.objects.filter(recipient=user).exclude(id__in=keep).update(
+                read_at=timezone.now()
+            )
 
     def _make_trades(self, fieldnote, mabel, extras) -> None:
         """Offers in every state the inbox, outbox and history can show.

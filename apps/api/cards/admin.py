@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import CardDefinition, CardSet
+from .models import CardDefinition, CardSet, Tag
 from .removal import remove_set
 
 
@@ -24,3 +24,9 @@ class CardSetAdmin(admin.ModelAdmin):
     def remove_for_violation(self, request, queryset):
         wiped = sum(remove_set(s) for s in queryset.exclude(status=CardSet.Status.REMOVED))
         self.message_user(request, f"Removed {queryset.count()} set(s), wiped {wiped} copies.")
+
+
+@admin.register(Tag)
+class TagAdmin(admin.ModelAdmin):
+    list_display = ["slug", "label", "created_at"]
+    search_fields = ["slug", "label"]

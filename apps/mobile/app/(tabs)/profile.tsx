@@ -1,9 +1,10 @@
 import { cardCode, SHOWCASE_SLOTS } from '@miscellary/shared';
 import type { OwnedCard, ProfilePage } from '@miscellary/shared';
-import { useFocusEffect } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import CardPreview from '@/components/CardPreview';
+import FilterField from '@/components/FilterField';
 import LoginGate from '@/components/LoginGate';
 import ProfileView from '@/components/ProfileView';
 import SharedSurface from '@/components/SharedSurface';
@@ -21,6 +22,7 @@ function Me() {
   const [cards, setCards] = useState<OwnedCard[]>([]);
   const [slots, setSlots] = useState<(string | null)[]>(Array(SHOWCASE_SLOTS).fill(null));
   const [picking, setPicking] = useState<number | null>(null);
+  const [pickFilter, setPickFilter] = useState('');
   const [error, setError] = useState<string | null>(null);
   const pickerScrollRef = useRef<ScrollView>(null);
 
@@ -81,6 +83,16 @@ function Me() {
     ...cards.map((card) => [card.id, card] as const),
   ]);
   const showcase = slots.map((id) => (id ? byId.get(id) : undefined));
+
+  const pickNeedle = pickFilter.trim().toLowerCase();
+  const choosable = cards
+    .filter((c) => !slots.includes(c.id))
+    .filter(
+      (c) =>
+        !pickNeedle ||
+        c.card.title.toLowerCase().includes(pickNeedle) ||
+        c.set_title.toLowerCase().includes(pickNeedle),
+    );
 
   if (editing)
     return (
@@ -157,29 +169,38 @@ function Me() {
               ) : null}
               <Button title="Cancel" kind="secondary" onPress={() => setPicking(null)} />
             </View>
+            <FilterField
+              value={pickFilter}
+              onChange={setPickFilter}
+              placeholder="Filter by card or set"
+              label="Filter your cards by card or set"
+            />
+            {choosable.length === 0 ? (
+              <Muted>
+                {pickFilter.trim()
+                  ? `None of your cards match “${pickFilter}”.`
+                  : 'Every card you hold is already pinned.'}
+              </Muted>
+            ) : null}
             <View style={styles.grid}>
-              {cards
-                .filter((c) => !slots.includes(c.id))
-                .map((c) => (
-                  <Pressable
-                    key={c.id}
-                    onPress={() =>
-                      void persistSlots(slots.map((s, i) => (i === picking ? c.id : s)))
-                    }
-                  >
-                    <CardPreview
-                      width={140}
-                      title={c.card.title}
-                      printedText={c.card.printed_text}
-                      code={cardCode(c.card.printed_set_code, c.card.position, c.card.set_total)}
-                      rarity={c.card.rarity}
-                      imageUrl={c.card.image.url}
-                      templateKey={c.card.template_key}
-                      templateConfig={c.card.template_config}
-                      render={c.card.render}
-                    />
-                  </Pressable>
-                ))}
+              {choosable.map((c) => (
+                <Pressable
+                  key={c.id}
+                  onPress={() => void persistSlots(slots.map((s, i) => (i === picking ? c.id : s)))}
+                >
+                  <CardPreview
+                    width={140}
+                    title={c.card.title}
+                    printedText={c.card.printed_text}
+                    code={cardCode(c.card.printed_set_code, c.card.position, c.card.set_total)}
+                    rarity={c.card.rarity}
+                    imageUrl={c.card.image.url}
+                    templateKey={c.card.template_key}
+                    templateConfig={c.card.template_config}
+                    render={c.card.render}
+                  />
+                </Pressable>
+              ))}
             </View>
           </ScrollView>
         </Modal>
@@ -193,6 +214,12 @@ function Me() {
       headerExtra={
         <>
           <Button title="Edit profile" kind="secondary" onPress={() => setEditing(true)} />
+          <Button
+            title="Notifications"
+            kind="secondary"
+            onPress={() => router.push('/notifications')}
+          />
+          <Button title="Account" kind="secondary" onPress={() => router.push('/settings')} />
           <Button title="Log out" kind="secondary" onPress={() => void logout()} />
         </>
       }

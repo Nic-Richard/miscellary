@@ -6,6 +6,8 @@ import * as FileSystem from 'expo-file-system';
 import type { CreateUploadResponse, ImageKind, ImageRef } from '@miscellary/shared';
 import { apiFetch } from '@/lib/api';
 import { pickAndUpload } from '@/lib/upload';
+import type { PhotoSource } from '@/lib/upload';
+import ChoiceSheet from './ChoiceSheet';
 import { ErrorText } from './ui';
 import bundle from '../generated/surfaces.json';
 
@@ -33,6 +35,22 @@ export default function SharedSurface({
   const ready = useRef(false);
   const [measuredHeight, setMeasuredHeight] = useState(500);
   const [error, setError] = useState('');
+  // The editor asks for a photo from inside the web view, so the question is
+  // held open here until the sheet answers it.
+  const [asking, setAsking] = useState(false);
+  const answer = useRef<((source: PhotoSource | null) => void) | null>(null);
+
+  function askSource(): Promise<PhotoSource | null> {
+    return new Promise((resolve) => {
+      answer.current = resolve;
+      setAsking(true);
+    });
+  }
+  function reply(source: PhotoSource | null) {
+    setAsking(false);
+    answer.current?.(source);
+    answer.current = null;
+  }
   const props = useRef({ mode, data });
   props.current = { mode, data };
   function render() {
@@ -138,7 +156,7 @@ export default function SharedSurface({
                   const { kind, aspect } = message.data ?? {};
                   if (!['card', 'cover', 'avatar', 'pack'].includes(kind))
                     throw new Error('Unsupported image.');
-                  result = await pickAndUpload(kind, Number(aspect));
+                  result = await pickAndUpload(kind, Number(aspect), askSource);
                 } else {
                   const input = message.data;
                   const context = data as { setId?: string; set?: { id: string } };
@@ -165,6 +183,26 @@ export default function SharedSurface({
             onEvent?.(message.type, message.data);
           })().catch(() => setError('Could not load this view. Please reopen it.'));
         }}
+      />
+      <ChoiceSheet
+        visible={asking}
+        title="Add a photo"
+        choices={[
+          {
+            value: 'camera',
+            label: 'Take a photo',
+            note: 'Frame the thing in front of you',
+            icon: 'camera',
+          },
+          {
+            value: 'library',
+            label: 'Choose from library',
+            note: 'Pick one you already have',
+            icon: 'image',
+          },
+        ]}
+        onChoose={reply}
+        onClose={() => reply(null)}
       />
     </View>
   );

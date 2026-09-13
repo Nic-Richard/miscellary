@@ -122,3 +122,21 @@
     font-size: 13px;
   }
 }
+
+.statButton {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.statButton:hover b,
+.statButton[aria-expanded='true'] b {
+  color: var(--accent-deep);
+}
+.statButton:hover svg,
+.statButton[aria-expanded='true'] svg {
+  stroke: var(--accent);
+}

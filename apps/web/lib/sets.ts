@@ -5,12 +5,18 @@ import type {
   CardTemplate,
   CardWrite,
   Paginated,
+  Tag,
+  TagSummary,
 } from '@miscellary/shared';
 import { apiFetch } from './api';
 import type { PackLayer, PackTextLayer } from './setIdentity';
 
 export const listPublicSets = (sort: 'new' | 'popular' = 'new') =>
   apiFetch<Paginated<CardSetSummary>>(`/api/v1/sets/?sort=${sort}`);
+export const listTags = (q?: string) =>
+  apiFetch<TagSummary[]>(`/api/v1/tags/${q ? `?q=${encodeURIComponent(q)}` : ''}`, {
+    auth: false,
+  });
 export const getPublicSet = (slug: string) => apiFetch<CardSetDetail>(`/api/v1/sets/${slug}/`);
 export const listTemplates = () => apiFetch<CardTemplate[]>('/api/v1/templates/', { auth: false });
 
@@ -61,3 +67,13 @@ export const reorderCards = (setId: string, cardIds: string[]) =>
   });
 export const deleteCard = (setId: string, cardId: string) =>
   apiFetch<void>(`/api/v1/me/sets/${setId}/cards/${cardId}/`, { method: 'DELETE' });
+
+// Tags stay editable after publication, so these are separate from the set and
+// card writes that a published set refuses.
+export const saveSetTags = (setId: string, tags: string[]) =>
+  apiFetch<Tag[]>(`/api/v1/me/sets/${setId}/tags/`, { method: 'PUT', body: { tags } });
+export const saveCardTags = (setId: string, cardId: string, tags: string[]) =>
+  apiFetch<Tag[]>(`/api/v1/me/sets/${setId}/cards/${cardId}/tags/`, {
+    method: 'PUT',
+    body: { tags },
+  });

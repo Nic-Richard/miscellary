@@ -2,17 +2,31 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 10px;
+  padding: 5px 9px;
   background: none;
   border: 1px solid transparent;
   border-radius: 5px;
-  color: #5e5346;
-  font-size: 14px;
-  letter-spacing: 0.04em;
+  color: #7a6f60;
+  font-size: 13px;
+  line-height: 1;
+  text-decoration: none;
   cursor: pointer;
   transition:
     color var(--dur-fast),
-    border-color var(--dur-fast);
+    border-color var(--dur-fast),
+    background var(--dur-fast);
+}
+.root svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+}
+.root b {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 .root:hover:not(:disabled) {
   border-color: var(--bdr2);
@@ -22,6 +36,30 @@
   cursor: default;
   opacity: 0.7;
 }
+
 .on {
   color: var(--danger);
+}
+.on svg {
+  fill: currentColor;
+  stroke: none;
+  animation: fill var(--dur-med) var(--ease-out);
+}
+
+@keyframes fill {
+  from {
+    transform: scale(0.72);
+  }
+  60% {
+    transform: scale(1.14);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .on svg {
+    animation: none;
+  }
 }

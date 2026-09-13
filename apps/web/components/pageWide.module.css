@@ -1,0 +1,217 @@
+.page {
+  --wide: min(1500px, calc(100vw - 268px));
+  position: relative;
+  width: var(--wide);
+  margin-inline: calc(50% - var(--wide) / 2);
+  padding-bottom: 60px;
+}
+
+.lamp {
+  position: absolute;
+  left: -14%;
+  top: -220px;
+  width: 90%;
+  height: 640px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(39, 139, 130, 0.13), transparent 62%);
+  pointer-events: none;
+}
+
+.header {
+  position: relative;
+  margin: 0 0 28px;
+}
+
+.layout {
+  position: relative;
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr) 296px;
+  align-items: start;
+  gap: 34px;
+}
+
+.jump {
+  position: sticky;
+  top: 26px;
+  display: grid;
+  gap: 14px;
+  padding-top: 4px;
+}
+.jumpPack {
+  position: relative;
+  display: block;
+  border-radius: 7px;
+  overflow: hidden;
+  box-shadow:
+    inset 0 0 0 1px rgba(41, 30, 14, 0.16),
+    0 2px 6px rgba(52, 38, 18, 0.2);
+  opacity: 0.62;
+  transition:
+    opacity var(--dur-fast),
+    transform var(--dur-fast);
+}
+.jumpPack:hover {
+  opacity: 1;
+  transform: translateX(3px);
+}
+.jumpReady {
+  opacity: 1;
+  box-shadow:
+    inset 0 0 0 1px rgba(30, 110, 103, 0.5),
+    0 0 0 2px rgba(39, 139, 130, 0.28),
+    0 3px 8px rgba(52, 38, 18, 0.24);
+}
+
+.rail {
+  position: sticky;
+  top: 26px;
+  display: grid;
+  gap: 14px;
+}
+.railPanel {
+  padding: 18px 20px 20px;
+}
+.railNote {
+  margin: 12px 0 0;
+  color: var(--faint);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.railLink {
+  display: inline-block;
+  margin-top: 12px;
+  color: var(--accent);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+.railLink:hover {
+  text-decoration: underline;
+}
+
+.summary {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.summary li {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.summary b {
+  min-width: 2ch;
+  color: #3a2f26;
+  font: 400 26px / 1 var(--display);
+  font-variant-numeric: tabular-nums;
+}
+.summary span {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.pointsList {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pointsList li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--bdr);
+}
+.pointsList li:last-child {
+  border-bottom: 0;
+}
+.pointsList a {
+  overflow: hidden;
+  color: #4b4238;
+  font-size: 13px;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pointsList a:hover {
+  color: var(--accent-deep);
+}
+.pointsList span {
+  color: var(--faint);
+  font: 400 18px / 1 var(--display);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 1400px) {
+  .layout {
+    grid-template-columns: 92px minmax(0, 1fr) 270px;
+    gap: 26px;
+  }
+}
+@media (max-width: 1180px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr) 260px;
+    gap: 24px;
+  }
+  .jump {
+    display: none;
+  }
+}
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .rail {
+    position: static;
+  }
+}
+@media (max-width: 860px) {
+  .page {
+    --wide: 100%;
+    margin-inline: 0;
+  }
+}
+
+/* Keep the pair grid here so CSS module load order cannot change its layout. */
+.layoutPair {
+  grid-template-columns: minmax(0, var(--measure, 720px)) 296px;
+  justify-content: center;
+}
+@media (max-width: 1400px) {
+  .layoutPair {
+    grid-template-columns: minmax(0, var(--measure, 720px)) 270px;
+    gap: 26px;
+  }
+}
+@media (max-width: 1180px) {
+  .layoutPair {
+    grid-template-columns: minmax(0, var(--measure, 720px)) 260px;
+    gap: 24px;
+  }
+}
+@media (max-width: 900px) {
+  .layoutPair {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.full {
+  --wide: calc(100vw - 268px);
+  position: relative;
+  width: var(--wide);
+  margin-inline: calc(50% - var(--wide) / 2);
+}
+
+@media (max-width: 860px) {
+  .full {
+    --wide: 100%;
+    margin-inline: 0;
+  }
+}

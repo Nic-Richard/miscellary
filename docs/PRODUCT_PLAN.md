@@ -137,11 +137,64 @@ The daily free-pack rule is also enforced by a database constraint.
 
 Profiles include identity, biography, created sets, collection counts, follows, and a public personal
 binder with up to 40 owned cards chosen by the collector. Public discovery includes people, sets, and
-cards. Users can follow profiles, like sets and cards, comment on sets, and report public content or
-behavior.
+cards. Users can follow profiles, follow sets, like sets and cards, comment on sets, and report public
+content or behavior.
+
+The social layer serves collecting, creators, sets, discovery, and trades. It is deliberately not a
+general social network: there is no global activity feed, no direct messaging, and no commenting on
+profiles.
 
 Comments support replies. Authors and set creators can remove comments, while comments with
 replies remain as tombstones so conversations retain their structure.
+
+### Following a set
+
+Following a set is the only save concept. There is no separate favourite or bookmark: following is
+what puts a set on the collector's packs page, where its free pack, its point balance and their
+collection progress are shown together. Liking is a separate, lighter signal of appreciation that
+feeds popularity sorting, and it does not subscribe anyone to anything.
+
+The packs page prioritises what a collector can act on. Sets with a free pack waiting come first,
+then ones they have enough points to buy another from, then the most recently followed. It carries
+availability and progress rather than an activity stream.
+
+### Tags
+
+Sets and cards carry discovery tags: up to eight on a set and five on a card. A tag is identified by
+its slug, so spelling and casing cannot split one subject across several tags, and the first label
+written is the one displayed.
+
+Tags are not part of the frozen published snapshot. They describe where a set should be found rather
+than what it looks like, so a creator can correct or extend them after publishing.
+
+A tag is a way into search rather than a filter control. Searching a tag returns the tag itself and
+also the sets and cards carrying it, so tapping a tag anywhere in the product runs that search. The
+browse page offers a search box rather than a subject menu.
+
+### Notifications
+
+Notifications cover five things: someone liking your set, liking one of your cards, commenting on
+your set, replying to your comment, and following you. Nothing else is worth interrupting someone
+for; a set being published or a pack resetting belongs on the packs page, which is read when the
+collector chooses to look.
+
+Nothing a person does themselves ever notifies them. One unread notification stands for one actor
+doing one thing to one target, so a like toggled repeatedly cannot stack up, and undoing something
+withdraws the unread notification it created. That rule is a database constraint rather than a
+check in code, and a like that was already given notifies nobody, so no amount of repeating a
+request can refill somebody's list. Notifications are written in the request that causes them;
+there is no background worker and no email or push delivery.
+
+## Accounts
+
+A collector manages their own profile, their public binder, and how they sign in from one account
+page. Email and password management live there alongside the profile, with room for subscription and
+payment management later.
+
+Usernames can be changed, at most once every 30 days. A changed username is not returned to the pool
+immediately: profile links carry usernames, so the vacated name stays reserved for the account that
+left it until its next change replaces the reservation. Each account therefore holds exactly one
+former name.
 
 ## Deletion and moderation
 

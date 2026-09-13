@@ -2,9 +2,10 @@ import { SHOWCASE_SLOTS } from '@miscellary/shared';
 import type { OwnedCard, ProfilePage } from '@miscellary/shared';
 import { Link, router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Alert, Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useAuth } from '@/lib/auth';
 import { sendReport, setFollow } from '@/lib/endpoints';
+import PeopleList from './PeopleList';
 import { colors } from '@/lib/theme';
 import CardInspector from './CardInspector';
 import DemoBadge from './DemoBadge';
@@ -21,6 +22,7 @@ export default function ProfileView({
   const { user } = useAuth();
   const [profile, setProfile] = useState(initial);
   const [selected, setSelected] = useState<OwnedCard | null>(null);
+  const [people, setPeople] = useState<'followers' | 'following' | null>(null);
   const showcase = useMemo(
     () =>
       Array.from(
@@ -74,10 +76,33 @@ export default function ProfileView({
         </View>
       </View>
       {profile.bio ? <Muted>{profile.bio}</Muted> : null}
-      <Muted style={{ fontSize: 13 }}>
-        {profile.follower_count} followers · {profile.following_count} following ·{' '}
-        {profile.set_count} sets · {profile.card_count} cards
-      </Muted>
+      <View style={styles.counts}>
+        <Pressable
+          accessibilityRole="button"
+          hitSlop={6}
+          onPress={() => setPeople(people === 'followers' ? null : 'followers')}
+        >
+          <Text style={styles.countLink}>{profile.follower_count} followers</Text>
+        </Pressable>
+        <Muted style={styles.count}>·</Muted>
+        <Pressable
+          accessibilityRole="button"
+          hitSlop={6}
+          onPress={() => setPeople(people === 'following' ? null : 'following')}
+        >
+          <Text style={styles.countLink}>{profile.following_count} following</Text>
+        </Pressable>
+        <Muted style={styles.count}>
+          · {profile.set_count} sets · {profile.card_count} cards
+        </Muted>
+      </View>
+      {people ? (
+        <PeopleList
+          username={profile.username}
+          direction={people}
+          onClose={() => setPeople(null)}
+        />
+      ) : null}
       <View style={styles.actions}>
         {headerExtra}
         {!profile.is_me && user ? (
@@ -169,6 +194,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   actions: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
+  counts: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6 },
+  count: { fontSize: 13 },
+  countLink: { color: colors.accent, fontSize: 13 },
   h2: { color: colors.text, fontSize: 16, fontWeight: '700', marginTop: 8 },
   inspector: { flex: 1, backgroundColor: '#241d16' },
   setRow: {

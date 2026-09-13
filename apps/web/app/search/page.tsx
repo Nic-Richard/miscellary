@@ -9,6 +9,7 @@ import SetTile from '@/components/SetTile';
 import CardPreview from '@/components/CardPreview';
 import DemoBadge from '@/components/DemoBadge';
 import Sheet, { Empty } from '@/components/Sheet';
+import TagList from '@/components/TagList';
 import tileStyles from '@/components/SetTile.module.css';
 import { search } from '@/lib/social';
 import ui from '@/components/ui.module.css';
@@ -32,7 +33,7 @@ function Results() {
         <h1 className={ui.title}>Search</h1>
         <Sheet className={styles.sheet}>
           <Empty icon="search">
-            Type at least two characters. You can look for a collector, or for words in a set or
+            Type at least two characters. You can look for a collector, a tag, or words in a set or
             card&rsquo;s title or description.
           </Empty>
         </Sheet>
@@ -48,7 +49,8 @@ function Results() {
         </Sheet>
       </section>
     );
-  const empty = !results.users.length && !results.sets.length && !results.cards.length;
+  const empty =
+    !results.users.length && !results.sets.length && !results.cards.length && !results.tags.length;
 
   return (
     <section>
@@ -64,14 +66,20 @@ function Results() {
               </Link>
             }
           >
-            Nothing matched &ldquo;{results.query}&rdquo;. Search reads collector names, and the
-            titles and descriptions of sets and cards.
+            Nothing matched &ldquo;{results.query}&rdquo;. Search reads collector names, tags, and
+            the titles and descriptions of sets and cards.
           </Empty>
         </Sheet>
       ) : null}
 
+      {results.tags.length ? (
+        <Sheet className={styles.sheet} title="Tags" meta={`${results.tags.length} found`}>
+          <TagList tags={results.tags} label={`Tags matching ${results.query}`} />
+        </Sheet>
+      ) : null}
+
       {results.users.length ? (
-        <Sheet className={styles.sheet} title="People" meta={`${results.users.length} found`}>
+        <Sheet className={styles.sheet} title="Users" meta={`${results.users.length} found`}>
           <ul className={styles.list}>
             {results.users.map((u) => (
               <li key={u.username}>

@@ -5,46 +5,15 @@ import {
   PACK_COLOURS,
   resolveBinderColour,
   resolvePackColour,
+  SET_MARK_PATHS,
 } from '@miscellary/shared';
 
 export { BINDER_COLOURS, PACK_COLOURS };
 
 // Lists mirror apps/api/cards/identity.py.
 
-export const SET_MARKS = [
-  'waves',
-  'leaf',
-  'peaks',
-  'crystal',
-  'record',
-  'feather',
-  'star',
-  'shell',
-  'bolt',
-  'moon',
-  'flame',
-  'drop',
-  'key',
-  'bloom',
-  'orbit',
-  'arrowhead',
-  'acorn',
-  'anchor',
-  'beetle',
-  'butterfly',
-  'cactus',
-  'cloud',
-  'cog',
-  'compass',
-  'fern',
-  'fish',
-  'honeycomb',
-  'lantern',
-  'mushroom',
-  'pine',
-  'snowflake',
-  'sprout',
-] as const;
+// Derive the mark list from the artwork so the editor cannot drift from it.
+export const SET_MARKS = Object.keys(SET_MARK_PATHS);
 
 export const MARK_LABELS: Record<string, string> = {
   waves: 'Sun and waves',
@@ -79,6 +48,18 @@ export const MARK_LABELS: Record<string, string> = {
   pine: 'Pine',
   snowflake: 'Snowflake',
   sprout: 'Sprout',
+  coin: 'Coin',
+  stamp: 'Stamp',
+  ticket: 'Ticket',
+  bottle: 'Bottle',
+  camera: 'Camera',
+  spool: 'Spool',
+  bell: 'Bell',
+  egg: 'Egg',
+  paw: 'Paw',
+  clover: 'Clover',
+  medal: 'Medal',
+  pin: 'Pin',
   none: 'No mark',
 };
 

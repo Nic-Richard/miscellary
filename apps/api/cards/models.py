@@ -31,6 +31,7 @@ from .identity import (
 )
 from .packlayers import default_stack
 from .rarity import RARITY_CHOICES
+from .tags import TAG_LABEL_MAX, TAG_SLUG_MAX
 
 
 class PublishedCardError(ValidationError):
@@ -234,3 +235,50 @@ class CardDefinition(models.Model):
             if current is not None:
                 set_ids.add(current)
         return CardSet.objects.filter(id__in=set_ids).exclude(status=CardSet.Status.DRAFT).exists()
+
+
+class Tag(models.Model):
+    """A discovery keyword shared by every set and card that uses it.
+
+    The slug is the identity, so casing and spacing never split one subject into
+    several tags. The label keeps the first spelling anyone wrote.
+    """
+
+    slug = models.SlugField(max_length=TAG_SLUG_MAX, unique=True)
+    label = models.CharField(max_length=TAG_LABEL_MAX)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["slug"]
+
+    def __str__(self) -> str:
+        return self.slug
+
+
+class SetTag(models.Model):
+    """Tags stay editable after publication: they are how a set is found, not
+    part of the frozen snapshot a collector's copies render from."""
+
+    card_set = models.ForeignKey(CardSet, on_delete=models.CASCADE, related_name="set_tags")
+    tag = models.ForeignKey(Tag, on_delete=models.CASCADE, related_name="set_tags")
+    position = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        ordering = ["position"]
+        constraints = [models.UniqueConstraint(fields=["card_set", "tag"], name="one_tag_per_set")]
+
+    def __str__(self) -> str:
+        return f"{self.card_set} #{self.tag}"
+
+
+class CardTag(models.Model):
+    card = models.ForeignKey(CardDefinition, on_delete=models.CASCADE, related_name="card_tags")
+    tag = models.ForeignKey(Tag, on_delete=models.CASCADE, related_name="card_tags")
+    position = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        ordering = ["position"]
+        constraints = [models.UniqueConstraint(fields=["card", "tag"], name="one_tag_per_card")]
+
+    def __str__(self) -> str:
+        return f"{self.card} #{self.tag}"

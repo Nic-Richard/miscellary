@@ -45,10 +45,10 @@ export function useDiscovery(sort: DiscoverySort) {
       } catch (e) {
         if (request.current !== controller) return;
         const message = controller.signal.aborted
-          ? 'The shelf took too long to load. Please try again.'
+          ? 'Sets took too long to load. Please try again.'
           : e instanceof Error
             ? e.message
-            : 'Could not load the shelf.';
+            : 'Could not load sets.';
         if (page) setMoreError(message);
         else setError(message);
       } finally {

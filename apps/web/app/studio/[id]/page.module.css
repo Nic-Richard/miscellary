@@ -134,3 +134,34 @@
   gap: 12px;
   flex-wrap: wrap;
 }
+
+.cardTags {
+  display: grid;
+  gap: 16px;
+  margin: 22px 0 0;
+  padding: 20px 0 0;
+  border-top: 1px solid var(--bdr);
+  list-style: none;
+}
+.cardTags > li {
+  display: grid;
+  grid-template-columns: minmax(140px, 220px) minmax(0, 1fr);
+  align-items: start;
+  gap: 16px;
+}
+.cardTagName {
+  padding-top: 10px;
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+}
+
+@media (max-width: 720px) {
+  .cardTags > li {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  .cardTagName {
+    padding-top: 0;
+  }
+}

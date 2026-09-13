@@ -128,6 +128,7 @@ function InspectorGallery() {
     printed_set_code: 'SIG-01',
     set_total: 24,
     like_count: 0,
+    tags: [],
   };
 
   return (

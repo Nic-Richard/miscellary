@@ -1,4 +1,4 @@
-.PHONY: dev api web seed test lint build check migrate
+.PHONY: dev api web seed seed-data-only verify-renders test lint build check migrate
 
 dev: ## Start db, api and web with Docker Compose
 	docker compose up --build
@@ -9,8 +9,14 @@ api: ## Run the API locally (expects Postgres on localhost:5432)
 web: ## Run the web app locally
 	pnpm --filter web dev
 
-seed: ## Recreate local demo data in the running Docker stack
+seed: ## Rebuild the demo catalogue and bake every render
+	pnpm reseed
+
+seed-data-only: ## Recreate demo rows without baking; published cards will not display
 	docker compose exec api uv run python manage.py seed_demo
+
+verify-renders: ## Check every published card and set has its baked renders
+	docker compose exec api uv run python manage.py verify_renders
 
 migrate:
 	cd apps/api && uv run python manage.py migrate

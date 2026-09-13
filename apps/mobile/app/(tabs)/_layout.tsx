@@ -53,6 +53,7 @@ export default function TabsLayout() {
         name="index"
         options={{ title: 'Browse', headerShown: false, tabBarIcon: icon('book-open') }}
       />
+      <Tabs.Screen name="packs" options={{ title: 'Packs', tabBarIcon: icon('package') }} />
       <Tabs.Screen name="collection" options={{ title: 'My cards', tabBarIcon: cardsIcon }} />
       <Tabs.Screen name="trades" options={{ title: 'Trades', tabBarIcon: icon('repeat') }} />
       <Tabs.Screen name="studio" options={{ title: 'Studio', tabBarIcon: icon('edit-3') }} />

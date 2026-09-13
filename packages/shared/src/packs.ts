@@ -5,3 +5,7 @@ export const FREE_PACKS_PER_DAY = 1;
 export const SHOWCASE_SLOTS = 40;
 // Mirrored in apps/api/trades/actions.py.
 export const TRADE_MAX_PER_SIDE = 20;
+// Mirrored in apps/api/cards/tags.py.
+export const SET_TAG_MAX = 8;
+export const CARD_TAG_MAX = 5;
+export const TAG_LABEL_MAX = 30;

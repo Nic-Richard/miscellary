@@ -1,8 +1,36 @@
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+}
+.find {
+  min-width: 250px;
+}
+
 .crumbs {
   margin: 10px 0 0;
   color: var(--muted);
   font-size: 13px;
 }
+.crumbs a {
+  color: var(--accent);
+  text-decoration: none;
+}
+.crumbs a:hover {
+  text-decoration: underline;
+}
+
+.grids {
+  display: grid;
+  gap: 22px;
+  min-width: 0;
+}
+.sheet {
+  margin: 0;
+}
+
 .groupTitle {
   color: #3a2f26;
   font: 400 26px / 1 var(--display);
@@ -13,6 +41,64 @@
 .groupTitle:hover {
   color: var(--accent);
 }
+
+/* A tally of the tiers a collection is made of. The bar is relative to the
+   commonest tier held, so the shape reads at a glance rather than the totals. */
+.rarities {
+  display: grid;
+  gap: 9px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.rarities li {
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr) 2.5ch;
+  align-items: center;
+  gap: 10px;
+}
+.rarityName {
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.rarityBar {
+  display: block;
+  height: 8px;
+  background: var(--sur2);
+  border: 1px solid var(--bdr2);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.rarityBar span {
+  display: block;
+  height: 100%;
+  background: var(--tier, var(--cloth-deep));
+  transition: width var(--dur-med) var(--ease-out);
+}
+.rarities b {
+  color: #4b4238;
+  font: 400 17px / 1 var(--display);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.rarities li[data-rarity='common'] {
+  --tier: var(--rarity-common);
+}
+.rarities li[data-rarity='uncommon'] {
+  --tier: var(--rarity-uncommon);
+}
+.rarities li[data-rarity='rare'] {
+  --tier: var(--rarity-rare);
+}
+.rarities li[data-rarity='epic'] {
+  --tier: var(--rarity-epic);
+}
+.rarities li[data-rarity='legendary'] {
+  --tier: var(--rarity-legendary);
+}
+
 .recycle {
   padding: 5px 10px;
   background: none;
@@ -64,10 +150,6 @@
   }
 }
 
-.sheet {
-  margin-top: 20px;
-}
-
 .inspect {
   all: unset;
   display: block;
@@ -78,4 +160,10 @@
   outline: 2px solid var(--accent);
   outline-offset: 3px;
   border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rarityBar span {
+    transition: none;
+  }
 }

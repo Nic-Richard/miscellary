@@ -1,0 +1,15 @@
+.strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.follow {
+  padding-right: 15px;
+}
+
+.report {
+  margin-left: auto;
+}

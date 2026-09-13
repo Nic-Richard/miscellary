@@ -41,8 +41,16 @@ export async function pickPhoto(
   return result.canceled ? null : (result.assets[0] ?? null);
 }
 
-export async function pickAndUpload(kind: ImageKind, aspect: number): Promise<ImageRef | null> {
-  const asset = await pickPhoto(aspect);
+export type PhotoSource = 'camera' | 'library';
+
+export async function pickAndUpload(
+  kind: ImageKind,
+  aspect: number,
+  ask: () => Promise<PhotoSource | null>,
+): Promise<ImageRef | null> {
+  const source = await ask();
+  if (!source) return null;
+  const asset = source === 'camera' ? await takePhoto(aspect) : await pickPhoto(aspect);
   return asset ? uploadAsset(asset, kind) : null;
 }
 

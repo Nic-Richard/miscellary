@@ -1,16 +1,48 @@
 import type { OwnedCard, TradeOffer } from '@miscellary/shared';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Modal, ScrollView, StyleSheet, View } from 'react-native';
+import { Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
 import CardInspector from '@/components/CardInspector';
 import LoginGate from '@/components/LoginGate';
 import OfferCard from '@/components/OfferCard';
 import { useAuth } from '@/lib/auth';
 import { actOnOffer, listOffers } from '@/lib/endpoints';
-import { colors } from '@/lib/theme';
+import { colors, fonts } from '@/lib/theme';
 import { Button, Chip, ErrorText, Input, Muted, Tag, Title } from '@/components/ui';
 
 type Box = 'inbox' | 'outbox' | 'history';
+
+const NOTHING: Record<Box, string> = {
+  inbox: 'Nothing on the table. When another collector offers you a trade, it lands here.',
+  outbox: 'You have not put anything on the table yet. Find a collector and pick from their cards.',
+  history: 'Nothing settled yet. Accepted, rejected and cancelled offers are kept here.',
+};
+
+function DealMat({ box }: { box: Box }) {
+  return (
+    <View style={styles.mat}>
+      <View style={styles.matSides}>
+        <View style={styles.matSide}>
+          <Text style={styles.matLabel}>YOU GIVE</Text>
+          <View style={styles.matSlots}>
+            {[0, 1, 2].map((i) => (
+              <View key={i} style={styles.matSlot} />
+            ))}
+          </View>
+        </View>
+        <View style={styles.matSide}>
+          <Text style={styles.matLabel}>THEY GIVE</Text>
+          <View style={styles.matSlots}>
+            {[0, 1, 2].map((i) => (
+              <View key={i} style={styles.matSlot} />
+            ))}
+          </View>
+        </View>
+      </View>
+      <Muted style={styles.matNote}>{NOTHING[box]}</Muted>
+    </View>
+  );
+}
 
 function Trades() {
   const { user } = useAuth();
@@ -85,7 +117,7 @@ function Trades() {
         ))}
       </View>
       <ErrorText>{error}</ErrorText>
-      {offers.length === 0 ? <Muted>Nothing here.</Muted> : null}
+      {offers.length === 0 ? <DealMat box={box} /> : null}
       {offers.map((o) => (
         <OfferCard
           key={o.id}
@@ -127,4 +159,28 @@ export default function TradesScreen() {
   );
 }
 
-const styles = StyleSheet.create({ row: { flexDirection: 'row', gap: 8, alignItems: 'center' } });
+const styles = StyleSheet.create({
+  mat: {
+    gap: 16,
+    paddingVertical: 26,
+    paddingHorizontal: 14,
+    backgroundColor: colors.sur,
+    borderWidth: 1,
+    borderColor: colors.bdr,
+    borderRadius: 10,
+  },
+  matSides: { flexDirection: 'row', justifyContent: 'space-around', gap: 14 },
+  matSide: { alignItems: 'center', gap: 8 },
+  matLabel: { color: colors.faint, fontFamily: fonts.medium, fontSize: 10, letterSpacing: 1.3 },
+  matSlots: { flexDirection: 'row', gap: 6 },
+  matSlot: {
+    width: 40,
+    aspectRatio: 5 / 7,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: colors.bdr2,
+    borderStyle: 'dashed',
+  },
+  matNote: { fontSize: 14, lineHeight: 20, textAlign: 'center' },
+  row: { flexDirection: 'row', gap: 8, alignItems: 'center' },
+});

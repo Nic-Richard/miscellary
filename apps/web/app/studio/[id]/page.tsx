@@ -4,13 +4,14 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
-import { cardCode } from '@miscellary/shared';
+import { CARD_TAG_MAX, cardCode, SET_TAG_MAX } from '@miscellary/shared';
 import type { Card, CardSetDetail, CardTemplate } from '@miscellary/shared';
 import CardGrid, { CardCell } from '@/components/CardGrid';
 import PackDesigner from '@/components/studio/PackDesigner';
 import SetCover from '@/components/SetCover';
 import CardPreview from '@/components/CardPreview';
 import CardForm from '@/components/CardForm';
+import TagEditor from '@/components/TagEditor';
 import { ApiRequestError } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import {
@@ -21,6 +22,8 @@ import {
   publishProblems,
   publishSet,
   reorderCards,
+  saveCardTags,
+  saveSetTags,
   updateSet,
 } from '@/lib/sets';
 import type { SetWrite } from '@/lib/sets';
@@ -36,6 +39,7 @@ export default function SetEditorPage() {
   const [editing, setEditing] = useState<Card | 'new' | null>(null);
   const [problems, setProblems] = useState<string[] | null>(null);
   const [packOpen, setPackOpen] = useState(false);
+  const [cardTagsOpen, setCardTagsOpen] = useState(false);
   /* Which card is being dragged. Held in a ref as well as in state, because a
      pointer can move before React has re-rendered and the move needs to know
      what it is carrying the moment it is asked. */
@@ -298,6 +302,58 @@ export default function SetEditorPage() {
           ) : null}
         </div>
       ) : null}
+
+      <div className={`${ui.panel} ${styles.identity}`}>
+        <div className={styles.identityHead}>
+          <h2 className={ui.panelTitle}>Tags</h2>
+          {set.cards.length ? (
+            <button
+              className={ui.btnQuiet}
+              type="button"
+              aria-expanded={cardTagsOpen}
+              onClick={() => setCardTagsOpen(!cardTagsOpen)}
+            >
+              {cardTagsOpen ? 'Close card tags' : 'Tag individual cards'}
+            </button>
+          ) : null}
+        </div>
+        <TagEditor
+          tags={set.tags}
+          max={SET_TAG_MAX}
+          note={`Up to ${SET_TAG_MAX}. Tags put this set in front of people browsing a subject, and they stay editable after it is published.`}
+          onSave={async (labels) => {
+            const tags = await saveSetTags(set.id, labels);
+            setSet({ ...set, tags });
+            return tags;
+          }}
+        />
+        {cardTagsOpen ? (
+          <ul className={styles.cardTags}>
+            {set.cards.map((c) => (
+              <li key={c.id}>
+                <span className={styles.cardTagName}>
+                  {cardCode(setCode, c.position, c.set_total || set.cards.length)} · {c.title}
+                </span>
+                <TagEditor
+                  tags={c.tags}
+                  max={CARD_TAG_MAX}
+                  note={`Up to ${CARD_TAG_MAX} on this card.`}
+                  onSave={async (labels) => {
+                    const tags = await saveCardTags(set.id, c.id, labels);
+                    setSet({
+                      ...set,
+                      cards: set.cards.map((entry) =>
+                        entry.id === c.id ? { ...entry, tags } : entry,
+                      ),
+                    });
+                    return tags;
+                  }}
+                />
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </div>
 
       <div className={styles.cardsHeader}>
         <h2 className={ui.subtitle}>Cards · {set.cards.length}</h2>

@@ -36,20 +36,39 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 14px;
-  margin-top: 18px;
+  gap: 12px;
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--bdr);
   color: #5e5346;
   font-size: 14px;
 }
 .creatorLink {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 11px;
+  margin-right: auto;
   color: #3a2f26;
   text-decoration: none;
 }
-.creatorLink strong {
+.creatorName {
+  display: grid;
+  gap: 1px;
+}
+.creatorName strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 15px;
   font-weight: 600;
+}
+.creatorLink:hover .creatorName strong {
+  color: var(--accent-deep);
+}
+.creatorName small {
+  color: var(--faint);
+  font-size: 12px;
+  letter-spacing: 0.04em;
 }
 .monogram {
   display: grid;
@@ -73,12 +92,14 @@
   gap: 4px;
   min-width: 0;
 }
-.social {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding-right: 6px;
-  color: #5e5346;
+.filed {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--bdr);
+}
+.filed > span:first-child {
+  margin-top: 0;
+  margin-bottom: 8px;
 }
 
 .body {
@@ -87,10 +108,8 @@
   gap: 18px;
   align-items: start;
 }
-/* Pull the binder past the main padding so it tucks under the navigation. */
 .binderColumn {
   min-width: 0;
-  margin-left: -34px;
 }
 .spread {
   position: relative;
@@ -311,9 +330,6 @@
 @media (max-width: 1080px) {
   .body {
     grid-template-columns: 1fr;
-  }
-  .binderColumn {
-    margin-left: 0;
   }
   .sheet {
     padding: 18px 16px 22px;

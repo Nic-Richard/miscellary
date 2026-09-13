@@ -1,4 +1,4 @@
-import { cardCode } from '@miscellary/shared';
+import { CARD_TAG_MAX, cardCode, SET_TAG_MAX } from '@miscellary/shared';
 import type { CardSetDetail } from '@miscellary/shared';
 import Feather from '@expo/vector-icons/Feather';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
@@ -16,6 +16,7 @@ import {
 import type { LayoutRectangle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import SharedSurface from '@/components/SharedSurface';
+import TagField from '@/components/TagField';
 import CardPreview from '@/components/CardPreview';
 import PackPreview from '@/components/PackPreview';
 import {
@@ -25,6 +26,8 @@ import {
   publishProblems,
   publishSet,
   reorderCards,
+  saveCardTags,
+  saveSetTags,
   updateSet,
 } from '@/lib/endpoints';
 import { colors, fonts } from '@/lib/theme';
@@ -38,6 +41,7 @@ export default function SetEditorScreen() {
   const [description, setDescription] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [designingPack, setDesigningPack] = useState(false);
+  const [taggingCards, setTaggingCards] = useState(false);
   const [dragging, setDragging] = useState<string | null>(null);
 
   /* Long press to pick a card up, then drag it into place. Held in refs because
@@ -297,6 +301,51 @@ export default function SetEditorScreen() {
         </View>
       ) : null}
 
+      <View style={styles.tagPanel}>
+        <Text style={{ color: colors.text, fontSize: 17, fontWeight: '700' }}>Tags</Text>
+        <TagField
+          tags={set.tags}
+          max={SET_TAG_MAX}
+          note={`Up to ${SET_TAG_MAX}. Tags put this set in front of people browsing a subject, and they stay editable after it is published.`}
+          onSave={async (labels) => {
+            const tags = await saveSetTags(set.id, labels);
+            setSet({ ...set, tags });
+            return tags;
+          }}
+        />
+        {set.cards.length ? (
+          <Button
+            title={taggingCards ? 'Close card tags' : 'Tag individual cards'}
+            kind="secondary"
+            onPress={() => setTaggingCards(!taggingCards)}
+          />
+        ) : null}
+        {taggingCards
+          ? set.cards.map((c) => (
+              <View key={c.id} style={styles.cardTagRow}>
+                <Muted style={{ fontSize: 13 }}>
+                  {cardCode(setCode, c.position, c.set_total || set.cards.length)} · {c.title}
+                </Muted>
+                <TagField
+                  tags={c.tags}
+                  max={CARD_TAG_MAX}
+                  note={`Up to ${CARD_TAG_MAX} on this card.`}
+                  onSave={async (labels) => {
+                    const tags = await saveCardTags(set.id, c.id, labels);
+                    setSet({
+                      ...set,
+                      cards: set.cards.map((entry) =>
+                        entry.id === c.id ? { ...entry, tags } : entry,
+                      ),
+                    });
+                    return tags;
+                  }}
+                />
+              </View>
+            ))
+          : null}
+      </View>
+
       <View style={styles.cardsHeader}>
         <Text style={{ color: colors.text, fontSize: 17, fontWeight: '700' }}>
           Cards ({set.cards.length})
@@ -390,6 +439,20 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     gap: 8,
+  },
+  tagPanel: {
+    gap: 10,
+    padding: 14,
+    backgroundColor: colors.sur,
+    borderWidth: 1,
+    borderColor: colors.bdr,
+    borderRadius: 8,
+  },
+  cardTagRow: {
+    gap: 6,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: colors.bdr,
   },
   cardsHeader: {
     flexDirection: 'row',

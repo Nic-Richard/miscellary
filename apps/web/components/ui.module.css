@@ -123,6 +123,140 @@
   width: 100%;
 }
 
+.action {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 0 13px;
+  border: 1px solid var(--bdr2);
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.4);
+  color: #5e5346;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background var(--dur-fast),
+    border-color var(--dur-fast),
+    color var(--dur-fast);
+}
+.action svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.action b {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.action:not(:disabled):hover {
+  border-color: #a99b82;
+  color: var(--text);
+}
+.action:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.actionOn {
+  border-color: var(--accent);
+  background: rgba(39, 139, 130, 0.1);
+  color: var(--accent-deep);
+}
+.actionOn:not(:disabled):hover {
+  border-color: var(--accent-deep);
+  color: var(--accent-deep);
+}
+.actionLiked {
+  border-color: #d3a89f;
+  background: rgba(174, 74, 58, 0.08);
+  color: var(--danger);
+}
+.actionLiked svg {
+  fill: currentColor;
+  stroke: none;
+}
+.actionLiked:not(:disabled):hover {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+.actionQuiet {
+  border-color: transparent;
+  background: none;
+  color: var(--faint);
+}
+.actionQuiet:not(:disabled):hover {
+  border-color: var(--bdr2);
+  color: var(--danger);
+}
+
+.segments {
+  display: inline-flex;
+  padding: 3px;
+  background: var(--sur2);
+  border: 1px solid var(--bdr2);
+  border-radius: 7px;
+}
+.segment {
+  min-height: 36px;
+  padding: 0 22px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: none;
+  color: var(--muted);
+  font: 400 15px / 1 var(--display);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    background var(--dur-fast),
+    color var(--dur-fast),
+    box-shadow var(--dur-fast);
+}
+.segment:hover {
+  color: var(--text);
+}
+.segmentOn {
+  background: var(--sur);
+  border-color: var(--bdr);
+  color: #3a2f26;
+  box-shadow: 0 1px 2px rgba(58, 42, 20, 0.12);
+}
+
+.rows {
+  display: grid;
+  padding: 4px 24px;
+}
+.rowItem {
+  display: grid;
+  grid-template-columns: minmax(200px, 280px) minmax(0, 1fr);
+  gap: 10px 40px;
+  padding: 24px 0;
+  border-bottom: 1px solid var(--bdr);
+}
+.rowItem:last-child {
+  border-bottom: 0;
+}
+.rowHead h3 {
+  margin: 0;
+  font: 400 20px / 1 var(--display);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #3a2f26;
+}
+.rowHead p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 .panel {
   padding: 20px 22px;
   background: var(--sur);
@@ -202,6 +336,63 @@
 }
 textarea.input {
   resize: vertical;
+}
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  padding: 0 6px 0 12px;
+  background: var(--sur);
+  border: 1px solid var(--bdr2);
+  border-radius: 7px;
+}
+.search:focus-within {
+  border-color: #b9d4ce;
+  box-shadow: 0 0 0 3px rgba(39, 139, 130, 0.12);
+}
+.searchIcon {
+  flex: none;
+  width: 19px;
+  height: 19px;
+  fill: none;
+  stroke: #8b7f6d;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.searchField {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 0;
+  background: transparent;
+  border: 0;
+  color: #3d342b;
+  font: inherit;
+  font-size: 14px;
+}
+.searchField::placeholder {
+  color: #9a8e7c;
+}
+.searchField:focus {
+  outline: 0;
+}
+.searchField::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  width: 13px;
+  height: 13px;
+  background: #8b7f6d;
+  mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M5 5l14 14M19 5 5 19' stroke='black' stroke-width='2.4' stroke-linecap='round' fill='none'/></svg>")
+    center / contain no-repeat;
+  cursor: pointer;
+}
+.searchField::-webkit-search-cancel-button:hover {
+  background: var(--accent);
+}
+.search button[disabled] {
+  opacity: 0.45;
+  cursor: default;
 }
 
 .muted {

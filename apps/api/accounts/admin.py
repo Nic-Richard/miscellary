@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
-from .models import Profile, User
+from .models import Profile, ReservedUsername, User
 
 
 class ProfileInline(admin.StackedInline):
@@ -15,14 +15,20 @@ class UserAdmin(BaseUserAdmin):
     list_display = ["username", "email", "email_verified", "is_active", "is_staff", "created_at"]
     list_filter = ["email_verified", "is_active", "is_staff"]
     search_fields = ["username", "email"]
-    readonly_fields = ["created_at", "last_login"]
+    readonly_fields = ["username_changed_at", "created_at", "last_login"]
     inlines = [ProfileInline]
     fieldsets = (
         (None, {"fields": ("email", "username", "password")}),
         ("Status", {"fields": ("email_verified", "is_active", "is_staff", "is_superuser")}),
         ("Permissions", {"fields": ("groups", "user_permissions")}),
-        ("Dates", {"fields": ("created_at", "last_login")}),
+        ("Dates", {"fields": ("username_changed_at", "created_at", "last_login")}),
     )
     add_fieldsets = (
         (None, {"classes": ("wide",), "fields": ("email", "username", "password1", "password2")}),
     )
+
+
+@admin.register(ReservedUsername)
+class ReservedUsernameAdmin(admin.ModelAdmin):
+    list_display = ["username", "user", "created_at"]
+    search_fields = ["username"]

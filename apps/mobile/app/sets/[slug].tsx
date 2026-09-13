@@ -16,15 +16,18 @@ import {
 } from 'react-native';
 import BinderPages from '@/components/BinderPages';
 import CardInspector from '@/components/CardInspector';
+import Comments from '@/components/Comments';
 import CardPreview from '@/components/CardPreview';
 import Description from '@/components/Description';
 import DemoBadge from '@/components/DemoBadge';
 import PackPreview from '@/components/PackPreview';
 import PackReveal from '@/components/PackReveal';
 import PointGain from '@/components/PointGain';
+import TagChips from '@/components/TagChips';
 import { useAuth } from '@/lib/auth';
 import { CONTINUE_PARAM, loginRoute } from '@/lib/returnTo';
 import {
+  followSet,
   getPackStatus,
   getPublicSet,
   likeCard,
@@ -38,6 +41,7 @@ import { colors, fonts } from '@/lib/theme';
 import { Button, Chip, ErrorText, Loading, Muted, Tag, Title } from '@/components/ui';
 
 const PACK_ACTION = 'pack';
+const FOLLOW_SET_ACTION = 'follow-set';
 
 function stack(owned: OwnedCard[]): OwnedCard[] {
   const seen = new Map<string, OwnedCard>();
@@ -123,6 +127,21 @@ export default function BinderScreen() {
     openFromPack();
   }, [busy, openFromPack, params, status, user]);
 
+  const followContinued = useRef(false);
+  useEffect(() => {
+    if (followContinued.current || params[CONTINUE_PARAM] !== FOLLOW_SET_ACTION) return;
+    if (!user || !set || set.following) return;
+    followContinued.current = true;
+    router.setParams({ [CONTINUE_PARAM]: undefined });
+    void followSet(set.slug, true).then((r) =>
+      setSet((current) =>
+        current
+          ? { ...current, following: r.following, follower_count: r.follower_count }
+          : current,
+      ),
+    );
+  }, [params, set, user]);
+
   async function recycle(copy: OwnedCard) {
     setRecycling(copy.id);
     setError(null);
@@ -159,6 +178,16 @@ export default function BinderScreen() {
     if (!set || !user) return;
     const r = await likeSet(set.slug, !set.liked);
     setSet({ ...set, liked: r.liked, like_count: r.like_count });
+  }
+
+  async function toggleSetFollow() {
+    if (!set) return;
+    if (!user) {
+      router.push(loginRoute(`/sets/${set.slug}`, FOLLOW_SET_ACTION));
+      return;
+    }
+    const r = await followSet(set.slug, !set.following);
+    setSet({ ...set, following: r.following, follower_count: r.follower_count });
   }
 
   async function toggleCardLike(cardId: string) {
@@ -241,6 +270,11 @@ export default function BinderScreen() {
         </Muted>
       </View>
       {set.description ? <Description text={set.description} /> : null}
+      {set.tags.length ? (
+        <View style={styles.tags}>
+          <TagChips tags={set.tags} label={`Tags on ${set.title}`} />
+        </View>
+      ) : null}
 
       {set.status === 'published' ? (
         <View style={styles.social}>
@@ -252,12 +286,30 @@ export default function BinderScreen() {
               ♥ {set.like_count}
             </Text>
           </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ selected: set.following }}
+            onPress={() => void toggleSetFollow()}
+            style={[styles.follow, set.following && styles.followOn]}
+          >
+            <Feather
+              name="package"
+              size={14}
+              color={set.following ? colors.accent : colors.muted}
+            />
+            <Text style={{ color: set.following ? colors.accent : colors.muted, fontSize: 13 }}>
+              {set.following ? 'On your packs' : 'Follow set'}
+            </Text>
+          </Pressable>
           {user ? (
             <Pressable onPress={report}>
               <Text style={{ color: colors.faint, fontSize: 12 }}>Report</Text>
             </Pressable>
           ) : null}
         </View>
+      ) : null}
+      {set.status === 'published' && !set.following ? (
+        <Muted style={styles.followNote}>Keeps its free pack on your Packs tab.</Muted>
       ) : null}
 
       {set.status === 'published' ? (
@@ -437,6 +489,8 @@ export default function BinderScreen() {
         </View>
       ) : null}
 
+      {set.status === 'published' ? <Comments slug={set.slug} /> : null}
+
       {opening ? <PackReveal opening={opening} onClose={() => setOpening(null)} /> : null}
       {selected ? (
         <Modal
@@ -463,6 +517,19 @@ export default function BinderScreen() {
 }
 
 const styles = StyleSheet.create({
+  tags: { marginTop: 10 },
+  follow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+    borderWidth: 1,
+    borderColor: colors.bdr2,
+    borderRadius: 6,
+    paddingHorizontal: 11,
+    paddingVertical: 8,
+  },
+  followOn: { borderColor: colors.accent, backgroundColor: 'rgba(30,110,103,0.09)' },
+  followNote: { fontSize: 12, marginTop: 6 },
   topline: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 4 },
   back: {
     width: 36,

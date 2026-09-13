@@ -9,6 +9,7 @@ import SetTile from '@/components/SetTile';
 import tileStyles from '@/components/SetTile.module.css';
 import Sheet, { Empty } from '@/components/Sheet';
 import { OwnedCardInspector } from '@/components/CardInspector';
+import PeopleList from '@/components/PeopleList';
 import ProfileBinder from '@/components/ProfileBinder';
 import ReportButton from '@/components/ReportButton';
 import DemoBadge from '@/components/DemoBadge';
@@ -37,6 +38,7 @@ export default function ProfilePageView() {
   const [profile, setProfile] = useState<ProfilePage | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [inspect, setInspect] = useState<OwnedCard | null>(null);
+  const [people, setPeople] = useState<'followers' | 'following' | null>(null);
 
   useEffect(() => {
     if (loading) return;
@@ -129,19 +131,33 @@ export default function ProfilePageView() {
 
         <div className={`${ui.panel} ${styles.statsPanel}`}>
           <ul className={ui.stats}>
-            <li className={ui.stat}>
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d={ICONS.followers} />
-              </svg>
-              <b>{profile.follower_count}</b>
-              <span>Followers</span>
+            <li>
+              <button
+                type="button"
+                className={`${ui.stat} ${styles.statButton}`}
+                aria-expanded={people === 'followers'}
+                onClick={() => setPeople(people === 'followers' ? null : 'followers')}
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d={ICONS.followers} />
+                </svg>
+                <b>{profile.follower_count}</b>
+                <span>Followers</span>
+              </button>
             </li>
-            <li className={ui.stat}>
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d={ICONS.following} />
-              </svg>
-              <b>{profile.following_count}</b>
-              <span>Following</span>
+            <li>
+              <button
+                type="button"
+                className={`${ui.stat} ${styles.statButton}`}
+                aria-expanded={people === 'following'}
+                onClick={() => setPeople(people === 'following' ? null : 'following')}
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d={ICONS.following} />
+                </svg>
+                <b>{profile.following_count}</b>
+                <span>Following</span>
+              </button>
             </li>
             <li className={ui.stat}>
               <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -160,6 +176,16 @@ export default function ProfilePageView() {
           </ul>
         </div>
       </div>
+
+      {people ? (
+        <div className={styles.section}>
+          <PeopleList
+            username={profile.username}
+            direction={people}
+            onClose={() => setPeople(null)}
+          />
+        </div>
+      ) : null}
 
       <div className={styles.section}>
         <ProfileBinder
