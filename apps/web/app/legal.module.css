@@ -1,0 +1,36 @@
+.page {
+  width: min(760px, 100%);
+  margin-inline: auto;
+  color: var(--text);
+}
+.page h1 {
+  margin: 0 0 4px;
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 8vw, 4.5rem);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+.updated {
+  margin: 0 0 36px;
+  color: var(--muted);
+}
+.page section {
+  margin-top: 30px;
+}
+.page h2 {
+  margin-bottom: 8px;
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 400;
+  letter-spacing: 0.025em;
+}
+.page p,
+.page li {
+  line-height: 1.65;
+}
+.page ul {
+  padding-left: 22px;
+}
+.page a {
+  color: var(--accent);
+}

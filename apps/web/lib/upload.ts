@@ -8,11 +8,7 @@ async function dimensions(blob: Blob): Promise<{ width: number; height: number }
   return size;
 }
 
-/* The native surface replaces both of these. It can open the system picker,
-   crop and resize on the device, and upload the file straight from disk, which
-   saves decoding a full size photograph inside the WebView and handing it back
-   across the bridge as base64. A browser has nothing better than its own file
-   input, so it declines and the page picker is used. */
+// WebView editors use the native picker; browser editors fall back to file inputs.
 export const hasNativePicker = false;
 
 export async function pickNativeImage(_kind: ImageKind, _aspect: number): Promise<ImageRef | null> {
@@ -30,7 +26,10 @@ export async function uploadImage(blob: Blob, kind: ImageKind): Promise<ImageRef
   const put = await fetch(upload_url, {
     method: 'PUT',
     body: blob,
-    headers: { 'Content-Type': contentType },
+    headers: {
+      'Content-Type': contentType,
+      'Cache-Control': 'public, max-age=31536000, immutable',
+    },
   });
   if (!put.ok) throw new Error('Upload failed. Please try again.');
 

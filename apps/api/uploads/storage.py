@@ -9,6 +9,8 @@ from django.conf import settings
 ALLOWED_TYPES = {"image/jpeg": "jpg", "image/png": "png", "image/webp": "webp"}
 MAX_SIZE = 10 * 1024 * 1024
 PRESIGN_SECONDS = 600
+SOURCE_URL_SECONDS = 24 * 60 * 60
+CACHE_CONTROL = "public, max-age=31536000, immutable"
 
 
 def public_endpoint_for(host: str | None) -> str:
@@ -40,7 +42,7 @@ def client(*, public: bool = False, host: str | None = None):
         "s3",
         endpoint_url=endpoint or None,
         region_name=settings.AWS_S3_REGION,
-        # Empty in production: the App Runner instance role provides credentials.
+        # Empty in production: the ECS task role provides credentials.
         aws_access_key_id=settings.AWS_ACCESS_KEY_ID or None,
         aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY or None,
         # SigV4 is required by newer AWS regions; MinIO supports it too.
@@ -61,8 +63,19 @@ def presigned_put_url(key: str, content_type: str, host: str | None = None) -> s
             "Bucket": settings.AWS_STORAGE_BUCKET_NAME,
             "Key": key,
             "ContentType": content_type,
+            "CacheControl": CACHE_CONTROL,
         },
         ExpiresIn=PRESIGN_SECONDS,
+    )
+
+
+def object_url(key: str) -> str:
+    if not settings.MEDIA_SOURCE_URLS_SIGNED:
+        return f"{settings.MEDIA_PUBLIC_URL.rstrip('/')}/{key}"
+    return client().generate_presigned_url(
+        "get_object",
+        Params={"Bucket": settings.AWS_STORAGE_BUCKET_NAME, "Key": key},
+        ExpiresIn=SOURCE_URL_SECONDS,
     )
 
 
@@ -85,4 +98,5 @@ def put_object(key: str, body: bytes, content_type: str) -> None:
         Key=key,
         Body=body,
         ContentType=content_type,
+        CacheControl=CACHE_CONTROL,
     )

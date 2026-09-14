@@ -35,8 +35,6 @@ export default function SharedSurface({
   const ready = useRef(false);
   const [measuredHeight, setMeasuredHeight] = useState(500);
   const [error, setError] = useState('');
-  // The editor asks for a photo from inside the web view, so the question is
-  // held open here until the sheet answers it.
   const [asking, setAsking] = useState(false);
   const answer = useRef<((source: PhotoSource | null) => void) | null>(null);
 
@@ -85,7 +83,10 @@ export default function SharedSurface({
       if (input.data.length * 0.75 > max_size) throw new Error('Image is too large.');
       const response = await FileSystem.uploadAsync(upload_url, file, {
         httpMethod: 'PUT',
-        headers: { 'Content-Type': input.contentType },
+        headers: {
+          'Content-Type': input.contentType,
+          'Cache-Control': 'public, max-age=31536000, immutable',
+        },
         uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
       });
       if (response.status < 200 || response.status >= 300) throw new Error('Upload failed.');

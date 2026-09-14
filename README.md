@@ -36,7 +36,7 @@ apps/mobile/       Expo Android client
 packages/shared/   Shared API types, rarity rules, pack constants, and Markdown rules
 packages/config/   Shared TypeScript and ESLint configuration
 docker/            Application container definitions
-infra/             App Runner, IAM, and S3 configuration examples
+infra/             Terraform for ECS, RDS, S3, SES, IAM, networking, and monitoring
 scripts/           Local development and deployment helpers
 docs/              Product rules, API reference, design system, ADRs, and release checks
 ```
@@ -146,7 +146,8 @@ Each app includes a committed `.env.example`. Real environment files are ignored
 | -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
 | `DJANGO_SETTINGS_MODULE`                                             | Optional explicit settings override; management commands default to development and pytest selects test settings |
 | `SECRET_KEY`                                                         | Django secret key, required in production                                                                        |
-| `DATABASE_URL`                                                       | PostgreSQL connection URL                                                                                        |
+| `DATABASE_URL`                                                       | PostgreSQL connection URL; the VPS-compatible production path                                                    |
+| `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`            | Split PostgreSQL settings used with RDS-managed credentials on ECS                                               |
 | `ALLOWED_HOSTS`                                                      | Comma-separated API hostnames                                                                                    |
 | `CORS_ALLOWED_ORIGINS`                                               | Browser origins allowed to call the API with credentials                                                         |
 | `CSRF_TRUSTED_ORIGINS`                                               | Trusted browser origins for cookie-authenticated requests                                                        |
@@ -202,8 +203,10 @@ refresh tokens. The web client receives its refresh token in an HttpOnly cookie.
 client stores its refresh token in SecureStore. Uploads go directly from clients to
 S3-compatible storage through presigned URLs.
 
-The production target is Vercel for the web client and AWS App Runner, RDS PostgreSQL, S3, and
-SES for the API and supporting services. See [`infra/README.md`](infra/README.md) for setup and
-deployment details.
+The production target is Vercel for the web client and one AWS ECS Fargate task behind an HTTPS
+load balancer, with RDS PostgreSQL, S3, and SES for supporting services. Terraform owns the AWS
+resources and GitHub Actions deploys through OIDC. The same production images and environment
+contract remain available for the Ubuntu VPS fallback. See [`infra/README.md`](infra/README.md) for
+setup and deployment details.
 
 Additional project documentation is indexed in [`docs/README.md`](docs/README.md).

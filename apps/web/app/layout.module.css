@@ -2,12 +2,31 @@
   display: flex;
   min-height: 100vh;
 }
+.content {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+}
 .main {
   flex: 1;
+  width: 100%;
   min-width: 0;
   max-width: 1320px;
   margin-inline: auto;
   padding: 28px 30px 90px;
+}
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px 18px;
+  padding: 20px 24px 28px;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+.footer a {
+  color: inherit;
 }
 
 @media (max-width: 860px) {

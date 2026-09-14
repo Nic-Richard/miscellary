@@ -41,6 +41,13 @@ docker/data/
 *.log
 logs/
 
+# Terraform working data and local state
+**/.terraform/
+*.tfstate
+*.tfstate.*
+infra/terraform/terraform.tfvars
+crash.log
+
 # Local tooling
 .vscode/
 .idea/

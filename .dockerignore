@@ -12,6 +12,10 @@ node_modules
 **/.mypy_cache
 **/coverage
 **/*.log
+**/.terraform
+**/*.tfstate
+**/*.tfstate.*
+**/terraform.tfvars
 **/.env
 **/.env.*
 !**/.env.example

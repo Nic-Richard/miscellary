@@ -11,7 +11,9 @@
     "newArchEnabled": true,
     "android": {
       "package": "com.miscellary.app",
-      "permissions": ["CAMERA", "READ_MEDIA_IMAGES"]
+      "versionCode": 1,
+      "permissions": ["CAMERA", "READ_MEDIA_IMAGES"],
+      "blockedPermissions": ["android.permission.RECORD_AUDIO"]
     },
     "plugins": [
       "expo-router",

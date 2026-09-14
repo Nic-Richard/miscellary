@@ -73,7 +73,10 @@ export async function uploadAsset(
 
   const put = await FileSystem.uploadAsync(upload_url, resized.uri, {
     httpMethod: 'PUT',
-    headers: { 'Content-Type': 'image/jpeg' },
+    headers: {
+      'Content-Type': 'image/jpeg',
+      'Cache-Control': 'public, max-age=31536000, immutable',
+    },
     uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
   });
   if (put.status < 200 || put.status >= 300) throw new Error('Upload failed. Please try again.');

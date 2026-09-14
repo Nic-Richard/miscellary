@@ -239,8 +239,9 @@ Clients upload images directly to S3-compatible storage through presigned URLs. 
 the local S3-compatible service. Background infrastructure should only be added when a concrete
 job requires it.
 
-Production uses Vercel for the web client and AWS App Runner, RDS PostgreSQL, S3, and SES for the
-API and supporting services.
+Production uses Vercel for the web client and one AWS ECS Fargate task behind an HTTPS load
+balancer, with RDS PostgreSQL, S3, and SES for supporting services. Terraform owns the AWS
+infrastructure and GitHub Actions deploys through OIDC.
 
 ## Validation
 

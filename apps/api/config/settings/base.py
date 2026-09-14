@@ -181,3 +181,4 @@ AWS_STORAGE_BUCKET_NAME = env.str("AWS_STORAGE_BUCKET_NAME", default="miscellary
 AWS_ACCESS_KEY_ID = env.str("AWS_ACCESS_KEY_ID", default="")
 AWS_SECRET_ACCESS_KEY = env.str("AWS_SECRET_ACCESS_KEY", default="")
 MEDIA_PUBLIC_URL = env.str("MEDIA_PUBLIC_URL", default="http://localhost:9000/miscellary-media")
+MEDIA_SOURCE_URLS_SIGNED = False

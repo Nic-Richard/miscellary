@@ -3,6 +3,8 @@ import uuid
 from django.conf import settings
 from django.db import models
 
+from . import storage
+
 
 class Image(models.Model):
     """An image object in S3 (MinIO locally).
@@ -40,4 +42,4 @@ class Image(models.Model):
 
     @property
     def url(self) -> str:
-        return f"{settings.MEDIA_PUBLIC_URL.rstrip('/')}/{self.key}"
+        return storage.object_url(self.key)

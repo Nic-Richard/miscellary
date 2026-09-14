@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import type { ReactNode } from 'react';
 import {
   Alfa_Slab_One,
@@ -76,7 +77,14 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <AuthProvider>
           <div className={styles.shell}>
             <Nav />
-            <main className={styles.main}>{children}</main>
+            <div className={styles.content}>
+              <main className={styles.main}>{children}</main>
+              <footer className={styles.footer}>
+                <span>© {new Date().getFullYear()} Miscellary</span>
+                <Link href="/terms">Terms</Link>
+                <Link href="/privacy">Privacy</Link>
+              </footer>
+            </div>
           </div>
         </AuthProvider>
       </body>

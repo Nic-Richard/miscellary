@@ -1,3 +1,5 @@
+from urllib.parse import parse_qs, urlsplit
+
 import boto3
 import pytest
 from django.conf import settings
@@ -25,6 +27,8 @@ def test_upload_flow(auth_client, user, bucket):
     assert response.status_code == 201
     body = response.json()
     assert body["upload_url"].startswith("https://")
+    signed_headers = parse_qs(urlsplit(body["upload_url"]).query)["X-Amz-SignedHeaders"][0]
+    assert "cache-control" in signed_headers
     assert body["image"]["ready"] is False
     image = Image.objects.get(id=body["image"]["id"])
     assert image.key.startswith("card/") and image.key.endswith(".png")
@@ -138,3 +142,20 @@ def test_presigned_host_is_pinned_outside_development(settings):
     assert storage.public_endpoint_for("10.0.0.84:8000") == "https://media.example.com"
     settings.AWS_S3_PUBLIC_ENDPOINT_URL = ""
     assert storage.public_endpoint_for("10.0.0.84:8000") == ""
+
+
+def test_server_uploads_are_immutable(bucket):
+    storage.put_object("renders/example.webp", b"render", "image/webp")
+    stored = bucket.head_object(
+        Bucket=settings.AWS_STORAGE_BUCKET_NAME,
+        Key="renders/example.webp",
+    )
+    assert stored["CacheControl"] == storage.CACHE_CONTROL
+
+
+def test_source_urls_are_signed_in_production(settings, bucket):
+    settings.MEDIA_SOURCE_URLS_SIGNED = True
+    url = storage.object_url("card/private-source.webp")
+    query = parse_qs(urlsplit(url).query)
+    assert query["X-Amz-Expires"] == [str(storage.SOURCE_URL_SECONDS)]
+    assert "X-Amz-Signature" in query

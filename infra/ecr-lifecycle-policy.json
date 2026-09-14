@@ -1,0 +1,14 @@
+{
+  "rules": [
+    {
+      "rulePriority": 1,
+      "description": "Keep the twenty most recent API images",
+      "selection": {
+        "tagStatus": "any",
+        "countType": "imageCountMoreThan",
+        "countNumber": 20
+      },
+      "action": { "type": "expire" }
+    }
+  ]
+}

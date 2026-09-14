@@ -1,0 +1,35 @@
+name: Deploy API
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: production-api
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy:
+    name: ECS production
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+      - uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+      - run: bash scripts/deploy-api.sh
+        env:
+          AWS_REGION: ${{ vars.AWS_REGION }}
+          AWS_ACCOUNT_ID: ${{ vars.AWS_ACCOUNT_ID }}
+          ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
+          ECS_CLUSTER: ${{ vars.ECS_CLUSTER }}
+          ECS_SERVICE: ${{ vars.ECS_SERVICE }}
+          ECS_TASK_FAMILY: ${{ vars.ECS_TASK_FAMILY }}
+          SERVICE_HEALTH_URL: https://api.miscellary.com

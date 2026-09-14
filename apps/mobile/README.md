@@ -65,7 +65,26 @@ pnpm --filter mobile test
 pnpm --filter mobile build
 ```
 
-The Android export checks bundling; it does not install or validate the app on a device.
+The Android export checks bundling; it does not install or validate the app on a device. Release
+binaries use EAS Build from this application directory. The preview profile produces a signed APK
+against the production API for direct installation:
+
+```sh
+cd apps/mobile
+pnpm dlx eas-cli build --platform android --profile preview
+```
+
+After production device testing, the production profile creates the AAB for Play internal testing:
+
+```sh
+cd apps/mobile
+pnpm dlx eas-cli build --platform android --profile production
+```
+
+The first EAS build links the Expo project and creates or selects Android signing credentials. Keep
+the keystore in EAS credential storage and in a separate encrypted backup. Increment `versionCode`
+for every Play upload and `version` for user-visible releases.
+
 Keep Docker serving web/API while Metro runs. Avoid simultaneous host web builds/dev servers
 sharing `apps/web/.next`.
 
