@@ -1,4 +1,5 @@
 from copy import deepcopy
+from urllib.parse import unquote
 
 import pytest
 from django.core.management import call_command
@@ -6,7 +7,7 @@ from django.core.management.base import CommandError
 from django.test import override_settings
 
 from accounts.models import User
-from cards import catalogue
+from cards import catalogue, catalogue_photos
 from cards.catalogue import bootstrap_catalogue, load_manifest, required_photo_specs, stable_id
 from cards.demo_activity import refresh_demo_activity
 from cards.models import CardDefinition, CardSet
@@ -44,10 +45,19 @@ def small_manifest(set_count=1):
 
 def test_catalogue_sources_are_pinned():
     manifest = load_manifest()
-    specs = [card[5] for card_set in manifest["sets"] for card in card_set["cards"]]
+    specs = required_photo_specs(manifest)
     assert not [spec for spec in specs if spec.startswith("search:")]
     assert set(specs) == set(manifest["sources"])
     assert all(len(source["sha256"]) == 64 for source in manifest["sources"].values())
+    for spec, source in manifest["sources"].items():
+        if spec in catalogue_photos.CURATED_PHOTOS:
+            continue
+        filename = unquote(source["source_url"].split("/wiki/File:", 1)[1])
+        assert spec.replace(" ", "_") == filename.replace(" ", "_")
+
+
+def test_empty_photo_url_is_unavailable():
+    assert catalogue_photos._open("") is None
 
 
 @override_settings(ALLOW_DESTRUCTIVE_DEMO_RESET=False)

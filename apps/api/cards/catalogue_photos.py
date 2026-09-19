@@ -28,6 +28,8 @@ _requests_blocked_until = 0.0
 
 def _open(url: str, attempts: int = 4):
     global _last_request, _requests_blocked_until
+    if not url:
+        return None
     if time.monotonic() < _requests_blocked_until:
         return None
     for attempt in range(attempts):
