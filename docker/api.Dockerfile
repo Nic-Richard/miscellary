@@ -15,7 +15,7 @@ FROM base AS prod
 COPY apps/api/pyproject.toml apps/api/uv.lock ./
 RUN uv sync --frozen --no-dev --no-install-project
 COPY apps/api/ .
-COPY docker/api-entrypoint.sh /entrypoint.sh
+COPY --chmod=755 docker/api-entrypoint.sh /entrypoint.sh
 ENV DJANGO_SETTINGS_MODULE=config.settings.prod PATH="/app/.venv/bin:$PATH"
 RUN DJANGO_SETTINGS_MODULE=config.settings.base SECRET_KEY=build DATABASE_URL=sqlite:///build.db \
     python manage.py collectstatic --noinput \
