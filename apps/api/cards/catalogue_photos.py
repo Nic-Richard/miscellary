@@ -2,6 +2,7 @@ import html
 import json
 import re
 import struct
+import tempfile
 import time
 import urllib.error
 import urllib.parse
@@ -10,7 +11,7 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-CACHE_DIR = Path(__file__).resolve().parents[3] / "tmp" / "seed-photos"
+CACHE_DIR = Path(tempfile.gettempdir()) / "miscellary-seed-photos"
 PHOTO_MANIFEST = Path(__file__).resolve().parent / "management" / "seed_photos.json"
 CURATED_PHOTOS = json.loads(PHOTO_MANIFEST.read_text(encoding="utf-8"))
 COMMONS_API = "https://commons.wikimedia.org/w/api.php"

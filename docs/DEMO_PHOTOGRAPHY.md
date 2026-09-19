@@ -51,9 +51,8 @@ the product feels lived in without fabricating real-user activity.
 
 `apps/api/cards/catalogue_manifest.json` records the persistent demo creators, published sets, cards,
 pack designs, tags, and source references. `bootstrap_catalogue --prepare-photos` downloads and checks
-every required image and source record in the ignored `tmp/seed-photos` cache without database writes.
-Docker uses the same cache through its repository mount. Once bootstrapped, images are served from the
-app's own media storage; clients do not need to contact source providers.
+every required image and source record in a temporary cache without database writes. Once bootstrapped,
+images are served from the app's own media storage; clients do not need to contact source providers.
 
 ```bash
 docker compose exec api uv run python manage.py bootstrap_catalogue --prepare-photos
