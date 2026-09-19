@@ -26,7 +26,7 @@ cache, queue, worker service, or multi-AZ database.
 
 ## Deployment order
 
-1. Secure the AWS account, create the billing alerts, and configure an AWS CLI SSO profile.
+1. Secure the AWS account, create the billing alerts, and configure short-lived AWS CLI access.
 2. Review and apply the Terraform foundation with no API image tag.
 3. Add the ACM and SES records in Namecheap, request SES production access, and fill the two runtime
    secrets.
@@ -53,7 +53,7 @@ starts changing the stack.
 ## Prerequisites
 
 - Terraform 1.8 or newer
-- AWS CLI v2
+- AWS CLI 2.32 or newer
 - Docker with Linux container support
 - `jq`
 - Bash through Linux, WSL, or Git Bash
@@ -67,12 +67,26 @@ Before running Terraform:
 
 - enable MFA on the root user, set account recovery and alternate contacts, and do not create root
   access keys;
-- create a daily administrator through IAM Identity Center, configure an AWS CLI SSO profile, and use
-  that identity for Terraform instead of a long-lived IAM user key;
+- create an MFA-protected daily administrator and use `aws login --profile miscellary` for temporary
+  local credentials instead of creating an access key;
+- do not create an AWS Organization only to enable IAM Identity Center while new-account credits
+  matter, because joining an organization expires those credits;
 - create a monthly AWS Budget with actual and forecast email alerts at amounts you are comfortable
   paying, then confirm the notification address;
 - enable billing alerts and review the Free Tier and Cost Explorer pages; and
 - run `aws sts get-caller-identity` and confirm the account before every apply.
+
+Set the profile region once, then export it before Terraform commands:
+
+```bash
+aws login --profile miscellary --region us-east-1
+aws configure set region us-east-1 --profile miscellary
+export AWS_PROFILE=miscellary
+aws sts get-caller-identity
+```
+
+An organization instance of IAM Identity Center is the better multi-account option after the
+credit-funded launch, but an account instance cannot provide AWS account or CLI access.
 
 The load balancer and RDS instance are the main steady costs. Fargate, logs, S3, SES, Secrets Manager,
 and ECR add smaller usage-based charges at this scale. The absence of a NAT gateway avoids another
