@@ -94,7 +94,12 @@ fixed hourly charge.
 
 ## First infrastructure apply
 
-Copy the example variables and replace the bucket name, GitHub repository, and alert address:
+Copy the example variables and replace the bucket name, GitHub repository, immutable GitHub owner
+and repository IDs, and alert address. The repository API response contains `id` and `owner.id`:
+
+```text
+https://api.github.com/repos/OWNER/REPOSITORY
+```
 
 ```bash
 cp infra/terraform/terraform.tfvars.example infra/terraform/terraform.tfvars

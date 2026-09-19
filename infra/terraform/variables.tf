@@ -23,6 +23,16 @@ variable "github_repository" {
   description = "GitHub repository in owner/name form."
 }
 
+variable "github_owner_id" {
+  type        = string
+  description = "Immutable numeric ID of the GitHub repository owner."
+}
+
+variable "github_repository_id" {
+  type        = string
+  description = "Immutable numeric ID of the GitHub repository."
+}
+
 variable "alert_email" {
   type        = string
   description = "Address for infrastructure alarms. Leave empty to create alarms without notifications."

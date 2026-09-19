@@ -9,6 +9,8 @@ locals {
   web_origin      = "https://${var.domain_name}"
   media_url       = "https://${var.media_bucket_name}.s3.${var.aws_region}.amazonaws.com"
   alarm_actions   = var.alert_email == "" ? [] : [aws_sns_topic.alerts[0].arn]
+  github_parts    = split("/", var.github_repository)
+  github_subject  = "repo:${local.github_parts[0]}@${var.github_owner_id}/${local.github_parts[1]}@${var.github_repository_id}:environment:Production"
 }
 
 resource "aws_vpc" "main" {
@@ -609,7 +611,7 @@ data "aws_iam_policy_document" "github_assume" {
     condition {
       test     = "StringEquals"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:${var.github_repository}:environment:Production"]
+      values   = [local.github_subject]
     }
   }
 }

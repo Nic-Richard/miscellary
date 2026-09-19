@@ -1,6 +1,8 @@
-media_bucket_name = "miscellary-media-prod-123456789012"
-github_repository = "your-github-name/miscellary"
-alert_email        = "you@example.com"
+media_bucket_name    = "miscellary-media-prod-123456789012"
+github_repository    = "your-github-name/miscellary"
+github_owner_id      = "12345678"
+github_repository_id = "123456789"
+alert_email           = "you@example.com"
 
 # Add this only after the image is in ECR and the ACM validation record is in DNS.
 # api_image_tag = "0123456789abcdef0123456789abcdef01234567"
