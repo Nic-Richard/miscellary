@@ -199,7 +199,7 @@ The API and web client share the same site, so the refresh cookie remains secure
 
 ## GitHub deployment
 
-Create a GitHub environment named `production`. Add approval protection if the repository plan
+Create a GitHub environment named `Production`. Add approval protection if the repository plan
 supports it, then add these environment variables:
 
 ```text
