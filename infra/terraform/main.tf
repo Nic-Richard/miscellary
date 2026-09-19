@@ -637,6 +637,8 @@ resource "aws_iam_role_policy" "github_deploy" {
         Action = [
           "ecr:BatchCheckLayerAvailability",
           "ecr:CompleteLayerUpload",
+          "ecr:DescribeImages",
+          "ecr:DescribeRepositories",
           "ecr:GetDownloadUrlForLayer",
           "ecr:InitiateLayerUpload",
           "ecr:PutImage",
