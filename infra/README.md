@@ -178,6 +178,7 @@ definition, and starts one Fargate task. Run the database and administrator setu
 ```bash
 bash scripts/run-api-task.sh migrate_locked
 bash scripts/run-api-task.sh bootstrap_admin
+bash scripts/run-api-task.sh bootstrap_catalogue
 bash scripts/run-api-task.sh verify_renders
 ```
 
@@ -185,10 +186,24 @@ After confirming the administrator login, replace `initial_admin_password` in th
 with an unused random value while preserving the Django secret and admin identity fields. The
 bootstrap command never changes the password of an administrator that already exists.
 
-Do not run `seed_demo` in production. The production catalogue still needs its own persistent,
-idempotent management command and reviewed source material. Once that content exists, run it through
-`run-api-task.sh`, bake its assets, import them through its production workflow, and finish with
-`verify_renders`.
+`bootstrap_catalogue` creates missing persistent catalogue entries and verifies existing published
+entries without rewriting them. Run `refresh_demo_activity` separately when synthetic collections and
+social activity should be replaced; pass `--include-trades` only when demo trade fixtures are wanted.
+`reset_demo` is disabled outside development. Bake and import the catalogue renders,
+then finish with `verify_renders`.
+
+Build the shared surface and bake against the live API from a workstation with Chromium available:
+
+```bash
+pnpm --filter mobile surfaces:build
+node apps/mobile/scripts/render-card-assets.mjs --api https://api.miscellary.com
+bash scripts/import-production-renders.sh
+bash scripts/run-api-task.sh verify_renders
+```
+
+The import helper uploads the local render directory under a private `staging/card-renders/*` prefix,
+then gives that manifest to an ECS one-off task. Set `MEDIA_BUCKET` in `.env.deploy` first. Remove that
+staging prefix after verification; the imported immutable files live under public `renders/*` keys.
 
 ## Vercel
 

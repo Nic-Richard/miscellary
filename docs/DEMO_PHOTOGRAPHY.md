@@ -47,21 +47,24 @@ activity without being presented as real users. Seed follows and likes in varied
 optional and should be sparse, short, and ordinary when used. Collections and trades can also be seeded so
 the product feels lived in without fabricating real-user activity.
 
-## Existing local preparation workflow
+## Catalogue workflows
 
-`apps/api/cards/management/commands/seed_photos.json` records the current curated development assets.
-`seed_demo --prepare-photos` downloads only those assets into the ignored `tmp/seed-photos` cache and
-returns without database writes. Docker uses the same cache through its repository mount. Once seeded,
-images are served from the app's own media storage; clients do not need to contact source providers.
+`apps/api/cards/catalogue_manifest.json` records the persistent demo creators, published sets, cards,
+pack designs, tags, and source references. `bootstrap_catalogue --prepare-photos` downloads and checks
+every required image and source record in the ignored `tmp/seed-photos` cache without database writes.
+Docker uses the same cache through its repository mount. Once bootstrapped, images are served from the
+app's own media storage; clients do not need to contact source providers.
 
 ```bash
-docker compose exec api uv run python manage.py seed_demo --prepare-photos
+docker compose exec api uv run python manage.py bootstrap_catalogue --prepare-photos
 ```
 
-Normal `seed_demo` still deletes and recreates local demo accounts and associated data and requires
-separate approval before use on a running review database. Curated download failure aborts before deletion.
-`--no-photos` explicitly opts into placeholders.
+`bootstrap_catalogue` creates missing manifest entries and verifies existing published entries. It never
+rewrites a published set or card; a mismatch aborts the command. Adding a reviewed set to the manifest and
+running the command creates only that set. `refresh_demo_activity` replaces synthetic collections, likes,
+follows, showcases, and set follows belonging to demo accounts. Demo-only trades require
+`--include-trades`. Real-user rows are outside its deletion scope.
 
-The current approved development reset recreated eight collectors, eleven published sets, and one draft.
-A pre-reset database backup remains in `tmp/demo-reset-backup/before-reset.dump`. Production bootstrap
-content should use a separate persistent path and should not be recreated automatically on startup.
+`reset_demo` remains the destructive local review workflow and is enabled only by development and test
+settings. It recreates the older local draft and interaction fixtures, accepts `--no-photos`, and requires
+confirmation. Neither catalogue command runs automatically on application startup.

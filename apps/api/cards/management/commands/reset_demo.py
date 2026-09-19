@@ -1,4 +1,4 @@
-"""Seed comprehensive demo data for local visual and multi-user QA.
+"""Reset comprehensive demo data for local visual and multi-user QA.
 
 This command deletes and recreates demo users and their collections.
 Use --prepare-photos to cache seed photography without changing the database.
@@ -2146,7 +2146,7 @@ CACHE_DIR = Path(__file__).resolve().parents[5] / "tmp" / "seed-photos"
 PHOTO_MANIFEST = Path(__file__).resolve().parents[1] / "seed_photos.json"
 CURATED_PHOTOS = json.loads(PHOTO_MANIFEST.read_text(encoding="utf-8"))
 PNG_MAGIC = bytes([0x89]) + b"PNG"
-AGENT = {"User-Agent": "miscellary-dev/1.0 (seed_demo; local development)"}
+AGENT = {"User-Agent": "miscellary-dev/1.0 (reset_demo; local development)"}
 PHOTO_SOURCES: dict[str, dict[str, str]] = {}
 SOURCE_AUTHOR_OVERRIDES = {"Vinyl groove macro.jpg": "Shane Gavin"}
 PUBLIC_DOMAIN_MARK = "https://creativecommons.org/publicdomain/mark/1.0/"
@@ -2446,7 +2446,7 @@ def _body_face(set_title: str, template_key: str) -> str | None:
 
 
 class Command(BaseCommand):
-    help = "Seed demo sets, cards, and users for local product review."
+    help = "Delete and recreate local demo data for product review. Never use in production."
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -2466,6 +2466,8 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        if not settings.ALLOW_DESTRUCTIVE_DEMO_RESET:
+            raise CommandError("reset_demo is disabled outside development.")
         random.seed(20260909)
         self.use_photos = not options["no_photos"]
         self.fallbacks = 0

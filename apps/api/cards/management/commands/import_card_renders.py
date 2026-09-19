@@ -1,6 +1,8 @@
 import json
-from pathlib import Path
+from pathlib import Path, PurePosixPath
+from urllib.parse import urlsplit
 
+from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
@@ -22,10 +24,9 @@ class Command(BaseCommand):
         parser.add_argument("manifest")
 
     def handle(self, *args, **options):
-        manifest_path = Path(options["manifest"]).resolve()
         try:
-            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError) as error:
+            manifest, source = self._manifest(options["manifest"])
+        except (OSError, json.JSONDecodeError, UnicodeDecodeError) as error:
             raise CommandError(f"Could not read render manifest: {error}") from error
         if not isinstance(manifest, dict):
             raise CommandError("The render manifest must be a JSON object.")
@@ -38,7 +39,6 @@ class Command(BaseCommand):
         if not isinstance(cards, list) or not all(isinstance(item, dict) for item in cards):
             raise CommandError("The manifest cards value must be a list of objects.")
 
-        root = manifest_path.parent
         set_imports = []
         card_imports = []
 
@@ -58,10 +58,10 @@ class Command(BaseCommand):
                     card_set,
                     item["signature"],
                     key,
-                    self._path(root, item.get("back")),
+                    self._file(source, item.get("back")),
                     pack_signature,
                     pack_key,
-                    self._path(root, item.get("pack")),
+                    self._file(source, item.get("pack")),
                 )
             )
 
@@ -82,17 +82,17 @@ class Command(BaseCommand):
                 "render_front_thumbnail_key": (
                     f"{prefix}/front-300.webp",
                     "image/webp",
-                    self._path(root, item.get("thumbnail")),
+                    self._file(source, item.get("thumbnail")),
                 ),
                 "render_front_key": (
                     f"{prefix}/front-1000.webp",
                     "image/webp",
-                    self._path(root, item.get("front")),
+                    self._file(source, item.get("front")),
                 ),
                 "render_flat_thumbnail_key": (
                     f"{prefix}/flat-300.webp",
                     "image/webp",
-                    self._path(root, item.get("flat_thumbnail")),
+                    self._file(source, item.get("flat_thumbnail")),
                 ),
             }
             if spot:
@@ -101,23 +101,23 @@ class Command(BaseCommand):
                         "render_mask_thumbnail_key": (
                             f"{prefix}/mask-300.png",
                             "image/png",
-                            self._path(root, item.get("mask_thumbnail")),
+                            self._file(source, item.get("mask_thumbnail")),
                         ),
                         "render_mask_key": (
                             f"{prefix}/mask-1000.png",
                             "image/png",
-                            self._path(root, item.get("mask")),
+                            self._file(source, item.get("mask")),
                         ),
                     }
                 )
             card_imports.append((card, item["signature"], files))
 
-        for _, _, key, path, _, pack_key, pack_path in set_imports:
-            storage.put_object(key, path.read_bytes(), "image/webp")
-            storage.put_object(pack_key, pack_path.read_bytes(), "image/webp")
+        for _, _, key, file, _, pack_key, pack_file in set_imports:
+            storage.put_object(key, self._read(file), "image/webp")
+            storage.put_object(pack_key, self._read(pack_file), "image/webp")
         for _, _, files in card_imports:
-            for key, content_type, path in files.values():
-                storage.put_object(key, path.read_bytes(), content_type)
+            for key, content_type, file in files.values():
+                storage.put_object(key, self._read(file), content_type)
 
         with transaction.atomic():
             for card_set, signature, key, _, pack_signature, pack_key, _ in set_imports:
@@ -149,10 +149,42 @@ class Command(BaseCommand):
             )
         )
 
-    def _path(self, root: Path, relative: object) -> Path:
+    def _manifest(self, location: str) -> tuple[dict, Path | tuple[str, str]]:
+        if location.startswith("s3://"):
+            parsed = urlsplit(location)
+            key = parsed.path.lstrip("/")
+            if parsed.netloc != settings.AWS_STORAGE_BUCKET_NAME or not key:
+                raise CommandError("The render manifest must be in the configured media bucket.")
+            body = storage.client().get_object(Bucket=parsed.netloc, Key=key)["Body"].read()
+            return json.loads(body), (parsed.netloc, str(PurePosixPath(key).parent))
+        path = Path(location).resolve()
+        return json.loads(path.read_text(encoding="utf-8")), path.parent
+
+    def _file(self, source: Path | tuple[str, str], relative: object):
         if not isinstance(relative, str) or not relative:
             raise CommandError("The render manifest contains a missing file path.")
-        path = (root / relative).resolve()
-        if not path.is_relative_to(root) or not path.is_file():
-            raise CommandError(f"Missing render file: {relative}")
-        return path
+        if isinstance(source, Path):
+            path = (source / relative).resolve()
+            if not path.is_relative_to(source) or not path.is_file():
+                raise CommandError(f"Missing render file: {relative}")
+            return path
+        bucket, prefix = source
+        relative_path = PurePosixPath(relative)
+        if relative_path.is_absolute() or ".." in relative_path.parts:
+            raise CommandError(f"Invalid render file path: {relative}")
+        key = str(PurePosixPath(prefix) / relative_path)
+        try:
+            storage.client().head_object(Bucket=bucket, Key=key)
+        except Exception as error:
+            raise CommandError(f"Missing render file: {relative}") from error
+        return bucket, key
+
+    def _read(self, file: Path | tuple[str, str]) -> bytes:
+        if isinstance(file, Path):
+            return file.read_bytes()
+        bucket, key = file
+        try:
+            return storage.client().get_object(Bucket=bucket, Key=key)["Body"].read()
+        except Exception as error:
+            relative = PurePosixPath(key).name
+            raise CommandError(f"Missing render file: {relative}") from error

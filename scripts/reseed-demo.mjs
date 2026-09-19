@@ -250,11 +250,11 @@ if (!bakeOnly) {
   if (args['no-photos']) {
     process.stdout.write('Skipped: --no-photos uses generated gradients.\n');
   } else {
-    await manage(['seed_demo', '--prepare-photos']);
+    await manage(['bootstrap_catalogue', '--prepare-photos']);
   }
 
   heading('Recreate demo users, sets, cards and social data');
-  await manage(['seed_demo', '--yes', ...photos]);
+  await manage(['reset_demo', '--yes', ...photos]);
 }
 
 heading('Build the shared render surface');

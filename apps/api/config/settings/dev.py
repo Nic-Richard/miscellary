@@ -1,6 +1,7 @@
 from .base import *  # noqa: F403
 
 DEBUG = True
+ALLOW_DESTRUCTIVE_DEMO_RESET = True
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 REFRESH_COOKIE_SECURE = False
 STORAGES["staticfiles"] = {  # noqa: F405

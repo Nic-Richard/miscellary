@@ -17,6 +17,7 @@ DEBUG = False
 # everywhere except local development; see config/settings/dev.py.
 UNLIMITED_PACK_EMAILS: list[str] = env.list("UNLIMITED_PACK_EMAILS", default=[])
 UNLIMITED_PACKS_FOR_DEMO_ACCOUNTS = False
+ALLOW_DESTRUCTIVE_DEMO_RESET = False
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["localhost", "127.0.0.1"])
 
 INSTALLED_APPS = [

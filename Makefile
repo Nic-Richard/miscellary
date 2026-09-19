@@ -13,7 +13,7 @@ seed: ## Rebuild the demo catalogue and bake every render
 	pnpm reseed
 
 seed-data-only: ## Recreate demo rows without baking; published cards will not display
-	docker compose exec api uv run python manage.py seed_demo
+	docker compose exec api uv run python manage.py reset_demo
 
 verify-renders: ## Check every published card and set has its baked renders
 	docker compose exec api uv run python manage.py verify_renders

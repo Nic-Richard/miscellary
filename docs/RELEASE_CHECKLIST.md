@@ -7,6 +7,8 @@
 - [ ] Compare a production-like web build and installed Android build before treating Docker/Expo Go lag as renderer performance.
 - [ ] Production bootstrap accounts are visibly marked as demo accounts, including an accessible label.
 - [ ] Bootstrap card imagery has durable source/license records and no source or seed metadata is printed in normal card copy.
+- [ ] `bootstrap_catalogue` reports every manifest set as verified on a second production run.
+- [ ] Every bootstrapped card, set back, and pack passes `verify_renders` after render import.
 - [ ] Production email delivery from SES (verification and reset links point at `WEB_URL`).
 - [ ] `support@miscellary.com` and `privacy@miscellary.com` receive mail before publishing legal pages.
 - [ ] Refresh cookie works cross-origin from `miscellary.com` (`COOKIE_SAMESITE=Lax`).

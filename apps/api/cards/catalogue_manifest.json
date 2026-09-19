@@ -1,0 +1,3939 @@
+{
+  "version": 1,
+  "creators": [
+    {
+      "email": "ellis@example.com",
+      "username": "ellisgrant",
+      "display_name": "Ellis Grant",
+      "bio": "Weekend walks, native plants, and rocks picked up along the way."
+    },
+    {
+      "email": "mara@example.com",
+      "username": "marabell",
+      "display_name": "Mara Bell",
+      "bio": "Records, second-hand audio gear, and live sessions."
+    },
+    {
+      "email": "devon@example.com",
+      "username": "devonlee",
+      "display_name": "Devon Lee",
+      "bio": "Old tools, pocket finds, and whatever is on the workbench."
+    },
+    {
+      "email": "orla@example.com",
+      "username": "orla",
+      "display_name": "Orla Finch",
+      "bio": "Garden birds, mostly from the kitchen window."
+    },
+    {
+      "email": "kit@example.com",
+      "username": "kit",
+      "display_name": "Kit Marlow",
+      "bio": "Long exposures and colder nights."
+    },
+    {
+      "email": "bex@example.com",
+      "username": "bex",
+      "display_name": "Bex Ndlovu",
+      "bio": "Saturday market, before the good stuff goes."
+    },
+    {
+      "email": "sol@example.com",
+      "username": "sol",
+      "display_name": "Sol Tanaka",
+      "bio": "Small details of large cities."
+    },
+    {
+      "email": "wren@example.com",
+      "username": "wren",
+      "display_name": "Wren Amari",
+      "bio": "Fungi, lichen and the underside of logs."
+    }
+  ],
+  "sets": [
+    {
+      "title": "Plants Along the Trail",
+      "set_code": "TRL",
+      "mark": "leaf",
+      "pack_colour": "moss",
+      "pack_finish": "matte",
+      "pack_size": 4,
+      "emblem_layout": "seal",
+      "emblem_shape": "rosette",
+      "emblem_style": "filled",
+      "emblem_text": "forest",
+      "surface": "grain",
+      "description": "Pressed leaves and wildflowers spotted on weekend hikes.",
+      "palette": [
+        [
+          70,
+          110,
+          70
+        ],
+        [
+          30,
+          60,
+          40
+        ]
+      ],
+      "cards": [
+        [
+          "Broadleaf Plantain",
+          "common",
+          "classic",
+          {
+            "stock": "bone",
+            "accent": "green"
+          },
+          [
+            "*Plantago major*. Broad ribbed leaves flat to the ground, wind-pollinated spikes above.",
+            "A rosette of broad, strongly ribbed leaves with several flower spikes standing up out of it, growing where the grass runs out against the tarmac."
+          ],
+          "Plantago major RF.jpg"
+        ],
+        [
+          "Wild Clover",
+          "common",
+          "classic",
+          {
+            "stock": "bone",
+            "accent": "green"
+          },
+          [
+            "*Trifolium repens*. Creeping stems root at the nodes; heads brown from the base up.",
+            "One white clover head at full size, the lower florets already browning while the top ones are still fresh."
+          ],
+          "Trifolium repens (inflorescense) Edit.jpg"
+        ],
+        [
+          "Dandelion Puff",
+          "common",
+          "polaroid",
+          {
+            "tint": "none"
+          },
+          [
+            "",
+            "A complete dandelion seed head with every parachute still attached, lit against dark grass."
+          ],
+          "Dandelion seed head (Taraxacum officinale).jpg"
+        ],
+        [
+          "Fern Frond",
+          "common",
+          "fieldnote",
+          {
+            "accent": "green"
+          },
+          [
+            "**Fern crozier**\n- New fronds unroll from the base upward\n- The coil protects the growing tip\n- Ferns spread by spores, never seed",
+            "New fern fronds coming up beside a fallen branch, two still tightly curled and one part opened."
+          ],
+          "Unfurling Fern Fronds - geograph.org.uk - 6840619.jpg"
+        ],
+        [
+          "Trailside Moss",
+          "common",
+          "polaroid",
+          {
+            "tint": "cool"
+          },
+          [
+            "",
+            "A close view of moss sporophytes, each capsule held clear of the cushion on a thin red stalk."
+          ],
+          "Macro Photography of Moss Sporophytes.jpg"
+        ],
+        [
+          "Chicory Bloom",
+          "uncommon",
+          "classic",
+          {
+            "stock": "bone",
+            "accent": "blue"
+          },
+          [
+            "*Cichorium intybus*. Each flower opens for one morning and is closed again by midday.",
+            "A single chicory flower fully open, its pale blue rays square-cut and fringed at the tips."
+          ],
+          "Cichorium intybus-alvesgaspar1.jpg"
+        ],
+        [
+          "Milkweed Pod",
+          "uncommon",
+          "polaroid",
+          {
+            "tint": "warm"
+          },
+          [
+            "",
+            "Two views of the same plant: a closed green pod still on the stem, and a split pod letting its silk out."
+          ],
+          "Asclepias syriaca seed pod.jpg"
+        ],
+        [
+          "Foxglove Spire",
+          "rare",
+          "bold",
+          {
+            "shape": "arch"
+          },
+          [
+            "*Digitalis purpurea*. Leaves in the first year, one tall spike in the second. Toxic throughout.",
+            "A foxglove with the lower bells open and the top of the spire still closed in bud."
+          ],
+          "Digitalis purpurea - Panoramic trail - Northern Black Forest 01.jpg"
+        ],
+        [
+          "Marsh Orchid",
+          "epic",
+          "minimal",
+          {
+            "gradient": "full",
+            "accent": "cream",
+            "border": "copper",
+            "border_width": "hairline"
+          },
+          [
+            "*Dactylorhiza*. A wet-meadow orchid; the spike opens from the bottom up.",
+            "A marsh orchid in flower with a fritillary butterfly settled on the spike, wings open."
+          ],
+          "Melitaea sp. and Dactylorhiza fuchsii.jpg"
+        ],
+        [
+          "Ghost Pipe",
+          "legendary",
+          "fieldnote",
+          {
+            "stock": "ink",
+            "accent": "gold"
+          },
+          [
+            "**Monotropa uniflora**\n- No chlorophyll, so it is white rather than green\n- Feeds through fungi joined to tree roots\n- Blackens as it goes over",
+            "A tight group of pale ghost pipe stems standing in leaf litter, the flower heads already blackening."
+          ],
+          "Monotropa uniflora ghost pipe.jpg"
+        ],
+        [
+          "Red Maple",
+          "common",
+          "classic",
+          {
+            "stock": "bone",
+            "accent": "rust"
+          },
+          [
+            "*Acer rubrum*. Red in the spring flowers, red in the autumn leaf, red in the twigs between.",
+            "One fallen maple leaf, still deep red, lying in a patch of light on the dark ground."
+          ],
+          "Red_maple_leaf_on_paper_birch.jpg"
+        ],
+        [
+          "Wood Sorrel",
+          "common",
+          "polaroid",
+          {
+            "tint": "cool"
+          },
+          [
+            "",
+            "A spreading patch of wood sorrel over damp ground, with one small white flower open in it."
+          ],
+          "Wood_sorrel_after_rain.jpg"
+        ],
+        [
+          "Yarrow",
+          "common",
+          "fieldnote",
+          {
+            "accent": "green"
+          },
+          [
+            "**Achillea millefolium**\n- Flat-topped heads of many small florets\n- Leaves finely divided, almost feathery\n- Dry verges, meadows and roadsides",
+            "A flat-topped yarrow head in full flower, with a pale crab spider sitting among the florets."
+          ],
+          "Misumena_vatia_on_Achillea_millefolium_qtl2.jpg"
+        ],
+        [
+          "Hawthorn Berries",
+          "common",
+          "classic",
+          {
+            "stock": "cream",
+            "accent": "red"
+          },
+          [
+            "*Crataegus monogyna*. One seed to a haw, which is where the *monogyna* comes from.",
+            "Hawthorn fruit part way to ripe, orange on one side and red on the other, hanging among the lobed leaves."
+          ],
+          "Ripening Hawthorn Berries - geograph.org.uk - 936373.jpg"
+        ],
+        [
+          "Beech Mast",
+          "common",
+          "fieldnote",
+          {
+            "stock": "forest",
+            "accent": "ochre"
+          },
+          [
+            "**Fagus sylvatica**\n- Each husk holds two triangular nuts\n- Heavy crops arrive only every few years\n- A mast year feeds birds and mammals alike",
+            "Beech husks still shut on the branch, sitting among the leaves before they open and drop."
+          ],
+          "Beech_mast_on_trees,_Cockshoots_picnic_site_-_geograph.org.uk_-_232863.jpg"
+        ],
+        [
+          "Meadowsweet",
+          "uncommon",
+          "polaroid",
+          {
+            "tint": "faded"
+          },
+          [
+            "",
+            "Cream meadowsweet plumes in full flower, held above the leaves on reddish stems."
+          ],
+          "Meadowsweet_by_Lysekil_Line_in_Brastad_7.jpg"
+        ],
+        [
+          "Teasel",
+          "uncommon",
+          "bold",
+          {
+            "stock": "sage",
+            "shape": "circle",
+            "border": "ochre"
+          },
+          [
+            "*Dipsacus fullonum*. The dry heads stand all winter, and goldfinches work them for seed.",
+            "A dry teasel head with its spines intact and a tuft of fresh green growth pushing out of the top."
+          ],
+          "A_Teasel_head_where_the_seeds_in_it_are_germinating_(vivipary).jpg"
+        ],
+        [
+          "Rowan",
+          "rare",
+          "fieldnote",
+          {
+            "accent": "red",
+            "finish": "pearl"
+          },
+          [
+            "**Sorbus aucuparia**\n- Pinnate leaves and berries in dense bunches\n- Grows higher up a hill than most trees\n- Thrushes and waxwings strip it bare",
+            "A cut rowan branch photographed against black, carrying a full cluster of red berries under its pinnate leaves."
+          ],
+          "Sorbus_aucuparia_2022_G1.jpg"
+        ],
+        [
+          "Early Purple Orchid",
+          "rare",
+          "classic",
+          {
+            "stock": "lavender",
+            "accent": "plum",
+            "finish": "metallic"
+          },
+          [
+            "*Orchis mascula*. One of the first orchids out, on chalk and in old woodland.",
+            "An early purple orchid in full flower, the hooded blooms working their way up the spike."
+          ],
+          "Orchis_mascula_inflorescence_-_Keila.jpg"
+        ],
+        [
+          "Sea Holly",
+          "epic",
+          "minimal",
+          {
+            "gradient": "bottom",
+            "accent": "gold",
+            "body_ink": "linen",
+            "finish": "pearl"
+          },
+          [
+            "*Eryngium maritimum*. Waxy blue-grey leaves hold water on open shingle.",
+            "One low sea holly plant out among the shingle, with the beach running back to the dunes behind it."
+          ],
+          "Eryngium_maritimum,_Vic-la-Gardiole_02.jpg"
+        ]
+      ],
+      "creator": "ellisgrant",
+      "pack_design": {
+        "cutout": "Glechoma hederacea.png",
+        "art": [
+          {
+            "cutout": true,
+            "scale": 52,
+            "y": -12,
+            "rotate": 4
+          }
+        ],
+        "emblem_y": 19,
+        "emblem_scale": 84,
+        "lines": [
+          [
+            "PRESSED ON THE WAY ROUND",
+            "cream",
+            2.9,
+            -40,
+            26,
+            "body"
+          ],
+          [
+            "{pack} CARDS PER PACK",
+            "cream",
+            4.0,
+            39,
+            30,
+            "body"
+          ]
+        ]
+      },
+      "tags": [
+        "plants",
+        "wildflowers",
+        "botany",
+        "trail"
+      ],
+      "body_faces": {
+        "": "garamond",
+        "polaroid": "caveat"
+      }
+    },
+    {
+      "title": "Pocket Geology",
+      "set_code": "GEO",
+      "mark": "crystal",
+      "pack_colour": "ash",
+      "pack_finish": "satin",
+      "pack_size": 6,
+      "emblem_layout": "stacked",
+      "emblem_shape": "tablet",
+      "emblem_style": "filled",
+      "emblem_text": "ink",
+      "surface": "canvas",
+      "description": "Stones and minerals collected from riverbeds and roadcuts.",
+      "palette": [
+        [
+          120,
+          112,
+          98
+        ],
+        [
+          58,
+          52,
+          44
+        ]
+      ],
+      "cards": [
+        [
+          "River Quartz",
+          "common",
+          "bold",
+          {
+            "shape": "square"
+          },
+          [
+            "Silicon dioxide, hardness 7. Six-sided prisms ending in a point, and hard enough to scratch glass.",
+            "A clear quartz crystal with its termination intact, photographed against black."
+          ],
+          "A clear quartz crystal with natural features.jpg"
+        ],
+        [
+          "Granite Block",
+          "common",
+          "bold",
+          {
+            "shape": "square"
+          },
+          [
+            "Coarse intrusive rock of quartz, feldspar and mica, cooled slowly well below the surface.",
+            "A rough granite block resting on paving, with the photographer's shadow falling across it."
+          ],
+          "Granite 2641.jpg"
+        ],
+        [
+          "Contorted Slate",
+          "common",
+          "fieldnote",
+          {
+            "accent": "blue"
+          },
+          [
+            "**Slate**\n- Mudstone recrystallised under pressure\n- Splits along its cleavage, not its bedding\n- The folding here came after the cleavage",
+            "Slate beds folded back on themselves in a coastal outcrop, the cleavage catching the light."
+          ],
+          "Contorted slate at Hayle Bay - geograph.org.uk - 629405.jpg"
+        ],
+        [
+          "Basalt Cobbles",
+          "common",
+          "classic",
+          {
+            "stock": "pine",
+            "accent": "red"
+          },
+          [
+            "Fine-grained lava and the commonest rock of the ocean floor. Dark, dense and tough.",
+            "Rounded basalt cobbles packed across a shoreline, every one worked smooth by the surf."
+          ],
+          "Basalt cobble-boulder shoreline (Yaquina Head, Oregon, USA) 3.jpg"
+        ],
+        [
+          "Sandstone Block",
+          "common",
+          "classic",
+          {
+            "stock": "sand",
+            "accent": "gold"
+          },
+          [
+            "Cemented sand grains. The pink comes from iron oxide coating each grain.",
+            "A pink sandstone block with one fresh face, its bedding showing as faint parallel lines."
+          ],
+          "Sandstone sample, Vosges.jpg"
+        ],
+        [
+          "Shoreline Outcrop",
+          "uncommon",
+          "bold",
+          {
+            "shape": "circle"
+          },
+          [
+            "Weathering opens the grain of a rock face, and then frost and water carry the rest away.",
+            "A weathered rock surface at the water's edge, its banding worn down to faint pale streaks."
+          ],
+          "Banded gneiss, Six Mile Lake.jpg"
+        ],
+        [
+          "Rose Quartz",
+          "uncommon",
+          "classic",
+          {
+            "stock": "bone",
+            "accent": "purple"
+          },
+          [
+            "Quartz clouded pink by traces of titanium or manganese. It rarely forms good crystals.",
+            "A fist-sized piece of rose quartz, cloudy pink and translucent where it broke."
+          ],
+          "Rose Quartz Macro 1.JPG"
+        ],
+        [
+          "Pyrite Cluster",
+          "rare",
+          "fieldnote",
+          {
+            "stock": "charcoal",
+            "accent": "gold"
+          },
+          [
+            "**Iron sulphide, FeS2**\n- Grows in cubes with striated faces\n- Brassy yellow, but much harder than gold\n- Hardness 6, with a greenish black streak",
+            "Interlocking pyrite cubes with flat brassy faces and edges sharp enough to look machined."
+          ],
+          "Pyrite-232956.jpg"
+        ],
+        [
+          "Fossil Trilobite",
+          "epic",
+          "fieldnote",
+          {
+            "stock": "slate",
+            "accent": "gold"
+          },
+          [
+            "**Trilobite**\n- Marine arthropod, three lobes lengthwise\n- Moulted its shell as it grew\n- Cambrian to the end of the Permian",
+            "A trilobite in its matrix, the segmented thorax and tail standing clear in relief."
+          ],
+          "Trilobite fossil, Desert Museum.jpg"
+        ],
+        [
+          "Raw Amethyst",
+          "legendary",
+          "bold",
+          {
+            "shape": "circle"
+          },
+          [
+            "Purple quartz, coloured by iron and natural radiation. Heat turns it to yellow citrine.",
+            "Two halves of a geode opened out, both lined with small purple crystals over a white rim."
+          ],
+          "Amethyst-geode 020 7765.jpg"
+        ],
+        [
+          "Chert Nodule",
+          "common",
+          "classic",
+          {
+            "stock": "ash",
+            "accent": "slate"
+          },
+          [
+            "Microcrystalline silica formed inside chalk and limestone. Breaks with a curved face.",
+            "A slab of chert broken open, weathered pink along the top and fine grey inside."
+          ],
+          "Dover_Chert_(St._Louis_Limestone,_Middle_Mississippian"
+        ],
+        [
+          "Gneiss Band",
+          "common",
+          "bold",
+          {
+            "stock": "sand",
+            "shape": "square",
+            "border": "charcoal"
+          },
+          [
+            "High-grade metamorphic rock. Heat and pressure sorted its minerals into pale and dark bands.",
+            "A cut face of gneiss with pale and dark bands folded into a tight hook."
+          ],
+          "Gneiss_2_(33239757534).jpg"
+        ],
+        [
+          "Pumice",
+          "common",
+          "polaroid",
+          {
+            "tint": "faded"
+          },
+          [
+            "",
+            "A worn piece of pumice, its whole surface full of the small cavities gas left behind."
+          ],
+          "Pumice Stone.jpg"
+        ],
+        [
+          "Mudstone",
+          "common",
+          "fieldnote",
+          {
+            "accent": "slate"
+          },
+          [
+            "**Mudstone**\n- Silt and clay settled out in still water\n- Splits along thin bedding planes\n- Fossils survive best where the grain is finest",
+            "A blocky mudstone specimen on display, with the printed label naming the formation behind it."
+          ],
+          "Mudstone_(Graneros_Formation,_Upper_Cretaceous"
+        ],
+        [
+          "Conglomerate",
+          "common",
+          "classic",
+          {
+            "stock": "cocoa",
+            "accent": "cream"
+          },
+          [
+            "Rounded pebbles cemented in a finer matrix. The rounding means water moved them first.",
+            "Rounded pebbles set in a coarse orange matrix, the block still carrying its catalogue number."
+          ],
+          "Conglomerate_(GeoDIL_number_-_466).jpg"
+        ],
+        [
+          "Calcite",
+          "uncommon",
+          "bold",
+          {
+            "stock": "bone",
+            "shape": "diamond",
+            "border": "ochre"
+          },
+          [
+            "Calcium carbonate, hardness 3. It cleaves into rhombs and fizzes in dilute acid.",
+            "A honey-coloured calcite crystal, its cleavage faces meeting at the slanted angles that identify the mineral."
+          ],
+          "Calcite_crystal_(GeoDIL_number_-_698).jpg"
+        ],
+        [
+          "Fluorite",
+          "uncommon",
+          "fieldnote",
+          {
+            "stock": "plum",
+            "accent": "violet"
+          },
+          [
+            "**Calcium fluoride**\n- Cubes and octahedra, hardness 4\n- Purple, green and colourless in one seam\n- Many specimens glow under ultraviolet",
+            "Loose fluorite octahedra in purple and pale green, scattered among small brassy pyrite cubes."
+          ],
+          "Fluorite_octahedrons_and_cubic_pyrite.jpg"
+        ],
+        [
+          "Labradorite",
+          "rare",
+          "classic",
+          {
+            "stock": "navy",
+            "accent": "blue",
+            "finish": "pearl"
+          },
+          [
+            "A feldspar whose blue flash comes from light bouncing off layers inside the stone.",
+            "A rough labradorite block with one face polished, turned until the blue flash comes up."
+          ],
+          "Labradorite_specimen.jpg"
+        ],
+        [
+          "Malachite",
+          "rare",
+          "fieldnote",
+          {
+            "accent": "green",
+            "finish": "metallic"
+          },
+          [
+            "**Copper carbonate**\n- Forms where copper ore weathers\n- Banding follows each growth surface\n- Ground for green pigment for centuries",
+            "Polished malachite with light and dark green bands ringing several growth centres."
+          ],
+          "Malachite-250210.jpg"
+        ],
+        [
+          "Cut Amethyst",
+          "epic",
+          "minimal",
+          {
+            "gradient": "full",
+            "accent": "cream",
+            "finish": "pearl"
+          },
+          [
+            "Faceting trades weight away for light returned through the table.",
+            "A faceted oval amethyst, pale violet, cut so the colour reads through the table."
+          ],
+          "Amethyst_(GeoDIL_number_-_1742).jpg"
+        ]
+      ],
+      "creator": "ellisgrant",
+      "pack_design": {
+        "keyed": "pocket-geology",
+        "art": [
+          {
+            "cutout": true,
+            "scale": 46,
+            "y": -12,
+            "rotate": -4
+          }
+        ],
+        "emblem_y": 19,
+        "emblem_scale": 82,
+        "lines": [
+          [
+            "PICKED UP AND KEPT",
+            "ink",
+            2.9,
+            -40,
+            24,
+            "body"
+          ],
+          [
+            "{pack} CARDS PER PACK",
+            "ink",
+            4.0,
+            39,
+            30,
+            "body"
+          ]
+        ]
+      },
+      "tags": [
+        "rocks",
+        "minerals",
+        "geology"
+      ],
+      "body_faces": {
+        "": "cabin"
+      }
+    },
+    {
+      "title": "Records on My Shelf",
+      "set_code": "REC",
+      "mark": "record",
+      "pack_colour": "black",
+      "pack_finish": "holo",
+      "pack_size": 5,
+      "emblem_layout": "wordmark",
+      "emblem_text": "cream",
+      "surface": "linen",
+      "description": "Records I return to, along with the sleeves, decks, and small parts around them.",
+      "palette": [
+        [
+          70,
+          55,
+          90
+        ],
+        [
+          20,
+          16,
+          28
+        ]
+      ],
+      "cards": [
+        [
+          "B-Side Blue",
+          "common",
+          "classic",
+          {
+            "accent": "blue"
+          },
+          [
+            "The colour is pigment in the PVC. It plays no differently from black vinyl.",
+            "A translucent blue seven-inch propped against its sleeve, lit from behind so the vinyl glows."
+          ],
+          "True Blue vinyl record.jpg"
+        ],
+        [
+          "Late Night Pressing",
+          "common",
+          "classic",
+          {
+            "accent": "purple"
+          },
+          [
+            "A twelve-inch LP runs at 33 rpm and holds around twenty minutes a side.",
+            "A record on the platter with the arm resting across it, and the mixer on a shelf above the deck."
+          ],
+          "Kazantip, Popovka, Crimea, Technics turntable, Vinyl turntable.jpg"
+        ],
+        [
+          "First Cut",
+          "common",
+          "fieldnote",
+          {
+            "accent": "purple"
+          },
+          [
+            "**Groove**\n- One continuous spiral, cut from the outside in\n- The shape of the walls carries the stereo\n- Lead-in and run-out hold no audio",
+            "A close black and white view across the grooves, with the light picking out every ridge."
+          ],
+          "12in-LP-Vinyl-Record-Macro-Grooves.jpg"
+        ],
+        [
+          "Basement Tape",
+          "common",
+          "classic",
+          {
+            "stock": "pine",
+            "accent": "gold"
+          },
+          [
+            "Belt drive or direct, the platter has one job: hold a steady 33 or 45 rpm.",
+            "A turntable set up on a table with someone reaching past it, and an electric guitar on the wall behind."
+          ],
+          "Close-up of a dj reaching for a vinyl on the turntable, guitar in a blurry background.jpg"
+        ],
+        [
+          "Corner Store 45",
+          "common",
+          "polaroid",
+          {
+            "tint": "cool"
+          },
+          [
+            "",
+            "A plain black seven-inch with the centre knocked out, one tab of the spider still in place."
+          ],
+          "45 rpm Single Record.jpg"
+        ],
+        [
+          "Sunday Matinee",
+          "uncommon",
+          "classic",
+          {
+            "stock": "bone",
+            "accent": "blue"
+          },
+          [
+            "Slide a record out by its edges. Fingerprints on the playing surface collect dust.",
+            "A record halfway out of its sleeve, lifted beside a turntable with the lid standing open."
+          ],
+          "Man reading vinyl record (Unsplash).jpg"
+        ],
+        [
+          "Reissue Green Wax",
+          "uncommon",
+          "classic",
+          {
+            "stock": "forest",
+            "accent": "green"
+          },
+          [
+            "The stylus rides in the groove, and the counterweight sets how hard it presses.",
+            "A teal pressing on the platter with the cartridge down and the stylus in the groove."
+          ],
+          "Audio-Technica turntable playing coloured vinyl.jpg"
+        ],
+        [
+          "Groove Macro",
+          "rare",
+          "bold",
+          {
+            "shape": "square"
+          },
+          [
+            "Raking light shows the groove wall. Dust caught in it is most of what surface noise is.",
+            "A raking-light macro of the run-out grooves, close enough to show the dust on the surface."
+          ],
+          "Vinyl groove macro.jpg"
+        ],
+        [
+          "Sorting the Table",
+          "epic",
+          "fieldnote",
+          {
+            "stock": "ink",
+            "accent": "purple"
+          },
+          [
+            "**Sorting a collection**\n- Sleeve and disc are graded separately\n- The run-out carries the matrix number\n- Play-grade anything you cannot hear first",
+            "Three collectors working through sleeves and loose discs spread out across a table."
+          ],
+          "Jaume Pujagut and his vinyl records sleeve collection.jpg"
+        ],
+        [
+          "Soundtrack Single",
+          "legendary",
+          "minimal",
+          {
+            "gradient": "full",
+            "accent": "gold"
+          },
+          [
+            "A seven-inch label carries credits the sleeve often leaves out.",
+            "The green label of a seven-inch single, its credits and rights notice set in small type around the edge."
+          ],
+          "Chi Mai 45 rpm vinyl single label detail.jpg"
+        ],
+        [
+          "Seven Inch Single",
+          "common",
+          "classic",
+          {
+            "stock": "cream",
+            "accent": "red"
+          },
+          [
+            "The large centre hole was cut for jukeboxes; an adapter fits it to a spindle.",
+            "A seven-inch label in teal and black, with the large centre hole punched clean out of it."
+          ],
+          "Amen Brother 7 inch single.jpg"
+        ],
+        [
+          "Gatefold Sleeve",
+          "common",
+          "polaroid",
+          {
+            "tint": "warm"
+          },
+          [
+            "",
+            "A plain white gatefold standing open on top of a deck, the embossed title catching the light."
+          ],
+          "White Album Gatefold.jpg"
+        ],
+        [
+          "Direct Drive",
+          "common",
+          "fieldnote",
+          {
+            "stock": "charcoal",
+            "accent": "silver"
+          },
+          [
+            "**Direct drive**\n- The motor turns the platter with no belt\n- A pitch slider trims the speed\n- Strobe marks show when it is on speed",
+            "A direct-drive deck from above in black and white, with the arm, the pitch slider and the platter edge all in frame."
+          ],
+          "Technics_SL-1200MK5_Direct_Drive_Turntable_System_with_Ortofon_cartridge_(2017-01-21_22.33.27_piqsels.com_en).jpg"
+        ],
+        [
+          "Seven-Inch Extender",
+          "common",
+          "bold",
+          {
+            "stock": "butter",
+            "shape": "circle",
+            "border": "red"
+          },
+          [
+            "A plastic disc that sits a seven-inch single flat on a full-size platter.",
+            "A plastic disc sold to sit a seven-inch single on a full-size platter, still bagged with the printed card it came with."
+          ],
+          "Extender_phonograph_record_adapter.jpg"
+        ],
+        [
+          "Inner Sleeve",
+          "common",
+          "fieldnote",
+          {
+            "accent": "slate"
+          },
+          [
+            "**Inner sleeve**\n- Plain paper sheds fibres and scuffs\n- Anti-static liners hold much less dust\n- Store records upright, never in a stack",
+            "A record part way out of a plain paper inner sleeve, its label showing through the cut-out."
+          ],
+          "LP_Sleeve.jpg"
+        ],
+        [
+          "Record Shop Interior",
+          "uncommon",
+          "classic",
+          {
+            "stock": "cocoa",
+            "accent": "ochre"
+          },
+          [
+            "Bins are filed by genre and then by artist. The dividers do most of the work.",
+            "Full bins in a record shop, with hand-lettered genre signs on the wall above them."
+          ],
+          "Vinyl Store.jpg"
+        ],
+        [
+          "Record Brush",
+          "uncommon",
+          "polaroid",
+          {
+            "tint": "mono"
+          },
+          [
+            "",
+            "A brush-and-pad cleaner resting on a record, ready to be drawn round the surface."
+          ],
+          "Record-cleaner4.jpg"
+        ],
+        [
+          "Test Pressing",
+          "rare",
+          "fieldnote",
+          {
+            "stock": "ink",
+            "accent": "white",
+            "finish": "pearl"
+          },
+          [
+            "**Test pressing**\n- Pressed in small numbers before the run\n- Plain label, details filled in by hand\n- Matrix numbers tie it back to the lacquer",
+            "A test pressing label with the date, title, artist and matrix numbers written into its printed blanks."
+          ],
+          "Run–D.M.C. - Faces-Back From Hell (test pressing single) (Side A).jpg"
+        ],
+        [
+          "Coloured Vinyl",
+          "rare",
+          "bold",
+          {
+            "stock": "lavender",
+            "shape": "circle",
+            "border": "violet",
+            "finish": "metallic"
+          },
+          [
+            "A picture disc laminates artwork inside the record, and usually plays noisier for it.",
+            "A plain black single lying beside a yellow picture disc, both out of their sleeves."
+          ],
+          "Vinyl_singles_7\"_+_5,5\".jpg"
+        ],
+        [
+          "Cutting Lathe",
+          "epic",
+          "minimal",
+          {
+            "gradient": "bottom",
+            "accent": "gold",
+            "body_ink": "linen",
+            "finish": "metallic"
+          },
+          [
+            "The cutter head writes one spiral groove into a lacquer master.",
+            "A record-cutting lathe with the cutter head over a blank disc and its controls along the front."
+          ],
+          "Neumann_VMS-70_Cutting_Lathe.png"
+        ]
+      ],
+      "creator": "marabell",
+      "pack_design": {
+        "keyed": "records-on-my-shelf",
+        "art": [
+          {
+            "cutout": true,
+            "scale": 66,
+            "y": -11,
+            "rotate": 0
+          }
+        ],
+        "emblem_y": 20,
+        "emblem_scale": 82,
+        "lines": [
+          [
+            "SEVEN INCH AND TWELVE",
+            "cream",
+            3.0,
+            -40,
+            26,
+            "body"
+          ],
+          [
+            "{pack} CARDS PER PACK",
+            "cream",
+            4.0,
+            39,
+            30,
+            "body"
+          ]
+        ]
+      },
+      "tags": [
+        "records",
+        "vinyl",
+        "music"
+      ],
+      "body_faces": {
+        "": "jost",
+        "polaroid": "caveat"
+      }
+    },
+    {
+      "creator": "orla",
+      "title": "Garden Birds",
+      "description": "Whatever lands on the feeder, catalogued from the kitchen window.",
+      "palette": [
+        [
+          120,
+          150,
+          190
+        ],
+        [
+          40,
+          60,
+          90
+        ]
+      ],
+      "cards": [
+        [
+          "European Robin",
+          "common",
+          "classic",
+          {
+            "stock": "cream"
+          },
+          [
+            "*Erithacus rubecula*. Juveniles are spotted brown; the red front arrives with the moult.",
+            "A young robin still in spotted brown plumage, on bare ground, before the red breast comes through."
+          ],
+          "European_robin_(Erithacus_rubecula)_juvenile.jpg"
+        ],
+        [
+          "Blue Tit",
+          "common",
+          "polaroid",
+          {
+            "tint": "cool"
+          },
+          [
+            "",
+            "A blue tit seen from behind on a lichened branch, showing the blue wing and the long blue-grey tail."
+          ],
+          "Cyanistes_caeruleus_3_Luc_Viatour.jpg"
+        ],
+        [
+          "Goldfinch",
+          "common",
+          "classic",
+          {
+            "stock": "butter",
+            "accent": "ochre"
+          },
+          [
+            "*Carduelis carduelis*. A fine bill for teasing seed out of thistles and teasels.",
+            "A goldfinch on a hazel branch hung with catkins, its red face and gold wing bar clear."
+          ],
+          "Carduelis_carduelis_(2012).jpg"
+        ],
+        [
+          "Long-tailed Tit",
+          "uncommon",
+          "classic",
+          {
+            "stock": "bone"
+          },
+          [
+            "*Aegithalos caudatus*. Travels in family parties and roosts in a huddle on cold nights.",
+            "A long-tailed tit on a bare branch, round-bodied with a tail longer than the rest of it."
+          ],
+          "Aegithalos_caudatus_front-on_2.jpg"
+        ],
+        [
+          "Wren",
+          "rare",
+          "fieldnote",
+          {},
+          [
+            "**Troglodytes troglodytes**\n- Among the smallest birds here, and the loudest\n- Feeds low down, in cover\n- The male builds several nests for the female to pick",
+            "A wren on a sawn log end, tail cocked, with the barring showing on its wings."
+          ],
+          "Eurasian_wren_(Troglodytes_troglodytes).jpg"
+        ],
+        [
+          "Kingfisher",
+          "legendary",
+          "bold",
+          {
+            "shape": "circle",
+            "border": "ocean",
+            "treatment": "foil",
+            "coverage": "reverse"
+          },
+          [
+            "*Alcedo atthis*. Takes fish and larvae from a perch over water, and nests in a bank tunnel.",
+            "A female kingfisher on a bare log, holding a dragonfly larva across her bill."
+          ],
+          "Common_kingfisher_(Alcedo_atthis_ispida)_female_with_dragonfly_larva.jpg"
+        ],
+        [
+          "House Sparrow",
+          "common",
+          "classic",
+          {
+            "stock": "sand",
+            "accent": "ochre"
+          },
+          [
+            "*Passer domesticus*. The black bib marks a male, and grows broader with age.",
+            "A male house sparrow gripping a thin metal loop, with the black bib and chestnut wing markings clear."
+          ],
+          "House_Sparrow_on_Feeder.jpg"
+        ],
+        [
+          "Blackbird",
+          "common",
+          "polaroid",
+          {
+            "tint": "warm"
+          },
+          [
+            "",
+            "A female blackbird low on the grass among fallen leaves, brown rather than black."
+          ],
+          "Female_Blackbird_(7551014334).jpg"
+        ],
+        [
+          "Chaffinch",
+          "common",
+          "classic",
+          {
+            "stock": "sky",
+            "accent": "rust"
+          },
+          [
+            "*Fringilla coelebs*. Double white wing bars; the male sings a set phrase with a flourish.",
+            "A male chaffinch on a lichened branch, its double white wing bars showing against the sky."
+          ],
+          "Common_Chaffinch,_Switzerland.jpg"
+        ],
+        [
+          "Collared Dove",
+          "common",
+          "fieldnote",
+          {
+            "accent": "slate"
+          },
+          [
+            "**Streptopelia decaocto**\n- A narrow black half-collar on the nape\n- Spread across Europe from the 1930s\n- Breeds through most of the year",
+            "Two collared doves crowded onto a bracket against blue sky, one with its tail spread."
+          ],
+          "Eurasian_Collared_Dove,_Tijuana,_Mexico_2023-03-31.jpg"
+        ],
+        [
+          "Great Tit",
+          "common",
+          "bold",
+          {
+            "stock": "butter",
+            "shape": "circle",
+            "border": "charcoal"
+          },
+          [
+            "*Parus major*. The largest of the tits; the black stripe is broader on a male than a female.",
+            "A great tit in profile on a wooden perch, the black stripe running down its yellow breast."
+          ],
+          "Great_Tit_With_Sunflower_Seed_(240416935).jpeg"
+        ],
+        [
+          "Starling",
+          "common",
+          "fieldnote",
+          {
+            "stock": "navy",
+            "accent": "violet"
+          },
+          [
+            "**Sturnus vulgaris**\n- Pale spots in winter, glossy green and purple in summer\n- Walks rather than hops\n- Mimics other birds, and machines",
+            "A starling on the lawn, its dark plumage flecked with pale spots and shot through with green."
+          ],
+          "Common_starling_(Sturnus_vulgaris)_breeding_male_Marken.jpg"
+        ],
+        [
+          "Wood Pigeon",
+          "common",
+          "classic",
+          {
+            "stock": "sage",
+            "accent": "white"
+          },
+          [
+            "*Columba palumbus*. The white neck patch separates it from stock dove and rock dove.",
+            "A wood pigeon settled on a wooden rail, the white patch on its neck turned to the camera."
+          ],
+          "Common_wood_pigeon.jpg"
+        ],
+        [
+          "Nuthatch",
+          "uncommon",
+          "bold",
+          {
+            "stock": "peach",
+            "shape": "arch",
+            "border": "blue"
+          },
+          [
+            "*Sitta europaea*. The only bird here that climbs down a trunk head first.",
+            "A nuthatch working head-first down a tree trunk, which no other garden bird here does."
+          ],
+          "Eurasian_Nuthatch_on_tree_trunk.jpg"
+        ],
+        [
+          "Greenfinch",
+          "uncommon",
+          "classic",
+          {
+            "stock": "mint",
+            "accent": "green"
+          },
+          [
+            "*Chloris chloris*. Yellow flashes in wing and tail, and a heavy bill for big seeds.",
+            "Two greenfinches on a concrete ledge, the yellow flashes on wing and tail catching the light."
+          ],
+          "European_Greenfinch_(3211682355).jpg"
+        ],
+        [
+          "Song Thrush",
+          "uncommon",
+          "fieldnote",
+          {
+            "accent": "ochre"
+          },
+          [
+            "**Turdus philomelos**\n- Repeats each phrase two or three times\n- Breaks snails open on a favoured stone\n- Spotted breast, warm brown above",
+            "A song thrush standing on snow-covered grass, its spotted breast turned to the camera."
+          ],
+          "Song Thrush.jpg"
+        ],
+        [
+          "Bullfinch",
+          "rare",
+          "classic",
+          {
+            "stock": "blush",
+            "accent": "red",
+            "finish": "pearl"
+          },
+          [
+            "*Pyrrhula pyrrhula*. Black cap and stubby bill; quiet, and usually seen in pairs.",
+            "A bullfinch on a bare branch, with the black cap and short thick bill the species is known for."
+          ],
+          "Pyrrhula_pyrrhula_female_2.jpg"
+        ],
+        [
+          "Great Spotted Woodpecker",
+          "rare",
+          "fieldnote",
+          {
+            "stock": "charcoal",
+            "accent": "red",
+            "finish": "metallic"
+          },
+          [
+            "**Dendrocopos major**\n- A stiff tail props it against bark and mesh\n- Drums in spring rather than singing\n- Red on the nape marks the male",
+            "A great spotted woodpecker clinging to a hanging mesh feeder, with a log store behind it."
+          ],
+          "Male_Great_Spotted_Woodpecker_on_a_bird_feeder_-_geograph.org.uk_-_6878453.jpg"
+        ],
+        [
+          "Siskin",
+          "epic",
+          "minimal",
+          {
+            "gradient": "full",
+            "accent": "green",
+            "finish": "pearl"
+          },
+          [
+            "*Spinus spinus*. A small streaked finch; numbers rise here in hard winters.",
+            "A siskin on a branch in leaf and white blossom, its streaked yellow-green plumage showing."
+          ],
+          "Siskin_-_Male_-_Spinus_spinus3.jpg"
+        ],
+        [
+          "Tawny Owl",
+          "epic",
+          "minimal",
+          {
+            "gradient": "full",
+            "accent": "ochre",
+            "finish": "metallic"
+          },
+          [
+            "*Strix aluco*. Roosts against a trunk by day and hunts small mammals at night.",
+            "A tawny owl roosting hard against a trunk, its plumage almost matching the bark behind it."
+          ],
+          "Tawny_owl_(51161205713).jpg"
+        ]
+      ],
+      "set_code": "BRD",
+      "mark": "feather",
+      "pack_colour": "sky",
+      "pack_finish": "gloss",
+      "pack_size": 3,
+      "emblem_layout": "seal",
+      "emblem_shape": "disc",
+      "emblem_style": "filled",
+      "emblem_text": "ocean",
+      "surface": "linen",
+      "pack_design": {
+        "cutout": "Passer montanus.png",
+        "art": [
+          {
+            "cutout": true,
+            "scale": 74,
+            "y": -10,
+            "rotate": -3
+          }
+        ],
+        "emblem_y": 19,
+        "emblem_scale": 84,
+        "lines": [
+          [
+            "FROM THE KITCHEN WINDOW",
+            "ink",
+            2.9,
+            -40,
+            26,
+            "body"
+          ],
+          [
+            "{pack} CARDS PER PACK",
+            "ink",
+            4.0,
+            39,
+            30,
+            "body"
+          ]
+        ]
+      },
+      "tags": [
+        "birds",
+        "garden",
+        "wildlife"
+      ],
+      "body_faces": {
+        "": "spectral",
+        "polaroid": "caveat"
+      }
+    },
+    {
+      "creator": "bex",
+      "title": "Film Cameras",
+      "description": "Film cameras from compact rangefinders to large folding field cameras.",
+      "palette": [
+        [
+          145,
+          110,
+          75
+        ],
+        [
+          35,
+          30,
+          25
+        ]
+      ],
+      "cards": [
+        [
+          "Canon AE-1",
+          "common",
+          "bold",
+          {
+            "stock": "charcoal",
+            "shape": "square",
+            "border": "copper",
+            "border_width": "medium",
+            "title_typeface": "display",
+            "tint": "none"
+          },
+          [
+            "1976. Shutter-priority SLR built around a microprocessor. FD mount, 50mm f/1.8 as standard.",
+            "A black AE-1 with the 50mm f/1.8 fitted, photographed square on against a plain ground."
+          ],
+          "camera:canon-ae1"
+        ],
+        [
+          "Pentax K1000",
+          "common",
+          "fieldnote",
+          {
+            "stock": "sand",
+            "accent": "rust",
+            "title_typeface": "spacemono",
+            "tint": "none"
+          },
+          [
+            "**Pentax K1000, 1976**\n- Fully mechanical; only the meter needs a battery\n- K bayonet mount\n- Sold for two decades as a first camera",
+            "A silver K1000 carrying a zoom far larger than the body, with the shutter dial and prism in view."
+          ],
+          "camera:pentax-k1000"
+        ],
+        [
+          "Nikon F",
+          "uncommon",
+          "fieldnote",
+          {
+            "stock": "navy",
+            "accent": "slate",
+            "title_typeface": "spacemono",
+            "tint": "none"
+          },
+          [
+            "**Nikon F, 1959**\n- Nikon's first system SLR\n- Interchangeable prisms and focusing screens\n- Built on the F bayonet mount, still in use",
+            "A silver Nikon F with a Nikkor lens fitted, the flat-topped prism giving it its familiar outline."
+          ],
+          "camera:nikon-f"
+        ],
+        [
+          "Leica M3",
+          "rare",
+          "classic",
+          {
+            "stock": "forest",
+            "border": "silver",
+            "border_width": "hairline",
+            "title_typeface": "cinzel",
+            "finish": "metallic",
+            "tint": "none"
+          },
+          [
+            "1954. Bayonet M mount, with rangefinder and viewfinder combined in one window.",
+            "A chrome M3 with a 5cm Summicron, its three front windows set across the top plate. Photographed at the German Museum of Technology in Berlin."
+          ],
+          "camera:leica-m3"
+        ],
+        [
+          "Polaroid SX-70",
+          "legendary",
+          "minimal",
+          {
+            "gradient": "full",
+            "accent": "gold",
+            "border": "copper",
+            "border_width": "medium",
+            "title_typeface": "cinzel",
+            "finish": "satin",
+            "treatment": "foil",
+            "coverage": "full",
+            "tint": "none"
+          },
+          [
+            "1972. A folding SLR that develops its print out in the light.",
+            "A folding SX-70 in brown leather and brightwork, opened out to its working shape."
+          ],
+          "camera:sx70"
+        ],
+        [
+          "Olympus OM-1",
+          "common",
+          "classic",
+          {
+            "stock": "charcoal",
+            "border": "silver",
+            "title_typeface": "spacemono"
+          },
+          [
+            "1972. A small, quiet SLR with the shutter speeds on a ring around the mount.",
+            "A silver OM-1 on a table beside its lens cap, with the shutter-speed ring set around the lens mount."
+          ],
+          "Olympus OM1.jpg"
+        ],
+        [
+          "Minolta SRT-101",
+          "common",
+          "fieldnote",
+          {
+            "stock": "sand",
+            "accent": "rust",
+            "title_typeface": "spacemono"
+          },
+          [
+            "**Minolta SR-T 101, 1966**\n- Match-needle metering through the lens\n- Mechanical shutter to 1/1000\n- SR bayonet mount",
+            "A silver SRT-101 with a normal lens fitted and a second lens standing beside the body."
+          ],
+          "My_Fathers_Minolta_SRT-101_(4643231280).jpg"
+        ],
+        [
+          "Yashica Mat-124G",
+          "common",
+          "fieldnote",
+          {
+            "stock": "ink",
+            "accent": "silver",
+            "title_typeface": "spacemono"
+          },
+          [
+            "**Yashica Mat-124G, 1970**\n- Twin-lens reflex for 120 and 220 film\n- Twelve square frames to a roll of 120\n- The waist-level hood folds flat",
+            "A Yashica twin-lens reflex with the finder hood closed, showing both lenses and the focusing knob."
+          ],
+          "Yashica_mat_124G_-_ouvert.JPG"
+        ],
+        [
+          "Kodak Retina II",
+          "common",
+          "polaroid",
+          {
+            "tint": "warm"
+          },
+          [
+            "",
+            "A Retina opened for use, the lens standard carried out from the body on folding struts."
+          ],
+          "Vintage_Kodak_Retina_II_(Type_142)_Folding_Camera,_Retina-Xenon_f_2_Lens_&_Compur--Rapid_Shutter,_Made_In_Germany_From_1937_-_1939_(35901172276).jpg"
+        ],
+        [
+          "Rolleiflex 2.8F",
+          "common",
+          "bold",
+          {
+            "stock": "charcoal",
+            "shape": "square",
+            "border": "silver"
+          },
+          [
+            "Twin-lens reflex: one lens views while the other exposes, so nothing blacks out.",
+            "The viewing and taking lenses of a Rolleiflex, with the focusing knob and shutter controls either side."
+          ],
+          "Rolleiflex_f2-8-F.jpg"
+        ],
+        [
+          "Mamiya RB67",
+          "common",
+          "fieldnote",
+          {
+            "stock": "charcoal",
+            "accent": "white",
+            "title_typeface": "spacemono"
+          },
+          [
+            "**Mamiya RB67**\n- The back rotates, so the frame turns and the camera does not\n- 6 by 7 cm negatives\n- Bellows focusing, and heavy enough to want a tripod",
+            "An RB67 body from the front with no lens mounted, its waist-level finder folded up on top."
+          ],
+          "Mamiya_RB67_de_face.jpg"
+        ],
+        [
+          "Agfa Isolette",
+          "common",
+          "fieldnote",
+          {
+            "stock": "bone",
+            "accent": "rust"
+          },
+          [
+            "**Agfa Isolette**\n- A folding camera for 120 roll film\n- The bellows collapse it to pocket size\n- Old bellows leak light along the folds",
+            "A folding Isolette opened out, the bellows drawn forward to carry the front standard."
+          ],
+          "Kamera_Agfa_Isolette_III_2.jpg"
+        ],
+        [
+          "Nikonos V",
+          "common",
+          "classic",
+          {
+            "stock": "peach",
+            "border": "rust",
+            "title_typeface": "spacemono"
+          },
+          [
+            "1984. An amphibious camera sealed with O-rings and rated to 50 metres.",
+            "A Nikonos body and a wide lens laid out under warm light, both built to be sealed against water."
+          ],
+          "Nikonos-V (7476257320).jpg"
+        ],
+        [
+          "Hasselblad 500C",
+          "uncommon",
+          "bold",
+          {
+            "stock": "ash",
+            "shape": "square",
+            "border": "silver"
+          },
+          [
+            "Modular 6 by 6: body, lens, finder and film magazine all come apart.",
+            "A 500C assembled with its normal lens and film magazine, standing on a wooden bench."
+          ],
+          "Hasselblad 500 c camera.jpg"
+        ],
+        [
+          "Contax T2",
+          "uncommon",
+          "polaroid",
+          {
+            "tint": "mono"
+          },
+          [
+            "",
+            "A gold Contax T2 in its lined presentation case, with two other compacts standing beside it."
+          ],
+          "Contax_T2_^_Contax_T3_-_Flickr_-_Lordcolus.jpg"
+        ],
+        [
+          "Linhof Technika",
+          "uncommon",
+          "fieldnote",
+          {
+            "stock": "sand",
+            "accent": "red",
+            "title_typeface": "spacemono"
+          },
+          [
+            "**Linhof Technika**\n- A folding technical camera for sheet film\n- Rise, shift, swing and tilt on the front\n- Rangefinder or ground glass",
+            "A Technika with its lens fitted and the leather focusing hood folded over to one side."
+          ],
+          "Linhof_Technika_Press_6x9cm_Camera.jpg"
+        ],
+        [
+          "Graflex Crown Graphic",
+          "rare",
+          "classic",
+          {
+            "stock": "ink",
+            "border": "silver",
+            "finish": "metallic",
+            "title_typeface": "spacemono"
+          },
+          [
+            "The American press camera: 4 by 5 sheet film, a folding bed and a flash bracket.",
+            "A press camera with its bed down and a large flash reflector mounted on the bracket beside it."
+          ],
+          "Graflex_Pacemaker_Crown_Graphic,_TIPMEE_20181021.jpg"
+        ],
+        [
+          "Fuji GW690",
+          "rare",
+          "fieldnote",
+          {
+            "stock": "navy",
+            "accent": "silver",
+            "finish": "pearl",
+            "title_typeface": "spacemono"
+          },
+          [
+            "**Fuji GW690**\n- Fixed 90mm lens, with no interchangeable mount\n- Eight 6 by 9 cm frames to a roll\n- A leaf shutter, so flash syncs at any speed",
+            "A fixed-lens rangefinder built around the 6 by 9 frame, with its cap and strap set down beside it."
+          ],
+          "0223 Fuji GW690III (5255034816).jpg"
+        ],
+        [
+          "Widelux F7",
+          "epic",
+          "minimal",
+          {
+            "gradient": "full",
+            "accent": "ochre",
+            "finish": "metallic",
+            "title_typeface": "spacemono"
+          },
+          [
+            "The lens swings across a curved film gate for a 140 degree frame.",
+            "A Widelux with the back off, showing the curved film path the swinging lens sweeps across."
+          ],
+          "Widelux_F7_panoramic_camera-back.jpg"
+        ],
+        [
+          "Deardorff V8",
+          "epic",
+          "minimal",
+          {
+            "gradient": "full",
+            "accent": "copper",
+            "finish": "pearl",
+            "title_typeface": "cinzel"
+          },
+          [
+            "An 8 by 10 wooden field camera; every movement is in the standards.",
+            "A wooden field camera opened on its rail, bellows drawn out between the two standards."
+          ],
+          "Deardorff_Portrait_Camera_Used_by_Oscar_Schneider_Studio_-_DPLA_-_958cefedd519a1cbc31ac04c6968b086_(page_1).jpg"
+        ]
+      ],
+      "set_code": "CAM",
+      "mark": "orbit",
+      "pack_colour": "charcoal",
+      "pack_finish": "satin",
+      "pack_size": 7,
+      "emblem_layout": "badge",
+      "emblem_shape": "tablet",
+      "emblem_style": "filled",
+      "emblem_text": "cream",
+      "surface": "linen",
+      "pack_design": {
+        "keyed": "film-cameras",
+        "art": [
+          {
+            "cutout": true,
+            "scale": 72,
+            "y": -11,
+            "rotate": -3
+          }
+        ],
+        "emblem_y": 19,
+        "emblem_scale": 84,
+        "lines": [
+          [
+            "THIRTY FIVE MILLIMETRE",
+            "cream",
+            2.9,
+            -40,
+            26,
+            "body"
+          ],
+          [
+            "{pack} CARDS PER PACK",
+            "cream",
+            4.0,
+            39,
+            30,
+            "body"
+          ]
+        ]
+      },
+      "tags": [
+        "cameras",
+        "film",
+        "objects"
+      ],
+      "body_faces": {
+        "": "body"
+      }
+    },
+    {
+      "creator": "kit",
+      "title": "Planets and Moons",
+      "description": "Every world out there that a spacecraft has sent back a decent portrait of.",
+      "palette": [
+        [
+          60,
+          70,
+          120
+        ],
+        [
+          12,
+          14,
+          30
+        ]
+      ],
+      "cards": [
+        [
+          "The Sun",
+          "legendary",
+          "minimal",
+          {
+            "stock": "ink",
+            "texture": "smooth",
+            "border": "ember",
+            "border_width": "hairline",
+            "gradient": "bottom",
+            "accent": "ember",
+            "title_typeface": "alfa",
+            "body_typeface": "oswald",
+            "title_ink": "butter",
+            "body_ink": "apricot",
+            "finish": "gloss",
+            "treatment": "holo",
+            "coverage": "full",
+            "pattern": "rainbow"
+          },
+          [
+            "*SOHO, extreme ultraviolet.* A prominence stands clear of the disc.",
+            "The Sun imaged in extreme ultraviolet by SOHO, with a huge handle-shaped prominence held out above the limb in cooler, denser plasma."
+          ],
+          "nasa:PIA03149"
+        ],
+        [
+          "Mercury",
+          "common",
+          "fieldnote",
+          {
+            "stock": "charcoal",
+            "texture": "smooth",
+            "border": "steel",
+            "border_width": "hairline",
+            "window": "inset",
+            "accent": "silver",
+            "title_typeface": "oswald",
+            "body_typeface": "archivo",
+            "title_ink": "haze"
+          },
+          [
+            "**Closest in**\n- Smaller than Ganymede or Titan, and still a planet\n- Almost no atmosphere to move the heat around\n- Craters everywhere, because nothing has erased them",
+            "A MESSENGER global view of Mercury, the sunlit face covered edge to edge with craters laid over craters."
+          ],
+          "nasa:PIA15162"
+        ],
+        [
+          "Venus",
+          "common",
+          "fieldnote",
+          {
+            "stock": "ink",
+            "texture": "smooth",
+            "border": "ochre",
+            "border_width": "thin",
+            "window": "none",
+            "accent": "ochre",
+            "title_typeface": "oswald",
+            "body_typeface": "archivo",
+            "title_ink": "straw"
+          },
+          [
+            "**Under the cloud**\n- Cloud hides the ground from any ordinary camera\n- Magellan mapped the surface by radar instead\n- The colour here was chosen, not photographed",
+            "A computer-built globe of the northern hemisphere of Venus, assembled from Magellan radar and coloured in the tan the mission chose for it."
+          ],
+          "nasa:PIA00271"
+        ],
+        [
+          "Earth",
+          "common",
+          "classic",
+          {
+            "stock": "navy",
+            "texture": "smooth",
+            "border": "sky",
+            "border_width": "thin",
+            "window": "rule",
+            "accent": "sky",
+            "title_typeface": "jost",
+            "body_typeface": "jost",
+            "title_ink": "powder"
+          },
+          [
+            "*Blue Marble.* Four orbits of VIIRS data, stitched into one face.",
+            "The Suomi NPP Blue Marble composite, centred on North America, with Pacific cloud systems turning across the left of the disc."
+          ],
+          "nasa:PIA18033"
+        ],
+        [
+          "The Moon",
+          "common",
+          "classic",
+          {
+            "stock": "charcoal",
+            "texture": "smooth",
+            "border": "silver",
+            "border_width": "hairline",
+            "window": "mat",
+            "tint": "mono",
+            "accent": "silver",
+            "title_typeface": "jost",
+            "body_typeface": "jost",
+            "title_ink": "white"
+          },
+          [
+            "*Clementine mosaic.* Fifty thousand frames, put together as one face.",
+            "A Clementine mosaic of the lunar nearside, the dark maria filling the middle of the disc and the rays of Tycho reaching up from the bottom."
+          ],
+          "nasa:PIA00302"
+        ],
+        [
+          "Mars",
+          "common",
+          "fieldnote",
+          {
+            "stock": "oxblood",
+            "texture": "smooth",
+            "border": "rust",
+            "border_width": "medium",
+            "window": "rule",
+            "accent": "rust",
+            "title_typeface": "oswald",
+            "body_typeface": "archivo",
+            "title_ink": "apricot"
+          },
+          [
+            "**Global colour view**\n- Polar caps of water ice and frozen carbon dioxide\n- Dust storms that can close over the whole planet\n- Two small moons, both irregular",
+            "A global colour view of Mars, the north polar cap bright at the top and the dark surface markings running in a band below it."
+          ],
+          "nasa:PIA00407"
+        ],
+        [
+          "Phobos",
+          "common",
+          "polaroid",
+          {
+            "stock": "slate",
+            "texture": "smooth",
+            "border": "ash",
+            "border_width": "thin",
+            "tint": "mono",
+            "accent": "ash",
+            "title_typeface": "cabin",
+            "body_typeface": "cabin",
+            "title_ink": "haze"
+          },
+          [
+            "",
+            "Phobos from about 5,800 kilometres, lit from one side, with its largest crater breaking the outline near the edge of the disc."
+          ],
+          "nasa:PIA10367"
+        ],
+        [
+          "Vesta",
+          "common",
+          "fieldnote",
+          {
+            "stock": "graphite",
+            "texture": "smooth",
+            "border": "sand",
+            "border_width": "hairline",
+            "window": "inset",
+            "accent": "sand",
+            "title_typeface": "oswald",
+            "body_typeface": "archivo",
+            "title_ink": "linen"
+          },
+          [
+            "**Second heaviest in the belt**\n- Dawn held orbit around it for a year\n- Three craters in a row, called the snowman\n- Pieces of it reach Earth as meteorites",
+            "A Dawn mosaic of Vesta, too small to have pulled itself round, with the three linked craters known as the snowman near the top."
+          ],
+          "nasa:PIA15678"
+        ],
+        [
+          "Ceres",
+          "uncommon",
+          "classic",
+          {
+            "stock": "slate",
+            "texture": "smooth",
+            "border": "haze",
+            "border_width": "thin",
+            "window": "none",
+            "accent": "haze",
+            "title_typeface": "jost",
+            "body_typeface": "jost",
+            "title_ink": "white"
+          },
+          [
+            "*Occator crater.* The bright deposits are salts left by briny water.",
+            "The Dawn view into Occator crater on Ceres, built from a short exposure for the bright deposits and a normal one for the ground around them."
+          ],
+          "nasa:PIA19889"
+        ],
+        [
+          "Jupiter",
+          "epic",
+          "minimal",
+          {
+            "stock": "ink",
+            "texture": "smooth",
+            "border": "ochre",
+            "border_width": "thin",
+            "gradient": "bottom",
+            "accent": "ochre",
+            "title_typeface": "cinzel",
+            "body_typeface": "marcellus",
+            "title_ink": "butter",
+            "finish": "metallic",
+            "treatment": "foil",
+            "coverage": "full",
+            "pattern": "mirror"
+          },
+          [
+            "*Cassini, 2000.* The dark dot on the belt is the shadow of Europa.",
+            "A true-colour globe of Jupiter built from four Cassini frames, the Great Red Spot in the southern belts and the shadow of Europa falling on the cloud tops."
+          ],
+          "nasa:PIA02873"
+        ],
+        [
+          "Io",
+          "uncommon",
+          "bold",
+          {
+            "stock": "ink",
+            "texture": "smooth",
+            "border": "straw",
+            "border_width": "thick",
+            "tint": "punch",
+            "accent": "straw",
+            "title_typeface": "archivo",
+            "body_typeface": "spacemono",
+            "title_ink": "butter"
+          },
+          [
+            "The most volcanic body we know of. It repaves itself faster than craters can form.",
+            "The Galileo view of Io, the whole disc mottled yellow and white by the sulphur compounds its volcanoes lay down."
+          ],
+          "nasa:PIA00282"
+        ],
+        [
+          "Europa",
+          "rare",
+          "classic",
+          {
+            "stock": "navy",
+            "texture": "brushed",
+            "border": "powder",
+            "border_width": "thin",
+            "window": "rule",
+            "accent": "powder",
+            "title_typeface": "jost",
+            "body_typeface": "jost",
+            "title_ink": "white",
+            "finish": "pearl"
+          },
+          [
+            "*Galileo, reprocessed.* Ice crust, cracked through, ocean underneath.",
+            "A reprocessed Galileo colour view of Europa, the ice shell crossed in every direction by long reddish fractures."
+          ],
+          "nasa:PIA19048"
+        ],
+        [
+          "Ganymede",
+          "uncommon",
+          "fieldnote",
+          {
+            "stock": "cocoa",
+            "texture": "smooth",
+            "border": "linen",
+            "border_width": "thin",
+            "window": "rule",
+            "accent": "linen",
+            "title_typeface": "oswald",
+            "body_typeface": "archivo",
+            "title_ink": "cream"
+          },
+          [
+            "**Largest moon in the system**\n- Bigger than Mercury, and the only moon with a magnetic field\n- Dark ground is old and cratered\n- Pale ground is younger and grooved",
+            "A natural-colour Galileo view of Ganymede, the older dark terrain set against the paler, grooved ground that replaced it."
+          ],
+          "nasa:PIA00716"
+        ],
+        [
+          "Callisto",
+          "common",
+          "bold",
+          {
+            "stock": "charcoal",
+            "texture": "smooth",
+            "border": "haze",
+            "border_width": "thick",
+            "accent": "haze",
+            "title_typeface": "archivo",
+            "body_typeface": "spacemono",
+            "title_ink": "white"
+          },
+          [
+            "Every bright scar is an impact. Nothing has resurfaced it in billions of years.",
+            "The Galileo global view of Callisto, its dark surface covered in bright impact scars with no smooth ground anywhere on the disc."
+          ],
+          "nasa:PIA03456"
+        ],
+        [
+          "Saturn",
+          "epic",
+          "minimal",
+          {
+            "stock": "ink",
+            "texture": "smooth",
+            "border": "gold",
+            "border_width": "thin",
+            "gradient": "none",
+            "accent": "gold",
+            "title_typeface": "playfair",
+            "body_typeface": "playfair",
+            "title_ink": "butter",
+            "body_ink": "straw",
+            "finish": "pearl",
+            "treatment": "foil",
+            "coverage": "full",
+            "pattern": "cosmos"
+          },
+          [
+            "*Cassini.* The rings are mostly water ice, and only metres thick.",
+            "Saturn from Cassini with the rings opened wide, the banding on the planet pale and soft-edged behind them."
+          ],
+          "nasa:PIA06077"
+        ],
+        [
+          "Titan",
+          "rare",
+          "classic",
+          {
+            "stock": "cocoa",
+            "texture": "smooth",
+            "border": "butter",
+            "border_width": "thin",
+            "window": "rule",
+            "accent": "butter",
+            "title_typeface": "playfair",
+            "body_typeface": "garamond",
+            "title_ink": "straw",
+            "finish": "pearl"
+          },
+          [
+            "*Natural colour.* Thick nitrogen air, and rain that falls as methane.",
+            "Titan passing in front of Saturn in natural colour, its haze layer giving the moon a soft orange edge against the bands of the planet."
+          ],
+          "nasa:PIA14922"
+        ],
+        [
+          "Enceladus",
+          "uncommon",
+          "polaroid",
+          {
+            "stock": "white",
+            "texture": "smooth",
+            "border": "powder",
+            "border_width": "thin",
+            "tint": "cool",
+            "accent": "ocean",
+            "title_typeface": "cabin",
+            "body_typeface": "cabin"
+          },
+          [
+            "",
+            "Cassini approaching Enceladus, cratered ground across the top of the disc giving way to fractured, wrinkled terrain below it."
+          ],
+          "nasa:PIA17202"
+        ],
+        [
+          "Uranus",
+          "uncommon",
+          "bold",
+          {
+            "stock": "ocean",
+            "texture": "smooth",
+            "border": "mint",
+            "border_width": "medium",
+            "tint": "none",
+            "accent": "mint",
+            "title_typeface": "archivo",
+            "body_typeface": "spacemono",
+            "title_ink": "white",
+            "body_ink": "powder"
+          },
+          [
+            "Voyager 2, 1986. The only visit anything has made, and almost no cloud to see.",
+            "Uranus from Voyager 2 in 1986, an almost featureless pale blue-green disc with no banding the camera could resolve."
+          ],
+          "nasa:PIA18182"
+        ],
+        [
+          "Neptune",
+          "rare",
+          "fieldnote",
+          {
+            "stock": "indigo",
+            "texture": "brushed",
+            "border": "cornflower",
+            "border_width": "thin",
+            "window": "rule",
+            "accent": "cornflower",
+            "title_typeface": "oswald",
+            "body_typeface": "archivo",
+            "title_ink": "powder",
+            "finish": "metallic"
+          },
+          [
+            "**Voyager 2, 1989**\n- The Great Dark Spot, with a bright companion cloud\n- A fast white feature the team named Scooter\n- Winds faster than anywhere else out here",
+            "Neptune from the last whole-planet frames Voyager 2 took, showing the Great Dark Spot with its bright companion and the streak called Scooter."
+          ],
+          "nasa:PIA01492"
+        ],
+        [
+          "Triton",
+          "uncommon",
+          "classic",
+          {
+            "stock": "aubergine",
+            "texture": "smooth",
+            "border": "blush",
+            "border_width": "thin",
+            "window": "rule",
+            "accent": "blush",
+            "title_typeface": "jost",
+            "body_typeface": "jost",
+            "title_ink": "peach",
+            "finish": "satin"
+          },
+          [
+            "*Voyager 2, 1989.* Nitrogen ice, and geysers going off when it passed.",
+            "A Voyager 2 colour mosaic of Triton, the pink southern cap meeting darker, rougher ground along a ragged line."
+          ],
+          "nasa:PIA00317"
+        ]
+      ],
+      "set_code": "SKY",
+      "mark": "star",
+      "pack_colour": "indigo",
+      "pack_finish": "holo",
+      "pack_size": 10,
+      "emblem_layout": "crest",
+      "emblem_shape": "disc",
+      "emblem_style": "filled",
+      "emblem_text": "cream",
+      "pack_design": {
+        "keyed": "planets-and-moons",
+        "art": [
+          {
+            "pick": "legendary",
+            "fit": "flood",
+            "opacity": 26
+          },
+          {
+            "cutout": true,
+            "scale": 58,
+            "y": -11,
+            "rotate": 0
+          }
+        ],
+        "emblem_y": 19,
+        "emblem_scale": 82,
+        "lines": [
+          [
+            "EVERY WORLD WE HAVE PHOTOGRAPHED",
+            "cream",
+            2.8,
+            -40,
+            22,
+            "body"
+          ],
+          [
+            "{pack} CARDS PER PACK",
+            "cream",
+            4.0,
+            39,
+            30,
+            "body"
+          ]
+        ]
+      },
+      "tags": [
+        "space",
+        "astronomy",
+        "night sky"
+      ],
+      "body_faces": {}
+    },
+    {
+      "creator": "wren",
+      "title": "Woodland Fungi",
+      "description": "Damp woodland, mostly from October onward, and mostly from turning things over.",
+      "palette": [
+        [
+          90,
+          105,
+          70
+        ],
+        [
+          35,
+          40,
+          28
+        ]
+      ],
+      "cards": [
+        [
+          "Fly Agaric",
+          "common",
+          "fieldnote",
+          {
+            "stock": "cream",
+            "texture": "felt",
+            "border": "brick",
+            "border_width": "medium",
+            "window": "rule",
+            "accent": "brick",
+            "title_typeface": "garamond",
+            "body_typeface": "spectral",
+            "title_ink": "oxblood"
+          },
+          [
+            "**Amanita muscaria**\n- The flecks are veil remains, and wash off\n- Grows with birch and pine, never on its own\n- Poisonous, and a long way from edible",
+            "A fly agaric in moss, the orange-red cap still domed and flecked with white above a thick white stem."
+          ],
+          "AD2009Sep20 Amanita muscaria 02.jpg"
+        ],
+        [
+          "Sulphur Tuft",
+          "common",
+          "fieldnote",
+          {
+            "stock": "straw",
+            "texture": "felt",
+            "border": "olive",
+            "border_width": "thin",
+            "window": "rule",
+            "accent": "olive",
+            "title_typeface": "garamond",
+            "body_typeface": "spectral",
+            "title_ink": "forest"
+          },
+          [
+            "**Hypholoma fasciculare**\n- Always in tight clumps on dead wood\n- Gills turn green as the spores ripen\n- Bitter enough that little will eat it",
+            "A tight clump of sulphur tuft on rotting wood and needle litter, the caps pale yellow and darker towards the middle."
+          ],
+          "Hypholoma fasciculare LC0091.jpg"
+        ],
+        [
+          "Turkey Tail",
+          "common",
+          "classic",
+          {
+            "stock": "sand",
+            "texture": "felt",
+            "border": "cocoa",
+            "border_width": "thin",
+            "window": "mat",
+            "accent": "cocoa",
+            "title_typeface": "spectral",
+            "body_typeface": "cinzel",
+            "title_ink": "umber"
+          },
+          [
+            "*Trametes versicolor.* Banded brackets, in rosettes, on dead wood.",
+            "A rosette of turkey tail brackets on a cut log, each one banded in rings of brown, cream and rust."
+          ],
+          "Trametes versicolor 2025 G1.jpg"
+        ],
+        [
+          "Shaggy Inkcap",
+          "common",
+          "polaroid",
+          {
+            "stock": "bone",
+            "texture": "felt",
+            "border": "slate",
+            "border_width": "thin",
+            "accent": "slate",
+            "title_typeface": "caveat",
+            "body_typeface": "caveat"
+          },
+          [
+            "",
+            "Two shaggy inkcaps in rough grass, the caps still tall and scaled, before they start to blacken from the rim."
+          ],
+          "Shaggy inkcaps (Coprinus comatus).JPG"
+        ],
+        [
+          "Birch Polypore",
+          "common",
+          "classic",
+          {
+            "stock": "linen",
+            "texture": "felt",
+            "border": "umber",
+            "border_width": "thin",
+            "window": "inset",
+            "tint": "sepia",
+            "accent": "umber",
+            "title_typeface": "spectral",
+            "body_typeface": "cinzel",
+            "title_ink": "cocoa"
+          },
+          [
+            "*Fomitopsis betulina.* Only on birch, and usually on a dying one.",
+            "A smooth pale bracket set against the dark trunk of a birch, its underside turned down towards the ground."
+          ],
+          "Fomitopsis betulina 117742765.jpg"
+        ],
+        [
+          "Common Puffball",
+          "common",
+          "polaroid",
+          {
+            "stock": "haze",
+            "texture": "felt",
+            "border": "moss",
+            "border_width": "thin",
+            "accent": "moss",
+            "title_typeface": "caveat",
+            "body_typeface": "caveat"
+          },
+          [
+            "",
+            "One common puffball on leaf litter, the head covered in short spines and the stem tapering away below it."
+          ],
+          "Single lycoperdon perlatum.jpg"
+        ],
+        [
+          "Candlesnuff",
+          "common",
+          "fieldnote",
+          {
+            "stock": "charcoal",
+            "texture": "felt",
+            "border": "bone",
+            "border_width": "hairline",
+            "window": "none",
+            "accent": "bone",
+            "title_typeface": "garamond",
+            "body_typeface": "spectral",
+            "title_ink": "linen"
+          },
+          [
+            "**Xylaria hypoxylon**\n- White tips carry one kind of spore, the black base another\n- Stays on the wood all winter\n- Antler shapes, rarely more than a few centimetres",
+            "A line of candlesnuff along the cut end of a log, each one black at the base and white and forked at the tip."
+          ],
+          "Xylaria hypoxylon (candlestick fungus) location, Val Sinestra. 14-10-2024. (actm.) 01.jpg"
+        ],
+        [
+          "King Alfred's Cakes",
+          "common",
+          "classic",
+          {
+            "stock": "cocoa",
+            "texture": "felt",
+            "border": "straw",
+            "border_width": "thin",
+            "window": "rule",
+            "accent": "straw",
+            "title_typeface": "spectral",
+            "body_typeface": "cinzel",
+            "title_ink": "butter"
+          },
+          [
+            "*Daldinia concentrica.* Cut one across and it is ringed like a tree.",
+            "Hard rounded lumps of Daldinia under a fallen branch, brown where they are young and black where they are not."
+          ],
+          "Daldinia concentrica 166975777.jpg"
+        ],
+        [
+          "Jelly Ear",
+          "common",
+          "polaroid",
+          {
+            "stock": "blush",
+            "texture": "felt",
+            "border": "wine",
+            "border_width": "thin",
+            "accent": "wine",
+            "title_typeface": "caveat",
+            "body_typeface": "caveat"
+          },
+          [
+            "",
+            "Jelly ear on a fallen branch, the lobes folded over like an ear and translucent where the light comes through."
+          ],
+          "Jelly Ear, Auricularia auricula-judae, UK 2.jpg"
+        ],
+        [
+          "Beefsteak Fungus",
+          "common",
+          "bold",
+          {
+            "stock": "oxblood",
+            "texture": "felt",
+            "border": "salmon",
+            "border_width": "thick",
+            "accent": "salmon",
+            "title_typeface": "body",
+            "body_typeface": "alfa",
+            "title_ink": "blush"
+          },
+          [
+            "Bleeds red when it is cut, which is where the name comes from.",
+            "A beefsteak fungus on an oak trunk, one thick reddish-tan bracket pushing straight out of the bark."
+          ],
+          "Fistulina hepatica, Beefsteak Fungus, UK.jpg"
+        ],
+        [
+          "Amethyst Deceiver",
+          "uncommon",
+          "classic",
+          {
+            "stock": "lavender",
+            "texture": "felt",
+            "border": "plum",
+            "border_width": "thin",
+            "window": "rule",
+            "accent": "plum",
+            "title_typeface": "spectral",
+            "body_typeface": "cinzel",
+            "title_ink": "damson"
+          },
+          [
+            "*Laccaria amethystina.* Deep purple fresh, and it fades as it dries.",
+            "A single amethyst deceiver on a thin stem, the cap deep violet, standing clear of a soft green background."
+          ],
+          "Amethyst Deceiver - Laccaria amethystea - Violetter Lacktrichterling - Laccaria amethystina - 01.jpg"
+        ],
+        [
+          "Scarlet Elf Cup",
+          "common",
+          "polaroid",
+          {
+            "stock": "bone",
+            "texture": "felt",
+            "border": "crimson",
+            "border_width": "thin",
+            "tint": "punch",
+            "accent": "crimson",
+            "title_typeface": "caveat",
+            "body_typeface": "caveat"
+          },
+          [
+            "",
+            "A scarlet elf cup open on the leaf litter, bright red inside and pale and felted around the rim."
+          ],
+          "GT Scarlet Elf Cup fungus - Sarcoscypha austriaca.jpg"
+        ],
+        [
+          "Wood Blewit",
+          "uncommon",
+          "fieldnote",
+          {
+            "stock": "thistle",
+            "texture": "felt",
+            "border": "damson",
+            "border_width": "thin",
+            "window": "rule",
+            "shape": "arch",
+            "accent": "damson",
+            "title_typeface": "garamond",
+            "body_typeface": "spectral",
+            "title_ink": "aubergine"
+          },
+          [
+            "**Lepista nuda**\n- Lilac all through when young, fading with age\n- Comes up late, often after the first frosts\n- Edible, but only cooked",
+            "A wood blewit tipped over on leaf litter, showing the pale gills and the lilac wash running down the stem."
+          ],
+          "Clitocybe Nuda, AKA Lepista Nuda, AKA Wood Blewit.jpg"
+        ],
+        [
+          "Green Elfcup",
+          "common",
+          "classic",
+          {
+            "stock": "sage",
+            "texture": "felt",
+            "border": "teal",
+            "border_width": "thin",
+            "window": "inset",
+            "accent": "teal",
+            "title_typeface": "spectral",
+            "body_typeface": "cinzel",
+            "title_ink": "forest"
+          },
+          [
+            "*Chlorociboria.* The wood stains green long before the cups show.",
+            "Weathered wood stained blue-green by Chlorociboria, with a few of the small cups open on the surface."
+          ],
+          "Green Elfcup - Chlorociboria aeruginascens (44271232505).jpg"
+        ],
+        [
+          "Porcelain Fungus",
+          "rare",
+          "fieldnote",
+          {
+            "stock": "white",
+            "texture": "felt",
+            "border": "sage",
+            "border_width": "thin",
+            "window": "mat",
+            "accent": "sage",
+            "title_typeface": "garamond",
+            "body_typeface": "spectral",
+            "title_ink": "moss",
+            "finish": "pearl"
+          },
+          [
+            "**Oudemansiella mucida**\n- Nearly always on beech, well up the trunk\n- The cap carries a slime that never dries\n- Almost translucent while it is fresh",
+            "Porcelain fungus high on a mossy beech trunk, the caps white and glistening and thin enough to see light through."
+          ],
+          "Oudemansiella mucida, Porcelain Fungus, Enfield, UK.jpg"
+        ],
+        [
+          "Collared Earthstar",
+          "rare",
+          "classic",
+          {
+            "stock": "sand",
+            "texture": "felt",
+            "border": "umber",
+            "border_width": "medium",
+            "window": "rule",
+            "shape": "diamond",
+            "tint": "sepia",
+            "accent": "umber",
+            "title_typeface": "spectral",
+            "body_typeface": "cinzel",
+            "title_ink": "cocoa",
+            "finish": "pearl"
+          },
+          [
+            "*Geastrum triplex.* The outer wall splits into rays and lifts the sac clear.",
+            "A collared earthstar opened on leaf litter, the rays folded back under a round spore sac sitting in its collar."
+          ],
+          "Collared Earthstar Geastrum triplex at Gunnersbury Triangle.JPG"
+        ],
+        [
+          "Chicken of the Woods",
+          "rare",
+          "bold",
+          {
+            "stock": "butter",
+            "texture": "brushed",
+            "border": "ochre",
+            "border_width": "thick",
+            "accent": "ochre",
+            "title_typeface": "body",
+            "body_typeface": "alfa",
+            "title_ink": "rust",
+            "finish": "metallic"
+          },
+          [
+            "Tiers of soft brackets straight out of the trunk, bright while young.",
+            "Overlapping brackets of Laetiporus stacked up a pale trunk, each shelf wavy-edged and darkening towards brown."
+          ],
+          "Laetiporus sulphureus 2017 G01.jpg"
+        ],
+        [
+          "Violet Coral",
+          "epic",
+          "minimal",
+          {
+            "stock": "ink",
+            "texture": "smooth",
+            "border": "violet",
+            "border_width": "thin",
+            "gradient": "bottom",
+            "accent": "violet",
+            "title_typeface": "garamond",
+            "body_typeface": "display",
+            "title_ink": "thistle",
+            "finish": "pearl",
+            "treatment": "foil",
+            "coverage": "full",
+            "pattern": "mirror"
+          },
+          [
+            "*Clavaria zollingeri.* Lilac fingers, unbranched, in old grassland.",
+            "A dense stand of violet coral among moss and fallen leaves, each lilac finger blunt at the tip."
+          ],
+          "Clavaria zollingeri 90973.jpg"
+        ],
+        [
+          "Devil's Fingers",
+          "epic",
+          "bold",
+          {
+            "stock": "ink",
+            "texture": "smooth",
+            "border": "crimson",
+            "border_width": "thick",
+            "accent": "crimson",
+            "title_typeface": "body",
+            "body_typeface": "display",
+            "title_ink": "coral",
+            "finish": "gloss",
+            "treatment": "foil",
+            "coverage": "reverse",
+            "pattern": "linear"
+          },
+          [
+            "Rises from a white egg, then opens red arms that smell of rot to draw flies.",
+            "Clathrus archeri just open on the forest floor, red arms lifting out of the white egg they grew from."
+          ],
+          "Clathrus archeri, (devils fingers) (26273567937).jpg"
+        ],
+        [
+          "Bitter Oysterling",
+          "legendary",
+          "minimal",
+          {
+            "stock": "ink",
+            "texture": "smooth",
+            "border": "fern",
+            "border_width": "hairline",
+            "gradient": "bottom",
+            "accent": "fern",
+            "title_typeface": "garamond",
+            "body_typeface": "display",
+            "title_ink": "mint",
+            "body_ink": "jade",
+            "finish": "satin",
+            "treatment": "holo",
+            "coverage": "full",
+            "pattern": "cosmos"
+          },
+          [
+            "*Panellus stipticus.* It glows, faintly, and long exposures show it.",
+            "Panellus stipticus photographed in the dark on a fallen log, the gills giving off a steady green light."
+          ],
+          "PanellusStipticusAug12 2009.jpg"
+        ]
+      ],
+      "set_code": "MYC",
+      "mark": "bloom",
+      "pack_colour": "forest",
+      "pack_finish": "matte",
+      "pack_size": 8,
+      "emblem_layout": "stacked",
+      "emblem_shape": "tablet",
+      "emblem_style": "filled",
+      "emblem_text": "forest",
+      "pack_design": {
+        "art": [],
+        "emblem_y": -2,
+        "emblem_scale": 106,
+        "lines": [
+          [
+            "FOUND ON THE WOODLAND FLOOR",
+            "cream",
+            2.9,
+            -40,
+            24,
+            "body"
+          ],
+          [
+            "{pack} CARDS PER PACK",
+            "cream",
+            4.0,
+            39,
+            30,
+            "body"
+          ]
+        ]
+      },
+      "tags": [
+        "fungi",
+        "woodland",
+        "macro"
+      ],
+      "body_faces": {}
+    }
+  ],
+  "sources": {
+    "0223 Fuji GW690III (5255034816).jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:0223_Fuji_GW690III_(5255034816).jpg",
+      "author": "Zebrio from Tokyo, Japan",
+      "license": "CC BY-SA 2.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "fba804336908309608ba1ed9ffb27efe10d37d2031d21af9eef3715f496a1ebd"
+    },
+    "12in-LP-Vinyl-Record-Macro-Grooves.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:12in-LP-Vinyl-Record-Macro-Grooves.jpg",
+      "author": "Evan-Amos",
+      "license": "Public domain",
+      "license_url": "https://creativecommons.org/publicdomain/mark/1.0/",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "0525ddc8ded27651255bf5788e3dee210c4bbcf28803fb1eab1e09c855151a91"
+    },
+    "45 rpm Single Record.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:45_rpm_Single_Record.jpg",
+      "author": "Erik Henning Edvardsen",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "827985e3b291643ab8a9cad5d8d74aa82d0af705379ea03cea2f354dcf03207a"
+    },
+    "A clear quartz crystal with natural features.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:A_clear_quartz_crystal_with_natural_features.jpg",
+      "author": "Unbreaking",
+      "license": "CC BY 4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "e5de3aa8084e7779b39a9b889beee14d828f0c20a60ce89f6368a61f9a82d009"
+    },
+    "AD2009Sep20 Amanita muscaria 02.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:AD2009Sep20_Amanita_muscaria_02.jpg",
+      "author": "Bernie",
+      "license": "Public domain",
+      "license_url": "https://creativecommons.org/publicdomain/mark/1.0/",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "8cd7f1a17c5a96a403d443d1e04bff4810ba1dad5e52ecb241653bd283052a41"
+    },
+    "A_Teasel_head_where_the_seeds_in_it_are_germinating_(vivipary).jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:A_Teasel_head_where_the_seeds_in_it_are_germinating_(vivipary).jpg",
+      "author": "TheDragonflyMan",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "ea6a7a666315f871d19e1c827047ae16a1a61631dfe5192ae617580825b869fa"
+    },
+    "Aegithalos_caudatus_front-on_2.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Aegithalos_caudatus_front-on_2.jpg",
+      "author": "Francis C. Franklin",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "3d95ec9a3a7a18ada82daff942c206eb8acfa64b44ad0c861d2147bc645f509c"
+    },
+    "Amen Brother 7 inch single.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Amen_Brother_7_inch_single.jpg",
+      "author": "The Winstons / Metromedia",
+      "license": "Public domain",
+      "license_url": "https://creativecommons.org/publicdomain/mark/1.0/",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "19973bc7fcb9a9707db1bbe03a65be47f4746ddfe54a5186ead0ce5f4ed5380a"
+    },
+    "Amethyst Deceiver - Laccaria amethystea - Violetter Lacktrichterling - Laccaria amethystina - 01.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Amethyst_Deceiver_-_Laccaria_amethystea_-_Violetter_Lacktrichterling_-_Laccaria_amethystina_-_01.jpg",
+      "author": "Norbert Nagel",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "bb4262c148510f32d8af604e3312ddfcce2b2448f8c45649f48e60eae7885dfc"
+    },
+    "Amethyst-geode 020 7765.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Amethyst-geode_020_7765.jpg",
+      "author": "Ludvig14",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "f2feea5062635ffd12b05a43b3d4870ce3d3f42e3f60aa2a843eb85a4e9f90a4"
+    },
+    "Amethyst_(GeoDIL_number_-_1742).jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Amethyst_(GeoDIL_number_-_1742).jpg",
+      "author": "Darla Sondrol",
+      "license": "CC0",
+      "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "8a36d4458343a9ec12f93d7059d5ef6b870a6f176316b669e372248a056a8c29"
+    },
+    "Asclepias syriaca seed pod.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Asclepias_syriaca_seed_pod.jpg",
+      "author": "Greg Hume",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "2e1ffa4d5b0975463c01437336ff72981e592c1e18821f98749f8ae7d2d77e2a"
+    },
+    "Audio-Technica turntable playing coloured vinyl.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Audio-Technica_turntable_playing_coloured_vinyl.jpg",
+      "author": "M. Johnson",
+      "license": "CC BY 2.0",
+      "license_url": "https://creativecommons.org/licenses/by/2.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "87cbd6790d6617fe620ff970c6f859fc27a89c848ecc8cffceb94725821a5a7a"
+    },
+    "Banded gneiss, Six Mile Lake.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Banded_gneiss,_Six_Mile_Lake.jpg",
+      "author": "The Cosmonaut",
+      "license": "CC BY-SA 2.5 ca",
+      "license_url": "https://creativecommons.org/licenses/by-sa/2.5/ca/deed.en",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "7703a2be8e8582d6f0e7b1b4199bc9ac5446b9f51b3090cbc9eedd98409008d2"
+    },
+    "Basalt cobble-boulder shoreline (Yaquina Head, Oregon, USA) 3.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Basalt_cobble-boulder_shoreline_(Yaquina_Head,_Oregon,_USA)_3.jpg",
+      "author": "James St. John",
+      "license": "CC BY 2.0",
+      "license_url": "https://creativecommons.org/licenses/by/2.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "8003646331fe3dec5e8acc5eaf730264c6449bca346f092fcf9ab811cd1b6cc7"
+    },
+    "Beech_mast_on_trees,_Cockshoots_picnic_site_-_geograph.org.uk_-_232863.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Beech_mast_on_trees,_Cockshoots_picnic_site_-_geograph.org.uk_-_232863.jpg",
+      "author": "David Hawgood",
+      "license": "CC BY-SA 2.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "bb49156c8bcea30fc0708f5a6d62a646d36613817ffd2d1d1ec0fa74f2f43430"
+    },
+    "Calcite_crystal_(GeoDIL_number_-_698).jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Calcite_crystal_(GeoDIL_number_-_698).jpg",
+      "author": "Nessa Eull",
+      "license": "CC0",
+      "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "97f1a8a99c622cc61301559a443e0ed7b15836f79775dd0153b1c0898c959932"
+    },
+    "Carduelis_carduelis_(2012).jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Carduelis_carduelis_(2012).jpg",
+      "author": "Pierre Dalous",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "eda9935f968dd5d16a0517cf04b216571a5ca81bf109c160acb3ab438700da58"
+    },
+    "Chi Mai 45 rpm vinyl single label detail.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Chi_Mai_45_rpm_vinyl_single_label_detail.jpg",
+      "author": "FarewellAngelina",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "e3d6895a8f75a78af16d1fafff7dd2cb57450a494e5c4e598314418703314c60"
+    },
+    "Cichorium intybus-alvesgaspar1.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Cichorium_intybus-alvesgaspar1.jpg",
+      "author": "Alvesgaspar",
+      "license": "CC BY 2.5",
+      "license_url": "https://creativecommons.org/licenses/by/2.5",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "cab6184ca40966d677a6b62ddf9fd653d47833f47d7cdcf2724709e3f0649fb4"
+    },
+    "Clathrus archeri, (devils fingers) (26273567937).jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Clathrus_archeri,_(devils_fingers)_(26273567937).jpg",
+      "author": "Bernard Spragg. NZ from Christchurch, New Zealand",
+      "license": "CC0",
+      "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "b37ed8f93c19ee294444421aa880fae664b0cb62a8938c96dff70422af9fbba5"
+    },
+    "Clavaria zollingeri 90973.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Clavaria_zollingeri_90973.jpg",
+      "author": "This image was created by user Dan Molter (shroomydan) at Mushroom Observer, a source for mycological images.You can contact this user here.",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "477ccfabe635cda8d6b2fc34619efd18041f1b368a5946792b94f36e9d74b494"
+    },
+    "Clitocybe Nuda, AKA Lepista Nuda, AKA Wood Blewit.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Clitocybe_Nuda,_AKA_Lepista_Nuda,_AKA_Wood_Blewit.jpg",
+      "author": "FNeill",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "0ef3936d79b794e95afc60fca9efd4977ac838bd75a0abcc1b075dc33a91f86d"
+    },
+    "Close-up of a dj reaching for a vinyl on the turntable, guitar in a blurry background.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Close-up_of_a_dj_reaching_for_a_vinyl_on_the_turntable,_guitar_in_a_blurry_background.jpg",
+      "author": "Shixart1985",
+      "license": "CC BY 2.0",
+      "license_url": "https://creativecommons.org/licenses/by/2.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "e220681f52cdce4552f7a84476ed03e3d78e2b303042b878edea021598a2eb8b"
+    },
+    "Collared Earthstar Geastrum triplex at Gunnersbury Triangle.JPG": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Collared_Earthstar_Geastrum_triplex_at_Gunnersbury_Triangle.JPG",
+      "author": "Ian Alexander",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "8b47d345fd49e7dfcfb6e510432145c65ac0c0b3266bc190c898b4dfa829386c"
+    },
+    "Common_Chaffinch,_Switzerland.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Common_Chaffinch,_Switzerland.jpg",
+      "author": "Scarabinol",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "4a0ba899840a00c2bd54f977ed5466e28ea7546b93e8f00110763589845429e2"
+    },
+    "Common_kingfisher_(Alcedo_atthis_ispida)_female_with_dragonfly_larva.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Common_kingfisher_(Alcedo_atthis_ispida)_female_with_dragonfly_larva.jpg",
+      "author": "Charles J. Sharp",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "8137878fc12f0fdcc5333bd5271152b97b91f39eeab3f8d30b5bcabf84147fdc"
+    },
+    "Common_starling_(Sturnus_vulgaris)_breeding_male_Marken.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Common_starling_(Sturnus_vulgaris)_breeding_male_Marken.jpg",
+      "author": "Charles J. Sharp",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "56be028c34b63a4ee4d32414f47fb39f3da531a6df3a9614cd0fce61ba4309b4"
+    },
+    "Common_wood_pigeon.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Common_wood_pigeon.jpg",
+      "author": "Astrochamp",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "5cd6f91630a8efe4e862ed6a900b11aea04d09238d2de9cd1548ce5e08ec5e69"
+    },
+    "Conglomerate_(GeoDIL_number_-_466).jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Conglomerate_(GeoDIL_number_-_466).jpg",
+      "author": "Darla Sondrol",
+      "license": "CC0",
+      "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "547db674712b0b8cbe5aaf4b42aa878f2a94e9578c5eb7c14be3ffe5746472fd"
+    },
+    "Contax_T2_^_Contax_T3_-_Flickr_-_Lordcolus.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Contax_T2_%5E_Contax_T3_-_Flickr_-_Lordcolus.jpg",
+      "author": "Lordcolus from Taoyuan country, Taiwan",
+      "license": "CC BY 2.0",
+      "license_url": "https://creativecommons.org/licenses/by/2.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "445ae44ee9c2c67c4a5d52302d47dda648939bf20197c4275b00df005a86e410"
+    },
+    "Contorted slate at Hayle Bay - geograph.org.uk - 629405.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Contorted_slate_at_Hayle_Bay_-_geograph.org.uk_-_629405.jpg",
+      "author": "Rodney Harris",
+      "license": "CC BY-SA 2.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "61d6870115addfcf1ce816860478c144af758f63dcdea5d00e782f6ce3ea42e1"
+    },
+    "Cyanistes_caeruleus_3_Luc_Viatour.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Cyanistes_caeruleus_3_Luc_Viatour.jpg",
+      "author": "Luc Viatour",
+      "license": "CC BY-SA 3.0",
+      "license_url": "http://creativecommons.org/licenses/by-sa/3.0/",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "1307c66e105344f89ef456e779aacd6609c2df8f4bd6a88643ff591d082c3094"
+    },
+    "Daldinia concentrica 166975777.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Daldinia_concentrica_166975777.jpg",
+      "author": "Stephen James McWilliam",
+      "license": "CC0",
+      "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "97a30e1d0243f136e2bb86da19616a621e52ec01801a95573040511c22b52af1"
+    },
+    "Dandelion seed head (Taraxacum officinale).jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Dandelion_seed_head_(Taraxacum_officinale).jpg",
+      "author": "Avenue",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "28a8ba9f98e1a6e2b7d429b6978aa571fe8c593ac41447a2a80a8fbb30a7c1a0"
+    },
+    "Deardorff_Portrait_Camera_Used_by_Oscar_Schneider_Studio_-_DPLA_-_958cefedd519a1cbc31ac04c6968b086_(page_1).jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Deardorff_Portrait_Camera_Used_by_Oscar_Schneider_Studio_-_DPLA_-_958cefedd519a1cbc31ac04c6968b086_(page_1).jpg",
+      "author": "L. F. Deardorff and Sons Incorporated",
+      "license": "Public domain",
+      "license_url": "https://creativecommons.org/publicdomain/mark/1.0/",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "d395b07ea6631806109d0d12d2ff3550a204934a26a21beb1968ebe108c9125b"
+    },
+    "Digitalis purpurea - Panoramic trail - Northern Black Forest 01.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Digitalis_purpurea_-_Panoramic_trail_-_Northern_Black_Forest_01.jpg",
+      "author": "H. Zell",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "8fef240dcc8a9cdfc3468f2d2815a73fad1861662bf2ae8ae01ff7b5a7bf16a1"
+    },
+    "Dover_Chert_(St._Louis_Limestone,_Middle_Mississippian": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Dover_Chert_(St._Louis_Limestone,_Middle_Mississippian;_Tennessee,_USA)_8.jpg",
+      "author": "James St. John",
+      "license": "CC BY 2.0",
+      "license_url": "https://creativecommons.org/licenses/by/2.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "83b572d76d06c4903c9b1249768108411c05425fb4890793ebfd5b5b1837dd6a"
+    },
+    "Eryngium_maritimum,_Vic-la-Gardiole_02.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Eryngium_maritimum,_Vic-la-Gardiole_02.jpg",
+      "author": "Christian Ferrer",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "4075f78f0bc57fb1a2dd68e75c017615a376d6b886679bff5662f3a80e5d04b5"
+    },
+    "Eurasian_Collared_Dove,_Tijuana,_Mexico_2023-03-31.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Eurasian_Collared_Dove,_Tijuana,_Mexico_2023-03-31.jpg",
+      "author": "Laurel Wreath of Victors",
+      "license": "CC0",
+      "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "a39baa4ae5e8e3abf405f8175b7a8d10c9e737c3c99098a4e36145493667be4f"
+    },
+    "Eurasian_Nuthatch_on_tree_trunk.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Eurasian_Nuthatch_on_tree_trunk.jpg",
+      "author": "Zhanna Tyshchuk",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "e355200c3e10b853c15c90edad56257a9104ec5c6e0717d5ac3e50b31ec3cbc7"
+    },
+    "Eurasian_wren_(Troglodytes_troglodytes).jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Eurasian_wren_(Troglodytes_troglodytes).jpg",
+      "author": "Alexis Lours",
+      "license": "CC BY 4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "bd9ac9be8dfee2c382794b0fede6e917a2f9995b4bacd74021fa5c8da1745f6a"
+    },
+    "European_Greenfinch_(3211682355).jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:European_Greenfinch_(3211682355).jpg",
+      "author": "Harald Hoyer from Schwerin, Germany",
+      "license": "CC BY-SA 2.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "a727a57b511959367101eff39f565adfdf4700031a4e95b0b0eb96e3d21d5ec3"
+    },
+    "European_robin_(Erithacus_rubecula)_juvenile.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:European_robin_(Erithacus_rubecula)_juvenile.jpg",
+      "author": "Charles J. Sharp",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "71ee09e2eac933a6df05ad9a06075d0d9a3151a2a457e4890480191697875edc"
+    },
+    "Extender_phonograph_record_adapter.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Extender_phonograph_record_adapter.jpg",
+      "author": "Mark Grant",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "5a4fd08044248a81d2bd9b208f4149ef405113cf3779ce4c51fef7e9ba306fcc"
+    },
+    "Female_Blackbird_(7551014334).jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Female_Blackbird_(7551014334).jpg",
+      "author": "Tony Hisgett from Birmingham, UK",
+      "license": "CC BY 2.0",
+      "license_url": "https://creativecommons.org/licenses/by/2.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "05dfdb34688e5b8c9adf85efb8d88ffab9a760db14157e6c39068328f7cc8148"
+    },
+    "Fistulina hepatica, Beefsteak Fungus, UK.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Fistulina_hepatica,_Beefsteak_Fungus,_UK.jpg",
+      "author": "Stu's Images",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "230827af45abf3d740f746cf3ae1ed3cb68475bb430c85f4d68a7e2ef183bdc5"
+    },
+    "Fluorite_octahedrons_and_cubic_pyrite.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Fluorite_octahedrons_and_cubic_pyrite.jpg",
+      "author": "Amy M Lavine",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "ec99267475a8d4a991dc2b9c349e4ae6a541c688ec7adda3154b851f726c549a"
+    },
+    "Fomitopsis betulina 117742765.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Fomitopsis_betulina_117742765.jpg",
+      "author": "rdegeer",
+      "license": "CC0",
+      "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "215cdc5ec07830512b57eb9d07c74555a11518919257e569f33ff18b198ed760"
+    },
+    "GT Scarlet Elf Cup fungus - Sarcoscypha austriaca.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:GT_Scarlet_Elf_Cup_fungus_-_Sarcoscypha_austriaca.jpg",
+      "author": "Ian Alexander",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "fd38e6ce939a243f636784d9ad1fa20a0fe96ee4cc414fb3c50572faaec88690"
+    },
+    "Gneiss_2_(33239757534).jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Gneiss_2_(33239757534).jpg",
+      "author": "James St. John",
+      "license": "CC BY 2.0",
+      "license_url": "https://creativecommons.org/licenses/by/2.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "0fcbb2a0e0b60416ae2a9ecda326044f2633cb70d41979b2eeb723463ee57c33"
+    },
+    "Graflex_Pacemaker_Crown_Graphic,_TIPMEE_20181021.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Graflex_Pacemaker_Crown_Graphic,_TIPMEE_20181021.jpg",
+      "author": "Solomon203",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "78b50f0795f090aa23ec9afa45edec30b94ec720f543e67cd1e2ced5150f284b"
+    },
+    "Granite 2641.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Granite_2641.jpg",
+      "author": "Chris Light",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "af4a252eec9cb37d21948aaa2629e8642a35813e13b48459675f9d7f8a44b5e7"
+    },
+    "Great_Tit_With_Sunflower_Seed_(240416935).jpeg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Great_Tit_With_Sunflower_Seed_(240416935).jpeg",
+      "author": "David Lienhard",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "a808f91188a2410213d1cab74a183f4b71298d72b67c541b6469b905e7c53831"
+    },
+    "Green Elfcup - Chlorociboria aeruginascens (44271232505).jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Green_Elfcup_-_Chlorociboria_aeruginascens_(44271232505).jpg",
+      "author": "Björn S...",
+      "license": "CC BY-SA 2.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "f03fa1b78634d618738c133a5e7fdd288fa84c1e61a47d33ad309ff1ef230476"
+    },
+    "Hasselblad 500 c camera.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Hasselblad_500_c_camera.jpg",
+      "author": "Jonathan Mauer",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "e483c7d06238bf1cace402c1df4d8f95bf8d248b64c5777a1e0555acaee88343"
+    },
+    "House_Sparrow_on_Feeder.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:House_Sparrow_on_Feeder.jpg",
+      "author": "Russell Sutherland",
+      "license": "Public domain",
+      "license_url": "https://creativecommons.org/publicdomain/mark/1.0/",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "7ac6bc56276fabd505e0d88a614c264fdd14bedf5bbb5a52179415ffb87cadb8"
+    },
+    "Hypholoma fasciculare LC0091.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Hypholoma_fasciculare_LC0091.jpg",
+      "author": "Jörg Hempel",
+      "license": "CC BY-SA 2.0 de",
+      "license_url": "https://creativecommons.org/licenses/by-sa/2.0/de/deed.en",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "1a288426443be15e047577fdfad5a8c20a243571b798a098b82b5445ff095f6b"
+    },
+    "Jaume Pujagut and his vinyl records sleeve collection.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Jaume_Pujagut_and_his_vinyl_records_sleeve_collection.jpg",
+      "author": "Xavier Alamany",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "0c957e94fd9aaf9c4b2179a2ca4e6d3594845bdf93a32efed8f4a363486bac32"
+    },
+    "Jelly Ear, Auricularia auricula-judae, UK 2.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Jelly_Ear,_Auricularia_auricula-judae,_UK_2.jpg",
+      "author": "Stu's Images",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "ce1b05e9a5b814443408294166dd7569bad403ca775283603afccd5613a308c8"
+    },
+    "Kamera_Agfa_Isolette_III_2.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Kamera_Agfa_Isolette_III_2.jpg",
+      "author": "Christian Faulhammer (User:V-Li), modified by Eric Gaba (User:Sting)",
+      "license": "CC BY-SA 2.5",
+      "license_url": "https://creativecommons.org/licenses/by-sa/2.5",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "a5b830683c6034a139082e5c46a1da5982c2c6b9543046427108abe19d276a1c"
+    },
+    "Kazantip, Popovka, Crimea, Technics turntable, Vinyl turntable.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Kazantip,_Popovka,_Crimea,_Technics_turntable,_Vinyl_turntable.jpg",
+      "author": "Vyacheslav Argenberg",
+      "license": "CC BY 4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "98c03300bc7c286fa045ffc7759f0e8b6d1883f7d27ad9b1ceb8e8445ee12c5e"
+    },
+    "LP_Sleeve.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:LP_Sleeve.jpg",
+      "author": "J.P.Lon",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "77d671a49f822e2f560351d6fdb41e62e7c140d328d50b3a10249168513f22cd"
+    },
+    "Labradorite_specimen.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Labradorite_specimen.jpg",
+      "author": "Arenamontanus",
+      "license": "CC BY 2.0",
+      "license_url": "https://creativecommons.org/licenses/by/2.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "6b042a3a1cd270881d2a542a6e290cbb3087077633a430e9d30053228eea7bde"
+    },
+    "Laetiporus sulphureus 2017 G01.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Laetiporus_sulphureus_2017_G01.jpg",
+      "author": "George Chernilevsky",
+      "license": "Public domain",
+      "license_url": "https://creativecommons.org/publicdomain/mark/1.0/",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "3d3f23e5566218bded2ec3ab85aa3a0e9cffc51e40dcda735f8aa16ce27c5c15"
+    },
+    "Linhof_Technika_Press_6x9cm_Camera.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Linhof_Technika_Press_6x9cm_Camera.jpg",
+      "author": "Detlef Hansen",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "837ade781b204dbcd93bfb4d24a4fb6888095bd40a5a4cfd4a4956ca2722a617"
+    },
+    "Macro Photography of Moss Sporophytes.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Macro_Photography_of_Moss_Sporophytes.jpg",
+      "author": "Pietro Lusso",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "87cfee4a463f07ef0a76cdb1df2cec163a10d359443903c8ee20102b31d81f09"
+    },
+    "Malachite-250210.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Malachite-250210.jpg",
+      "author": "Robert M. Lavinsky",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "3beffc486d4831e0e1f1260a8ffaadba8af613c06ed51b8efad831dd4f70fde6"
+    },
+    "Male_Great_Spotted_Woodpecker_on_a_bird_feeder_-_geograph.org.uk_-_6878453.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Male_Great_Spotted_Woodpecker_on_a_bird_feeder_-_geograph.org.uk_-_6878453.jpg",
+      "author": "Adrian S Pye",
+      "license": "CC BY-SA 2.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "69d1bb8489994d74784e9967ec434438c8532274614178b078688a6b638c71c5"
+    },
+    "Mamiya_RB67_de_face.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Mamiya_RB67_de_face.jpg",
+      "author": "Eusebius",
+      "license": "CC BY 3.0",
+      "license_url": "https://creativecommons.org/licenses/by/3.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "b1c21ab4823f3f7a6a4280fe49b12b0ba1d88eea92275c7a49a5d729f7e891fe"
+    },
+    "Man reading vinyl record (Unsplash).jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Man_reading_vinyl_record_(Unsplash).jpg",
+      "author": "Crew crew",
+      "license": "CC0",
+      "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "8e0849570fc37ee3e8cda3f52c8cdbff9475c1b0eb69eeb2fd4825379456884c"
+    },
+    "Meadowsweet_by_Lysekil_Line_in_Brastad_7.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Meadowsweet_by_Lysekil_Line_in_Brastad_7.jpg",
+      "author": "W.carter",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "611c6ee4e6936fba63e41ad89600edbc66ecb2c0f377d3ecc91ccd22af66e4af"
+    },
+    "Melitaea sp. and Dactylorhiza fuchsii.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Melitaea_sp._and_Dactylorhiza_fuchsii.jpg",
+      "author": "Ivar Leidus",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "e56aa28e82a4ab1f5937fb25d0167e61b057bea4109c194fd3b155cfbf459609"
+    },
+    "Misumena_vatia_on_Achillea_millefolium_qtl2.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Misumena_vatia_on_Achillea_millefolium_qtl2.jpg",
+      "author": "Quartl",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "9903ef5664b1f8fc9679ba68cfa8a83136bc323ca276c8af39dd640d922a90a0"
+    },
+    "Monotropa uniflora ghost pipe.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Monotropa_uniflora_ghost_pipe.jpg",
+      "author": "Gageills",
+      "license": "CC0",
+      "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "f65fb8b0481f9f8af3c7186d76d02386f0e816270dfd7393808ac8b22a16bde4"
+    },
+    "Mudstone_(Graneros_Formation,_Upper_Cretaceous": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Mudstone_(Graneros_Formation,_Upper_Cretaceous;_Ponca_State_Park,_Nebraska,_USA).jpg",
+      "author": "James St. John",
+      "license": "CC BY 2.0",
+      "license_url": "https://creativecommons.org/licenses/by/2.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "e26bb6244f7d82843a25023ea822acffcf2f0a4504e935e25fcbe14b5078b419"
+    },
+    "My_Fathers_Minolta_SRT-101_(4643231280).jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:My_Fathers_Minolta_SRT-101_(4643231280).jpg",
+      "author": "E Magnuson",
+      "license": "CC BY 2.0",
+      "license_url": "https://creativecommons.org/licenses/by/2.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "24f4bb4a1859c79b73117cc6093e0321e0f9ab11daefd784ad9c0919cf58bf2a"
+    },
+    "Neumann_VMS-70_Cutting_Lathe.png": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Neumann_VMS-70_Cutting_Lathe.png",
+      "author": "Remixato",
+      "license": "CC BY-SA 2.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "dc127949f84ae547426fc4851fc696f38972da824c13f26bf0d70b963f595043"
+    },
+    "Nikonos-V (7476257320).jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Nikonos-V_(7476257320).jpg",
+      "author": "Kurt Bauschardt from Edmonton, Canada",
+      "license": "CC BY-SA 2.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "a24b4702260c67fb9f92e3d3656e49fe30a654c9475d9cdfbe500863fd5757fb"
+    },
+    "Olympus OM1.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Olympus_OM1.jpg",
+      "author": "Alberto.bidinot",
+      "license": "Public domain",
+      "license_url": "https://creativecommons.org/publicdomain/mark/1.0/",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "cd7a6717935ccc23f7cd6cb5cf1f7d0c53967a8ca07fed5cd5ed433013f2b656"
+    },
+    "Orchis_mascula_inflorescence_-_Keila.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Orchis_mascula_inflorescence_-_Keila.jpg",
+      "author": "Ivar Leidus",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "b929962d69653819184f25237e9a2219e62bc3bbbc890279794ba983bd621d6e"
+    },
+    "Oudemansiella mucida, Porcelain Fungus, Enfield, UK.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Oudemansiella_mucida,_Porcelain_Fungus,_Enfield,_UK.jpg",
+      "author": "Stu's Images",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "0ad86c8ee5233942cbf8c221176080e8e445b3e30997b79ac1a5334d7d7146e9"
+    },
+    "PanellusStipticusAug12 2009.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:PanellusStipticusAug12_2009.jpg",
+      "author": "Ylem",
+      "license": "Public domain",
+      "license_url": "https://creativecommons.org/publicdomain/mark/1.0/",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "764f2457e3e1f6305f3716a2ea1641a1e3f363701a6774c1b61475c1a379f69f"
+    },
+    "Plantago major RF.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Plantago_major_RF.jpg",
+      "author": "Robert Flogaus-Faust",
+      "license": "CC BY 4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "729209961f76c358382a196bbc4759210368e26256c6be5e052558095e6e1096"
+    },
+    "Pumice Stone.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Pumice_Stone.jpg",
+      "author": "Ambuj Saxena",
+      "license": "CC BY 2.0",
+      "license_url": "https://creativecommons.org/licenses/by/2.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "1d7fee2ec2b45c7cf222412613b2e065a14264cacbb627bf4c18d99d5796f148"
+    },
+    "Pyrite-232956.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Pyrite-232956.jpg",
+      "author": "Robert M. Lavinsky",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "45fd3c2a2882415960dcdad438bf2232e0f9df56109a4f71eecc91e7391bb2c0"
+    },
+    "Pyrrhula_pyrrhula_female_2.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Pyrrhula_pyrrhula_female_2.jpg",
+      "author": "Francis C. Franklin",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "72bccd55ea3f93ab49e3a6f8f675b9d84f57d4bfb6f3a2b8ec5f75697b2884ac"
+    },
+    "Record-cleaner4.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Record-cleaner4.jpg",
+      "author": "Gmhofmann",
+      "license": "Public domain",
+      "license_url": "https://creativecommons.org/publicdomain/mark/1.0/",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "0124b946df4bb3fd2bab442d2438463d4dca1bf5f3932db97774cbcaa6bc0fbf"
+    },
+    "Red_maple_leaf_on_paper_birch.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Red_maple_leaf_on_paper_birch.jpg",
+      "author": "The Cosmonaut",
+      "license": "CC BY-SA 2.5 ca",
+      "license_url": "https://creativecommons.org/licenses/by-sa/2.5/ca/deed.en",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "1b74c5de0420a35641fd50deccba73f31b3e6b0a6db7ea35a14ecc509a85f24e"
+    },
+    "Ripening Hawthorn Berries - geograph.org.uk - 936373.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Ripening_Hawthorn_Berries_-_geograph.org.uk_-_936373.jpg",
+      "author": "Sarah Smith",
+      "license": "CC BY-SA 2.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "175ac63747bb0f4355dfa60204239a636b5385a823d1210e2a08d6ad9faff785"
+    },
+    "Rolleiflex_f2-8-F.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Rolleiflex_f2-8-F.jpg",
+      "author": "Sputniktilt",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "1ef13256f76314cbc6095c967b2f9dfddb203f11b1b73420175ef8873b3c9ced"
+    },
+    "Rose Quartz Macro 1.JPG": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Rose_Quartz_Macro_1.JPG",
+      "author": "“Jon Zander (Digon3)\"",
+      "license": "CC BY-SA 3.0",
+      "license_url": "http://creativecommons.org/licenses/by-sa/3.0/",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "b0061479b659c0e49112c406f703dad910794e812cf227ff673d2e7fe4b8c73d"
+    },
+    "Run–D.M.C. - Faces-Back From Hell (test pressing single) (Side A).jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Run%E2%80%93D.M.C._-_Faces-Back_From_Hell_(test_pressing_single)_(Side_A).jpg",
+      "author": "Profile Records",
+      "license": "Public domain",
+      "license_url": "https://creativecommons.org/publicdomain/mark/1.0/",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "859dc7eb63a2b3d17c31ea8a26f02e2a4c752336344b50ac1bf2eab9144dd6fc"
+    },
+    "Sandstone sample, Vosges.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Sandstone_sample,_Vosges.jpg",
+      "author": "Coyau",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "6c0642fbff0be14f852b38abcb4099b9990f775016b1c4f80b0c33ef19a4bb19"
+    },
+    "Shaggy inkcaps (Coprinus comatus).JPG": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Shaggy_inkcaps_(Coprinus_comatus).JPG",
+      "author": "The High Fin Sperm Whale",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "0e1ef36c45568c7f6035b63df1ea365bb0da316606482f886837d367fa4f746a"
+    },
+    "Single lycoperdon perlatum.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Single_lycoperdon_perlatum.jpg",
+      "author": "Daniel Ullrich, Threedots",
+      "license": "CC BY-SA 3.0",
+      "license_url": "http://creativecommons.org/licenses/by-sa/3.0/",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "af5b0185eaa7d0f808f8cce245dafdfd4268154e9111805768616e42e4dd929b"
+    },
+    "Siskin_-_Male_-_Spinus_spinus3.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Siskin_-_Male_-_Spinus_spinus3.jpg",
+      "author": "cazalegg",
+      "license": "CC BY 4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "7014ea491294ea2f1e9b2ecec7e4ed72b7447e8034a58ce8a61ce61e90c4bdaa"
+    },
+    "Song Thrush.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Song_Thrush.jpg",
+      "author": "pondman2",
+      "license": "CC BY 2.0",
+      "license_url": "https://creativecommons.org/licenses/by/2.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "a78146b987c3f7aefba669b2d56ea279a7a17a9c94b862ac03fd7aefd7175245"
+    },
+    "Sorbus_aucuparia_2022_G1.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Sorbus_aucuparia_2022_G1.jpg",
+      "author": "George Chernilevsky",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "8cdca2fb3f0ec5a382d5cc7b5702353e9c67b69ca50a0899e0b17bb872f8d004"
+    },
+    "Tawny_owl_(51161205713).jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Tawny_owl_(51161205713).jpg",
+      "author": "hedera.baltica from Wrocław, Poland",
+      "license": "CC BY-SA 2.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "b7159f221da92f60282442688026c1f6e44f2e4671252a027b605f60dbb1d16d"
+    },
+    "Technics_SL-1200MK5_Direct_Drive_Turntable_System_with_Ortofon_cartridge_(2017-01-21_22.33.27_piqsels.com_en).jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Technics_SL-1200MK5_Direct_Drive_Turntable_System_with_Ortofon_cartridge_(2017-01-21_22.33.27_piqsels.com_en).jpg",
+      "author": "Unknown authorUnknown author",
+      "license": "CC0",
+      "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "8b7926949dfba9bdf5030deddb6e6a1673764d2354c5d80e5bea4736eb25cdda"
+    },
+    "Trametes versicolor 2025 G1.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Trametes_versicolor_2025_G1.jpg",
+      "author": "George Chernilevsky",
+      "license": "CC BY 4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "cc72e1f5517b84b066ee374abb49ef2a50559a71d1cd0d6cb217300fb1cbd036"
+    },
+    "Trifolium repens (inflorescense) Edit.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Trifolium_repens_(inflorescense)_Edit.jpg",
+      "author": "Hans Hillewaert",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "55f7802181fd78301617230c2a538439fc30138c6ade8ddb771136a2f7c1445e"
+    },
+    "Trilobite fossil, Desert Museum.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Trilobite_fossil,_Desert_Museum.jpg",
+      "author": "Juan Carlos Fonseca Mata",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "5a1dc3f44ab28dec76dab30cd2a945ff22c7d6dd8acac766e87ea6cad4df359b"
+    },
+    "True Blue vinyl record.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:True_Blue_vinyl_record.jpg",
+      "author": "James_Seattle",
+      "license": "CC BY 2.0",
+      "license_url": "https://creativecommons.org/licenses/by/2.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "26341970bf58ff4ca852c2649a81b6d39794dcd1928b9e92dffa5ad7aa1d529c"
+    },
+    "Unfurling Fern Fronds - geograph.org.uk - 6840619.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Unfurling_Fern_Fronds_-_geograph.org.uk_-_6840619.jpg",
+      "author": "Bob Harvey",
+      "license": "CC BY-SA 2.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "143ee610480ba63a279b74094f680aa8cb71e6ada20f1cf362f3c302f45768c1"
+    },
+    "Vintage_Kodak_Retina_II_(Type_142)_Folding_Camera,_Retina-Xenon_f_2_Lens_&_Compur--Rapid_Shutter,_Made_In_Germany_From_1937_-_1939_(35901172276).jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Vintage_Kodak_Retina_II_(Type_142)_Folding_Camera,_Retina-Xenon_f_2_Lens_%26_Compur--Rapid_Shutter,_Made_In_Germany_From_1937_-_1939_(35901172276).jpg",
+      "author": "Joe Haupt from USA",
+      "license": "CC BY-SA 2.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "074aad76a858e62ca58ca54d21e3909ae6f5008d2c0b6401f1f5efb2be72e2f7"
+    },
+    "Vinyl Store.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Vinyl_Store.jpg",
+      "author": "Celsoazevedo",
+      "license": "CC0",
+      "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "863f62cfa7aa586f23ca5b5b8a9c4216d69356b7262210ae7f42ba4fefbd008d"
+    },
+    "Vinyl groove macro.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Vinyl_groove_macro.jpg",
+      "author": "Shane Gavin",
+      "license": "CC BY 2.0",
+      "license_url": "https://creativecommons.org/licenses/by/2.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "36de1188611430e8c02545842fcef46fa5280a6c52994cc7feb652767d8cb1d6"
+    },
+    "Vinyl_singles_7\"_+_5,5\".jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Vinyl_singles_7%22_%2B_5,5%22.jpg",
+      "author": "Huhu at de.wikipedia",
+      "license": "Public domain",
+      "license_url": "https://creativecommons.org/publicdomain/mark/1.0/",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "6ad822c32fd5b80b420ff9f80a2720cf8a765c09daa5ec06fec0f9568a1f2784"
+    },
+    "White Album Gatefold.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:White_Album_Gatefold.jpg",
+      "author": "Pink Floyd Fan 101",
+      "license": "CC0",
+      "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "862edc0094dc05eba5c8130a2e8806fbfc13f59bc9d723d51af38413b7f9b86d"
+    },
+    "Widelux_F7_panoramic_camera-back.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Widelux_F7_panoramic_camera-back.jpg",
+      "author": "Kenneth C. Zirkel",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "46f261f1084421a9b2519d1ed701ef4e90c66461639d810b64a84b01728e389e"
+    },
+    "Wood_sorrel_after_rain.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Wood_sorrel_after_rain.jpg",
+      "author": "W.carter",
+      "license": "CC0",
+      "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "b98b033929f30ffca8e947667c67780fcf2bba58446ed78bad2f26f8e802ccc4"
+    },
+    "Xylaria hypoxylon (candlestick fungus) location, Val Sinestra. 14-10-2024. (actm.) 01.jpg": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Xylaria_hypoxylon_(candlestick_fungus)_location,_Val_Sinestra._14-10-2024._(actm.)_01.jpg",
+      "author": "Agnes Monkelbaan",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "30a202b89368ac6caad30f631eca7c42111701d3bf7dc8b269553df0503f8bb4"
+    },
+    "Yashica_mat_124G_-_ouvert.JPG": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Yashica_mat_124G_-_ouvert.JPG",
+      "author": "Eusebius",
+      "license": "CC BY 3.0",
+      "license_url": "https://creativecommons.org/licenses/by/3.0",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "48afb6b8aa7656d548c0cf8a62c53d3573c86720ec644afaf335f9b41f9d152c"
+    },
+    "camera:canon-ae1": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Canon_AE-1_front_with_50mm_lens.jpg",
+      "author": "Cburnett",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "81eff074c65af79713380f4fe7dca932dae78fd614c12f557d5608ed625ebf7b"
+    },
+    "camera:leica-m3": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Leica_M3.jpg",
+      "author": "Aconcagua",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "beafbd0cb7ef72cd5e2925449b5e9d8fb2764fcc4a019ca7a2902e2f6e8b824a"
+    },
+    "camera:nikon-f": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Nikon_F_35mm.jpg",
+      "author": "Hiyotada",
+      "license": "CC0 1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "189897765f32818b13efb67d9024a7e69d9b5dfd0dad5621344cd4209e9342ba"
+    },
+    "camera:pentax-k1000": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Pentax_K1000.jpg",
+      "author": "Martin Taylor",
+      "license": "CC BY-SA 2.5",
+      "license_url": "https://creativecommons.org/licenses/by-sa/2.5/",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "1476b2c03d3c05df3291fce81d5f76ad8ea68208d468e089183001bb3794fe68"
+    },
+    "camera:sx70": {
+      "source_url": "https://commons.wikimedia.org/wiki/File:Polaroid_SX-70_camera.jpg",
+      "author": "Michael Gatchell",
+      "license": "CC BY 2.0",
+      "license_url": "https://creativecommons.org/licenses/by/2.0/",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "22a998098055e68a2cdc35d4099885eab25da8f01a157e0b596e25876118e524"
+    },
+    "nasa:PIA00271": {
+      "source_url": "https://images.nasa.gov/details/PIA00271",
+      "author": "NASA/JPL",
+      "license": "NASA media usage guidelines; no endorsement implied",
+      "license_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "3767b1bd4939d82e94912ccc4509e88cdd34167d78d300535428ebe1f6d3cf94"
+    },
+    "nasa:PIA00282": {
+      "source_url": "https://images.nasa.gov/details/PIA00282",
+      "author": "NASA/JPL",
+      "license": "NASA media usage guidelines; no endorsement implied",
+      "license_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "b1d8672b1e2131378a0ed1bc3ee144cd73ef73e53694d9363bee539cb86ef5c1"
+    },
+    "nasa:PIA00302": {
+      "source_url": "https://images.nasa.gov/details/PIA00302",
+      "author": "NASA/JPL/USGS",
+      "license": "NASA media usage guidelines; no endorsement implied",
+      "license_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "caf0c06f9a5d2b5c6b0f16eb8e090412072d778a343c06cbb419e73a1599357d"
+    },
+    "nasa:PIA00317": {
+      "source_url": "https://images.nasa.gov/details/PIA00317",
+      "author": "NASA/JPL/USGS",
+      "license": "NASA media usage guidelines; no endorsement implied",
+      "license_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "318ad86e2916d4ce18e9d145e6b6a4efae8b1521f5950be3626003e5f6189b5a"
+    },
+    "nasa:PIA00407": {
+      "source_url": "https://images.nasa.gov/details/PIA00407",
+      "author": "NASA/JPL/USGS",
+      "license": "NASA media usage guidelines; no endorsement implied",
+      "license_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "b97cb7e1fe54a68f0dc1949015752875c86ee18921b91c43046e5fe20f195a4e"
+    },
+    "nasa:PIA00716": {
+      "source_url": "https://images.nasa.gov/details/PIA00716",
+      "author": "NASA/JPL",
+      "license": "NASA media usage guidelines; no endorsement implied",
+      "license_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "2519b90e1304313fe5b6fb0e5d6fe581fd1831221039a31cd9c499268bb8ea66"
+    },
+    "nasa:PIA01492": {
+      "source_url": "https://images.nasa.gov/details/PIA01492",
+      "author": "NASA/JPL",
+      "license": "NASA media usage guidelines; no endorsement implied",
+      "license_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "2cb5d6be0b64fd94cb4b7a5d511f9a6b5a89a558b03a63f38972e67b0c1dfc09"
+    },
+    "nasa:PIA02873": {
+      "source_url": "https://images.nasa.gov/details/PIA02873",
+      "author": "NASA/JPL/University of Arizona",
+      "license": "NASA media usage guidelines; no endorsement implied",
+      "license_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "2b754a3a2566400da1bb268e98d087dd42a4b04bfe9374db090886d8e959f133"
+    },
+    "nasa:PIA03149": {
+      "source_url": "https://images.nasa.gov/details/PIA03149",
+      "author": "NASA/ESA/SOHO",
+      "license": "NASA media usage guidelines; no endorsement implied",
+      "license_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "7a6568ddaa2b8c7a5af4a8e70c38733016e1e390ce4e79c810518990bd5075fa"
+    },
+    "nasa:PIA03456": {
+      "source_url": "https://images.nasa.gov/details/PIA03456",
+      "author": "NASA/JPL/DLR",
+      "license": "NASA media usage guidelines; no endorsement implied",
+      "license_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "4165a810ac7a40d8c87b14981c3a112d00371fc392bc453d6e4eb1ad78d66a0e"
+    },
+    "nasa:PIA06077": {
+      "source_url": "https://images.nasa.gov/details/PIA06077",
+      "author": "NASA/JPL/Space Science Institute",
+      "license": "NASA media usage guidelines; no endorsement implied",
+      "license_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "2bb6f3f9673296c7036060ff65a05f25ea3cfa215e8c3212b84dd16f721f026a"
+    },
+    "nasa:PIA10367": {
+      "source_url": "https://images.nasa.gov/details/PIA10367",
+      "author": "NASA/JPL-Caltech/University of Arizona",
+      "license": "NASA media usage guidelines; no endorsement implied",
+      "license_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "e4769674eb08df8492ca564470b75e1c3391885e78b96ff8bf8d5286cc7db533"
+    },
+    "nasa:PIA14922": {
+      "source_url": "https://images.nasa.gov/details/PIA14922",
+      "author": "NASA/JPL-Caltech/Space Science Institute",
+      "license": "NASA media usage guidelines; no endorsement implied",
+      "license_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "0c86f465159b995f80865692eee9604fb4f0fe4b07777cf90ebc44b049796828"
+    },
+    "nasa:PIA15162": {
+      "source_url": "https://images.nasa.gov/details/PIA15162",
+      "author": "NASA/Johns Hopkins APL/Carnegie Institution of Washington",
+      "license": "NASA media usage guidelines; no endorsement implied",
+      "license_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "e17b3e6eae8d9f18eb4211c2dde1094c5540e440e59525f8a679223aaf505919"
+    },
+    "nasa:PIA15678": {
+      "source_url": "https://images.nasa.gov/details/PIA15678",
+      "author": "NASA/JPL-Caltech/UCLA/MPS/DLR/IDA",
+      "license": "NASA media usage guidelines; no endorsement implied",
+      "license_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "ba2a4b76ccd3fd1aafc64a1d576ba5d2f828d8cb2c4eeb796bde828839e7023f"
+    },
+    "nasa:PIA17202": {
+      "source_url": "https://images.nasa.gov/details/PIA17202",
+      "author": "NASA/JPL-Caltech/Space Science Institute",
+      "license": "NASA media usage guidelines; no endorsement implied",
+      "license_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "df9381a9bbd6d4113aa523cd536302564d8b907af4e651298f8be44518680ae8"
+    },
+    "nasa:PIA18033": {
+      "source_url": "https://images.nasa.gov/details/PIA18033",
+      "author": "NASA/NOAA/Suomi NPP",
+      "license": "NASA media usage guidelines; no endorsement implied",
+      "license_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "d0470ba7a24cb58e6361c1e413d44987f1536120abee107fb60b3062511af734"
+    },
+    "nasa:PIA18182": {
+      "source_url": "https://images.nasa.gov/details/PIA18182",
+      "author": "NASA/JPL-Caltech",
+      "license": "NASA media usage guidelines; no endorsement implied",
+      "license_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "975b21fc4430fd56a32f267173f7f4b97baf36cb9c70daf8f4a9dc97670a9d80"
+    },
+    "nasa:PIA19048": {
+      "source_url": "https://images.nasa.gov/details/PIA19048",
+      "author": "NASA/JPL-Caltech/SETI Institute",
+      "license": "NASA media usage guidelines; no endorsement implied",
+      "license_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "9a16941ce72791857431c2c4d2bf57000167ddc0b425663f32385225070c0705"
+    },
+    "nasa:PIA19889": {
+      "source_url": "https://images.nasa.gov/details/PIA19889",
+      "author": "NASA/JPL-Caltech/UCLA/MPS/DLR/IDA",
+      "license": "NASA media usage guidelines; no endorsement implied",
+      "license_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+      "adaptation": "Cropped by the card renderer from the downloaded source.",
+      "sha256": "e7b5f03d064ed24862dbb1ac54bb679004b37be37a2ab223fec0622b283f96c7"
+    }
+  }
+}

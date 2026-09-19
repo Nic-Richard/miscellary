@@ -354,12 +354,12 @@ the pack and open it with Enter.
 
 ## Demo content
 
-`apps/api/cards/management/commands/seed_demo.py` creates collectors, published and draft sets,
+`reset_demo` creates collectors, published and draft sets,
 owned cards, likes, comments, follows, showcases, pack history, and trade offers. It uses
 Wikimedia Commons photographs when available and supports `--no-photos` for offline placeholders.
 
 ```bash
 docker compose up -d
 docker compose exec api uv run python manage.py migrate
-docker compose exec api uv run python manage.py seed_demo
+docker compose exec api uv run python manage.py reset_demo
 ```

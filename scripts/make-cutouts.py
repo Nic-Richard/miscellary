@@ -10,7 +10,7 @@ colour, so a white camera body or a black shadow inside the subject survives.
 
 Run from the repository root, after the photo cache has been filled:
 
-    docker compose exec api uv run python manage.py seed_demo --prepare-photos
+    docker compose exec api uv run python manage.py bootstrap_catalogue --prepare-photos
     python scripts/make-cutouts.py
 
 It writes PNGs and a source record into apps/api/cards/management/cutouts/.

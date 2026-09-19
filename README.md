@@ -86,7 +86,7 @@ start your own with `--headless=new --remote-debugging-port=9224` and it will be
 | `--runner local`    | Run the Django commands on the host instead of in the API container |
 | `--api`, `--chrome` | Point at a different API or debugging endpoint                      |
 
-Running `seed_demo` on its own recreates the database rows but leaves every published card
+Running `reset_demo` on its own recreates the database rows but leaves every published card
 unbaked, and an unbaked published card renders as an empty frame. It is available as
 `make seed-data-only` when that is what you want. To check the catalogue at any time:
 
@@ -101,8 +101,8 @@ A baked render is keyed to `CARD_RENDERER_VERSION` in `apps/api/cards/rendering.
    cards will display. `pnpm reseed --bake-only` does that in development. In production it is a
    migration of the asset store rather than a code deploy, so plan for it.
 
-All seeded users use the password `demopass123`. The main accounts are
-`fieldnote@example.com`, `waverly@example.com`, and `mabel@example.com`; additional accounts
+All local reset users use the password `demopass123`. The main accounts are
+`ellis@example.com`, `mara@example.com`, and `devon@example.com`; additional accounts
 use `orla`, `kit`, `bex`, `sol`, or `wren` followed by `@example.com`.
 
 ### Host-native development

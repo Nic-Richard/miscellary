@@ -1,6 +1,9 @@
 import json
+from io import BytesIO
+from unittest.mock import Mock
 
 import pytest
+from django.conf import settings
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.urls import reverse
@@ -142,3 +145,67 @@ def test_import_card_renders_validates_manifest_before_uploading(tmp_path, monke
     card_set.refresh_from_db()
     assert card_set.render_back_key == ""
     assert uploaded == []
+
+
+def test_import_card_renders_reads_private_s3_staging(monkeypatch, user):
+    card_set = make_set(user)
+    fill_publishable(card_set)
+    publish_set(card_set)
+    card = card_set.cards.select_related("image", "card_set").first()
+    manifest = {
+        "renderer_version": CARD_RENDERER_VERSION,
+        "sets": [
+            {
+                "id": str(card_set.id),
+                "signature": back_render_signature(card_set),
+                "back": "back.webp",
+                "pack_signature": pack_render_signature(card_set),
+                "pack": "pack.webp",
+            }
+        ],
+        "cards": [
+            {
+                "id": str(card.id),
+                "signature": card_render_signature(card),
+                "front": "front.webp",
+                "thumbnail": "thumbnail.webp",
+                "flat_thumbnail": "flat-thumbnail.webp",
+                "mask": None,
+                "mask_thumbnail": None,
+            }
+        ],
+    }
+    prefix = "staging/card-renders/test"
+    files = {
+        f"{prefix}/manifest.json": json.dumps(manifest).encode(),
+        **{
+            f"{prefix}/{name}": name.encode()
+            for name in (
+                "back.webp",
+                "pack.webp",
+                "front.webp",
+                "thumbnail.webp",
+                "flat-thumbnail.webp",
+            )
+        },
+    }
+    client = Mock()
+    client.head_object.side_effect = lambda Bucket, Key: {"ContentLength": len(files[Key])}
+    client.get_object.side_effect = lambda Bucket, Key: {"Body": BytesIO(files[Key])}
+    monkeypatch.setattr(
+        "cards.management.commands.import_card_renders.storage.client", lambda: client
+    )
+    uploaded = []
+    monkeypatch.setattr(
+        "cards.management.commands.import_card_renders.storage.put_object",
+        lambda key, body, content_type: uploaded.append((key, body, content_type)),
+    )
+
+    call_command(
+        "import_card_renders",
+        f"s3://{settings.AWS_STORAGE_BUCKET_NAME}/{prefix}/manifest.json",
+    )
+
+    card.refresh_from_db()
+    assert card.render_front_key.endswith("/front-1000.webp")
+    assert len(uploaded) == 5
