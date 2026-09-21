@@ -22,6 +22,7 @@ import { Button, Chip, ErrorText, Input } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
 import { getNotifications, getPublicSet } from '@/lib/endpoints';
 import { useDiscovery } from '@/lib/discovery';
+import { readPublicCache, writePublicCache } from '@/lib/publicCache';
 import type { DiscoverySort } from '@/lib/discovery';
 import { colors, fonts } from '@/lib/theme';
 
@@ -53,13 +54,19 @@ export default function BrowseScreen() {
   useEffect(() => {
     if (!featuredSlug) return;
     let live = true;
-    getPublicSet(featuredSlug)
-      .then((detail) => {
+    const cacheKey = `set:${featuredSlug}`;
+    void (async () => {
+      const cached = await readPublicCache<CardSetDetail>(cacheKey);
+      if (!live) return;
+      if (cached) setFeatured(cached);
+      try {
+        const detail = await getPublicSet(featuredSlug, false);
+        void writePublicCache(cacheKey, detail);
         if (live) setFeatured(detail);
-      })
-      .catch(() => {
-        if (live) setFeatured(null);
-      });
+      } catch {
+        if (live && !cached) setFeatured(null);
+      }
+    })();
     return () => {
       live = false;
     };

@@ -1,10 +1,5 @@
-'use client';
-
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
-import { Suspense, useEffect, useState } from 'react';
 import { cardCode } from '@miscellary/shared';
-import type { SearchResults } from '@miscellary/shared';
 import SetTile from '@/components/SetTile';
 import CardPreview from '@/components/CardPreview';
 import DemoBadge from '@/components/DemoBadge';
@@ -15,16 +10,14 @@ import { search } from '@/lib/social';
 import ui from '@/components/ui.module.css';
 import styles from './page.module.css';
 
-function Results() {
-  const q = useSearchParams().get('q') ?? '';
-  const [results, setResults] = useState<SearchResults | null>(null);
+export const dynamic = 'force-dynamic';
 
-  useEffect(() => {
-    if (q.trim().length < 2) return;
-    search(q)
-      .then(setResults)
-      .catch(() => setResults(null));
-  }, [q]);
+export default async function SearchPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
+  const { q = '' } = await searchParams;
 
   if (q.trim().length < 2)
     return (
@@ -39,16 +32,7 @@ function Results() {
         </Sheet>
       </section>
     );
-  if (!results)
-    return (
-      <section>
-        <p className={ui.eyebrow}>Search</p>
-        <h1 className={ui.title}>&ldquo;{q}&rdquo;</h1>
-        <Sheet className={styles.sheet}>
-          <Empty icon="search">Searching…</Empty>
-        </Sheet>
-      </section>
-    );
+  const results = await search(q);
   const empty =
     !results.users.length && !results.sets.length && !results.cards.length && !results.tags.length;
 
@@ -127,13 +111,5 @@ function Results() {
         </Sheet>
       ) : null}
     </section>
-  );
-}
-
-export default function SearchPage() {
-  return (
-    <Suspense fallback={null}>
-      <Results />
-    </Suspense>
   );
 }

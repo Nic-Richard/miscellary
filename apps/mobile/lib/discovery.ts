@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { CardSetSummary } from '@miscellary/shared';
+import type { CardSetSummary, Paginated } from '@miscellary/shared';
 import { listPublicSets } from './endpoints';
+import { readPublicCache, writePublicCache } from './publicCache';
 
 export type DiscoverySort = 'new' | 'popular';
 
@@ -16,7 +17,7 @@ export function useDiscovery(sort: DiscoverySort) {
   const request = useRef<AbortController | null>(null);
 
   const load = useCallback(
-    async (page: string | null = null, refresh = false) => {
+    async (page: string | null = null, refresh = false, background = false) => {
       if (page && request.current) return;
       request.current?.abort();
       const controller = new AbortController();
@@ -26,7 +27,7 @@ export function useDiscovery(sort: DiscoverySort) {
         setMoreError(null);
       } else {
         setRefreshing(refresh);
-        setLoading(!refresh);
+        setLoading(!refresh && !background);
         setLoadingMore(false);
         setError(null);
         setMoreError(null);
@@ -42,6 +43,7 @@ export function useDiscovery(sort: DiscoverySort) {
         );
         setCount(result.count);
         setNext(result.next);
+        if (!page) void writePublicCache(`sets:${sort}`, result);
       } catch (e) {
         if (request.current !== controller) return;
         const message = controller.signal.aborted
@@ -65,15 +67,28 @@ export function useDiscovery(sort: DiscoverySort) {
   );
 
   useEffect(() => {
-    setSets([]);
-    setCount(0);
-    setNext(null);
-    void load();
+    let active = true;
+    request.current?.abort();
+    void readPublicCache<Paginated<CardSetSummary>>(`sets:${sort}`).then((cached) => {
+      if (!active) return;
+      if (cached) {
+        setSets(cached.results);
+        setCount(cached.count);
+        setNext(cached.next);
+        setLoading(false);
+      } else {
+        setSets([]);
+        setCount(0);
+        setNext(null);
+      }
+      void load(null, false, Boolean(cached));
+    });
     return () => {
+      active = false;
       request.current?.abort();
       request.current = null;
     };
-  }, [load]);
+  }, [load, sort]);
 
   return {
     sets,

@@ -6,6 +6,7 @@ import { cardCode } from '@miscellary/shared';
 import CardPreview from '@/components/CardPreview';
 import DemoBadge from '@/components/DemoBadge';
 import { search } from '@/lib/endpoints';
+import { readPublicCache, writePublicCache } from '@/lib/publicCache';
 import { colors } from '@/lib/theme';
 import { Loading, Muted, Title } from '@/components/ui';
 
@@ -14,10 +15,26 @@ export default function SearchScreen() {
   const [results, setResults] = useState<SearchResults | null>(null);
 
   useEffect(() => {
-    if (q)
-      search(q)
-        .then(setResults)
-        .catch(() => setResults(null));
+    const query = q?.trim();
+    if (!query) return;
+    let active = true;
+    const cacheKey = `search:${query.toLowerCase()}`;
+    setResults(null);
+    void (async () => {
+      const cached = await readPublicCache<SearchResults>(cacheKey);
+      if (!active) return;
+      if (cached) setResults(cached);
+      try {
+        const next = await search(query);
+        void writePublicCache(cacheKey, next);
+        if (active) setResults(next);
+      } catch {
+        if (active && !cached) setResults(null);
+      }
+    })();
+    return () => {
+      active = false;
+    };
   }, [q]);
 
   if (!results) return <Loading />;

@@ -1,6 +1,6 @@
 'use client';
 
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useRef } from 'react';
 import { CONTINUE_PARAM } from './returnTo';
 
@@ -10,7 +10,6 @@ export function useContinuation(
   ready = true,
   carries: string[] = [],
 ): void {
-  const params = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
   const done = useRef(false);
@@ -19,6 +18,7 @@ export function useContinuation(
 
   useEffect(() => {
     if (done.current || !ready) return;
+    const params = new URLSearchParams(window.location.search);
     if (params.get(CONTINUE_PARAM) !== action) return;
     done.current = true;
     const carried = new URLSearchParams(params.toString());
@@ -28,5 +28,5 @@ export function useContinuation(
     const query = rest.toString();
     router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
     latest.current(carried);
-  }, [action, carries, params, pathname, ready, router]);
+  }, [action, carries, pathname, ready, router]);
 }

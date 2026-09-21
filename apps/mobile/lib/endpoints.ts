@@ -40,10 +40,11 @@ export const listTags = (q?: string) =>
   apiFetch<TagSummary[]>(`/api/v1/tags/${q ? `?q=${encodeURIComponent(q)}` : ''}`, {
     auth: false,
   });
-export const getPublicSet = (slug: string) => apiFetch<CardSetDetail>(`/api/v1/sets/${slug}/`);
+export const getPublicSet = (slug: string, auth = true) =>
+  apiFetch<CardSetDetail>(`/api/v1/sets/${slug}/`, { auth });
 export const listTemplates = () => apiFetch<CardTemplate[]>('/api/v1/templates/', { auth: false });
 export const search = (q: string) =>
-  apiFetch<SearchResults>(`/api/v1/search/?q=${encodeURIComponent(q)}`);
+  apiFetch<SearchResults>(`/api/v1/search/?q=${encodeURIComponent(q)}`, { auth: false });
 
 export const listMySets = () => apiFetch<CardSetSummary[]>('/api/v1/me/sets/');
 export const createSet = (body: { title: string; description: string }) =>
@@ -124,8 +125,8 @@ export const counterOffer = (id: string, body: TradeOfferWrite) =>
 export const actOnOffer = (id: string, action: 'accept' | 'reject' | 'cancel') =>
   apiFetch<TradeOffer>(`/api/v1/me/trades/${id}/${action}/`, { method: 'POST' });
 
-export const getProfile = (username: string) =>
-  apiFetch<ProfilePage>(`/api/v1/users/${encodeURIComponent(username)}/`);
+export const getProfile = (username: string, auth = true) =>
+  apiFetch<ProfilePage>(`/api/v1/users/${encodeURIComponent(username)}/`, { auth });
 export const setFollow = (username: string, follow: boolean) =>
   apiFetch<{ following: boolean; follower_count: number }>(
     `/api/v1/users/${encodeURIComponent(username)}/follow/`,

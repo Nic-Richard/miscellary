@@ -37,6 +37,7 @@ import {
   recycleCard,
   sendReport,
 } from '@/lib/endpoints';
+import { readPublicCache, writePublicCache } from '@/lib/publicCache';
 import { colors, fonts } from '@/lib/theme';
 import { Button, Chip, ErrorText, Loading, Muted, Tag, Title } from '@/components/ui';
 
@@ -73,10 +74,16 @@ export default function BinderScreen() {
 
   useEffect(() => {
     const request = ++setRequest.current;
+    const cacheKey = `set:${slug}`;
     setSet(null);
     setStatus(null);
-    getPublicSet(slug)
+    setError(null);
+    void readPublicCache<CardSetDetail>(cacheKey).then((cached) => {
+      if (setRequest.current === request && cached) setSet(cached);
+    });
+    getPublicSet(slug, false)
       .then((next) => {
+        void writePublicCache(cacheKey, next);
         if (setRequest.current === request) setSet(next);
       })
       .catch((e: Error) => {
@@ -90,7 +97,10 @@ export default function BinderScreen() {
     const packRequest = ++statusRequest.current;
     getPublicSet(slug)
       .then((next) => {
-        if (setRequest.current === detailRequest) setSet(next);
+        if (setRequest.current === detailRequest) {
+          setSet(next);
+          setError(null);
+        }
       })
       .catch(() => undefined);
     getPackStatus(slug)
