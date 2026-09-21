@@ -1,18 +1,18 @@
-'use client';
-
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
 import { cardCode } from '@miscellary/shared';
 import type { Card, CardSetDetail, CardSetSummary } from '@miscellary/shared';
 import Binder from '@/components/binder/Binder';
 import SetTile from '@/components/SetTile';
 import CardPreview from '@/components/CardPreview';
-import { SceneLight, slotLight } from '@/lib/lighting';
+import { SceneLight } from '@/lib/lighting';
+import { slotLight } from '@/lib/lightingStyle';
 import { getPublicSet, listPublicSets } from '@/lib/sets';
 import tileStyles from '@/components/SetTile.module.css';
 import ui from '@/components/ui.module.css';
 import wide from '@/components/pageWide.module.css';
 import styles from './page.module.css';
+
+export const revalidate = 300;
 
 interface Pick {
   card: Card;
@@ -39,44 +39,28 @@ const DESK = [
   { left: 71, top: 20, rotate: 13 },
 ];
 
-export default function HomePage() {
-  const [sets, setSets] = useState<CardSetSummary[]>([]);
-  const [total, setTotal] = useState(0);
-  const [picks, setPicks] = useState<(Pick | null)[]>([]);
-  const [featured, setFeatured] = useState<CardSetDetail | null>(null);
-
-  useEffect(() => {
-    let live = true;
-    listPublicSets('popular')
-      .then((page) => {
-        if (!live) return;
-        setSets(page.results);
-        setTotal(page.count);
-        const named = (prefix: string) => page.results.find((s) => s.slug.startsWith(prefix));
-        const wanted = [...new Set([...HERO.map((h) => h.set), SHOWCASE])];
-        setPicks(HERO.map(() => null));
-        for (const prefix of wanted) {
-          void (async () => {
-            const summary = named(prefix);
-            if (!summary) return;
-            const detail = await getPublicSet(summary.slug).catch(() => null);
-            if (!live || !detail) return;
-            if (prefix === SHOWCASE) setFeatured(detail);
-            setPicks((current) =>
-              HERO.map(({ set, card }, index) => {
-                if (set !== prefix) return current[index] ?? null;
-                const face = detail.cards.find((entry) => entry.title === card);
-                return face ? { card: face, set: summary } : null;
-              }),
-            );
-          })();
-        }
-      })
-      .catch(() => undefined);
-    return () => {
-      live = false;
-    };
-  }, []);
+export default async function HomePage() {
+  const page = await listPublicSets('popular').catch(() => null);
+  const sets = page?.results ?? [];
+  const total = page?.count ?? 0;
+  const named = (prefix: string) => sets.find((set) => set.slug.startsWith(prefix));
+  const wanted = [...new Set([...HERO.map((entry) => entry.set), SHOWCASE])];
+  const loaded = new Map(
+    await Promise.all(
+      wanted.map(async (prefix) => {
+        const summary = named(prefix);
+        if (!summary) return [prefix, null] as const;
+        const detail = await getPublicSet(summary.slug).catch(() => null);
+        return [prefix, detail ? { summary, detail } : null] as const;
+      }),
+    ),
+  );
+  const picks: (Pick | null)[] = HERO.map(({ set, card }) => {
+    const loadedSet = loaded.get(set);
+    const face = loadedSet?.detail.cards.find((entry) => entry.title === card);
+    return loadedSet && face ? { card: face, set: loadedSet.summary } : null;
+  });
+  const featured: CardSetDetail | null = loaded.get(SHOWCASE)?.detail ?? null;
 
   const packRow = sets.slice(0, PACK_ROW);
 
