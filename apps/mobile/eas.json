@@ -8,7 +8,7 @@
       "distribution": "internal",
       "env": {
         "EXPO_PUBLIC_API_URL": "https://api.miscellary.com",
-        "PNPM_CONFIG_NODE_LINKER": "hoisted"
+        "npm_config_node_linker": "hoisted"
       },
       "android": {
         "buildType": "apk"
@@ -17,7 +17,7 @@
     "production": {
       "env": {
         "EXPO_PUBLIC_API_URL": "https://api.miscellary.com",
-        "PNPM_CONFIG_NODE_LINKER": "hoisted"
+        "npm_config_node_linker": "hoisted"
       },
       "android": {
         "buildType": "app-bundle"
