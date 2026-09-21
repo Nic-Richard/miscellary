@@ -361,7 +361,6 @@ resource "aws_cloudformation_stack" "media_cdn" {
               TargetOriginId       = "media-s3"
               ViewerProtocolPolicy = "redirect-to-https"
             }
-            PriceClass = "PriceClass_100"
             ViewerCertificate = {
               AcmCertificateArn      = aws_acm_certificate_validation.media[0].certificate_arn
               MinimumProtocolVersion = "TLSv1.2_2021"
