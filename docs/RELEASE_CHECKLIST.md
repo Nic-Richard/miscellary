@@ -13,7 +13,8 @@
 - [ ] `support@miscellary.com` and `privacy@miscellary.com` receive mail before publishing legal pages.
 - [ ] Refresh cookie works cross-origin from `miscellary.com` (`COOKIE_SAMESITE=Lax`).
 - [ ] S3 CORS allows the production web origin only.
-- [ ] A source object rejects an unsigned GET, its API URL works while signed, and a `renders/*` URL is public.
+- [ ] A source object rejects an unsigned GET, its API URL works while signed, a CloudFront
+      `renders/*` URL works, and the equivalent raw S3 render URL is denied.
 - [ ] `ALLOWED_HOSTS`, `CORS_ALLOWED_ORIGINS`, `CSRF_TRUSTED_ORIGINS` contain the real hostnames.
 - [ ] RDS is private, Single-AZ, backed up, and reachable only from the API security group.
 - [ ] ECS runs one healthy task and the API task accepts port 8000 only from the load balancer.

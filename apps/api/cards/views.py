@@ -1,5 +1,6 @@
 from django.db import transaction
-from django.db.models import Count, Exists, OuterRef, Prefetch, Q, Value
+from django.db.models import Count, Exists, IntegerField, OuterRef, Prefetch, Q, Subquery, Value
+from django.db.models.functions import Coalesce
 from django.shortcuts import get_object_or_404
 from rest_framework import permissions, status
 from rest_framework.exceptions import ValidationError
@@ -28,26 +29,38 @@ class SetPagination(PageNumberPagination):
     page_size = 24
 
 
-def with_counts(queryset, user=None):
+def with_counts(queryset, user=None, *, include_cards=True):
     """Sets with their counts and tags, and whether `user` liked or follows them."""
+    from packs.models import PackOpening  # here, not at the top: import cycle
     from social.models import Reaction, SetFollow  # here, not at the top: import cycle
 
-    # Meta.ordering is dropped on GROUP BY queries, so order explicitly.
-    cards = (
-        CardDefinition.objects.select_related("image")
-        .prefetch_related("card_tags__tag")
-        .annotate(like_count=Count("reactions"))
-        .order_by("position", "created_at")
-    )
-    queryset = (
-        queryset.select_related("creator__profile", "cover")
-        .prefetch_related(Prefetch("cards", queryset=cards), "set_tags__tag")
-        .annotate(
-            card_count=Count("cards", distinct=True),
-            like_count=Count("reactions", distinct=True),
-            opening_count=Count("pack_openings", distinct=True),
-            follower_count=Count("set_followers", distinct=True),
+    def related_count(model, field):
+        counts = (
+            model.objects.filter(**{field: OuterRef("pk")})
+            .order_by()
+            .values(field)
+            .annotate(total=Count("pk"))
+            .values("total")
         )
+        return Coalesce(Subquery(counts, output_field=IntegerField()), 0)
+
+    queryset = queryset.select_related("creator__profile", "cover").prefetch_related(
+        "set_tags__tag"
+    )
+    if include_cards:
+        # Meta.ordering is dropped on GROUP BY queries, so order explicitly.
+        cards = (
+            CardDefinition.objects.select_related("image")
+            .prefetch_related("card_tags__tag")
+            .annotate(like_count=Count("reactions"))
+            .order_by("position", "created_at")
+        )
+        queryset = queryset.prefetch_related(Prefetch("cards", queryset=cards))
+    queryset = queryset.annotate(
+        card_count=related_count(CardDefinition, "card_set_id"),
+        like_count=related_count(Reaction, "card_set_id"),
+        opening_count=related_count(PackOpening, "card_set_id"),
+        follower_count=related_count(SetFollow, "card_set_id"),
     )
     if user is not None and user.is_authenticated:
         liked = Reaction.objects.filter(user=user, card_set=OuterRef("pk"))
@@ -71,7 +84,9 @@ class PublicSetListView(APIView):
 
     def get(self, request: Request) -> Response:
         queryset = with_counts(
-            CardSet.objects.filter(status=CardSet.Status.PUBLISHED), request.user
+            CardSet.objects.filter(status=CardSet.Status.PUBLISHED),
+            request.user,
+            include_cards=False,
         )
         tag = tagging.slugify_tag(request.query_params.get("tag", ""))
         if tag:
@@ -134,7 +149,8 @@ class MySetListView(APIView):
         queryset = with_counts(
             CardSet.objects.filter(creator_id=request.user.id).exclude(
                 status=CardSet.Status.REMOVED
-            )
+            ),
+            include_cards=False,
         )
         return Response(CardSetSerializer(queryset, many=True).data)
 

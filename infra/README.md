@@ -10,6 +10,7 @@ api.miscellary.com   -> ALB -> ECS Fargate -> RDS PostgreSQL
                                       |----> S3
                                       |----> SES
                                       `----> CloudWatch
+media.miscellary.com -> CloudFront -> S3 renders/*
 ```
 
 The load balancer and Fargate task use two public subnets. The task receives a public IP for outbound
@@ -17,8 +18,9 @@ S3 and SES traffic but accepts port 8000 only from the load balancer security gr
 private database subnets, is not publicly reachable, and accepts PostgreSQL only from the task
 security group. This avoids a NAT gateway while keeping the database private.
 
-Only immutable objects under `renders/*` are public in S3. Uploaded source images use 24-hour signed
-GET URLs, so draft artwork is not permanently readable from a leaked object key.
+Only immutable objects under `renders/*` are available through CloudFront. Uploaded source images
+use 24-hour signed S3 GET URLs and are outside the CDN, so draft artwork is not permanently readable
+from a leaked object key.
 
 Terraform keeps this deliberately small: one 0.25 vCPU/1 GB task, one Single-AZ `db.t4g.micro`, one
 bucket, one load balancer, and four basic alarms. There is no Kubernetes cluster, NAT gateway,
@@ -89,8 +91,8 @@ An organization instance of IAM Identity Center is the better multi-account opti
 credit-funded launch, but an account instance cannot provide AWS account or CLI access.
 
 The load balancer and RDS instance are the main steady costs. Fargate, logs, S3, SES, Secrets Manager,
-and ECR add smaller usage-based charges at this scale. The absence of a NAT gateway avoids another
-fixed hourly charge.
+ECR, and CloudFront add smaller usage-based charges at this scale. CloudFront uses Price Class 100
+for North America and Europe. The absence of a NAT gateway avoids another fixed hourly charge.
 
 ## First infrastructure apply
 
@@ -223,7 +225,27 @@ bash scripts/run-api-task.sh verify_renders
 
 The import helper uploads the local render directory under a private `staging/card-renders/*` prefix,
 then gives that manifest to an ECS one-off task. Set `MEDIA_BUCKET` in `.env.deploy` first. Remove that
-staging prefix after verification; the imported immutable files live under public `renders/*` keys.
+staging prefix after verification; the imported immutable files live under `renders/*` keys.
+
+## Render CDN
+
+CloudFront caches only immutable baked renders. Its S3 origin access is restricted to `renders/*`;
+source uploads and private staging objects remain available only through the API's signed S3 URLs.
+
+Roll out the CDN without interrupting existing render URLs:
+
+1. Apply with both media CDN flags left false. Read
+   `terraform -chdir=infra/terraform output media_certificate_validation`, add that CNAME in
+   Namecheap, and wait for the certificate to validate.
+2. Set `media_cdn_enabled = true`, plan, and apply. Read
+   `terraform -chdir=infra/terraform output -raw media_cloudfront_domain`.
+3. Add a Namecheap CNAME with host `media` and the CloudFront hostname as its value. Confirm an
+   existing `https://media.miscellary.com/renders/...` URL returns successfully.
+4. Set `media_cdn_cutover = true`, plan, and apply. This changes new API render URLs to the custom
+   hostname and removes direct public S3 access to renders.
+5. Deploy the API if the ECS service did not replace its task during the cutover apply. Confirm a
+   fresh API response uses `media.miscellary.com`, the render returns a CloudFront cache header, a
+   raw S3 render URL is denied, and a signed source URL still works.
 
 ## Vercel
 

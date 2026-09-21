@@ -4,5 +4,12 @@ github_owner_id      = "12345678"
 github_repository_id = "123456789"
 alert_email           = "you@example.com"
 
+# Set this after adding the media ACM validation record, then apply and point
+# media.miscellary.com at the media_cloudfront_domain output.
+# media_cdn_enabled = true
+
+# Set this only after the custom media hostname serves a render successfully.
+# media_cdn_cutover = true
+
 # Add this only after the image is in ECR and the ACM validation record is in DNS.
 # api_image_tag = "0123456789abcdef0123456789abcdef01234567"

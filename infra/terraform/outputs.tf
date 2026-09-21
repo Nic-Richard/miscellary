@@ -16,6 +16,20 @@ output "api_certificate_validation" {
   }
 }
 
+output "media_certificate_validation" {
+  value = {
+    for option in aws_acm_certificate.media.domain_validation_options : option.domain_name => {
+      name  = option.resource_record_name
+      type  = option.resource_record_type
+      value = option.resource_record_value
+    }
+  }
+}
+
+output "media_cloudfront_domain" {
+  value = var.media_cdn_enabled ? aws_cloudfront_distribution.media[0].domain_name : null
+}
+
 output "ses_verification_record" {
   value = {
     name  = "_amazonses.${var.domain_name}"

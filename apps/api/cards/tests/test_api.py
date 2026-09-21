@@ -5,6 +5,7 @@ from cards import templates
 from cards.models import CardSet
 from cards.publishing import publish_set
 from cards.tests.helpers import fill_publishable, make_card, make_image, make_set
+from cards.views import with_counts
 from conftest import make_user
 
 pytestmark = pytest.mark.django_db
@@ -257,6 +258,17 @@ def test_public_listing_and_binder(api_client, user):
     assert (first["printed_set_code"], first["position"], first["set_total"]) == ("PUB-01", 0, 5)
 
     assert api_client.get(reverse("cards:public-set", args=[draft.slug])).status_code == 404
+
+
+def test_set_queries_only_prefetch_cards_for_detail(user):
+    card_set = make_set(user)
+    make_card(card_set)
+
+    listed = with_counts(CardSet.objects.all(), include_cards=False).get()
+    detailed = with_counts(CardSet.objects.all()).get()
+
+    assert "cards" not in listed._prefetched_objects_cache
+    assert "cards" in detailed._prefetched_objects_cache
 
 
 def test_set_code_is_editable_on_a_draft_and_validated(auth_client, user):

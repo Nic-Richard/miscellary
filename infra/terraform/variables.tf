@@ -15,7 +15,24 @@ variable "api_domain" {
 
 variable "media_bucket_name" {
   type        = string
-  description = "Globally unique S3 bucket name for public media."
+  description = "Globally unique S3 bucket name for uploaded media and renders."
+}
+
+variable "media_domain" {
+  type    = string
+  default = "media.miscellary.com"
+}
+
+variable "media_cdn_enabled" {
+  type        = bool
+  description = "Create the render CDN after its ACM validation record is in DNS."
+  default     = false
+}
+
+variable "media_cdn_cutover" {
+  type        = bool
+  description = "Serve render URLs through the verified CDN and make S3 renders private."
+  default     = false
 }
 
 variable "github_repository" {

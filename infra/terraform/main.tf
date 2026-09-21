@@ -7,10 +7,12 @@ locals {
   name            = "miscellary-prod"
   service_enabled = var.api_image_tag != ""
   web_origin      = "https://${var.domain_name}"
-  media_url       = "https://${var.media_bucket_name}.s3.${var.aws_region}.amazonaws.com"
-  alarm_actions   = var.alert_email == "" ? [] : [aws_sns_topic.alerts[0].arn]
-  github_parts    = split("/", var.github_repository)
-  github_subject  = "repo:${local.github_parts[0]}@${var.github_owner_id}/${local.github_parts[1]}@${var.github_repository_id}:environment:Production"
+  media_url = var.media_cdn_cutover ? "https://${var.media_domain}" : (
+    "https://${var.media_bucket_name}.s3.${var.aws_region}.amazonaws.com"
+  )
+  alarm_actions  = var.alert_email == "" ? [] : [aws_sns_topic.alerts[0].arn]
+  github_parts   = split("/", var.github_repository)
+  github_subject = "repo:${local.github_parts[0]}@${var.github_owner_id}/${local.github_parts[1]}@${var.github_repository_id}:environment:Production"
 }
 
 resource "aws_vpc" "main" {
@@ -176,8 +178,8 @@ resource "aws_s3_bucket_public_access_block" "media" {
   bucket                  = aws_s3_bucket.media.id
   block_public_acls       = true
   ignore_public_acls      = true
-  block_public_policy     = false
-  restrict_public_buckets = false
+  block_public_policy     = var.media_cdn_cutover
+  restrict_public_buckets = var.media_cdn_cutover
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "media" {
@@ -218,30 +220,136 @@ resource "aws_s3_bucket_cors_configuration" "media" {
   }
 }
 
+data "aws_iam_policy_document" "media" {
+  dynamic "statement" {
+    for_each = var.media_cdn_cutover ? [1] : []
+
+    content {
+      sid       = "CloudFrontReadRenders"
+      actions   = ["s3:GetObject"]
+      resources = ["${aws_s3_bucket.media.arn}/renders/*"]
+
+      principals {
+        type        = "Service"
+        identifiers = ["cloudfront.amazonaws.com"]
+      }
+
+      condition {
+        test     = "StringEquals"
+        variable = "AWS:SourceArn"
+        values   = [aws_cloudfront_distribution.media[0].arn]
+      }
+    }
+  }
+
+  dynamic "statement" {
+    for_each = var.media_cdn_cutover ? [] : [1]
+
+    content {
+      sid       = "PublicReadRenders"
+      actions   = ["s3:GetObject"]
+      resources = ["${aws_s3_bucket.media.arn}/renders/*"]
+
+      principals {
+        type        = "*"
+        identifiers = ["*"]
+      }
+
+      condition {
+        test     = "Bool"
+        variable = "aws:SecureTransport"
+        values   = ["true"]
+      }
+    }
+  }
+
+  statement {
+    sid       = "DenyInsecureTransport"
+    effect    = "Deny"
+    actions   = ["s3:*"]
+    resources = [aws_s3_bucket.media.arn, "${aws_s3_bucket.media.arn}/*"]
+
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
+
+    condition {
+      test     = "Bool"
+      variable = "aws:SecureTransport"
+      values   = ["false"]
+    }
+  }
+}
+
 resource "aws_s3_bucket_policy" "media" {
   bucket     = aws_s3_bucket.media.id
   depends_on = [aws_s3_bucket_public_access_block.media]
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Sid       = "PublicReadRenders"
-        Effect    = "Allow"
-        Principal = "*"
-        Action    = "s3:GetObject"
-        Resource  = "${aws_s3_bucket.media.arn}/renders/*"
-        Condition = { Bool = { "aws:SecureTransport" = "true" } }
-      },
-      {
-        Sid       = "DenyInsecureTransport"
-        Effect    = "Deny"
-        Principal = "*"
-        Action    = "s3:*"
-        Resource  = [aws_s3_bucket.media.arn, "${aws_s3_bucket.media.arn}/*"]
-        Condition = { Bool = { "aws:SecureTransport" = "false" } }
-      }
-    ]
-  })
+  policy     = data.aws_iam_policy_document.media.json
+}
+
+check "media_cdn_cutover" {
+  assert {
+    condition     = !var.media_cdn_cutover || var.media_cdn_enabled
+    error_message = "media_cdn_enabled must be true before media_cdn_cutover."
+  }
+}
+
+resource "aws_acm_certificate" "media" {
+  domain_name       = var.media_domain
+  validation_method = "DNS"
+
+  lifecycle { create_before_destroy = true }
+}
+
+resource "aws_acm_certificate_validation" "media" {
+  count                   = var.media_cdn_enabled ? 1 : 0
+  certificate_arn         = aws_acm_certificate.media.arn
+  validation_record_fqdns = [for option in aws_acm_certificate.media.domain_validation_options : option.resource_record_name]
+}
+
+resource "aws_cloudfront_origin_access_control" "media" {
+  count                             = var.media_cdn_enabled ? 1 : 0
+  name                              = "${local.name}-media"
+  origin_access_control_origin_type = "s3"
+  signing_behavior                  = "always"
+  signing_protocol                  = "sigv4"
+}
+
+resource "aws_cloudfront_distribution" "media" {
+  count = var.media_cdn_enabled ? 1 : 0
+
+  enabled         = true
+  is_ipv6_enabled = true
+  comment         = "Miscellary immutable renders"
+  aliases         = [var.media_domain]
+  price_class     = "PriceClass_100"
+  http_version    = "http2and3"
+
+  origin {
+    domain_name              = aws_s3_bucket.media.bucket_regional_domain_name
+    origin_access_control_id = aws_cloudfront_origin_access_control.media[0].id
+    origin_id                = "media-s3"
+  }
+
+  default_cache_behavior {
+    allowed_methods        = ["GET", "HEAD"]
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = "media-s3"
+    viewer_protocol_policy = "redirect-to-https"
+    cache_policy_id        = "658327ea-f89d-4fab-a63d-7e88639e58f6"
+    compress               = true
+  }
+
+  restrictions {
+    geo_restriction { restriction_type = "none" }
+  }
+
+  viewer_certificate {
+    acm_certificate_arn      = aws_acm_certificate_validation.media[0].certificate_arn
+    ssl_support_method       = "sni-only"
+    minimum_protocol_version = "TLSv1.2_2021"
+  }
 }
 
 resource "aws_ecr_repository" "api" {
