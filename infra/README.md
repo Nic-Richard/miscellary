@@ -91,8 +91,11 @@ An organization instance of IAM Identity Center is the better multi-account opti
 credit-funded launch, but an account instance cannot provide AWS account or CLI access.
 
 The load balancer and RDS instance are the main steady costs. Fargate, logs, S3, SES, Secrets Manager,
-ECR, and CloudFront add smaller usage-based charges at this scale. CloudFront uses Price Class 100
-for North America and Europe. The absence of a NAT gateway avoids another fixed hourly charge.
+and ECR add smaller usage-based charges at this scale. The render CDN uses CloudFront's $0 flat-rate
+plan, which includes 1 million requests and 100 GB of transfer each month with no overage charges.
+AWS may reduce CDN performance above those allowances. The plan also includes a 5 GB S3 Standard
+storage credit, but normal S3 request and uncovered storage charges still apply. The absence of a NAT
+gateway avoids another fixed hourly charge.
 
 ## First infrastructure apply
 
@@ -231,13 +234,18 @@ staging prefix after verification; the imported immutable files live under `rend
 
 CloudFront caches only immutable baked renders. Its S3 origin access is restricted to `renders/*`;
 source uploads and private staging objects remain available only through the API's signed S3 URLs.
+Terraform attaches the distribution and its required WAF ACL to CloudFront's FREE flat-rate plan.
+They are created in one rollback-safe CloudFormation stack so a failed subscription does not leave
+pay-as-you-go CDN resources behind. This plan requires a paid AWS account rather than an account
+using AWS Free Tier.
 
 Roll out the CDN without interrupting existing render URLs:
 
 1. Apply with both media CDN flags left false. Read
    `terraform -chdir=infra/terraform output media_certificate_validation`, add that CNAME in
    Namecheap, and wait for the certificate to validate.
-2. Set `media_cdn_enabled = true`, plan, and apply. Read
+2. Set `media_cdn_enabled = true`, plan, and apply. Confirm the plan creates a
+   `AWS::PricingPlanManager::Subscription` with `PlanTier` set to `FREE`, then read
    `terraform -chdir=infra/terraform output -raw media_cloudfront_domain`.
 3. Add a Namecheap CNAME with host `media` and the CloudFront hostname as its value. Confirm an
    existing `https://media.miscellary.com/renders/...` URL returns successfully.

@@ -27,7 +27,7 @@ output "media_certificate_validation" {
 }
 
 output "media_cloudfront_domain" {
-  value = var.media_cdn_enabled ? aws_cloudfront_distribution.media[0].domain_name : null
+  value = var.media_cdn_enabled ? aws_cloudformation_stack.media_cdn[0].outputs["MediaDistributionDomain"] : null
 }
 
 output "ses_verification_record" {

@@ -237,7 +237,7 @@ data "aws_iam_policy_document" "media" {
       condition {
         test     = "StringEquals"
         variable = "AWS:SourceArn"
-        values   = [aws_cloudfront_distribution.media[0].arn]
+        values   = [aws_cloudformation_stack.media_cdn[0].outputs["MediaDistributionArn"]]
       }
     }
   }
@@ -308,48 +308,94 @@ resource "aws_acm_certificate_validation" "media" {
   validation_record_fqdns = [for option in aws_acm_certificate.media.domain_validation_options : option.resource_record_name]
 }
 
-resource "aws_cloudfront_origin_access_control" "media" {
-  count                             = var.media_cdn_enabled ? 1 : 0
-  name                              = "${local.name}-media"
-  origin_access_control_origin_type = "s3"
-  signing_behavior                  = "always"
-  signing_protocol                  = "sigv4"
-}
-
-resource "aws_cloudfront_distribution" "media" {
+resource "aws_cloudformation_stack" "media_cdn" {
   count = var.media_cdn_enabled ? 1 : 0
 
-  enabled         = true
-  is_ipv6_enabled = true
-  comment         = "Miscellary immutable renders"
-  aliases         = [var.media_domain]
-  price_class     = "PriceClass_100"
-  http_version    = "http2and3"
-
-  origin {
-    domain_name              = aws_s3_bucket.media.bucket_regional_domain_name
-    origin_access_control_id = aws_cloudfront_origin_access_control.media[0].id
-    origin_id                = "media-s3"
-  }
-
-  default_cache_behavior {
-    allowed_methods        = ["GET", "HEAD"]
-    cached_methods         = ["GET", "HEAD"]
-    target_origin_id       = "media-s3"
-    viewer_protocol_policy = "redirect-to-https"
-    cache_policy_id        = "658327ea-f89d-4fab-a63d-7e88639e58f6"
-    compress               = true
-  }
-
-  restrictions {
-    geo_restriction { restriction_type = "none" }
-  }
-
-  viewer_certificate {
-    acm_certificate_arn      = aws_acm_certificate_validation.media[0].certificate_arn
-    ssl_support_method       = "sni-only"
-    minimum_protocol_version = "TLSv1.2_2021"
-  }
+  name = "${local.name}-media-cdn"
+  template_body = jsonencode({
+    Resources = {
+      MediaOriginAccessControl = {
+        Type = "AWS::CloudFront::OriginAccessControl"
+        Properties = {
+          OriginAccessControlConfig = {
+            Name                          = "${local.name}-media"
+            OriginAccessControlOriginType = "s3"
+            SigningBehavior               = "always"
+            SigningProtocol               = "sigv4"
+          }
+        }
+      }
+      MediaWebAcl = {
+        Type = "AWS::WAFv2::WebACL"
+        Properties = {
+          Name          = "${local.name}-media"
+          Scope         = "CLOUDFRONT"
+          DefaultAction = { Allow = {} }
+          VisibilityConfig = {
+            CloudWatchMetricsEnabled = false
+            MetricName               = "${local.name}-media"
+            SampledRequestsEnabled   = false
+          }
+        }
+      }
+      MediaDistribution = {
+        Type = "AWS::CloudFront::Distribution"
+        Properties = {
+          DistributionConfig = {
+            Aliases     = [var.media_domain]
+            Comment     = "Miscellary immutable renders"
+            Enabled     = true
+            HttpVersion = "http2and3"
+            IPV6Enabled = true
+            Origins = [{
+              DomainName            = aws_s3_bucket.media.bucket_regional_domain_name
+              Id                    = "media-s3"
+              OriginAccessControlId = { Ref = "MediaOriginAccessControl" }
+              S3OriginConfig        = { OriginAccessIdentity = "" }
+            }]
+            DefaultCacheBehavior = {
+              AllowedMethods       = ["GET", "HEAD"]
+              CachedMethods        = ["GET", "HEAD"]
+              CachePolicyId        = "658327ea-f89d-4fab-a63d-7e88639e58f6"
+              Compress             = true
+              TargetOriginId       = "media-s3"
+              ViewerProtocolPolicy = "redirect-to-https"
+            }
+            PriceClass = "PriceClass_100"
+            ViewerCertificate = {
+              AcmCertificateArn      = aws_acm_certificate_validation.media[0].certificate_arn
+              MinimumProtocolVersion = "TLSv1.2_2021"
+              SslSupportMethod       = "sni-only"
+            }
+            WebACLId = { "Fn::GetAtt" = ["MediaWebAcl", "Arn"] }
+          }
+        }
+      }
+      Subscription = {
+        Type = "AWS::PricingPlanManager::Subscription"
+        Properties = {
+          PlanFamily = "CloudFront"
+          PlanTier   = "FREE"
+          UsageLevel = "DEFAULT"
+          ResourceArns = [
+            { "Fn::Sub" = "arn:$${AWS::Partition}:cloudfront::$${AWS::AccountId}:distribution/$${MediaDistribution}" },
+            { "Fn::GetAtt" = ["MediaWebAcl", "Arn"] }
+          ]
+        }
+      }
+    }
+    Outputs = {
+      MediaDistributionArn = {
+        Value = { "Fn::Sub" = "arn:$${AWS::Partition}:cloudfront::$${AWS::AccountId}:distribution/$${MediaDistribution}" }
+      }
+      MediaDistributionDomain = {
+        Value = { "Fn::GetAtt" = ["MediaDistribution", "DomainName"] }
+      }
+      SubscriptionArn = {
+        Value = { Ref = "Subscription" }
+      }
+    }
+  })
 }
 
 resource "aws_ecr_repository" "api" {
