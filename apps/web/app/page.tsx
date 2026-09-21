@@ -48,30 +48,29 @@ export default function HomePage() {
   useEffect(() => {
     let live = true;
     listPublicSets('popular')
-      .then(async (page) => {
+      .then((page) => {
         if (!live) return;
         setSets(page.results);
         setTotal(page.count);
         const named = (prefix: string) => page.results.find((s) => s.slug.startsWith(prefix));
         const wanted = [...new Set([...HERO.map((h) => h.set), SHOWCASE])];
-        const details = new Map<string, CardSetDetail>();
-        await Promise.all(
-          wanted.map(async (prefix) => {
+        setPicks(HERO.map(() => null));
+        for (const prefix of wanted) {
+          void (async () => {
             const summary = named(prefix);
             if (!summary) return;
             const detail = await getPublicSet(summary.slug).catch(() => null);
-            if (detail) details.set(prefix, detail);
-          }),
-        );
-        if (!live) return;
-        setFeatured(details.get(SHOWCASE) ?? null);
-        setPicks(
-          HERO.map(({ set, card }) => {
-            const summary = named(set);
-            const face = details.get(set)?.cards.find((c) => c.title === card);
-            return summary && face ? { card: face, set: summary } : null;
-          }),
-        );
+            if (!live || !detail) return;
+            if (prefix === SHOWCASE) setFeatured(detail);
+            setPicks((current) =>
+              HERO.map(({ set, card }, index) => {
+                if (set !== prefix) return current[index] ?? null;
+                const face = detail.cards.find((entry) => entry.title === card);
+                return face ? { card: face, set: summary } : null;
+              }),
+            );
+          })();
+        }
       })
       .catch(() => undefined);
     return () => {
@@ -179,6 +178,7 @@ export default function HomePage() {
                 return (
                   <CardPreview
                     size="small"
+                    forceFlat
                     title={card.title}
                     rarity={card.rarity}
                     code={cardCode(card.printed_set_code, card.position, card.set_total)}

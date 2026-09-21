@@ -68,17 +68,39 @@ export default function BinderScreen() {
   const [selected, setSelected] = useState<{ card: Card; copies?: number } | null>(null);
   const [recycling, setRecycling] = useState<string | null>(null);
   const [gain, setGain] = useState<{ cardId: string; amount: number; key: number } | null>(null);
-
-  const load = useCallback(async () => {
-    const s = await getPublicSet(slug);
-    setSet(s);
-    if (user && s.status === 'published') setStatus(await getPackStatus(slug));
-  }, [slug, user]);
+  const setRequest = useRef(0);
+  const statusRequest = useRef(0);
 
   useEffect(() => {
-    if (loading) return;
-    load().catch((e: Error) => setError(e.message));
-  }, [load, loading]);
+    const request = ++setRequest.current;
+    setSet(null);
+    setStatus(null);
+    getPublicSet(slug)
+      .then((next) => {
+        if (setRequest.current === request) setSet(next);
+      })
+      .catch((e: Error) => {
+        if (setRequest.current === request) setError(e.message);
+      });
+  }, [slug]);
+
+  useEffect(() => {
+    if (loading || !user) return;
+    const detailRequest = ++setRequest.current;
+    const packRequest = ++statusRequest.current;
+    getPublicSet(slug)
+      .then((next) => {
+        if (setRequest.current === detailRequest) setSet(next);
+      })
+      .catch(() => undefined);
+    getPackStatus(slug)
+      .then((next) => {
+        if (statusRequest.current === packRequest) setStatus(next);
+      })
+      .catch((e: Error) => {
+        if (statusRequest.current === packRequest) setError(e.message);
+      });
+  }, [loading, slug, user]);
 
   useEffect(() => {
     if (tab !== 'collected' || !user || owned !== null) return;

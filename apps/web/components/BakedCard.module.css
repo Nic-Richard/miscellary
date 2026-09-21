@@ -33,6 +33,29 @@
   height: 100%;
 }
 
+.preview,
+.detail {
+  position: absolute;
+  inset: 0;
+  transition: opacity 160ms ease-out;
+}
+
+.previewHidden,
+.detail {
+  opacity: 0;
+}
+
+.detailReady {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .preview,
+  .detail {
+    transition: none;
+  }
+}
+
 .finish,
 .spotField,
 .spotBand {

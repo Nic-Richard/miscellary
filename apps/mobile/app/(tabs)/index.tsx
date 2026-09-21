@@ -20,7 +20,7 @@ import CardPreview from '@/components/CardPreview';
 import SetTile from '@/components/SetTile';
 import { Button, Chip, ErrorText, Input } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
-import { getNotifications, getPublicSet, listPublicSets } from '@/lib/endpoints';
+import { getNotifications, getPublicSet } from '@/lib/endpoints';
 import { useDiscovery } from '@/lib/discovery';
 import type { DiscoverySort } from '@/lib/discovery';
 import { colors, fonts } from '@/lib/theme';
@@ -40,6 +40,8 @@ export default function BrowseScreen() {
   const contentWidth = Math.min(width - insets.left - insets.right, 640);
   const columns = contentWidth < 350 || fontScale > 1.3 ? 1 : 2;
   const itemWidth = (contentWidth - 40 - (columns - 1) * 20) / columns;
+  const featuredSlug =
+    shelf.sets.find((set) => set.slug.startsWith(FEATURED_SET))?.slug ?? shelf.sets[0]?.slug;
 
   function search() {
     const q = query.trim();
@@ -49,16 +51,11 @@ export default function BrowseScreen() {
   }
 
   useEffect(() => {
+    if (!featuredSlug) return;
     let live = true;
-    listPublicSets('popular')
-      .then((page) => {
-        const pick =
-          page.results.find((set) => set.slug.startsWith(FEATURED_SET)) ?? page.results[0];
-        if (!pick) return null;
-        return getPublicSet(pick.slug);
-      })
+    getPublicSet(featuredSlug)
       .then((detail) => {
-        if (live && detail) setFeatured(detail);
+        if (live) setFeatured(detail);
       })
       .catch(() => {
         if (live) setFeatured(null);
@@ -66,7 +63,7 @@ export default function BrowseScreen() {
     return () => {
       live = false;
     };
-  }, []);
+  }, [featuredSlug]);
 
   useFocusEffect(
     useCallback(() => {

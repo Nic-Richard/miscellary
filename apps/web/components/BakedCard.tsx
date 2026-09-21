@@ -1,7 +1,8 @@
 import { resolveCardMaterial, resolveCardTokens } from '@miscellary/shared';
 import { SPOT_PATTERNS } from '@miscellary/shared';
 import type { CardRenderAssets, CardRenderImage, Rarity, TemplateConfig } from '@miscellary/shared';
-import type { CSSProperties } from 'react';
+import { useEffect, useState } from 'react';
+import type { CSSProperties, SyntheticEvent } from 'react';
 import styles from './BakedCard.module.css';
 
 function stops(values: { color: string; at?: number }[], unit = '%'): string {
@@ -63,7 +64,6 @@ export default function BakedCard({
   lit?: boolean | undefined;
 }) {
   const image = size === 'small' ? render.thumbnail : render.front;
-  if (!image) return null;
   const material = resolveCardMaterial(templateKey, templateConfig, rarity);
   const tokens = resolveCardTokens(templateKey, templateConfig, rarity);
   const full = material.spot?.area === 'full';
@@ -71,6 +71,43 @@ export default function BakedCard({
   const spot = material.spot;
   const layers = spot?.layers;
   const worked = spot ? SPOT_PATTERNS[spot.pattern] : null;
+  const preview = size === 'large' ? (render.flat_thumbnail ?? render.thumbnail) : null;
+  const imageUrl = image?.url ?? '';
+  const maskUrl = mask?.url ?? null;
+  const hasSpot = Boolean(spot);
+  const [loadedFront, setLoadedFront] = useState<string | null>(null);
+  const [loadedMask, setLoadedMask] = useState<string | null>(null);
+  const detailed =
+    size === 'small' ||
+    (loadedFront === imageUrl && (!hasSpot || !maskUrl || loadedMask === maskUrl));
+
+  useEffect(() => {
+    if (size !== 'large' || !hasSpot || !maskUrl) return;
+    let live = true;
+    const preload = new window.Image();
+    const ready = () => {
+      if (live) setLoadedMask(maskUrl);
+    };
+    preload.src = maskUrl;
+    if (preload.decode)
+      void preload
+        .decode()
+        .then(ready)
+        .catch(() => undefined);
+    else preload.addEventListener('load', ready, { once: true });
+    return () => {
+      live = false;
+    };
+  }, [hasSpot, maskUrl, size]);
+
+  function frontLoaded(event: SyntheticEvent<HTMLImageElement>) {
+    const loaded = event.currentTarget;
+    const ready = () => setLoadedFront(imageUrl);
+    if (loaded.decode) void loaded.decode().then(ready).catch(ready);
+    else ready();
+  }
+
+  if (!image) return null;
   const grain =
     layers &&
     (worked?.grain
@@ -111,9 +148,24 @@ export default function BakedCard({
       role="img"
       aria-label={title}
     >
-      <img src={image.url} alt="" draggable={false} />
-      <i className={styles.finish} aria-hidden="true" />
-      {spot && mask ? (
+      {preview && preview.url !== image.url ? (
+        <img
+          className={`${styles.preview} ${detailed ? styles.previewHidden : ''}`}
+          src={preview.url}
+          alt=""
+          draggable={false}
+        />
+      ) : null}
+      <img
+        className={size === 'large' ? `${styles.detail} ${detailed ? styles.detailReady : ''}` : ''}
+        src={image.url}
+        alt=""
+        draggable={false}
+        decoding="async"
+        onLoad={size === 'large' ? frontLoaded : undefined}
+      />
+      {detailed ? <i className={styles.finish} aria-hidden="true" /> : null}
+      {detailed && spot && mask ? (
         <>
           <i className={styles.spotField} aria-hidden="true" />
           <i className={styles.spotBand} aria-hidden="true" />

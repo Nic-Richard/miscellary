@@ -26,6 +26,7 @@ export interface CardPreviewProps {
   mark?: string | undefined;
   lit?: boolean | undefined;
   render?: CardRenderAssets | null | undefined;
+  forceFlat?: boolean;
   renderMode?: 'static' | 'mask' | 'flat';
   textRules?: CardTextRules;
   onTitleChange?: (value: string) => void;
@@ -93,6 +94,7 @@ export default function CardPreview({
   mark,
   lit,
   render,
+  forceFlat,
   renderMode,
   textRules,
   onTitleChange,
@@ -101,7 +103,7 @@ export default function CardPreview({
   const sceneLit = useSceneLit();
   const bakedImage = size === 'small' ? render?.thumbnail : render?.front;
   const flat = render?.flat_thumbnail;
-  if (!renderMode && render && flat && size === 'small' && !lit && !sceneLit) {
+  if (!renderMode && render && flat && size === 'small' && (forceFlat || (!lit && !sceneLit))) {
     return (
       <FlatCard
         image={flat}

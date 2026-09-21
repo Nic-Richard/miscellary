@@ -27,3 +27,9 @@
   width: 62%;
   filter: drop-shadow(0 10px 12px rgba(20, 13, 4, 0.42));
 }
+
+.baked {
+  display: block;
+  width: 100%;
+  height: auto;
+}

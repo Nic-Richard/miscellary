@@ -125,13 +125,26 @@ export default function BinderPage() {
   const [gain, setGain] = useState<{ cardId: string; amount: number; key: number } | null>(null);
   const [packPoints, setPackPoints] = useState<number | undefined>();
   const preloadedImages = useRef<HTMLImageElement[]>([]);
+  const setRequest = useRef(0);
 
   useEffect(() => {
-    if (loading) return;
+    const request = ++setRequest.current;
     getPublicSet(slug)
-      .then(setSet)
+      .then((next) => {
+        if (setRequest.current === request) setSet(next);
+      })
       .catch((e: Error) => setError(e.message));
-  }, [slug, loading]);
+  }, [slug]);
+
+  useEffect(() => {
+    if (loading || !user) return;
+    const request = ++setRequest.current;
+    getPublicSet(slug)
+      .then((next) => {
+        if (setRequest.current === request) setSet(next);
+      })
+      .catch(() => undefined);
+  }, [slug, loading, user]);
 
   useEffect(() => {
     if (!set || !user || user.profile.username === set.creator.username) return;
