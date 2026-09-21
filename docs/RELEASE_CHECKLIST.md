@@ -9,7 +9,7 @@
 - [ ] Bootstrap card imagery has durable source/license records and no source or seed metadata is printed in normal card copy.
 - [ ] `bootstrap_catalogue` reports every manifest set as verified on a second production run.
 - [ ] Every bootstrapped card, set back, and pack passes `verify_renders` after render import.
-- [ ] Production email delivery from SES (verification and reset links point at `WEB_URL`).
+- [ ] Production email delivery from SES: verification and password-reset links point at `WEB_URL`, complete in the browser, and return to the installed Android app.
 - [ ] `support@miscellary.com` and `privacy@miscellary.com` receive mail before publishing legal pages.
 - [ ] Refresh cookie works cross-origin from `miscellary.com` (`COOKIE_SAMESITE=Lax`).
 - [ ] S3 CORS allows the production web origin only.

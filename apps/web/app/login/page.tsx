@@ -59,6 +59,9 @@ function LoginForm() {
         {busy ? 'Logging in…' : 'Log in'}
       </button>
       <p className={styles.alt}>
+        <Link href="/forgot-password">Forgot your password?</Link>
+      </p>
+      <p className={styles.alt}>
         No account? <Link href={swapAuthHref('/register', search)}>Sign up</Link>
       </p>
     </form>

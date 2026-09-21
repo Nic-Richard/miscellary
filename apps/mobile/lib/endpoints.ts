@@ -199,3 +199,9 @@ export const changePassword = (currentPassword: string, newPassword: string) =>
   });
 export const resendVerificationEmail = () =>
   apiFetch<void>('/api/v1/auth/verify-email/request/', { method: 'POST' });
+export const requestPasswordReset = (email: string) =>
+  apiFetch<void>('/api/v1/auth/password-reset/request/', {
+    method: 'POST',
+    body: { email },
+    auth: false,
+  });

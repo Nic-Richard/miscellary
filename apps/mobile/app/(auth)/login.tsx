@@ -47,6 +47,11 @@ export default function LoginScreen() {
         onPress={() => void submit()}
       />
       <View style={{ alignItems: 'center', marginTop: 8 }}>
+        <Link href="/(auth)/forgot-password">
+          <Text style={{ color: colors.accent }}>Forgot your password?</Text>
+        </Link>
+      </View>
+      <View style={{ alignItems: 'center' }}>
         <Link
           href={
             next

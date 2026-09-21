@@ -4,7 +4,15 @@
   "private": true,
   "type": "module",
   "main": "expo-router/entry",
+  "expo": {
+    "install": {
+      "exclude": [
+        "@types/react"
+      ]
+    }
+  },
   "scripts": {
+    "eas-build-post-install": "pnpm surfaces:build",
     "surfaces:build": "node scripts/build-surfaces.mjs",
     "renders:generate": "pnpm surfaces:build && node scripts/render-card-assets.mjs",
     "dev": "pnpm surfaces:build && expo start",

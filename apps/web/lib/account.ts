@@ -25,3 +25,24 @@ export const changePassword = (currentPassword: string, newPassword: string) =>
 
 export const resendVerificationEmail = () =>
   apiFetch<void>('/api/v1/auth/verify-email/request/', { method: 'POST' });
+
+export const confirmEmailVerification = (token: string) =>
+  apiFetch<void>('/api/v1/auth/verify-email/confirm/', {
+    method: 'POST',
+    body: { token },
+    auth: false,
+  });
+
+export const requestPasswordReset = (email: string) =>
+  apiFetch<void>('/api/v1/auth/password-reset/request/', {
+    method: 'POST',
+    body: { email },
+    auth: false,
+  });
+
+export const confirmPasswordReset = (uid: string, token: string, password: string) =>
+  apiFetch<void>('/api/v1/auth/password-reset/confirm/', {
+    method: 'POST',
+    body: { uid, token, password },
+    auth: false,
+  });

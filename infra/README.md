@@ -137,6 +137,26 @@ Request SES production access in `us-east-1`. Create SES SMTP credentials and st
 { "username": "SES SMTP username", "password": "SES SMTP password" }
 ```
 
+The SMTP IAM user must allow `ses:SendRawEmail` for any recipient while restricting the sender:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": "ses:SendRawEmail",
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "ses:FromAddress": "no-reply@miscellary.com"
+        }
+      }
+    }
+  ]
+}
+```
+
 Store application settings in `miscellary/app`:
 
 ```json

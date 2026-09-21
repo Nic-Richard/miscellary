@@ -1,5 +1,5 @@
-import { Stack } from 'expo-router';
-import { useState } from 'react';
+import { Stack, useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import LoginGate from '@/components/LoginGate';
 import { Button, ErrorText, Input, Muted } from '@/components/ui';
@@ -43,6 +43,12 @@ function Account() {
   const [passwordDone, setPasswordDone] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [busy, setBusy] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      void refreshUser();
+    }, [refreshUser]),
+  );
 
   if (!user) return null;
 

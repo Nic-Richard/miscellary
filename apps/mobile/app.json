@@ -6,13 +6,19 @@
     "version": "0.0.1",
     "orientation": "default",
     "userInterfaceStyle": "light",
-    "androidStatusBar": { "barStyle": "dark-content", "backgroundColor": "#f4eee1" },
-    "androidNavigationBar": { "barStyle": "dark-content", "backgroundColor": "#f9f4ea" },
+    "androidStatusBar": {
+      "barStyle": "dark-content",
+      "backgroundColor": "#f4eee1"
+    },
+    "androidNavigationBar": {
+      "barStyle": "dark-content",
+      "backgroundColor": "#f9f4ea"
+    },
     "newArchEnabled": true,
     "android": {
       "package": "com.miscellary.app",
       "versionCode": 1,
-      "permissions": ["CAMERA", "READ_MEDIA_IMAGES"],
+      "permissions": ["android.permission.CAMERA", "android.permission.READ_MEDIA_IMAGES"],
       "blockedPermissions": ["android.permission.RECORD_AUDIO"]
     },
     "plugins": [
@@ -21,9 +27,16 @@
       [
         "expo-image-picker",
         {
-          "cameraPermission": "Miscellary uses the camera to photograph the things you collect."
+          "cameraPermission": "Miscellary uses the camera to photograph the things you collect.",
+          "microphonePermission": false
         }
       ]
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "469f68f7-224a-4dec-948d-d0432577c17a"
+      }
+    }
   }
 }
