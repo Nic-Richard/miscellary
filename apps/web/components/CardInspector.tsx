@@ -250,7 +250,6 @@ export default function CardInspector({
                 mark={mark}
                 render={card.render}
                 previewThumbnail
-                useBlobMask
               />
             </div>
             <div className={styles.reverse}>

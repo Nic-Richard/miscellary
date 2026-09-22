@@ -55,7 +55,6 @@ export default function BakedCard({
   size,
   lit,
   previewThumbnail,
-  useBlobMask,
 }: {
   render: CardRenderAssets;
   title: string;
@@ -65,7 +64,6 @@ export default function BakedCard({
   size: 'small' | 'large';
   lit?: boolean | undefined;
   previewThumbnail?: boolean | undefined;
-  useBlobMask?: boolean | undefined;
 }) {
   const image = size === 'small' ? render.thumbnail : render.front;
   const material = resolveCardMaterial(templateKey, templateConfig, rarity);
@@ -85,53 +83,50 @@ export default function BakedCard({
   const maskUrl = mask?.url ?? null;
   const hasSpot = Boolean(spot);
   const [loadedFront, setLoadedFront] = useState<string | null>(null);
-  const [loadedMask, setLoadedMask] = useState<{ source: string; url: string } | null>(null);
+  const [loadedMask, setLoadedMask] = useState<string | null>(null);
   const detailed =
     size === 'small' ||
-    (loadedFront === imageUrl && (!hasSpot || !maskUrl || loadedMask?.source === maskUrl));
-  let appliedMaskUrl = maskUrl;
-  if (useBlobMask && size === 'large') {
-    appliedMaskUrl = loadedMask?.source === maskUrl ? loadedMask.url : null;
-  }
+    (loadedFront === imageUrl && (!hasSpot || !maskUrl || loadedMask === maskUrl));
 
   useEffect(() => {
     if (size !== 'large' || !hasSpot || !maskUrl) return;
     let live = true;
-    let objectUrl: string | null = null;
     const controller = new AbortController();
+    // Chrome fetches a CSS mask image with CORS. A no-CORS preload of the same
+    // URL caches a response without the allow-origin header, and renders are
+    // immutable, so the masked layers would then stay transparent.
+    const preload = async () => {
+      const image = new window.Image();
+      image.crossOrigin = 'anonymous';
+      if (image.decode) {
+        image.src = maskUrl;
+        await image.decode();
+        return;
+      }
+      await new Promise<void>((resolve, reject) => {
+        image.onload = () => resolve();
+        image.onerror = () => reject(new Error('Could not decode card mask'));
+        image.src = maskUrl;
+      });
+    };
     const load = async () => {
-      let url = maskUrl;
-      if (useBlobMask) {
-        // The production CSS mask stays transparent when applied from its S3 URL.
-        const response = await fetch(maskUrl, { signal: controller.signal });
-        if (!response.ok) throw new Error('Could not load card mask');
-        const blob = await response.blob();
-        if (!live) return;
-        objectUrl = URL.createObjectURL(blob);
-        url = objectUrl;
+      try {
+        await preload();
+      } catch {
+        // Replace a no-CORS response an earlier release left cached.
+        await fetch(maskUrl, { cache: 'reload', signal: controller.signal });
+        await preload();
       }
-      const preload = new window.Image();
-      if (preload.decode) {
-        preload.src = url;
-        await preload.decode();
-      } else {
-        await new Promise<void>((resolve, reject) => {
-          preload.onload = () => resolve();
-          preload.onerror = () => reject(new Error('Could not decode card mask'));
-          preload.src = url;
-        });
-      }
-      if (live) setLoadedMask({ source: maskUrl, url });
+      if (live) setLoadedMask(maskUrl);
     };
     void load().catch(() => {
-      if (live && useBlobMask) setLoadedMask({ source: maskUrl, url: maskUrl });
+      if (live) setLoadedMask(maskUrl);
     });
     return () => {
       live = false;
       controller.abort();
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [hasSpot, maskUrl, size, useBlobMask]);
+  }, [hasSpot, maskUrl, size]);
 
   function frontLoaded(event: SyntheticEvent<HTMLImageElement>) {
     const loaded = event.currentTarget;
@@ -152,7 +147,7 @@ export default function BakedCard({
     '--baked-coat': `linear-gradient(var(--lit-angle, ${material.coat.angle}deg), ${stops(material.coat.stops)})`,
     '--baked-coat-blend': material.coatBlend,
     '--baked-sheen': material.sheen,
-    '--baked-mask': appliedMaskUrl ? `url('${appliedMaskUrl}')` : 'none',
+    '--baked-mask': maskUrl ? `url('${maskUrl}')` : 'none',
     '--baked-field': layers
       ? `${grain}, linear-gradient(var(--lit-angle, ${layers.field.sheet.angle}deg), ${stops(layers.field.sheet.stops)})`
       : 'none',

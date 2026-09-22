@@ -29,7 +29,6 @@ export interface CardPreviewProps {
   lit?: boolean | undefined;
   render?: CardRenderAssets | null | undefined;
   previewThumbnail?: boolean;
-  useBlobMask?: boolean;
   forceFlat?: boolean;
   renderMode?: 'static' | 'mask' | 'flat';
   textRules?: CardTextRules;
@@ -99,7 +98,6 @@ export default function CardPreview({
   lit,
   render,
   previewThumbnail,
-  useBlobMask,
   forceFlat,
   renderMode,
   textRules,
@@ -131,7 +129,6 @@ export default function CardPreview({
         size={size}
         lit={lit}
         previewThumbnail={previewThumbnail}
-        useBlobMask={useBlobMask}
       />
     );
   }
