@@ -258,7 +258,7 @@ function Collection() {
 
 export default function CollectionScreen() {
   return (
-    <LoginGate message="Log in to see your cards.">
+    <LoginGate>
       <Collection />
     </LoginGate>
   );

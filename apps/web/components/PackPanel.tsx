@@ -9,6 +9,7 @@ import { getPackStatus, openPack } from '@/lib/packs';
 import { loginHref } from '@/lib/returnTo';
 import { countdown } from '@/lib/time';
 import { useContinuation } from '@/lib/useContinuation';
+import PackPouch from './PackPouch';
 import PackReveal from './PackReveal';
 import ui from './ui.module.css';
 import styles from './PackPanel.module.css';
@@ -82,16 +83,7 @@ export default function PackPanel({
   const packSize = status?.pack_size ?? 10;
   const pouch = (
     <div className={styles.pouch}>
-      {identity.render_pack?.image ? (
-        <img
-          className={styles.baked}
-          src={identity.render_pack.image.url}
-          alt=""
-          width={identity.render_pack.image.width}
-          height={identity.render_pack.image.height}
-          draggable={false}
-        />
-      ) : null}
+      <PackPouch title={identity.title} identity={identity} />
     </div>
   );
 

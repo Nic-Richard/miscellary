@@ -153,7 +153,7 @@ function Trades() {
 
 export default function TradesScreen() {
   return (
-    <LoginGate message="Log in to trade.">
+    <LoginGate>
       <Trades />
     </LoginGate>
   );

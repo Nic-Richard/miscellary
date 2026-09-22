@@ -71,6 +71,7 @@ export default function BinderScreen() {
   const [gain, setGain] = useState<{ cardId: string; amount: number; key: number } | null>(null);
   const setRequest = useRef(0);
   const statusRequest = useRef(0);
+  const socialPending = useRef(new Set<string>());
 
   useEffect(() => {
     const request = ++setRequest.current;
@@ -207,9 +208,34 @@ export default function BinderScreen() {
   }
 
   async function toggleSetLike() {
-    if (!set || !user) return;
-    const r = await likeSet(set.slug, !set.liked);
-    setSet({ ...set, liked: r.liked, like_count: r.like_count });
+    if (!set) return;
+    if (!user) {
+      router.push(loginRoute(`/sets/${set.slug}`));
+      return;
+    }
+    if (socialPending.current.has('set-like')) return;
+    const next = !set.liked;
+    socialPending.current.add('set-like');
+    setSet((current) =>
+      current
+        ? { ...current, liked: next, like_count: current.like_count + (next ? 1 : -1) }
+        : current,
+    );
+    try {
+      const result = await likeSet(set.slug, next);
+      setSet((current) =>
+        current ? { ...current, liked: result.liked, like_count: result.like_count } : current,
+      );
+    } catch (e) {
+      setSet((current) =>
+        current
+          ? { ...current, liked: !next, like_count: current.like_count + (next ? -1 : 1) }
+          : current,
+      );
+      setError(e instanceof Error ? e.message : 'Could not update like.');
+    } finally {
+      socialPending.current.delete('set-like');
+    }
   }
 
   async function toggleSetFollow() {
@@ -218,21 +244,91 @@ export default function BinderScreen() {
       router.push(loginRoute(`/sets/${set.slug}`, FOLLOW_SET_ACTION));
       return;
     }
-    const r = await followSet(set.slug, !set.following);
-    setSet({ ...set, following: r.following, follower_count: r.follower_count });
+    if (socialPending.current.has('set-follow')) return;
+    const next = !set.following;
+    socialPending.current.add('set-follow');
+    setSet((current) =>
+      current
+        ? { ...current, following: next, follower_count: current.follower_count + (next ? 1 : -1) }
+        : current,
+    );
+    try {
+      const result = await followSet(set.slug, next);
+      setSet((current) =>
+        current
+          ? { ...current, following: result.following, follower_count: result.follower_count }
+          : current,
+      );
+    } catch (e) {
+      setSet((current) =>
+        current
+          ? {
+              ...current,
+              following: !next,
+              follower_count: current.follower_count + (next ? -1 : 1),
+            }
+          : current,
+      );
+      setError(e instanceof Error ? e.message : 'Could not update follow.');
+    } finally {
+      socialPending.current.delete('set-follow');
+    }
   }
 
   async function toggleCardLike(cardId: string) {
-    if (!set || !user) return;
-    const liked = set.liked_card_ids.includes(cardId);
-    const r = await likeCard(cardId, !liked);
-    setSet({
-      ...set,
-      liked_card_ids: r.liked
-        ? [...set.liked_card_ids, cardId]
-        : set.liked_card_ids.filter((id) => id !== cardId),
-      cards: set.cards.map((c) => (c.id === cardId ? { ...c, like_count: r.like_count } : c)),
-    });
+    if (!set || !user || socialPending.current.has(cardId)) return;
+    const next = !set.liked_card_ids.includes(cardId);
+    socialPending.current.add(cardId);
+    setSet((current) =>
+      current
+        ? {
+            ...current,
+            liked_card_ids: next
+              ? [...current.liked_card_ids, cardId]
+              : current.liked_card_ids.filter((id) => id !== cardId),
+            cards: current.cards.map((card) =>
+              card.id === cardId
+                ? { ...card, like_count: card.like_count + (next ? 1 : -1) }
+                : card,
+            ),
+          }
+        : current,
+    );
+    try {
+      const result = await likeCard(cardId, next);
+      setSet((current) =>
+        current
+          ? {
+              ...current,
+              liked_card_ids: result.liked
+                ? [...new Set([...current.liked_card_ids, cardId])]
+                : current.liked_card_ids.filter((id) => id !== cardId),
+              cards: current.cards.map((card) =>
+                card.id === cardId ? { ...card, like_count: result.like_count } : card,
+              ),
+            }
+          : current,
+      );
+    } catch (e) {
+      setSet((current) =>
+        current
+          ? {
+              ...current,
+              liked_card_ids: next
+                ? current.liked_card_ids.filter((id) => id !== cardId)
+                : [...current.liked_card_ids, cardId],
+              cards: current.cards.map((card) =>
+                card.id === cardId
+                  ? { ...card, like_count: card.like_count + (next ? -1 : 1) }
+                  : card,
+              ),
+            }
+          : current,
+      );
+      setError(e instanceof Error ? e.message : 'Could not update like.');
+    } finally {
+      socialPending.current.delete(cardId);
+    }
   }
 
   function report() {

@@ -23,6 +23,7 @@ export default function ProfileView({
   const [profile, setProfile] = useState(initial);
   const [selected, setSelected] = useState<OwnedCard | null>(null);
   const [people, setPeople] = useState<'followers' | 'following' | null>(null);
+  const [followBusy, setFollowBusy] = useState(false);
   const showcase = useMemo(
     () =>
       Array.from(
@@ -32,8 +33,31 @@ export default function ProfileView({
     [profile.showcase],
   );
   async function toggleFollow() {
-    const r = await setFollow(profile.username, !profile.is_following);
-    setProfile({ ...profile, is_following: r.following, follower_count: r.follower_count });
+    if (followBusy) return;
+    const next = !profile.is_following;
+    setFollowBusy(true);
+    setProfile((current) => ({
+      ...current,
+      is_following: next,
+      follower_count: current.follower_count + (next ? 1 : -1),
+    }));
+    try {
+      const result = await setFollow(profile.username, next);
+      setProfile((current) => ({
+        ...current,
+        is_following: result.following,
+        follower_count: result.follower_count,
+      }));
+    } catch (e) {
+      setProfile((current) => ({
+        ...current,
+        is_following: !next,
+        follower_count: current.follower_count + (next ? -1 : 1),
+      }));
+      Alert.alert('Could not update follow', e instanceof Error ? e.message : 'Try again.');
+    } finally {
+      setFollowBusy(false);
+    }
   }
 
   function report() {
@@ -110,6 +134,7 @@ export default function ProfileView({
             <Button
               title={profile.is_following ? 'Following' : 'Follow'}
               kind={profile.is_following ? 'secondary' : 'primary'}
+              disabled={followBusy}
               onPress={() => void toggleFollow()}
             />
             <Button

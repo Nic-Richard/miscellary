@@ -71,7 +71,7 @@ function Studio() {
 
 export default function StudioScreen() {
   return (
-    <LoginGate message="Log in to create sets.">
+    <LoginGate>
       <Studio />
     </LoginGate>
   );

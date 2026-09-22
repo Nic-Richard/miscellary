@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { HomeAuthBanner, StartSetLink } from './HomeAuthActions';
 import { cardCode } from '@miscellary/shared';
 import type { Card, CardSetDetail, CardSetSummary } from '@miscellary/shared';
 import Binder from '@/components/binder/Binder';
@@ -80,9 +81,7 @@ export default async function HomePage() {
                 <path d="M4 12h15m-6-6 6 6-6 6" />
               </svg>
             </Link>
-            <Link href="/register" className={ui.btnOutline}>
-              Start a set
-            </Link>
+            <StartSetLink />
           </div>
           {total ? (
             <p className={styles.stats}>
@@ -201,20 +200,7 @@ export default async function HomePage() {
         </section>
       ) : null}
 
-      <section className={`${ui.ticket} ${styles.make}`}>
-        <div>
-          <h2 className={styles.h2}>Start collecting and creating</h2>
-          <p className={styles.makeText}>Sign up free to create sets and open packs.</p>
-        </div>
-        <div className={styles.makeActions}>
-          <Link href="/register" className={ui.btnPrimary}>
-            Create an account
-          </Link>
-          <Link href="/login" className={ui.btnOutline}>
-            Log in
-          </Link>
-        </div>
-      </section>
+      <HomeAuthBanner />
     </div>
   );
 }

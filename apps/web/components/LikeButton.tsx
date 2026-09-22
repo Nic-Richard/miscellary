@@ -37,6 +37,8 @@ export default function LikeButton({
   const [liked, setLiked] = useState(initialLiked);
   const [count, setCount] = useState(initialCount);
   const [beat, setBeat] = useState(0);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setLiked(initialLiked);
@@ -44,10 +46,24 @@ export default function LikeButton({
   }, [initialLiked, initialCount]);
 
   async function toggle() {
-    const result = await onToggle(!liked);
-    setLiked(result.liked);
-    setCount(result.like_count);
-    if (result.liked) setBeat((n) => n + 1);
+    if (busy) return;
+    const next = !liked;
+    setBusy(true);
+    setError(null);
+    setLiked(next);
+    setCount((value) => value + (next ? 1 : -1));
+    if (next) setBeat((n) => n + 1);
+    try {
+      const result = await onToggle(next);
+      setLiked(result.liked);
+      setCount(result.like_count);
+    } catch (e) {
+      setLiked(!next);
+      setCount((value) => value + (next ? -1 : 1));
+      setError(e instanceof Error ? e.message : 'Could not update like.');
+    } finally {
+      setBusy(false);
+    }
   }
 
   if (!user)
@@ -67,6 +83,8 @@ export default function LikeButton({
       type="button"
       key={beat}
       aria-pressed={liked}
+      disabled={busy}
+      title={error ?? undefined}
       aria-label={label ? (liked ? `Unlike ${label}` : `Like ${label}`) : 'Like'}
       className={`${styles.root} ${liked ? styles.on : ''}`}
       onClick={() => void toggle()}

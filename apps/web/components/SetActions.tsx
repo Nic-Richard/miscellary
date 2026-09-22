@@ -35,7 +35,9 @@ export default function SetActions({ set }: { set: CardSetDetail }) {
   const [followers, setFollowers] = useState(set.follower_count);
   const [liked, setLiked] = useState(set.liked);
   const [likes, setLikes] = useState(set.like_count);
-  const [busy, setBusy] = useState(false);
+  const [followBusy, setFollowBusy] = useState(false);
+  const [likeBusy, setLikeBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setFollowing(set.following);
@@ -45,20 +47,41 @@ export default function SetActions({ set }: { set: CardSetDetail }) {
   }, [set.following, set.follower_count, set.liked, set.like_count]);
 
   async function toggleFollow(next: boolean) {
-    setBusy(true);
+    if (followBusy) return;
+    setFollowBusy(true);
+    setError(null);
+    setFollowing(next);
+    setFollowers((count) => count + (next ? 1 : -1));
     try {
       const result = await followSet(set.slug, next);
       setFollowing(result.following);
       setFollowers(result.follower_count);
+    } catch (e) {
+      setFollowing(!next);
+      setFollowers((count) => count + (next ? -1 : 1));
+      setError(e instanceof Error ? e.message : 'Could not update follow.');
     } finally {
-      setBusy(false);
+      setFollowBusy(false);
     }
   }
 
   async function toggleLike(next: boolean) {
-    const result = await likeSet(set.slug, next);
-    setLiked(result.liked);
-    setLikes(result.like_count);
+    if (likeBusy) return;
+    setLikeBusy(true);
+    setError(null);
+    setLiked(next);
+    setLikes((count) => count + (next ? 1 : -1));
+    try {
+      const result = await likeSet(set.slug, next);
+      setLiked(result.liked);
+      setLikes(result.like_count);
+    } catch (e) {
+      setLiked(!next);
+      setLikes((count) => count + (next ? -1 : 1));
+      setError(e instanceof Error ? e.message : 'Could not update like.');
+    } finally {
+      setLikeBusy(false);
+    }
   }
 
   useContinuation(FOLLOW_SET_ACTION, () => void toggleFollow(true), Boolean(user) && !following);
@@ -86,7 +109,7 @@ export default function SetActions({ set }: { set: CardSetDetail }) {
     <div className={styles.strip}>
       <button
         type="button"
-        disabled={busy}
+        disabled={followBusy}
         title={
           following
             ? 'Its free pack and your progress stay on your Packs page'
@@ -103,6 +126,7 @@ export default function SetActions({ set }: { set: CardSetDetail }) {
       <button
         type="button"
         aria-pressed={liked}
+        disabled={likeBusy}
         aria-label={liked ? `Unlike ${set.title}` : `Like ${set.title}`}
         className={`${ui.action} ${liked ? ui.actionLiked : ''}`}
         onClick={() => void toggleLike(!liked)}
@@ -111,6 +135,7 @@ export default function SetActions({ set }: { set: CardSetDetail }) {
         <b>{likes}</b>
       </button>
 
+      {error ? <span className={ui.error}>{error}</span> : null}
       <span className={styles.report}>
         <ReportButton target={{ set_slug: set.slug }} />
       </span>

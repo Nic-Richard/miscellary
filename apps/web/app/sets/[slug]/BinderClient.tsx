@@ -120,6 +120,8 @@ export default function BinderClient({
   const { loading, user } = useAuth();
   const [set, setSet] = useState<CardSetDetail | null>(initialSet);
   const [following, setFollowing] = useState<boolean | null>(null);
+  const [followBusy, setFollowBusy] = useState(false);
+  const [followError, setFollowError] = useState<string | null>(null);
   const [tab, setTab] = useState<'binder' | 'all' | 'collected'>('binder');
   const tabsTop = useRef<HTMLDivElement>(null);
   const [spread, setSpread] = useState(0);
@@ -213,10 +215,21 @@ export default function BinderClient({
   }
 
   const toggleFollow = useCallback(async () => {
-    if (!set || following === null) return;
-    const result = await setFollow(set.creator.username, !following);
-    setFollowing(result.following);
-  }, [set, following]);
+    if (!set || following === null || followBusy) return;
+    const next = !following;
+    setFollowBusy(true);
+    setFollowError(null);
+    setFollowing(next);
+    try {
+      const result = await setFollow(set.creator.username, next);
+      setFollowing(result.following);
+    } catch (e) {
+      setFollowing(!next);
+      setFollowError(e instanceof Error ? e.message : 'Could not update follow.');
+    } finally {
+      setFollowBusy(false);
+    }
+  }, [set, following, followBusy]);
 
   useContinuation(FOLLOW_ACTION, () => void toggleFollow(), following === false);
   useContinuation(
@@ -303,6 +316,7 @@ export default function BinderClient({
               <button
                 type="button"
                 className={`${ui.action} ${following ? ui.actionOn : ''}`}
+                disabled={followBusy}
                 onClick={() => void toggleFollow()}
               >
                 {following ? 'Following' : 'Follow creator'}
@@ -314,6 +328,7 @@ export default function BinderClient({
             ) : null}
           </div>
 
+          {followError ? <p className={ui.error}>{followError}</p> : null}
           {isPublished ? <SetActions set={set} /> : null}
         </div>
 

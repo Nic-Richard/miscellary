@@ -402,7 +402,7 @@ function Packs() {
 
 export default function PacksScreen() {
   return (
-    <LoginGate message="Log in to keep the sets you follow here.">
+    <LoginGate>
       <Packs />
     </LoginGate>
   );

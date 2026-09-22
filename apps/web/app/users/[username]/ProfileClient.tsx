@@ -44,6 +44,8 @@ export default function ProfileClient({
   const [error, setError] = useState<string | null>(null);
   const [inspect, setInspect] = useState<OwnedCard | null>(null);
   const [people, setPeople] = useState<'followers' | 'following' | null>(null);
+  const [followBusy, setFollowBusy] = useState(false);
+  const [followError, setFollowError] = useState<string | null>(null);
 
   useEffect(() => {
     if (loading || !user) return;
@@ -53,14 +55,41 @@ export default function ProfileClient({
   }, [username, loading, user]);
 
   const toggleFollow = useCallback(async () => {
-    if (!profile) return;
-    const result = await setFollow(profile.username, !profile.is_following);
-    setProfile({
-      ...profile,
-      is_following: result.following,
-      follower_count: result.follower_count,
-    });
-  }, [profile]);
+    if (!profile || followBusy) return;
+    const next = !profile.is_following;
+    setFollowBusy(true);
+    setFollowError(null);
+    setProfile((current) =>
+      current
+        ? {
+            ...current,
+            is_following: next,
+            follower_count: current.follower_count + (next ? 1 : -1),
+          }
+        : current,
+    );
+    try {
+      const result = await setFollow(profile.username, next);
+      setProfile((current) =>
+        current
+          ? { ...current, is_following: result.following, follower_count: result.follower_count }
+          : current,
+      );
+    } catch (e) {
+      setProfile((current) =>
+        current
+          ? {
+              ...current,
+              is_following: !next,
+              follower_count: current.follower_count + (next ? -1 : 1),
+            }
+          : current,
+      );
+      setFollowError(e instanceof Error ? e.message : 'Could not update follow.');
+    } finally {
+      setFollowBusy(false);
+    }
+  }, [profile, followBusy]);
 
   useContinuation(
     FOLLOW_ACTION,
@@ -111,10 +140,12 @@ export default function ProfileClient({
                 <button
                   type="button"
                   className={`${profile.is_following ? ui.btnOutline : ui.btnPrimary} ${ui.btnSmall}`}
+                  disabled={followBusy}
                   onClick={() => void toggleFollow()}
                 >
                   {profile.is_following ? 'Following' : 'Follow'}
                 </button>
+                {followError ? <span className={ui.error}>{followError}</span> : null}
                 <Link
                   href={`/trades/new?with=${profile.username}`}
                   className={`${ui.btnQuiet} ${ui.btnSmall}`}

@@ -229,7 +229,7 @@ function Me() {
 
 export default function ProfileScreen() {
   return (
-    <LoginGate message="Log in to see your profile.">
+    <LoginGate>
       <Me />
     </LoginGate>
   );

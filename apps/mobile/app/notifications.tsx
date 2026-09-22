@@ -249,7 +249,7 @@ export default function NotificationsScreen() {
   return (
     <>
       <Stack.Screen options={{ title: 'Notifications' }} />
-      <LoginGate message="Log in to see your notifications.">
+      <LoginGate>
         <Notifications />
       </LoginGate>
     </>

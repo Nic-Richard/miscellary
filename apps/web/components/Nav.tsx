@@ -79,8 +79,8 @@ export default function Nav() {
     if (q.trim().length >= 2) router.push(`/search?q=${encodeURIComponent(q.trim())}`);
   }
 
-  const gated = (href: string) => (user ? href : registerHref(href));
-  const profileHref = user ? `/users/${user.profile.username}` : registerHref('/account');
+  const gated = (href: string) => (user ? href : loginHref(href));
+  const profileHref = user ? `/users/${user.profile.username}` : loginHref('/account');
 
   const links: { href: string; label: string; icon: IconName; match: string }[] = [
     { href: '/', label: 'Home', icon: 'home', match: '/' },
@@ -131,7 +131,7 @@ export default function Nav() {
           />
         </form>
 
-        <Link href={user ? '/studio' : '/register'} className={styles.newBtn}>
+        <Link href={gated('/studio')} className={styles.newBtn}>
           <NavIcon name="plus" />
           New
         </Link>
@@ -178,11 +178,11 @@ function AuthLinks({
 }) {
   return (
     <>
-      <Link href={to?.login ?? loginHref(pathname)} className={styles.secondary}>
+      <Link href={to?.login ?? loginHref(pathname)} className={styles.primary}>
         Log in
       </Link>
-      <Link href={to?.register ?? registerHref(pathname)} className={styles.primary}>
-        Sign up
+      <Link href={to?.register ?? registerHref(pathname)} className={styles.secondary}>
+        Create account
       </Link>
     </>
   );

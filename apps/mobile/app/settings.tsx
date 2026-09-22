@@ -183,7 +183,7 @@ export default function SettingsScreen() {
   return (
     <>
       <Stack.Screen options={{ title: 'Account' }} />
-      <LoginGate message="Log in to manage your account.">
+      <LoginGate>
         <Account />
       </LoginGate>
     </>
