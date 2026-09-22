@@ -22,6 +22,10 @@ interface Props {
 }
 const literal = (value: unknown) => JSON.stringify(value).replace(/</g, '\\u003c');
 
+// Android gives a WebView loaded from markup an opaque origin, and the render store
+// only answers CORS requests from the site's own origin.
+const SURFACE_ORIGIN = 'https://miscellary.com';
+
 export default function SharedSurface({
   mode,
   data,
@@ -49,6 +53,7 @@ export default function SharedSurface({
     answer.current?.(source);
     answer.current = null;
   }
+  const surface = mode === 'card' ? bundle.card : mode === 'pack' ? bundle.pack : bundle.full;
   const props = useRef({ mode, data });
   props.current = { mode, data };
   function render() {
@@ -111,7 +116,7 @@ export default function SharedSurface({
       {error ? <ErrorText>{error}</ErrorText> : null}
       <WebView
         ref={view}
-        source={mode === 'card' ? bundle.card : mode === 'pack' ? bundle.pack : bundle.full}
+        source={{ ...surface, baseUrl: SURFACE_ORIGIN }}
         originWhitelist={['*']}
         javaScriptEnabled
         scrollEnabled={!autoHeight && !passive}
@@ -119,7 +124,10 @@ export default function SharedSurface({
         setSupportMultipleWindows={false}
         style={{ backgroundColor: 'transparent', flex: 1 }}
         onShouldStartLoadWithRequest={(request) =>
-          request.url === 'about:blank' || request.url.startsWith('data:text/html')
+          request.url === 'about:blank' ||
+          request.url.startsWith('data:text/html') ||
+          request.url === SURFACE_ORIGIN ||
+          request.url === `${SURFACE_ORIGIN}/`
         }
         onError={(event) => setError(event.nativeEvent.description)}
         onContentProcessDidTerminate={() => {
