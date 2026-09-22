@@ -92,9 +92,8 @@ export default function BakedCard({
     if (size !== 'large' || !hasSpot || !maskUrl) return;
     let live = true;
     const controller = new AbortController();
-    // Chrome fetches a CSS mask image with CORS. A no-CORS preload of the same
-    // URL caches a response without the allow-origin header, and renders are
-    // immutable, so the masked layers would then stay transparent.
+    // Chrome fetches a CSS mask image with CORS, and a no-CORS response cached
+    // for the same URL leaves the masked layers transparent.
     const preload = async () => {
       const image = new window.Image();
       image.crossOrigin = 'anonymous';
@@ -113,7 +112,7 @@ export default function BakedCard({
       try {
         await preload();
       } catch {
-        // Replace a no-CORS response an earlier release left cached.
+        // Replace a cached no-CORS response.
         await fetch(maskUrl, { cache: 'reload', signal: controller.signal });
         await preload();
       }

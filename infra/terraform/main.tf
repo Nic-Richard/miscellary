@@ -354,12 +354,15 @@ resource "aws_cloudformation_stack" "media_cdn" {
               S3OriginConfig        = { OriginAccessIdentity = "" }
             }]
             DefaultCacheBehavior = {
-              AllowedMethods       = ["GET", "HEAD"]
-              CachedMethods        = ["GET", "HEAD"]
-              CachePolicyId        = "658327ea-f89d-4fab-a63d-7e88639e58f6"
-              Compress             = true
-              TargetOriginId       = "media-s3"
-              ViewerProtocolPolicy = "redirect-to-https"
+              AllowedMethods = ["GET", "HEAD"]
+              CachedMethods  = ["GET", "HEAD"]
+              CachePolicyId  = "658327ea-f89d-4fab-a63d-7e88639e58f6"
+              Compress       = true
+              # The edge caches one variant per object, so every response has to allow
+              # an origin. The free plan rules out a custom policy; this is SimpleCORS.
+              ResponseHeadersPolicyId = "60669652-455b-4ae9-85a4-c4c02393f86c"
+              TargetOriginId          = "media-s3"
+              ViewerProtocolPolicy    = "redirect-to-https"
             }
             ViewerCertificate = {
               AcmCertificateArn      = aws_acm_certificate_validation.media[0].certificate_arn
