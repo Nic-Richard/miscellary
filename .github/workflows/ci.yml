@@ -61,7 +61,9 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm format:check
       - run: pnpm turbo run lint typecheck test
+        env:
+          NEXT_PUBLIC_API_URL: https://api.miscellary.com
       - run: pnpm build
         env:
-          NEXT_PUBLIC_API_URL: http://localhost:8000
+          NEXT_PUBLIC_API_URL: https://api.miscellary.com
           EXPO_PUBLIC_API_URL: http://10.0.2.2:8000
