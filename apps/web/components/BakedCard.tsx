@@ -55,6 +55,7 @@ export default function BakedCard({
   size,
   lit,
   previewThumbnail,
+  useBlobMask,
 }: {
   render: CardRenderAssets;
   title: string;
@@ -64,6 +65,7 @@ export default function BakedCard({
   size: 'small' | 'large';
   lit?: boolean | undefined;
   previewThumbnail?: boolean | undefined;
+  useBlobMask?: boolean | undefined;
 }) {
   const image = size === 'small' ? render.thumbnail : render.front;
   const material = resolveCardMaterial(templateKey, templateConfig, rarity);
@@ -83,29 +85,53 @@ export default function BakedCard({
   const maskUrl = mask?.url ?? null;
   const hasSpot = Boolean(spot);
   const [loadedFront, setLoadedFront] = useState<string | null>(null);
-  const [loadedMask, setLoadedMask] = useState<string | null>(null);
+  const [loadedMask, setLoadedMask] = useState<{ source: string; url: string } | null>(null);
   const detailed =
     size === 'small' ||
-    (loadedFront === imageUrl && (!hasSpot || !maskUrl || loadedMask === maskUrl));
+    (loadedFront === imageUrl && (!hasSpot || !maskUrl || loadedMask?.source === maskUrl));
+  let appliedMaskUrl = maskUrl;
+  if (useBlobMask && size === 'large') {
+    appliedMaskUrl = loadedMask?.source === maskUrl ? loadedMask.url : null;
+  }
 
   useEffect(() => {
     if (size !== 'large' || !hasSpot || !maskUrl) return;
     let live = true;
-    const preload = new window.Image();
-    const ready = () => {
-      if (live) setLoadedMask(maskUrl);
+    let objectUrl: string | null = null;
+    const controller = new AbortController();
+    const load = async () => {
+      let url = maskUrl;
+      if (useBlobMask) {
+        // The production CSS mask stays transparent when applied from its S3 URL.
+        const response = await fetch(maskUrl, { signal: controller.signal });
+        if (!response.ok) throw new Error('Could not load card mask');
+        const blob = await response.blob();
+        if (!live) return;
+        objectUrl = URL.createObjectURL(blob);
+        url = objectUrl;
+      }
+      const preload = new window.Image();
+      if (preload.decode) {
+        preload.src = url;
+        await preload.decode();
+      } else {
+        await new Promise<void>((resolve, reject) => {
+          preload.onload = () => resolve();
+          preload.onerror = () => reject(new Error('Could not decode card mask'));
+          preload.src = url;
+        });
+      }
+      if (live) setLoadedMask({ source: maskUrl, url });
     };
-    preload.src = maskUrl;
-    if (preload.decode)
-      void preload
-        .decode()
-        .then(ready)
-        .catch(() => undefined);
-    else preload.addEventListener('load', ready, { once: true });
+    void load().catch(() => {
+      if (live && useBlobMask) setLoadedMask({ source: maskUrl, url: maskUrl });
+    });
     return () => {
       live = false;
+      controller.abort();
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [hasSpot, maskUrl, size]);
+  }, [hasSpot, maskUrl, size, useBlobMask]);
 
   function frontLoaded(event: SyntheticEvent<HTMLImageElement>) {
     const loaded = event.currentTarget;
@@ -126,7 +152,7 @@ export default function BakedCard({
     '--baked-coat': `linear-gradient(var(--lit-angle, ${material.coat.angle}deg), ${stops(material.coat.stops)})`,
     '--baked-coat-blend': material.coatBlend,
     '--baked-sheen': material.sheen,
-    '--baked-mask': mask ? `url('${mask.url}')` : 'none',
+    '--baked-mask': appliedMaskUrl ? `url('${appliedMaskUrl}')` : 'none',
     '--baked-field': layers
       ? `${grain}, linear-gradient(var(--lit-angle, ${layers.field.sheet.angle}deg), ${stops(layers.field.sheet.stops)})`
       : 'none',
