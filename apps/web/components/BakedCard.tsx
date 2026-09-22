@@ -54,6 +54,7 @@ export default function BakedCard({
   templateConfig,
   size,
   lit,
+  previewThumbnail,
 }: {
   render: CardRenderAssets;
   title: string;
@@ -62,6 +63,7 @@ export default function BakedCard({
   templateConfig: TemplateConfig;
   size: 'small' | 'large';
   lit?: boolean | undefined;
+  previewThumbnail?: boolean | undefined;
 }) {
   const image = size === 'small' ? render.thumbnail : render.front;
   const material = resolveCardMaterial(templateKey, templateConfig, rarity);
@@ -71,7 +73,12 @@ export default function BakedCard({
   const spot = material.spot;
   const layers = spot?.layers;
   const worked = spot ? SPOT_PATTERNS[spot.pattern] : null;
-  const preview = size === 'large' ? (render.flat_thumbnail ?? render.thumbnail) : null;
+  const preview =
+    size === 'large'
+      ? previewThumbnail
+        ? render.thumbnail
+        : (render.flat_thumbnail ?? render.thumbnail)
+      : null;
   const imageUrl = image?.url ?? '';
   const maskUrl = mask?.url ?? null;
   const hasSpot = Boolean(spot);

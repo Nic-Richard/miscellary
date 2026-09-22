@@ -248,6 +248,8 @@ export default function CardInspector({
                 templateKey={card.template_key}
                 templateConfig={card.template_config}
                 mark={mark}
+                render={card.render}
+                previewThumbnail
               />
             </div>
             <div className={styles.reverse}>

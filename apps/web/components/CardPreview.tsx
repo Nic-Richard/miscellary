@@ -28,6 +28,7 @@ export interface CardPreviewProps {
   mark?: string | undefined;
   lit?: boolean | undefined;
   render?: CardRenderAssets | null | undefined;
+  previewThumbnail?: boolean;
   forceFlat?: boolean;
   renderMode?: 'static' | 'mask' | 'flat';
   textRules?: CardTextRules;
@@ -96,6 +97,7 @@ export default function CardPreview({
   mark,
   lit,
   render,
+  previewThumbnail,
   forceFlat,
   renderMode,
   textRules,
@@ -126,6 +128,7 @@ export default function CardPreview({
         templateConfig={templateConfig}
         size={size}
         lit={lit}
+        previewThumbnail={previewThumbnail}
       />
     );
   }
