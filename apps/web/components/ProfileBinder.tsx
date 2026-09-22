@@ -121,16 +121,8 @@ export default function ProfileBinder({
   const [page, setPage] = useState(0);
   const rootRef = useRef<HTMLDivElement>(null);
   const alignOnOpen = useRef(false);
-  const preloadedImages = useRef<HTMLImageElement[]>([]);
   const filled = slots.filter(Boolean).length;
   const caption = title?.trim() || DEFAULT_TITLE;
-  const preloadKey = slots
-    .flatMap((slot) => {
-      const card = slot?.owned_card.card;
-      const source = card?.render?.thumbnail?.url ?? card?.image.url;
-      return source ? [source] : [];
-    })
-    .join('\n');
   const representedSets = useMemo(() => {
     const counts = new Map<string, { slug: string; title: string; count: number }>();
     for (const slot of slots) {
@@ -177,20 +169,6 @@ export default function ProfileBinder({
     });
     return () => cancelAnimationFrame(frame);
   }, [open]);
-
-  useEffect(() => {
-    const sources = preloadKey ? [...new Set(preloadKey.split('\n'))] : [];
-    const images = sources.map((source) => {
-      const image = new window.Image();
-      image.src = source;
-      void image.decode?.().catch(() => undefined);
-      return image;
-    });
-    preloadedImages.current = images;
-    return () => {
-      if (preloadedImages.current === images) preloadedImages.current = [];
-    };
-  }, [preloadKey]);
 
   if (!open) {
     return (

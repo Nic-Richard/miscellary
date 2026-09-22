@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import type { CardSetSummary } from '@miscellary/shared';
 import { Link } from 'expo-router';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -6,10 +5,7 @@ import { binderColors, colors, fonts } from '@/lib/theme';
 import DemoBadge from './DemoBadge';
 
 export default function SetTile({ set }: { set: CardSetSummary }) {
-  const [failed, setFailed] = useState(false);
   const pack = set.render_pack?.image?.url;
-  const cover = set.cover?.url;
-  const art = !failed && pack ? pack : null;
   return (
     <Link href={{ pathname: '/sets/[slug]', params: { slug: set.slug } }} asChild>
       <Pressable
@@ -23,18 +19,9 @@ export default function SetTile({ set }: { set: CardSetSummary }) {
             { backgroundColor: binderColors[set.binder_colour] ?? colors.cloth },
           ]}
         >
-          {art ? (
-            <Image
-              source={{ uri: art }}
-              resizeMode="cover"
-              style={StyleSheet.absoluteFill}
-              onError={() => setFailed(true)}
-            />
-          ) : cover ? (
-            <Image source={{ uri: cover }} resizeMode="cover" style={StyleSheet.absoluteFill} />
-          ) : (
-            <Text style={styles.initial}>{set.title.charAt(0).toUpperCase()}</Text>
-          )}
+          {pack ? (
+            <Image source={{ uri: pack }} resizeMode="cover" style={StyleSheet.absoluteFill} />
+          ) : null}
         </View>
         <Text style={styles.title} numberOfLines={2}>
           {set.title}
@@ -62,7 +49,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(41,30,14,0.18)',
   },
-  initial: { fontFamily: fonts.display, fontSize: 48, color: colors.sur, marginBottom: 24 },
   title: {
     fontFamily: fonts.display,
     fontSize: 19,

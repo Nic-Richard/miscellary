@@ -129,7 +129,6 @@ export default function BinderClient({
   const [recycling, setRecycling] = useState<string | null>(null);
   const [gain, setGain] = useState<{ cardId: string; amount: number; key: number } | null>(null);
   const [packPoints, setPackPoints] = useState<number | undefined>();
-  const preloadedImages = useRef<HTMLImageElement[]>([]);
   const setRequest = useRef(0);
 
   useEffect(() => {
@@ -162,20 +161,6 @@ export default function BinderClient({
       .then((page) => setOwned(page.results))
       .catch(() => setOwned([]));
   }, [tab, user, owned, slug]);
-
-  useEffect(() => {
-    if (!set) return;
-    const images = set.cards.map((card) => {
-      const image = new window.Image();
-      image.src = card.render?.thumbnail?.url ?? card.image.url;
-      void image.decode?.().catch(() => undefined);
-      return image;
-    });
-    preloadedImages.current = images;
-    return () => {
-      if (preloadedImages.current === images) preloadedImages.current = [];
-    };
-  }, [set]);
 
   const binderPages = useMemo<BinderPageData[]>(() => {
     if (!set) return [];
@@ -336,7 +321,6 @@ export default function BinderClient({
           {isPublished ? (
             <PackPanel
               slug={set.slug}
-              title={set.title}
               identity={set}
               points={packPoints}
               onOpened={(opening) => {

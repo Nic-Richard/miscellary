@@ -15,7 +15,7 @@ import CardBack from '../../web/components/CardBack';
 import CardInspector from '../../web/components/CardInspector';
 import Binder from '../../web/components/binder/Binder';
 import PackPouch from '../../web/components/PackPouch';
-import PackStage from '../../web/components/PackStage';
+import RenderPackStage from '../../web/components/RenderPackStage';
 import PackReveal from '../../web/components/PackReveal';
 import ProfileBinder from '../../web/components/ProfileBinder';
 import PackDesigner from '../../web/components/studio/PackDesigner';
@@ -41,17 +41,6 @@ function Surface({ mode, data }: Props) {
   }, [mode]);
   const cardProps = data as unknown as CardPreviewProps;
   const set = data.set as CardSetDetail;
-  useEffect(() => {
-    if (mode !== 'binder' || !set?.cards) return;
-    const spread = Math.floor(Number(data.page ?? 0) / 2);
-    const first = Math.max(0, spread - 1) * 8;
-    const last = Math.min(set.cards.length, (spread + 2) * 8);
-    for (const card of set.cards.slice(first, last)) {
-      const image = new Image();
-      image.src = card.render?.thumbnail?.url ?? card.image.url;
-      void image.decode?.().catch(() => undefined);
-    }
-  }, [data.page, mode, set]);
   let content;
   if (mode === 'card') content = <CardPreview {...cardProps} size="large" />;
   else if (mode === 'render-front')
@@ -70,7 +59,7 @@ function Surface({ mode, data }: Props) {
       />
     );
   else if (mode === 'pack') content = <PackPouch title={set.title} identity={set} />;
-  else if (mode === 'render-pack') content = <PackStage set={set} />;
+  else if (mode === 'render-pack') content = <RenderPackStage set={set} />;
   else if (mode === 'reveal')
     content = (
       <PackReveal

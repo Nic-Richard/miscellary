@@ -38,7 +38,7 @@ export default function PackReveal({
     const sources = new Set<string>();
     for (const owned of opening.cards) {
       const render = owned.card.render;
-      const front = render?.front?.url ?? owned.card.image.url;
+      const front = render?.front?.url;
       if (front) sources.add(front);
       if (render?.back?.url) sources.add(render.back.url);
     }

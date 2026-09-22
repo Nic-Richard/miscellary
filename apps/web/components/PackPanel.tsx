@@ -3,14 +3,12 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
-import type { PackOpening, PackStatus } from '@miscellary/shared';
+import type { CardSetSummary, PackOpening, PackStatus } from '@miscellary/shared';
 import { useAuth } from '@/lib/auth';
 import { getPackStatus, openPack } from '@/lib/packs';
 import { loginHref } from '@/lib/returnTo';
 import { countdown } from '@/lib/time';
 import { useContinuation } from '@/lib/useContinuation';
-import PackPouch from './PackPouch';
-import type { SetIdentity } from '@/lib/setIdentity';
 import PackReveal from './PackReveal';
 import ui from './ui.module.css';
 import styles from './PackPanel.module.css';
@@ -27,14 +25,12 @@ export const PACK_ACTION = 'pack';
 
 export default function PackPanel({
   slug,
-  title,
   identity,
   points,
   onOpened,
 }: {
   slug: string;
-  title: string;
-  identity: SetIdentity;
+  identity: CardSetSummary;
   points?: number | undefined;
   onOpened?: (opening: PackOpening) => void;
 }) {
@@ -86,7 +82,16 @@ export default function PackPanel({
   const packSize = status?.pack_size ?? 10;
   const pouch = (
     <div className={styles.pouch}>
-      <PackPouch title={title} identity={identity} />
+      {identity.render_pack?.image ? (
+        <img
+          className={styles.baked}
+          src={identity.render_pack.image.url}
+          alt=""
+          width={identity.render_pack.image.width}
+          height={identity.render_pack.image.height}
+          draggable={false}
+        />
+      ) : null}
     </div>
   );
 
