@@ -16,7 +16,15 @@ PHOTO_MANIFEST = Path(__file__).resolve().parent / "management" / "seed_photos.j
 CURATED_PHOTOS = json.loads(PHOTO_MANIFEST.read_text(encoding="utf-8"))
 COMMONS_API = "https://commons.wikimedia.org/w/api.php"
 PUBLIC_DOMAIN_MARK = "https://creativecommons.org/publicdomain/mark/1.0/"
-SOURCE_AUTHOR_OVERRIDES = {"Vinyl groove macro.jpg": "Shane Gavin"}
+# Commons gives no artist for these; the Met's open-access photographs are its own.
+SOURCE_AUTHOR_OVERRIDES = {
+    "Vinyl groove macro.jpg": "Shane Gavin",
+    "Bronze ring key MET DP20317.jpg": "The Metropolitan Museum of Art",
+    "Roman Key Ring with Inscription MET LC L 2015 73 5 s01.jpg": "The Metropolitan Museum of Art",
+    "Masterpiece key MET 144290.jpg": "The Metropolitan Museum of Art",
+    "Chess Piece in the Form of a Knight MET sf68-183s1.jpg": "The Metropolitan Museum of Art",
+    "Chess Piece, Bishop MET 17.190.228(1).jpg": "The Metropolitan Museum of Art",
+}
 PNG_MAGIC = bytes([0x89]) + b"PNG"
 AGENT = {"User-Agent": "miscellary-catalogue/1.0 (nic@nicrichard.dev)"}
 MIN_GAP = 0.8
