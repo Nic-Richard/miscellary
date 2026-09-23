@@ -38,8 +38,9 @@ export default function PackReveal({
     const sources = new Set<string>();
     for (const owned of opening.cards) {
       const render = owned.card.render;
-      const front = render?.front?.url;
-      if (front) sources.add(front);
+      // The reveal shows the flat thumbnail first and swaps the full front in behind it.
+      const preview = render?.flat_thumbnail?.url ?? render?.thumbnail?.url;
+      if (preview) sources.add(preview);
       if (render?.back?.url) sources.add(render.back.url);
     }
     for (const source of sources) {

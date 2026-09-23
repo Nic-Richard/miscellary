@@ -1,4 +1,5 @@
 import uuid
+from functools import lru_cache
 from urllib.parse import urlsplit, urlunsplit
 
 import boto3
@@ -33,20 +34,34 @@ def public_endpoint_for(host: str | None) -> str:
     return urlunsplit((parts.scheme, f"{caller}{port}", parts.path, "", ""))
 
 
+@lru_cache(maxsize=8)
+def _client(endpoint: str | None, region: str, key_id: str, secret: str):
+    return boto3.client(
+        "s3",
+        endpoint_url=endpoint,
+        region_name=region,
+        # Empty in production: the ECS task role provides credentials.
+        aws_access_key_id=key_id or None,
+        aws_secret_access_key=secret or None,
+        # SigV4 is required by newer AWS regions; MinIO supports it too.
+        config=Config(signature_version="s3v4"),
+    )
+
+
 def client(*, public: bool = False, host: str | None = None):
-    """An S3 client. `public` signs against the endpoint the caller can reach."""
+    """An S3 client. `public` signs against the endpoint the caller can reach.
+
+    Building one costs tens of milliseconds, and a listing signs a URL per
+    image, so they are cached on the settings they are built from.
+    """
     endpoint = settings.AWS_S3_ENDPOINT_URL
     if public:
         endpoint = public_endpoint_for(host) or endpoint
-    return boto3.client(
-        "s3",
-        endpoint_url=endpoint or None,
-        region_name=settings.AWS_S3_REGION,
-        # Empty in production: the ECS task role provides credentials.
-        aws_access_key_id=settings.AWS_ACCESS_KEY_ID or None,
-        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY or None,
-        # SigV4 is required by newer AWS regions; MinIO supports it too.
-        config=Config(signature_version="s3v4"),
+    return _client(
+        endpoint or None,
+        settings.AWS_S3_REGION,
+        settings.AWS_ACCESS_KEY_ID,
+        settings.AWS_SECRET_ACCESS_KEY,
     )
 
 
