@@ -181,8 +181,8 @@ Every card is printed to the same standard; rarity never lowers material quality
 is whatever its creator chose - matte, satin, gloss, pearl or metallic - and grain and sheen are
 properties of that coat, so a matte card shows more tooth than a gloss one at any rarity.
 
-Rarity gates specialty production, not design freedom: Rare opens pearl and metallic coats and the
-brushed surface, Epic the Full Art template and foil, Legendary holo and the rainbow pattern a
+Rarity gates specialty production, not design freedom: Uncommon opens pearl and metallic coats and
+the brushed surface, Rare foil, Epic the Full Art template and holo, Legendary the rainbow pattern a
 secret rare is worked with. A locked value stays
 visible in its control, hatched and tagged with the tier that opens it, so the ladder is legible from
 Common rather than only from the top.
@@ -354,12 +354,13 @@ the pack and open it with Enter.
 
 ## Demo content
 
-`reset_demo` creates collectors, published and draft sets,
-owned cards, likes, comments, follows, showcases, pack history, and trade offers. It uses
-Wikimedia Commons photographs when available and supports `--no-photos` for offline placeholders.
+`bootstrap_catalogue` creates the collectors, published sets and cards recorded in the catalogue
+manifest, from Wikimedia Commons photographs verified against their source records.
+`refresh_demo_activity` adds the owned cards, likes, comments, follows and showcases around them.
 
 ```bash
 docker compose up -d
 docker compose exec api uv run python manage.py migrate
-docker compose exec api uv run python manage.py reset_demo
+docker compose exec api uv run python manage.py bootstrap_catalogue
+docker compose exec api uv run python manage.py refresh_demo_activity
 ```

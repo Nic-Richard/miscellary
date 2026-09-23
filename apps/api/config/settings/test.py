@@ -10,7 +10,6 @@ DATABASES = {
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 REFRESH_COOKIE_SECURE = False
-ALLOW_DESTRUCTIVE_DEMO_RESET = True
 REST_FRAMEWORK = {**REST_FRAMEWORK, "DEFAULT_THROTTLE_CLASSES": []}  # noqa: F405
 
 AWS_S3_ENDPOINT_URL = ""

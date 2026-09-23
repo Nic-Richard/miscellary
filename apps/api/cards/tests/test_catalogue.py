@@ -2,9 +2,7 @@ from copy import deepcopy
 from urllib.parse import unquote
 
 import pytest
-from django.core.management import call_command
 from django.core.management.base import CommandError
-from django.test import override_settings
 
 from accounts.models import User
 from cards import catalogue, catalogue_photos
@@ -58,12 +56,6 @@ def test_catalogue_sources_are_pinned():
 
 def test_empty_photo_url_is_unavailable():
     assert catalogue_photos._open("") is None
-
-
-@override_settings(ALLOW_DESTRUCTIVE_DEMO_RESET=False)
-def test_destructive_reset_is_disabled_outside_development():
-    with pytest.raises(CommandError, match="disabled outside development"):
-        call_command("reset_demo", prepare_photos=True)
 
 
 @pytest.mark.django_db

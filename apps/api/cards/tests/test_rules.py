@@ -62,7 +62,7 @@ def _config(**overrides) -> dict[str, str]:
 
 def test_specialty_values_need_the_rarity_that_unlocks_them():
     assert templates.config_problems("classic", _config(finish="pearl"), "common")
-    assert templates.config_problems("classic", _config(finish="pearl"), "uncommon")
+    assert templates.config_problems("classic", _config(finish="pearl"), "uncommon") == []
     assert templates.config_problems("classic", _config(finish="pearl"), "rare") == []
     assert templates.config_problems("classic", _config(finish="pearl"), "legendary") == []
 
@@ -82,13 +82,13 @@ def test_ordinary_catalogue_is_open_at_every_rarity():
 
 
 def test_specialty_press_work_climbs_one_tier_at_a_time():
-    assert templates.config_problems("classic", _config(finish="pearl"), "uncommon")
-    assert templates.config_problems("classic", _config(finish="pearl"), "rare") == []
-    assert templates.config_problems("classic", _config(finish="metallic"), "rare") == []
-    assert templates.config_problems("classic", _config(treatment="foil"), "rare")
-    assert templates.config_problems("classic", _config(treatment="foil"), "epic") == []
-    assert templates.config_problems("classic", _config(treatment="holo"), "epic")
-    assert templates.config_problems("classic", _config(treatment="holo"), "legendary") == []
+    assert templates.config_problems("classic", _config(finish="pearl"), "common")
+    assert templates.config_problems("classic", _config(finish="pearl"), "uncommon") == []
+    assert templates.config_problems("classic", _config(finish="metallic"), "uncommon") == []
+    assert templates.config_problems("classic", _config(treatment="foil"), "uncommon")
+    assert templates.config_problems("classic", _config(treatment="foil"), "rare") == []
+    assert templates.config_problems("classic", _config(treatment="holo"), "rare")
+    assert templates.config_problems("classic", _config(treatment="holo"), "epic") == []
     assert templates.config_problems("classic", _config(pattern="rainbow"), "epic")
     rainbow = _config(treatment="holo", pattern="rainbow")
     assert templates.config_problems("classic", rainbow, "legendary") == []
@@ -143,8 +143,8 @@ def test_every_default_is_open_to_a_common_card():
 
 
 def test_specialty_surface_sits_above_the_ordinary_ones():
-    assert templates.config_problems("classic", _config(texture="brushed"), "uncommon")
-    assert templates.config_problems("classic", _config(texture="brushed"), "rare") == []
+    assert templates.config_problems("classic", _config(texture="brushed"), "common")
+    assert templates.config_problems("classic", _config(texture="brushed"), "uncommon") == []
 
 
 def test_full_art_is_reached_one_way_only():
@@ -173,8 +173,8 @@ def test_legendary_is_offered_a_treatment_but_never_forced_one():
 
 
 def test_treatment_is_refused_below_its_tier():
-    assert templates.config_problems("classic", _config(treatment="foil"), "rare")
-    assert templates.config_problems("classic", _config(treatment="holo"), "epic")
+    assert templates.config_problems("classic", _config(treatment="foil"), "uncommon")
+    assert templates.config_problems("classic", _config(treatment="holo"), "rare")
 
 
 def test_rarity_is_not_checked_when_it_is_not_given():

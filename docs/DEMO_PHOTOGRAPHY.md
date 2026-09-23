@@ -64,6 +64,4 @@ running the command creates only that set. `refresh_demo_activity` replaces synt
 follows, showcases, and set follows belonging to demo accounts. Demo-only trades require
 `--include-trades`. Real-user rows are outside its deletion scope.
 
-`reset_demo` remains the destructive local review workflow and is enabled only by development and test
-settings. It recreates the older local draft and interaction fixtures, accepts `--no-photos`, and requires
-confirmation. Neither catalogue command runs automatically on application startup.
+Neither catalogue command runs automatically on application startup.

@@ -276,8 +276,7 @@ whimsical sets with subjects that feel like things real collectors and hobbyists
 
 Launch content uses a versioned manifest and the idempotent `bootstrap_catalogue` command. Existing
 published rows are verified and never rewritten; a manifest mismatch aborts. Synthetic social activity
-has a separate `refresh_demo_activity` lifecycle, while the destructive `reset_demo` command is limited
-to development. None of these commands runs automatically on application startup.
+has a separate `refresh_demo_activity` lifecycle. None of these commands runs automatically on application startup.
 
 ## 11. Production deployment and live URL: Remaining
 

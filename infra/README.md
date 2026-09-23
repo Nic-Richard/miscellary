@@ -214,7 +214,7 @@ bootstrap command never changes the password of an administrator that already ex
 `bootstrap_catalogue` creates missing persistent catalogue entries and verifies existing published
 entries without rewriting them. Run `refresh_demo_activity` separately when synthetic collections and
 social activity should be replaced; pass `--include-trades` only when demo trade fixtures are wanted.
-`reset_demo` is disabled outside development. Bake and import the catalogue renders,
+Bake and import the catalogue renders,
 then finish with `verify_renders`.
 
 Build the shared surface and bake against the live API from a workstation with Chromium available:

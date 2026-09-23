@@ -19,7 +19,6 @@ const { values: args } = parseArgs({
     runner: { type: 'string' },
     output: { type: 'string' },
     yes: { type: 'boolean' },
-    'no-photos': { type: 'boolean' },
     'keep-renders': { type: 'boolean' },
     'bake-only': { type: 'boolean' },
   },
@@ -238,23 +237,13 @@ if (!(await reachable(`${api}/api/v1/health/`))) {
 
 await confirm();
 
-const photos = args['no-photos'] ? ['--no-photos'] : [];
-if (args['no-photos']) {
-  process.stdout.write(
-    '\n[33mBaking placeholder art: --no-photos replaces every photograph with a gradient.[0m\n',
-  );
-}
-
 if (!bakeOnly) {
   heading('Prepare source images');
-  if (args['no-photos']) {
-    process.stdout.write('Skipped: --no-photos uses generated gradients.\n');
-  } else {
-    await manage(['bootstrap_catalogue', '--prepare-photos']);
-  }
+  await manage(['bootstrap_catalogue', '--prepare-photos']);
 
-  heading('Recreate demo users, sets, cards and social data');
-  await manage(['reset_demo', '--yes', ...photos]);
+  heading('Create the catalogue and refresh demo social data');
+  await manage(['bootstrap_catalogue']);
+  await manage(['refresh_demo_activity']);
 }
 
 heading('Build the shared render surface');

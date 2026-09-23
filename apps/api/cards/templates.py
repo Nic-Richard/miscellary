@@ -19,7 +19,7 @@ INKS = ["rarity", *COLOURS]
 STOCKS_ALL = COLOURS
 
 TEXTURES = ["linen", "canvas", "grain", "felt", "smooth", "brushed"]
-TEXTURE_UNLOCKS = {"brushed": "rare"}
+TEXTURE_UNLOCKS = {"brushed": "uncommon"}
 
 CORNERS = ["round", "soft", "sharp"]
 
@@ -32,10 +32,10 @@ WINDOWS = ["rule", "none", "mat", "inset"]
 SHAPES = ["square", "arch", "circle", "diamond"]
 
 FINISHES = ["matte", "satin", "gloss", "pearl", "metallic"]
-FINISH_UNLOCKS = {"pearl": "rare", "metallic": "rare"}
+FINISH_UNLOCKS = {"pearl": "uncommon", "metallic": "uncommon"}
 
 TREATMENTS = ["none", "foil", "holo"]
-TREATMENT_UNLOCKS = {"foil": "epic", "holo": "legendary"}
+TREATMENT_UNLOCKS = {"foil": "rare", "holo": "epic"}
 
 COVERAGES = ["spot", "reverse", "full"]
 

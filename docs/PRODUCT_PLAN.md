@@ -101,8 +101,8 @@ creator decides whether to spend them. Rarity is also a design capability: it wi
 rather than dictating how a card looks. Common and uncommon have the full ordinary catalogue of
 layout, stock, colour, typography, imagery, framing and surface, so a common can be as
 well-designed as anything else. Higher tiers additionally unlock specialty production treatments -
-pearlescent and metallic finishes and a brushed surface at rare, the Full Art template and foil at
-epic, holo and the rainbow pattern at legendary -
+pearlescent and metallic finishes and a brushed surface at uncommon, foil at rare, the Full Art
+template and holo at epic, the rainbow pattern at legendary -
 and none of them are compulsory. Relief and cut edge are not creator choices: they are small enough
 that the renderer applies whatever suits the tier. No tier is required to carry a foil, and foil sits
 on an axis separate from a card's ordinary finish.

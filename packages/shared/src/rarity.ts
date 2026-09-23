@@ -18,9 +18,9 @@ export const RARITY_LABELS: Record<Rarity, string> = {
 // but the set must be at least COMMON_MIN_SHARE common so packs stay open-able.
 export const RARITY_MAX_SHARE: Record<Exclude<Rarity, 'common'>, number> = {
   uncommon: 0.3,
-  rare: 0.2,
-  epic: 0.1,
-  legendary: 0.05,
+  rare: 0.25,
+  epic: 0.15,
+  legendary: 0.1,
 };
 export const COMMON_MIN_SHARE = 0.4;
 

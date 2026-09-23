@@ -81,12 +81,11 @@ start your own with `--headless=new --remote-debugging-port=9224` and it will be
 | Option              | Effect                                                              |
 | ------------------- | ------------------------------------------------------------------- |
 | `--yes`             | Skip the confirmation prompt                                        |
-| `--no-photos`       | Use generated gradients instead of Wikimedia Commons photographs    |
 | `--bake-only`       | Re-bake and re-import renders without touching the database rows    |
 | `--runner local`    | Run the Django commands on the host instead of in the API container |
 | `--api`, `--chrome` | Point at a different API or debugging endpoint                      |
 
-Running `reset_demo` on its own recreates the database rows but leaves every published card
+Running `bootstrap_catalogue` on its own creates the database rows but leaves every published card
 unbaked, and an unbaked published card renders as an empty frame. It is available as
 `make seed-data-only` when that is what you want. To check the catalogue at any time:
 
