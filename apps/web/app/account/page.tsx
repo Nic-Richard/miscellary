@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import type { OwnedCard, ShowcaseSlot } from '@miscellary/shared';
@@ -121,6 +122,11 @@ export default function AccountPage() {
   if (!user) return <p className={styles.muted}>Taking you to create an account…</p>;
 
   const byId = new Map([...pinned, ...cards.map((c) => [c.id, c] as const)]);
+  const back = (
+    <Link className={ui.btnOutline} href={`/users/${user.profile.username}`}>
+      ← Back to profile
+    </Link>
+  );
 
   const pickNeedle = pickFilter.trim().toLowerCase();
   const choosable = cards
@@ -203,9 +209,7 @@ export default function AccountPage() {
             <button className={ui.btnPrimary} type="submit">
               Save profile
             </button>
-            <a className={styles.link} href={`/users/${user.profile.username}`}>
-              View your profile
-            </a>
+            {back}
             {saved ? <span className={styles.saved}>Saved</span> : null}
           </div>
         </form>
@@ -299,10 +303,16 @@ export default function AccountPage() {
               ) : null}
             </div>
           ) : null}
+          <div className={styles.row}>{back}</div>
         </>
       ) : null}
 
-      {section === 'account' ? <AccountSecurity user={user} onChanged={refreshUser} /> : null}
+      {section === 'account' ? (
+        <>
+          <AccountSecurity user={user} onChanged={refreshUser} />
+          <div className={styles.row}>{back}</div>
+        </>
+      ) : null}
 
       {inspect ? <OwnedCardInspector owned={inspect} onClose={() => setInspect(null)} /> : null}
     </section>

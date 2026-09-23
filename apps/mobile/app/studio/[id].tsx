@@ -1,4 +1,4 @@
-import { CARD_TAG_MAX, cardCode, SET_TAG_MAX } from '@miscellary/shared';
+import { CARD_TAG_MAX, cardCode, SET_TAG_MAX, SET_TITLE_MAX_LENGTH } from '@miscellary/shared';
 import type { CardSetDetail } from '@miscellary/shared';
 import Feather from '@expo/vector-icons/Feather';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
@@ -214,7 +214,7 @@ export default function SetEditorScreen() {
           <Input
             value={title}
             onChangeText={setTitle}
-            maxLength={80}
+            maxLength={SET_TITLE_MAX_LENGTH}
             style={{ fontSize: 20, fontWeight: '700' }}
           />
           <Input

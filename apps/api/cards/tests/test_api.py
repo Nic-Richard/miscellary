@@ -287,6 +287,14 @@ def test_set_code_is_editable_on_a_draft_and_validated(auth_client, user):
     )
 
 
+def test_set_title_is_held_to_what_the_card_back_fits(auth_client, user):
+    card_set = make_set(user)
+    url = reverse("cards:my-set", args=[card_set.id])
+
+    assert auth_client.patch(url, {"title": "x" * 30}, format="json").status_code == 200
+    assert "title" in auth_client.patch(url, {"title": "x" * 31}, format="json").json()["fields"]
+
+
 def test_creator_can_see_own_draft_binder(auth_client, user):
     draft = make_set(user)
     assert auth_client.get(reverse("cards:public-set", args=[draft.slug])).status_code == 200

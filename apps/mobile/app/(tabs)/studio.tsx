@@ -1,3 +1,4 @@
+import { SET_TITLE_MAX_LENGTH } from '@miscellary/shared';
 import type { CardSetSummary } from '@miscellary/shared';
 import { Link, router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
@@ -42,7 +43,7 @@ function Studio() {
         placeholder="New set title (e.g. Rocks from the backyard)"
         value={title}
         onChangeText={setTitle}
-        maxLength={80}
+        maxLength={SET_TITLE_MAX_LENGTH}
       />
       <Button title="Create draft" onPress={() => void create()} disabled={!title.trim()} />
       <ErrorText>{error}</ErrorText>

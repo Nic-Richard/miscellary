@@ -16,11 +16,13 @@ const { values: args } = parseArgs({
     api: { type: 'string' },
     chrome: { type: 'string' },
     output: { type: 'string' },
+    set: { type: 'string', multiple: true },
   },
 });
 const api = String(args.api ?? 'http://localhost:8000').replace(/\/$/, '');
 const chrome = String(args.chrome ?? 'http://127.0.0.1:9224').replace(/\/$/, '');
 const output = resolve(repo, String(args.output ?? 'tmp/card-renders'));
+const only = new Set(args.set ?? []);
 
 // Mirrors CARD_RENDERER_VERSION in apps/api/cards/rendering.py. The import
 // refuses a manifest that does not match, so the two move together.
@@ -47,11 +49,13 @@ async function catalogue() {
     const page = await response.json();
     sets.push(
       ...(await Promise.all(
-        page.results.map(async (set) => {
-          const detail = await fetch(`${api}/api/v1/sets/${set.slug}/`);
-          if (!detail.ok) throw new Error(`Set ${set.slug} failed with ${detail.status}.`);
-          return detail.json();
-        }),
+        page.results
+          .filter((set) => only.size === 0 || only.has(set.slug))
+          .map(async (set) => {
+            const detail = await fetch(`${api}/api/v1/sets/${set.slug}/`);
+            if (!detail.ok) throw new Error(`Set ${set.slug} failed with ${detail.status}.`);
+            return detail.json();
+          }),
       )),
     );
     next = page.next;
@@ -103,6 +107,9 @@ try {
 
   await call('Runtime.enable');
   await call('Page.enable');
+  // The browser can outlive a bake, and rebuilt catalogue art keeps its URL.
+  await call('Network.enable');
+  await call('Network.setCacheDisabled', { cacheDisabled: true });
   await call('Emulation.setDeviceMetricsOverride', {
     width: 1000,
     height: 1400,

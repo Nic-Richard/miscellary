@@ -94,7 +94,7 @@
   text-rendering: geometricPrecision;
 }
 .title {
-  font-size: 7px;
+  font-size: calc(7px * var(--title-scale, 1));
   letter-spacing: 0.12em;
 }
 .brand {

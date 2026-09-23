@@ -236,6 +236,10 @@ TEXT_TRACKING_MAX = 60
 
 PACK_SUBTITLE_MAX_LENGTH = 40
 
+# The card back shrinks the set title to fit one line; past this length it would
+# not fit even at its smallest size.
+SET_TITLE_MAX_LENGTH = 30
+
 # 00 is reserved, so published suffixes run from 01 through ZZ.
 SET_CODE_LENGTH = 3
 SET_SUFFIX_LENGTH = 2

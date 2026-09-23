@@ -5,15 +5,17 @@ import uuid
 import zlib
 from pathlib import Path
 
+from django.core.exceptions import ValidationError
 from django.core.management.base import CommandError
 from django.db import connection, transaction
 from django.utils.text import slugify
 
 from accounts.models import User
-from cards.identity import ART_SCALE_MAX, BINDER_COLOURS
+from cards.identity import ART_SCALE_MAX, BINDER_COLOURS, SET_TITLE_MAX_LENGTH
 from cards.markdown import description_issues
 from cards.models import CardDefinition, CardSet
 from cards.packlayers import DEFAULTS as PACK_LAYER_DEFAULTS
+from cards.packlayers import problems as pack_layer_problems
 from cards.packtext import DEFAULTS as PACK_TEXT_DEFAULTS
 from cards.publishing import publish_set
 from cards.tags import SET_TAG_MAX
@@ -68,12 +70,9 @@ def _photo_targets(manifest: dict) -> dict[str, list[uuid.UUID]]:
         for position, card in enumerate(card_set["cards"]):
             identity = stable_id("card-image", card_set["title"], position)
             targets.setdefault(card[5], []).append(identity)
-        design = card_set["pack_design"]
-        pack_art = stable_id("pack-art", card_set["title"])
-        if design.get("cutout"):
-            targets.setdefault(design["cutout"], []).append(pack_art)
-        if design.get("keyed"):
-            targets.setdefault(_keyed_sources()[design["keyed"]], []).append(pack_art)
+        for index, cutout in enumerate(_pack_cutouts(card_set["pack_design"])):
+            identity = _pack_art_id(card_set["title"], index)
+            targets.setdefault(_cutout_spec(cutout), []).append(identity)
     return targets
 
 
@@ -331,30 +330,52 @@ def _card_values(card_set: dict, card: list, position: int, image: Image) -> dic
 KEYED_ADAPTATION = "Background keyed out for pack artwork."
 
 
-def _pack_art(
+def _pack_cutouts(design: dict) -> list[dict[str, str]]:
+    if "cutouts" in design:
+        return design["cutouts"]
+    if design.get("cutout"):
+        return [{"spec": design["cutout"]}]
+    if design.get("keyed"):
+        return [{"keyed": design["keyed"]}]
+    return []
+
+
+def _cutout_spec(cutout: dict[str, str]) -> str:
+    return cutout["spec"] if "spec" in cutout else _keyed_sources()[cutout["keyed"]]
+
+
+def _pack_art_id(title: str, index: int) -> uuid.UUID:
+    # The first cutout keeps the single-cutout identity already published.
+    return stable_id("pack-art", title) if index == 0 else stable_id("pack-art", title, index)
+
+
+def _pack_images(
     card_set: CardSet,
     definition: dict,
     photos: dict[str, bytes],
     sources: dict[str, dict[str, str]],
-) -> Image | None:
-    design = definition["pack_design"]
-    identity = stable_id("pack-art", definition["title"])
-    if design.get("cutout"):
-        return _catalogue_image(
-            card_set.creator, identity, Image.Kind.PACK, design["cutout"], photos, sources
-        )
-    if not design.get("keyed"):
-        return None
-    name = design["keyed"]
-    spec = _keyed_sources()[name]
-    stored = _stored_image(
-        card_set.creator, identity, Image.Kind.PACK, spec, sources, KEYED_ADAPTATION
-    )
-    if stored:
-        return stored
-    data = (Path(__file__).parent / "management" / "cutouts" / f"{name}.png").read_bytes()
-    source = {**_source_metadata(spec, data), "adaptation": KEYED_ADAPTATION}
-    return _create_image(card_set.creator, identity, Image.Kind.PACK, data, source)
+) -> list[Image]:
+    images = []
+    for index, cutout in enumerate(_pack_cutouts(definition["pack_design"])):
+        identity = _pack_art_id(definition["title"], index)
+        creator = card_set.creator
+        if "spec" in cutout:
+            images.append(
+                _catalogue_image(
+                    creator, identity, Image.Kind.PACK, cutout["spec"], photos, sources
+                )
+            )
+            continue
+        spec = _cutout_spec(cutout)
+        stored = _stored_image(creator, identity, Image.Kind.PACK, spec, sources, KEYED_ADAPTATION)
+        if stored:
+            images.append(stored)
+            continue
+        path = Path(__file__).parent / "management" / "cutouts" / f"{cutout['keyed']}.png"
+        data = path.read_bytes()
+        source = {**_source_metadata(spec, data), "adaptation": KEYED_ADAPTATION}
+        images.append(_create_image(creator, identity, Image.Kind.PACK, data, source))
+    return images
 
 
 def _pack_values(
@@ -365,7 +386,7 @@ def _pack_values(
 ) -> tuple[list, list]:
     design = definition["pack_design"]
     cards = list(card_set.cards.select_related("image").order_by("position"))
-    cutout = _pack_art(card_set, definition, photos, sources)
+    cutouts = _pack_images(card_set, definition, photos, sources)
 
     def pick(which: str):
         if which in {"legendary", "epic", "rare"}:
@@ -374,12 +395,24 @@ def _pack_values(
                 return found
         return cards[0]
 
+    emblem = {
+        **PACK_LAYER_DEFAULTS,
+        "kind": "emblem",
+        "scale": design.get("emblem_scale", 100),
+        "y": design.get("emblem_y", 0),
+        "hidden": design.get("emblem_hidden", False),
+    }
     layers = []
     for spec in design.get("art", []):
-        if spec.get("cutout"):
-            if not cutout:
-                continue
-            image_id = cutout.id
+        if spec.get("emblem"):
+            layers.append(emblem)
+            continue
+        if "cutout" in spec:
+            # True is the original single-cutout form and means the first one.
+            index = 0 if spec["cutout"] is True else spec["cutout"]
+            if not isinstance(index, int) or not 0 <= index < len(cutouts):
+                raise CommandError(f"{definition['title']} pack art has no cutout {index}.")
+            image_id = cutouts[index].id
             scale = spec.get("scale", 60)
             y = spec.get("y", -12)
         else:
@@ -401,17 +434,16 @@ def _pack_values(
                 "x": spec.get("x", 0),
                 "y": y,
                 "rotate": spec.get("rotate", 0),
+                "flip_x": spec.get("flip_x", False),
+                "flip_y": spec.get("flip_y", False),
                 "opacity": spec.get("opacity", 100),
             }
         )
-    layers.append(
-        {
-            **PACK_LAYER_DEFAULTS,
-            "kind": "emblem",
-            "scale": design.get("emblem_scale", 100),
-            "y": design.get("emblem_y", 0),
-        }
-    )
+    if emblem not in layers:
+        layers.append(emblem)
+    problems = pack_layer_problems(layers)
+    if problems:
+        raise CommandError(f"{definition['title']} pack art is invalid: {problems}")
     text = [
         {
             **PACK_TEXT_DEFAULTS,
@@ -421,6 +453,9 @@ def _pack_values(
             "y": line[3],
             "tracking": line[4],
             "font": line[5],
+            # Optional trailing x and rotate, for text set off the centre line.
+            "x": line[6] if len(line) > 6 else 0,
+            "rotate": line[7] if len(line) > 7 else 0,
         }
         for line in design.get("lines", [])
     ]
@@ -454,8 +489,14 @@ def _bootstrap_set(
     photos: dict[str, bytes],
     sources: dict[str, dict[str, str]],
 ) -> tuple[CardSet, bool]:
+    if len(definition["title"]) > SET_TITLE_MAX_LENGTH:
+        raise CommandError(f"Catalogue set title does not fit the card back: {definition['title']}")
     identity = stable_id("set", definition["title"])
     expected = _set_values(definition, creator)
+    try:
+        CardSet(id=identity, **expected).clean_fields(exclude=["creator", "cover"])
+    except ValidationError as error:
+        raise CommandError(f"{definition['title']} is invalid: {error.message_dict}") from error
     card_set = CardSet.objects.filter(pk=identity).first()
     conflict = CardSet.objects.filter(slug=expected["slug"]).exclude(pk=identity).first()
     if conflict:

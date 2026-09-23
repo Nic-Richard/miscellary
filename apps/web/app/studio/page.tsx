@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
+import { SET_TITLE_MAX_LENGTH } from '@miscellary/shared';
 import type { CardSetSummary } from '@miscellary/shared';
 import SetTile from '@/components/SetTile';
 import tileStyles from '@/components/SetTile.module.css';
@@ -59,7 +60,7 @@ export default function StudioPage() {
             placeholder="Set title, e.g. Rocks from the backyard"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            maxLength={80}
+            maxLength={SET_TITLE_MAX_LENGTH}
             required
           />
           <button className={ui.btnPrimary} type="submit">

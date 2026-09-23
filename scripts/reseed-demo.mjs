@@ -21,6 +21,7 @@ const { values: args } = parseArgs({
     yes: { type: 'boolean' },
     'keep-renders': { type: 'boolean' },
     'bake-only': { type: 'boolean' },
+    set: { type: 'string', multiple: true },
   },
 });
 
@@ -39,7 +40,8 @@ const manifest =
 
 let step = 0;
 const bakeOnly = Boolean(args['bake-only']);
-const total = bakeOnly ? 4 : 6;
+const only = args.set ?? [];
+const total = bakeOnly ? 4 : only.length ? 5 : 6;
 
 function heading(text) {
   step += 1;
@@ -213,10 +215,14 @@ async function stopChrome(started) {
 async function confirm() {
   if (bakeOnly) return;
   process.stdout.write(
-    '[33mThis rebuilds the demo catalogue from scratch.[0m\n' +
-      '  Demo collectors, their sets, cards, collected copies and trades are deleted and recreated.\n' +
-      '  Every baked render is stranded and rebuilt, which takes a few minutes.\n' +
-      '  Accounts that are not demo accounts are left alone.\n',
+    only.length
+      ? `[33mThis removes and recreates ${only.join(', ')} from the catalogue.[0m\n` +
+          '  Demo activity is replaced, and only those sets are baked again.\n' +
+          '  Accounts that are not demo accounts are left alone.\n'
+      : '[33mThis creates any missing catalogue sets and re-bakes every render.[0m\n' +
+          '  Demo collections, likes, follows and showcases are replaced.\n' +
+          '  Baking every render takes a few minutes.\n' +
+          '  Accounts that are not demo accounts are left alone.\n',
   );
   if (args.yes) {
     process.stdout.write('Continuing (--yes).\n');
@@ -237,7 +243,11 @@ if (!(await reachable(`${api}/api/v1/health/`))) {
 
 await confirm();
 
-if (!bakeOnly) {
+if (only.length && !bakeOnly) {
+  heading(`Rebuild ${only.join(', ')} from the catalogue`);
+  await manage(['rebuild_catalogue_set', ...only]);
+  await manage(['refresh_demo_activity']);
+} else if (!bakeOnly) {
   heading('Prepare source images');
   await manage(['bootstrap_catalogue', '--prepare-photos']);
 
@@ -250,7 +260,7 @@ heading('Build the shared render surface');
 await run('pnpm', ['--filter', 'mobile', 'surfaces:build']);
 
 heading('Bake card fronts, thumbnails, masks, set backs and packs');
-if (!args['keep-renders']) await rm(output, { recursive: true, force: true });
+if (!args['keep-renders'] && !only.length) await rm(output, { recursive: true, force: true });
 const chrome = await startChrome();
 try {
   await run('node', [
@@ -261,6 +271,7 @@ try {
     chromeEndpoint,
     '--output',
     outputRelative,
+    ...only.flatMap((slug) => ['--set', slug]),
   ]);
 } finally {
   await stopChrome(chrome);

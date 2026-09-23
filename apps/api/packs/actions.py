@@ -54,20 +54,24 @@ def pack_size_for(card_set: CardSet) -> int:
     return card_set.pack_size or PACK_SIZE
 
 
-def _pull_cards(card_set: CardSet) -> list[CardDefinition]:
-    """Pick the set's pack size worth of cards by rarity odds, with replacement."""
+def _pull_cards(card_set: CardSet, rng: random.Random | None = None) -> list[CardDefinition]:
+    """Pick the set's pack size worth of cards by rarity odds, with replacement.
+
+    A seeded generator gives the same pulls every time, which the demo seed uses.
+    """
+    choices, choice = (rng.choices, rng.choice) if rng else (random.choices, random.choice)
     by_rarity: dict[str, list[CardDefinition]] = {r: [] for r in RARITIES}
     for card in card_set.cards.select_related("image"):
         by_rarity[card.rarity].append(card)
 
     pulls = []
     weights = [PULL_ODDS[r] for r in RARITIES]
-    for rarity in random.choices(RARITIES, weights=weights, k=pack_size_for(card_set)):
+    for rarity in choices(RARITIES, weights=weights, k=pack_size_for(card_set)):
         # If the set has no card of that rarity, step down until one exists.
         index = RARITIES.index(rarity)
         while index >= 0 and not by_rarity[RARITIES[index]]:
             index -= 1
-        pulls.append(random.choice(by_rarity[RARITIES[max(index, 0)]]))
+        pulls.append(choice(by_rarity[RARITIES[max(index, 0)]]))
     return pulls
 
 

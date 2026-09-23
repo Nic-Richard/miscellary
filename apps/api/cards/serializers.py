@@ -6,7 +6,7 @@ from uploads.models import Image
 from uploads.serializers import ImageSerializer
 
 from . import packlayers, packtext, templates
-from .identity import set_code_problems, suggest_set_code
+from .identity import SET_TITLE_MAX_LENGTH, set_code_problems, suggest_set_code
 from .markdown import ISSUE_MESSAGES, description_issues
 from .models import CardDefinition, CardSet, Tag
 from .rarity import RARITIES
@@ -365,6 +365,13 @@ class CardSetWriteSerializer(serializers.ModelSerializer):
             "pack_size",
             "set_code",
         ]
+
+    def validate_title(self, value: str) -> str:
+        if len(value) > SET_TITLE_MAX_LENGTH:
+            raise serializers.ValidationError(
+                f"Set titles fit up to {SET_TITLE_MAX_LENGTH} characters."
+            )
+        return value
 
     def validate_set_code(self, value: str) -> str:
         value = value.strip().upper()

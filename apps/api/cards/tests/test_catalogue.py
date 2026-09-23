@@ -3,7 +3,9 @@ from unittest.mock import Mock
 from urllib.parse import unquote
 
 import pytest
+from django.core.management import call_command
 from django.core.management.base import CommandError
+from django.test import override_settings
 
 from accounts.models import User
 from cards import catalogue, catalogue_photos
@@ -15,9 +17,10 @@ from cards.catalogue import (
     stable_id,
 )
 from cards.demo_activity import refresh_demo_activity
+from cards.management.commands import rebuild_catalogue_set
 from cards.models import CardDefinition, CardSet
 from packs.models import OwnedCard
-from social.models import Comment, Follow, Reaction
+from social.models import Comment, Follow, Reaction, SetFollow
 from trades.models import TradeOffer, TradeOfferItem
 from uploads.models import Image
 
@@ -137,6 +140,138 @@ def test_new_photos_must_match_their_reviewed_bytes(monkeypatch):
         prepare_photos(manifest)
 
 
+def layered_manifest(art):
+    manifest = small_manifest()
+    design = manifest["sets"][0]["pack_design"]
+    extra = manifest["sets"][0]["cards"][1][5]
+    design["cutouts"] = [{"spec": design.pop("cutout")}, {"spec": extra}]
+    design["art"] = art
+    return manifest
+
+
+@pytest.mark.django_db
+def test_pack_art_layers_several_cutouts_around_the_lockup(monkeypatch):
+    monkeypatch.setattr(catalogue.storage, "put_object", lambda *args: None)
+    manifest = layered_manifest(
+        [
+            {"cutout": 1, "scale": 180, "opacity": 30, "flip_x": True},
+            {"emblem": True},
+            {"cutout": 0, "scale": 50, "x": 20, "rotate": -8},
+        ]
+    )
+    photos = photos_for(manifest)
+    created, _ = bootstrap_catalogue(manifest, photos)
+    layers = created[0].pack_layers
+    title = manifest["sets"][0]["title"]
+
+    assert [layer["kind"] for layer in layers] == ["image", "emblem", "image"]
+    assert layers[0]["image_id"] == str(stable_id("pack-art", title, 1))
+    assert layers[0]["flip_x"] is True
+    assert layers[0]["opacity"] == 30
+    assert layers[2]["image_id"] == str(stable_id("pack-art", title))
+    assert Image.objects.filter(kind=Image.Kind.PACK).count() == 2
+
+    _, verified = bootstrap_catalogue(manifest, {})
+    assert verified == created
+
+
+@pytest.mark.django_db
+def test_pack_can_hide_its_lockup_and_set_text_off_centre(monkeypatch):
+    monkeypatch.setattr(catalogue.storage, "put_object", lambda *args: None)
+    manifest = layered_manifest([{"cutout": 0, "scale": 300}])
+    design = manifest["sets"][0]["pack_design"]
+    design["emblem_hidden"] = True
+    design["lines"] = [
+        ["BIG", "cream", 26, 30, 0, "alfa", -20, -90],
+        ["small", "ink", 3, 40, 10, "body"],
+    ]
+    created, _ = bootstrap_catalogue(manifest, photos_for(manifest))
+
+    emblem = next(layer for layer in created[0].pack_layers if layer["kind"] == "emblem")
+    assert emblem["hidden"] is True
+    big, small = created[0].pack_text
+    assert (big["size"], big["x"], big["rotate"]) == (26, -20, -90)
+    assert (small["x"], small["rotate"]) == (0, 0)
+
+
+@pytest.mark.django_db
+def test_pack_art_rejects_a_missing_cutout(monkeypatch):
+    monkeypatch.setattr(catalogue.storage, "put_object", lambda *args: None)
+    manifest = layered_manifest([{"cutout": 2}])
+
+    with pytest.raises(CommandError, match="has no cutout 2"):
+        bootstrap_catalogue(manifest, photos_for(manifest))
+
+
+@pytest.mark.django_db
+def test_pack_art_is_held_to_the_editor_layer_limit(monkeypatch):
+    monkeypatch.setattr(catalogue.storage, "put_object", lambda *args: None)
+    manifest = layered_manifest([{"cutout": index % 2} for index in range(6)])
+
+    with pytest.raises(CommandError, match="pack art is invalid"):
+        bootstrap_catalogue(manifest, photos_for(manifest))
+
+
+@pytest.mark.django_db
+def test_set_identity_is_held_to_the_model_choices(monkeypatch):
+    monkeypatch.setattr(catalogue.storage, "put_object", lambda *args: None)
+    manifest = small_manifest()
+    manifest["sets"][0]["pack_colour"] = "not-a-colour"
+
+    with pytest.raises(CommandError, match="pack_colour"):
+        bootstrap_catalogue(manifest, photos_for(manifest))
+
+
+@pytest.mark.django_db
+def test_set_title_is_held_to_what_the_card_back_fits(monkeypatch):
+    monkeypatch.setattr(catalogue.storage, "put_object", lambda *args: None)
+    manifest = small_manifest()
+    manifest["sets"][0]["title"] = "A Set Title Too Long for the Back"
+
+    with pytest.raises(CommandError, match="does not fit the card back"):
+        bootstrap_catalogue(manifest, photos_for(manifest))
+
+
+def rebuild(monkeypatch, manifest, *slugs):
+    monkeypatch.setattr(rebuild_catalogue_set, "load_manifest", lambda: manifest)
+    monkeypatch.setattr(catalogue, "prepare_photos", photos_for)
+    call_command("rebuild_catalogue_set", *slugs)
+
+
+@override_settings(DEBUG=False)
+def test_rebuild_is_refused_outside_development():
+    with pytest.raises(CommandError, match="only runs in development"):
+        call_command("rebuild_catalogue_set", "plants-along-the-trail")
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_rebuild_replaces_a_published_set_from_the_manifest(monkeypatch):
+    monkeypatch.setattr(catalogue.storage, "put_object", lambda *args: None)
+    manifest = small_manifest()
+    created, _ = bootstrap_catalogue(manifest, photos_for(manifest))
+    manifest["sets"][0]["cards"][0][0] = "Renamed Card"
+
+    rebuild(monkeypatch, manifest, created[0].slug)
+    card_set = CardSet.objects.get(slug=created[0].slug)
+    assert card_set.cards.get(position=0).title == "Renamed Card"
+    assert CardSet.objects.count() == 1
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_rebuild_leaves_a_set_real_accounts_own(monkeypatch):
+    monkeypatch.setattr(catalogue.storage, "put_object", lambda *args: None)
+    manifest = small_manifest()
+    created, _ = bootstrap_catalogue(manifest, photos_for(manifest))
+    real_user = User.objects.create_user("real@example.com", "realperson", "password")
+    OwnedCard.objects.create(owner=real_user, card=created[0].cards.first())
+
+    with pytest.raises(CommandError, match="owned by real accounts"):
+        rebuild(monkeypatch, manifest, created[0].slug)
+    assert CardSet.objects.filter(pk=created[0].pk).exists()
+
+
 @pytest.mark.django_db
 def test_bootstrap_can_add_a_set_without_rewriting_existing_rows(monkeypatch):
     monkeypatch.setattr(catalogue.storage, "put_object", lambda *args: None)
@@ -185,3 +320,28 @@ def test_refresh_demo_activity_leaves_real_user_data_alone(monkeypatch):
     assert Comment.objects.filter(pk=comment.pk, author=real_user).exists()
     assert TradeOffer.objects.filter(pk=offer.pk).exists()
     assert TradeOfferItem.objects.filter(offer=offer, owned_card=demo_owned).exists()
+
+
+@pytest.mark.django_db
+def test_demo_activity_looks_like_a_real_catalogue(monkeypatch):
+    monkeypatch.setattr(catalogue.storage, "put_object", lambda *args: None)
+    manifest = load_manifest()
+    bootstrap_catalogue(manifest, photos_for(manifest))
+    refresh_demo_activity()
+    demo = User.objects.filter(is_demo=True)
+
+    for card_set in CardSet.objects.all():
+        assert OwnedCard.objects.filter(owner__in=demo, card__card_set=card_set).exists()
+    for user in demo:
+        assert Follow.objects.filter(following=user).exists()
+
+    rarities = list(OwnedCard.objects.filter(owner__in=demo).values_list("card__rarity", flat=True))
+    assert rarities.count("legendary") < len(rarities) * 0.04
+    assert rarities.count("common") > len(rarities) * 0.45
+
+    likes = [
+        Reaction.objects.filter(card_set=card_set).count() for card_set in CardSet.objects.all()
+    ]
+    assert max(likes) >= 2 * max(min(likes), 1)
+    assert SetFollow.objects.filter(user__in=demo).exists()
+    assert Comment.objects.filter(author__in=demo, parent__isnull=False).exists()

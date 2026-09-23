@@ -1,8 +1,14 @@
-import { useId } from 'react';
+import { useId, useLayoutEffect, useRef } from 'react';
+import { SET_TITLE_MAX_LENGTH } from '@miscellary/shared';
 import type { CSSProperties } from 'react';
 import { markPaths } from './SetMark';
 import { packStyle, resolveMark } from '@/lib/setIdentity';
 import styles from './CardBack.module.css';
+
+// The span inside the inner rule, and the smallest size a title shrinks to,
+// matching the floor card titles shrink to.
+const TITLE_WIDTH = 78;
+const TITLE_MIN_SCALE = 0.72;
 
 export default function CardBack({
   mark,
@@ -22,6 +28,29 @@ export default function CardBack({
   pending?: boolean | undefined;
 }) {
   const id = useId().replace(/:/g, '');
+  const titleRef = useRef<SVGTextElement | null>(null);
+  const printed =
+    title && title.length > SET_TITLE_MAX_LENGTH
+      ? `${title.slice(0, SET_TITLE_MAX_LENGTH - 1)}…`
+      : title;
+
+  useLayoutEffect(() => {
+    const element = titleRef.current;
+    if (!element) return;
+    let live = true;
+    const fit = () => {
+      if (!live) return;
+      element.style.setProperty('--title-scale', '1');
+      const width = element.getComputedTextLength();
+      const scale = width > TITLE_WIDTH ? TITLE_WIDTH / width : 1;
+      element.style.setProperty('--title-scale', String(Math.max(TITLE_MIN_SCALE, scale)));
+    };
+    fit();
+    void document.fonts?.ready.then(fit);
+    return () => {
+      live = false;
+    };
+  }, [printed]);
   const chosen = resolveMark(mark);
   const paths = markPaths(chosen);
   const hasMark = paths.length > 0;
@@ -120,9 +149,9 @@ export default function CardBack({
           </g>
         )}
 
-        {title ? (
-          <text x="50" y="115" className={styles.title}>
-            {title.length > 22 ? `${title.slice(0, 21)}…` : title}
+        {printed ? (
+          <text ref={titleRef} x="50" y="115" className={styles.title}>
+            {printed}
           </text>
         ) : null}
         <text x="50" y="124.5" className={styles.brand}>

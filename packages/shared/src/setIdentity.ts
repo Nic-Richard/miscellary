@@ -54,6 +54,10 @@ export function resolveBinderColour(stored?: string): IdentityColour {
 
 export const SET_CODE_LENGTH = 3;
 
+/* The card back shrinks the set title to fit one line; past this length it would
+   not fit even at its smallest size. */
+export const SET_TITLE_MAX_LENGTH = 30;
+
 export function normaliseSetCode(value: string): string {
   return value
     .toUpperCase()

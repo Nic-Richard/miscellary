@@ -569,12 +569,19 @@ export default function BinderClient({
                   </li>
                 ))}
               </ol>
-              <a className={`${ui.btnOutline} ${ui.btnWide}`} href="#cards">
+              <button
+                type="button"
+                className={`${ui.btnOutline} ${ui.btnWide}`}
+                onClick={() => {
+                  setTab('all');
+                  tabsTop.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }}
+              >
                 View all cards
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M4 12h15m-6-6 6 6-6 6" />
                 </svg>
-              </a>
+              </button>
             </section>
           ) : null}
 

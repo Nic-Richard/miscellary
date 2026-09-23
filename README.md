@@ -78,12 +78,13 @@ Baking drives a headless Chromium over the debugging protocol. The script finds 
 Chrome, Chromium or Edge and starts one; set `CHROME_PATH` if yours lives somewhere unusual, or
 start your own with `--headless=new --remote-debugging-port=9224` and it will be reused.
 
-| Option              | Effect                                                              |
-| ------------------- | ------------------------------------------------------------------- |
-| `--yes`             | Skip the confirmation prompt                                        |
-| `--bake-only`       | Re-bake and re-import renders without touching the database rows    |
-| `--runner local`    | Run the Django commands on the host instead of in the API container |
-| `--api`, `--chrome` | Point at a different API or debugging endpoint                      |
+| Option              | Effect                                                                    |
+| ------------------- | ------------------------------------------------------------------------- |
+| `--yes`             | Skip the confirmation prompt                                              |
+| `--bake-only`       | Re-bake and re-import renders without touching the database rows          |
+| `--set <slug>`      | Rebuild and re-bake only that catalogue set; repeatable, development only |
+| `--runner local`    | Run the Django commands on the host instead of in the API container       |
+| `--api`, `--chrome` | Point at a different API or debugging endpoint                            |
 
 Running `bootstrap_catalogue` on its own creates the database rows but leaves every published card
 unbaked, and an unbaked published card renders as an empty frame. It is available as

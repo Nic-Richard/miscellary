@@ -22,8 +22,9 @@ import json
 import uuid
 from collections import deque
 from pathlib import Path
+from typing import cast
 
-from PIL import Image
+from PIL import Image, ImageFilter
 
 ROOT = Path(__file__).resolve().parents[1]
 CACHE = ROOT / "tmp" / "seed-photos"
@@ -37,7 +38,46 @@ WANTED: dict[str, dict[str, object]] = {
     # away wholesale. The Pentax chrome is the same value as its backdrop.
     "film-cameras": {"spec": "camera:canon-ae1", "tolerance": 62},
     "records-on-my-shelf": {"spec": "45 rpm Single Record.jpg", "tolerance": 26},
+    "pocket-watches-tompion": {
+        "spec": "Pair-case watch MET DP-12675-085.jpg",
+        "tolerance": 30,
+        "shadows": True,
+        "holes": [(0.489, 0.183)],
+    },
+    "a-bunch-of-keys-rijks": {"spec": "Sleutel, BK-NM-9057.jpg", "tolerance": 20, "shadows": True},
+    "a-bunch-of-keys-ring": {
+        "spec": "Roman Key Ring with Inscription MET LC L 2015 73 5 s01.jpg",
+        "tolerance": 20,
+        "shadows": True,
+        "holes": [
+            (0.552, 0.561),
+            (0.567, 0.684),
+            (0.473, 0.72),
+            (0.465, 0.594),
+            (0.49, 0.675),
+            (0.513, 0.632),
+            (0.468, 0.542),
+        ],
+    },
+    "letters-by-machine-valentine": {
+        "spec": "Olivetti-Valentine.jpg",
+        "tolerance": 20,
+        "shadows": True,
+    },
+    # The king stands on a polished surface; the crop drops his reflection.
+    "kings-queens-and-pawns-lewis": {
+        "spec": "NMSLewisChessmen3.jpg",
+        "tolerance": 20,
+        "shadows": True,
+        "crop": (0.0, 0.0, 1.0, 0.855),
+    },
 }
+
+
+# How far a shadow's colour may stray from the backdrop's once lightness is set
+# aside, and how much it may change from one pixel to the next.
+SHADOW_CAST = 10
+SHADOW_STEP = 4
 
 
 def cached(spec: str) -> Path:
@@ -54,40 +94,64 @@ def background(image: Image.Image) -> tuple[int, int, int]:
     return tuple(sorted(band)[len(edge) // 2] for band in zip(*edge, strict=True))  # type: ignore[return-value]
 
 
-def key(image: Image.Image, tolerance: int) -> Image.Image:
-    """Flood the background in from every edge and clear it."""
+def key(
+    image: Image.Image,
+    tolerance: int,
+    shadows: bool = False,
+    holes: list[tuple[float, float]] | None = None,
+) -> Image.Image:
+    """Flood the background in from every edge, and from any hole named, and clear it.
+
+    With shadows, the flood also carries on through pixels that are the backdrop's
+    colour only darker, so long as they change gradually: a cast shadow fades
+    across the backdrop, while the edge of the subject is a sharp step.
+    """
     width, height = image.size
     pixels = image.load()
     back = background(image)
     limit = tolerance * tolerance * 3
+    level = sum(back) / 3
+    cast = [channel - level for channel in back]
 
     def matches(x: int, y: int) -> bool:
         r, g, b = pixels[x, y][:3]
         return (r - back[0]) ** 2 + (g - back[1]) ** 2 + (b - back[2]) ** 2 <= limit
 
+    def shaded(x: int, y: int, fx: int, fy: int) -> bool:
+        r, g, b = pixels[x, y][:3]
+        lightness = (r + g + b) / 3
+        if lightness > level + tolerance:
+            return False
+        if max(abs(v - lightness - c) for v, c in zip((r, g, b), cast, strict=True)) > SHADOW_CAST:
+            return False
+        before = pixels[fx, fy][:3]
+        return max(abs(v - w) for v, w in zip((r, g, b), before, strict=True)) <= SHADOW_STEP
+
     clear = bytearray(width * height)
     queue: deque[tuple[int, int]] = deque()
-    for x in range(width):
-        for y in (0, height - 1):
-            if matches(x, y) and not clear[y * width + x]:
-                clear[y * width + x] = 1
-                queue.append((x, y))
-    for y in range(height):
-        for x in (0, width - 1):
-            if matches(x, y) and not clear[y * width + x]:
-                clear[y * width + x] = 1
-                queue.append((x, y))
+    seeds = [(x, y) for x in range(width) for y in (0, height - 1)]
+    seeds += [(x, y) for y in range(height) for x in (0, width - 1)]
+    seeds += [(int(fx * width), int(fy * height)) for fx, fy in holes or []]
+    for x, y in seeds:
+        if matches(x, y) and not clear[y * width + x]:
+            clear[y * width + x] = 1
+            queue.append((x, y))
 
     while queue:
         x, y = queue.popleft()
         for nx, ny in ((x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)):
-            if 0 <= nx < width and 0 <= ny < height and not clear[ny * width + nx]:
-                if matches(nx, ny):
-                    clear[ny * width + nx] = 1
-                    queue.append((nx, ny))
+            if not (0 <= nx < width and 0 <= ny < height) or clear[ny * width + nx]:
+                continue
+            if matches(nx, ny) or (shadows and shaded(nx, ny, x, y)):
+                clear[ny * width + nx] = 1
+                queue.append((nx, ny))
 
     out = image.convert("RGBA")
     mask = Image.frombytes("L", (width, height), bytes(0 if f else 255 for f in clear))
+    if shadows:
+        # The last pixel of a shadow sits against the subject; pulling the edge in
+        # by one and softening it leaves no grey rim.
+        mask = mask.filter(ImageFilter.MinFilter(3)).filter(ImageFilter.GaussianBlur(0.7))
     out.putalpha(mask)
     return out
 
@@ -103,7 +167,18 @@ def main() -> None:
             continue
         image = Image.open(source).convert("RGB")
         image.thumbnail((900, 900))
-        cut = key(image, int(want["tolerance"]))  # type: ignore[arg-type]
+        cut = key(
+            image,
+            int(want["tolerance"]),  # type: ignore[call-overload]
+            shadows=bool(want.get("shadows")),
+            holes=want.get("holes"),  # type: ignore[arg-type]
+        )
+        if "crop" in want:
+            left, top, right, bottom = cast(tuple[float, float, float, float], want["crop"])
+            width, height = cut.size
+            cut = cut.crop(
+                (int(left * width), int(top * height), int(right * width), int(bottom * height))
+            )
         box = cut.split()[-1].getbbox()
         if box:
             cut = cut.crop(box)
@@ -112,7 +187,7 @@ def main() -> None:
         record[name] = spec
         print(f"{name}: {cut.size} {clear * 100:.0f}% clear from {spec}")
     (OUT / "sources.json").write_text(
-        json.dumps(record, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+        json.dumps(record, indent=2, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n"
     )
 
 

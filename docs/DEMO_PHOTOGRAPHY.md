@@ -51,8 +51,22 @@ the product feels lived in without fabricating real-user activity.
 
 `apps/api/cards/catalogue_manifest.json` records the persistent demo creators, published sets, cards,
 pack designs, tags, and source references. `bootstrap_catalogue --prepare-photos` downloads and checks
-every required image and source record in a temporary cache without database writes. Once bootstrapped,
-images are served from the app's own media storage; clients do not need to contact source providers.
+every image not yet stored, against its source record and pinned hash, without database writes. Once
+stored, a copy is authoritative: later runs check its recorded source instead of downloading it again, so
+a provider re-encoding its file does not block the catalogue. Images are served from the app's own media
+storage; clients do not need to contact source providers.
+
+A set's `pack_design` lists its `cutouts`: transparent images given either as a source (`{"spec": ...}`)
+or as a PNG keyed out by `scripts/make-cutouts.py` (`{"keyed": ...}`). Its `art` list is the layer stack
+from bottom to top. A layer names a cutout by index (`{"cutout": 1}`) or a card photo (`{"pick": "rare"}`),
+with the pack editor's `scale`, `x`, `y`, `rotate`, `flip_x`, `flip_y` and `opacity`. `{"emblem": true}`
+places the set's lockup in the stack; without it the lockup sits on top. The stack is held to the editor's
+own limits, including five layers.
+
+A keyed PNG floods the backdrop in from the photo's edges. Set `shadows` to follow a cast shadow across
+the backdrop as well, `holes` to name points (as fractions of the photo) inside enclosed gaps such as a
+watch bow, and `crop` to keep only part of the photo. Look at each cutout on a strong colour before
+using it: grey silver and steel can match a grey backdrop, and the shadow pass will eat into them.
 
 ```bash
 docker compose exec api uv run python manage.py bootstrap_catalogue --prepare-photos

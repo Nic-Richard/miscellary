@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
-import { CARD_TAG_MAX, cardCode, SET_TAG_MAX } from '@miscellary/shared';
+import { CARD_TAG_MAX, cardCode, SET_TAG_MAX, SET_TITLE_MAX_LENGTH } from '@miscellary/shared';
 import type { Card, CardSetDetail, CardTemplate } from '@miscellary/shared';
 import CardGrid, { CardCell } from '@/components/CardGrid';
 import PackDesigner from '@/components/studio/PackDesigner';
@@ -217,7 +217,7 @@ export default function SetEditorPage() {
                 className={styles.titleInput}
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                maxLength={80}
+                maxLength={SET_TITLE_MAX_LENGTH}
                 aria-label="Set title"
               />
               <textarea
