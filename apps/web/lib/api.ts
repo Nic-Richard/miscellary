@@ -1,6 +1,9 @@
 import type { ApiError } from '@miscellary/shared';
 
-export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
+// Server-side rendering runs inside the container, where the browser's API
+// address does not resolve. API_INTERNAL_URL is unset in the browser bundle.
+export const API_URL =
+  process.env.API_INTERNAL_URL ?? process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
 
 export class ApiRequestError extends Error {
   status: number;
