@@ -72,6 +72,10 @@ using it: grey silver and steel can match a grey backdrop, and the shadow pass w
 docker compose exec api uv run python manage.py bootstrap_catalogue --prepare-photos
 ```
 
+Production bootstraps from the reviewed copies instead of downloading: `--export-photos <dir>` writes
+every pinned photo from the development cache under its hash, and `--photos <dir or s3:// prefix>`
+reads them back. `scripts/bootstrap-production-catalogue.sh` does both.
+
 `bootstrap_catalogue` creates missing manifest entries and verifies existing published entries. It never
 rewrites a published set or card; a mismatch aborts the command. Adding a reviewed set to the manifest and
 running the command creates only that set. `refresh_demo_activity` replaces synthetic collections, likes,

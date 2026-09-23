@@ -3,8 +3,10 @@ import json
 import struct
 import uuid
 import zlib
-from pathlib import Path
+from pathlib import Path, PurePosixPath
+from urllib.parse import urlsplit
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.management.base import CommandError
 from django.db import connection, transaction
@@ -80,7 +82,40 @@ def required_photo_specs(manifest: dict | None = None) -> tuple[str, ...]:
     return tuple(_photo_targets(manifest or load_manifest()))
 
 
-def prepare_photos(manifest: dict | None = None) -> dict[str, bytes]:
+def _staged_photo(location: str, sha256: str) -> bytes | None:
+    """A reviewed photo uploaded ahead of a bootstrap, found by its pinned hash."""
+    if location.startswith("s3://"):
+        parsed = urlsplit(location)
+        if parsed.netloc != settings.AWS_STORAGE_BUCKET_NAME:
+            raise CommandError("Staged photos must be in the configured media bucket.")
+        key = str(PurePosixPath(parsed.path.lstrip("/")) / sha256)
+        try:
+            return storage.client().get_object(Bucket=parsed.netloc, Key=key)["Body"].read()
+        except Exception:
+            return None
+    path = Path(location) / sha256
+    return path.read_bytes() if path.is_file() else None
+
+
+def export_photos(directory: Path, manifest: dict | None = None) -> int:
+    """Write every reviewed catalogue photo under its hash, ready to stage for production."""
+    manifest = manifest or load_manifest()
+    directory.mkdir(parents=True, exist_ok=True)
+    changed = []
+    for spec in _photo_targets(manifest):
+        sha256 = manifest["sources"][spec]["sha256"]
+        data = fetch_photo(spec)
+        if not data or hashlib.sha256(data).hexdigest() != sha256:
+            changed.append(spec)
+            continue
+        (directory / sha256).write_bytes(data)
+    if changed:
+        raise CommandError(f"No reviewed copy of these catalogue photos: {changed}")
+    return len(list(directory.iterdir()))
+
+
+def prepare_photos(manifest: dict | None = None, staged: str | None = None) -> dict[str, bytes]:
+    """New catalogue photos, from Commons in development or from staged reviewed copies."""
     manifest = manifest or load_manifest()
     photos: dict[str, bytes] = {}
     missing: list[str] = []
@@ -90,6 +125,18 @@ def prepare_photos(manifest: dict | None = None) -> dict[str, bytes]:
     for spec, identities in _photo_targets(manifest).items():
         # A stored copy is authoritative once created; sources re-encode their files over time.
         if Image.objects.filter(pk__in=identities).count() == len(set(identities)):
+            continue
+        if staged:
+            record = source_records.get(spec, {})
+            staged_data = _staged_photo(staged, record.get("sha256", ""))
+            if staged_data is None:
+                missing.append(spec)
+                continue
+            if hashlib.sha256(staged_data).hexdigest() != record["sha256"]:
+                changed[spec] = ["sha256"]
+                continue
+            PHOTO_SOURCES[spec] = {field: record[field] for field in SOURCE_FIELDS}
+            photos[spec] = staged_data
             continue
         data = fetch_photo(spec)
         if not data:

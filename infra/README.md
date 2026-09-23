@@ -203,9 +203,14 @@ definition, and starts one Fargate task. Run the database and administrator setu
 ```bash
 bash scripts/run-api-task.sh migrate_locked
 bash scripts/run-api-task.sh bootstrap_admin
-bash scripts/run-api-task.sh bootstrap_catalogue
+bash scripts/bootstrap-production-catalogue.sh
 bash scripts/run-api-task.sh verify_renders
 ```
+
+`bootstrap-production-catalogue.sh` exports the reviewed photos from the local development cache,
+stages them under a private `staging/seed-photos/<sha256>` prefix, and runs `bootstrap_catalogue
+--photos` against that prefix. Production never downloads catalogue photos itself, so an upstream
+re-encode cannot block a deploy.
 
 After confirming the administrator login, replace `initial_admin_password` in the application secret
 with an unused random value while preserving the Django secret and admin identity fields. The

@@ -1,3 +1,4 @@
+import hashlib
 from copy import deepcopy
 from unittest.mock import Mock
 from urllib.parse import unquote
@@ -11,6 +12,7 @@ from accounts.models import User
 from cards import catalogue, catalogue_photos
 from cards.catalogue import (
     bootstrap_catalogue,
+    export_photos,
     load_manifest,
     prepare_photos,
     required_photo_specs,
@@ -138,6 +140,23 @@ def test_new_photos_must_match_their_reviewed_bytes(monkeypatch):
     assert not Image.objects.exists()
     with pytest.raises(CommandError, match="changed from the reviewed sources"):
         prepare_photos(manifest)
+
+
+@pytest.mark.django_db
+def test_staged_photos_stand_in_for_downloads(monkeypatch, tmp_path):
+    manifest = small_manifest()
+    specs = required_photo_specs(manifest)
+    for spec in specs:
+        manifest["sources"][spec]["sha256"] = hashlib.sha256(spec.encode()).hexdigest()
+    monkeypatch.setattr(catalogue, "fetch_photo", lambda spec: spec.encode())
+    assert export_photos(tmp_path, manifest) == len(specs)
+
+    monkeypatch.setattr(catalogue, "fetch_photo", lambda spec: pytest.fail("downloaded"))
+    assert prepare_photos(manifest, staged=str(tmp_path)) == {s: s.encode() for s in specs}
+
+    next(tmp_path.iterdir()).unlink()
+    with pytest.raises(CommandError, match="unavailable"):
+        prepare_photos(manifest, staged=str(tmp_path))
 
 
 def layered_manifest(art):
