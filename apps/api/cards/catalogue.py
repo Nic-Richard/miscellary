@@ -54,22 +54,31 @@ def stable_id(*parts: object) -> uuid.UUID:
     return uuid.uuid5(CATALOGUE_NAMESPACE, ":".join(str(part) for part in parts))
 
 
-def required_photo_specs(manifest: dict | None = None) -> tuple[str, ...]:
-    manifest = manifest or load_manifest()
-    specs: list[str] = []
+def _keyed_sources() -> dict[str, str]:
+    return json.loads(
+        (Path(__file__).parent / "management" / "cutouts" / "sources.json").read_text(
+            encoding="utf-8"
+        )
+    )
+
+
+def _photo_targets(manifest: dict) -> dict[str, list[uuid.UUID]]:
+    targets: dict[str, list[uuid.UUID]] = {}
     for card_set in manifest["sets"]:
-        specs.extend(card[5] for card in card_set["cards"])
+        for position, card in enumerate(card_set["cards"]):
+            identity = stable_id("card-image", card_set["title"], position)
+            targets.setdefault(card[5], []).append(identity)
         design = card_set["pack_design"]
+        pack_art = stable_id("pack-art", card_set["title"])
         if design.get("cutout"):
-            specs.append(design["cutout"])
+            targets.setdefault(design["cutout"], []).append(pack_art)
         if design.get("keyed"):
-            sources = json.loads(
-                (Path(__file__).parent / "management" / "cutouts" / "sources.json").read_text(
-                    encoding="utf-8"
-                )
-            )
-            specs.append(sources[design["keyed"]])
-    return tuple(dict.fromkeys(specs))
+            targets.setdefault(_keyed_sources()[design["keyed"]], []).append(pack_art)
+    return targets
+
+
+def required_photo_specs(manifest: dict | None = None) -> tuple[str, ...]:
+    return tuple(_photo_targets(manifest or load_manifest()))
 
 
 def prepare_photos(manifest: dict | None = None) -> dict[str, bytes]:
@@ -79,7 +88,10 @@ def prepare_photos(manifest: dict | None = None) -> dict[str, bytes]:
     incomplete: dict[str, list[str]] = {}
     changed: dict[str, list[str]] = {}
     source_records = manifest.get("sources", {})
-    for spec in required_photo_specs(manifest):
+    for spec, identities in _photo_targets(manifest).items():
+        # A stored copy is authoritative once created; sources re-encode their files over time.
+        if Image.objects.filter(pk__in=identities).count() == len(set(identities)):
+            continue
         data = fetch_photo(spec)
         if not data:
             missing.append(spec)
@@ -134,6 +146,31 @@ def _source_metadata(spec: str, data: bytes) -> dict[str, str]:
     }
 
 
+def _stored_image(
+    owner: User,
+    identity: uuid.UUID,
+    kind: str,
+    spec: str,
+    sources: dict[str, dict[str, str]],
+    adaptation: str | None = None,
+) -> Image | None:
+    image = Image.objects.filter(pk=identity).first()
+    if image is None:
+        return None
+    _verify(image, {"owner_id": owner.id, "kind": kind, "ready": True}, f"image {identity}")
+    expected = {field: sources[spec][field] for field in SOURCE_FIELDS}
+    if adaptation:
+        expected["adaptation"] = adaptation
+    expected["catalogue_source"] = spec
+    stored = image.source_metadata or {}
+    changed = [field for field, value in expected.items() if stored.get(field) != value]
+    if changed:
+        raise CommandError(
+            f"image {identity} differs from the catalogue manifest: {', '.join(changed)}"
+        )
+    return image
+
+
 def _create_image(
     owner: User,
     identity: uuid.UUID,
@@ -146,23 +183,32 @@ def _create_image(
     conflict = Image.objects.filter(key=key).exclude(pk=identity).first()
     if conflict:
         raise CommandError(f"Catalogue image key is already used by {conflict.id}: {key}")
-    image = Image.objects.filter(pk=identity).first()
-    expected = {
-        "owner_id": owner.id,
-        "kind": kind,
-        "key": key,
-        "content_type": content_type,
-        "size": len(data),
-        "width": width,
-        "height": height,
-        "ready": True,
-        "source_metadata": source,
-    }
-    if image:
-        _verify(image, expected, f"image {identity}")
-        return image
     storage.put_object(key, data, content_type)
-    return Image.objects.create(id=identity, **expected)
+    return Image.objects.create(
+        id=identity,
+        owner_id=owner.id,
+        kind=kind,
+        key=key,
+        content_type=content_type,
+        size=len(data),
+        width=width,
+        height=height,
+        ready=True,
+        source_metadata=source,
+    )
+
+
+def _catalogue_image(
+    owner: User,
+    identity: uuid.UUID,
+    kind: str,
+    spec: str,
+    photos: dict[str, bytes],
+    sources: dict[str, dict[str, str]],
+) -> Image:
+    return _stored_image(owner, identity, kind, spec, sources) or _create_image(
+        owner, identity, kind, photos[spec], _source_metadata(spec, photos[spec])
+    )
 
 
 def _verify(instance, expected: dict, label: str) -> None:
@@ -282,47 +328,44 @@ def _card_values(card_set: dict, card: list, position: int, image: Image) -> dic
     }
 
 
-def _pack_art(card_set: CardSet, definition: dict, photos: dict[str, bytes]) -> Image | None:
+KEYED_ADAPTATION = "Background keyed out for pack artwork."
+
+
+def _pack_art(
+    card_set: CardSet,
+    definition: dict,
+    photos: dict[str, bytes],
+    sources: dict[str, dict[str, str]],
+) -> Image | None:
     design = definition["pack_design"]
+    identity = stable_id("pack-art", definition["title"])
     if design.get("cutout"):
-        spec = design["cutout"]
-        return _create_image(
-            card_set.creator,
-            stable_id("pack-art", definition["title"]),
-            Image.Kind.PACK,
-            photos[spec],
-            _source_metadata(spec, photos[spec]),
+        return _catalogue_image(
+            card_set.creator, identity, Image.Kind.PACK, design["cutout"], photos, sources
         )
     if not design.get("keyed"):
         return None
     name = design["keyed"]
-    path = Path(__file__).parent / "management" / "cutouts" / f"{name}.png"
-    sources = json.loads(
-        (Path(__file__).parent / "management" / "cutouts" / "sources.json").read_text(
-            encoding="utf-8"
-        )
+    spec = _keyed_sources()[name]
+    stored = _stored_image(
+        card_set.creator, identity, Image.Kind.PACK, spec, sources, KEYED_ADAPTATION
     )
-    spec = sources[name]
-    data = path.read_bytes()
-    source = {
-        **_source_metadata(spec, data),
-        "adaptation": "Background keyed out for pack artwork.",
-    }
-    return _create_image(
-        card_set.creator,
-        stable_id("pack-art", definition["title"]),
-        Image.Kind.PACK,
-        data,
-        source,
-    )
+    if stored:
+        return stored
+    data = (Path(__file__).parent / "management" / "cutouts" / f"{name}.png").read_bytes()
+    source = {**_source_metadata(spec, data), "adaptation": KEYED_ADAPTATION}
+    return _create_image(card_set.creator, identity, Image.Kind.PACK, data, source)
 
 
 def _pack_values(
-    card_set: CardSet, definition: dict, photos: dict[str, bytes]
+    card_set: CardSet,
+    definition: dict,
+    photos: dict[str, bytes],
+    sources: dict[str, dict[str, str]],
 ) -> tuple[list, list]:
     design = definition["pack_design"]
     cards = list(card_set.cards.select_related("image").order_by("position"))
-    cutout = _pack_art(card_set, definition, photos)
+    cutout = _pack_art(card_set, definition, photos, sources)
 
     def pick(which: str):
         if which in {"legendary", "epic", "rare"}:
@@ -406,7 +449,10 @@ def _set_values(definition: dict, creator: User) -> dict:
 
 
 def _bootstrap_set(
-    definition: dict, creator: User, photos: dict[str, bytes]
+    definition: dict,
+    creator: User,
+    photos: dict[str, bytes],
+    sources: dict[str, dict[str, str]],
 ) -> tuple[CardSet, bool]:
     identity = stable_id("set", definition["title"])
     expected = _set_values(definition, creator)
@@ -447,13 +493,8 @@ def _bootstrap_set(
                 raise CommandError(
                     f"{definition['title']} card {position + 1} has a different stable identity."
                 )
-            spec = card_definition[5]
-            image = _create_image(
-                creator,
-                image_id,
-                Image.Kind.CARD,
-                photos[spec],
-                _source_metadata(spec, photos[spec]),
+            image = _catalogue_image(
+                creator, image_id, Image.Kind.CARD, card_definition[5], photos, sources
             )
             _verify(
                 card,
@@ -463,7 +504,7 @@ def _bootstrap_set(
                 },
                 f"{definition['title']} card {position + 1}",
             )
-        layers, text = _pack_values(card_set, definition, photos)
+        layers, text = _pack_values(card_set, definition, photos, sources)
         _verify(card_set, {"pack_layers": layers, "pack_text": text}, definition["title"])
         apply_tags(card_set, definition["tags"], SET_TAG_MAX)
         return card_set, False
@@ -471,13 +512,13 @@ def _bootstrap_set(
     with transaction.atomic():
         card_set = CardSet.objects.create(id=identity, **expected)
         for position, card_definition in enumerate(definition["cards"]):
-            spec = card_definition[5]
-            image = _create_image(
+            image = _catalogue_image(
                 creator,
                 stable_id("card-image", definition["title"], position),
                 Image.Kind.CARD,
-                photos[spec],
-                _source_metadata(spec, photos[spec]),
+                card_definition[5],
+                photos,
+                sources,
             )
             CardDefinition.objects.create(
                 id=stable_id("card", definition["title"], position),
@@ -486,7 +527,7 @@ def _bootstrap_set(
             )
         card_set.cover = card_set.cards.get(position=0).image
         card_set.save(update_fields=["cover"])
-        layers, text = _pack_values(card_set, definition, photos)
+        layers, text = _pack_values(card_set, definition, photos, sources)
         card_set.pack_layers = layers
         card_set.pack_text = text
         card_set.save(update_fields=["pack_layers", "pack_text"])
@@ -504,7 +545,8 @@ def bootstrap_catalogue(
     manifest = manifest or load_manifest()
     if manifest.get("version") != 1:
         raise CommandError("Unsupported catalogue manifest version.")
-    photos = photos or prepare_photos(manifest)
+    if photos is None:
+        photos = prepare_photos(manifest)
     created: list[CardSet] = []
     verified: list[CardSet] = []
     with transaction.atomic():
@@ -514,7 +556,7 @@ def bootstrap_catalogue(
         }
         for definition in manifest["sets"]:
             card_set, was_created = _bootstrap_set(
-                definition, creators[definition["creator"]], photos
+                definition, creators[definition["creator"]], photos, manifest["sources"]
             )
             (created if was_created else verified).append(card_set)
     return created, verified

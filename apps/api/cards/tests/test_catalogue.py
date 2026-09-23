@@ -1,4 +1,5 @@
 from copy import deepcopy
+from unittest.mock import Mock
 from urllib.parse import unquote
 
 import pytest
@@ -6,27 +7,31 @@ from django.core.management.base import CommandError
 
 from accounts.models import User
 from cards import catalogue, catalogue_photos
-from cards.catalogue import bootstrap_catalogue, load_manifest, required_photo_specs, stable_id
+from cards.catalogue import (
+    bootstrap_catalogue,
+    load_manifest,
+    prepare_photos,
+    required_photo_specs,
+    stable_id,
+)
 from cards.demo_activity import refresh_demo_activity
 from cards.models import CardDefinition, CardSet
 from packs.models import OwnedCard
 from social.models import Comment, Follow, Reaction
 from trades.models import TradeOffer, TradeOfferItem
+from uploads.models import Image
 
-SOURCE = {
-    "source_url": "https://example.com/source",
-    "author": "Example photographer",
-    "license": "CC BY 4.0",
-    "license_url": "https://creativecommons.org/licenses/by/4.0/",
-    "adaptation": "Cropped by the card renderer from the downloaded source.",
-}
 PNG = b"\x89PNG\r\n\x1a\n" + b"\x00" * 8 + (800).to_bytes(4, "big") + (1000).to_bytes(4, "big")
+
+
+def reviewed(manifest, spec):
+    return {field: manifest["sources"][spec][field] for field in catalogue.SOURCE_FIELDS}
 
 
 def photos_for(manifest):
     photos = {}
     for spec in required_photo_specs(manifest):
-        catalogue.PHOTO_SOURCES[spec] = SOURCE
+        catalogue.PHOTO_SOURCES[spec] = reviewed(manifest, spec)
         photos[spec] = PNG
     return photos
 
@@ -89,6 +94,47 @@ def test_bootstrap_aborts_on_published_mismatch(monkeypatch):
 
     with pytest.raises(CommandError, match="differs from the catalogue manifest"):
         bootstrap_catalogue(manifest, photos)
+
+
+@pytest.mark.django_db
+def test_stored_images_are_verified_without_downloading_them(monkeypatch):
+    monkeypatch.setattr(catalogue.storage, "put_object", lambda *args: None)
+    manifest = small_manifest(2)
+    bootstrap_catalogue(manifest, photos_for(manifest))
+    fetch = Mock(return_value=b"re-encoded upstream")
+    monkeypatch.setattr(catalogue, "fetch_photo", fetch)
+
+    assert prepare_photos(manifest) == {}
+    created, verified = bootstrap_catalogue(manifest, {})
+    fetch.assert_not_called()
+    assert not created
+    assert len(verified) == 2
+
+
+@pytest.mark.django_db
+def test_stored_image_attribution_must_match_the_manifest(monkeypatch):
+    monkeypatch.setattr(catalogue.storage, "put_object", lambda *args: None)
+    manifest = small_manifest()
+    bootstrap_catalogue(manifest, photos_for(manifest))
+    spec = manifest["sets"][0]["cards"][0][5]
+    manifest["sources"][spec]["author"] = "Someone else"
+
+    with pytest.raises(CommandError, match="differs from the catalogue manifest: author"):
+        bootstrap_catalogue(manifest, {})
+
+
+@pytest.mark.django_db
+def test_new_photos_must_match_their_reviewed_bytes(monkeypatch):
+    manifest = small_manifest()
+
+    def fetch(spec):
+        catalogue.PHOTO_SOURCES[spec] = reviewed(manifest, spec)
+        return b"re-encoded upstream"
+
+    monkeypatch.setattr(catalogue, "fetch_photo", fetch)
+    assert not Image.objects.exists()
+    with pytest.raises(CommandError, match="changed from the reviewed sources"):
+        prepare_photos(manifest)
 
 
 @pytest.mark.django_db
