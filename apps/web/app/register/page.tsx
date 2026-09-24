@@ -28,7 +28,7 @@ function RegisterForm() {
     setFields({});
     try {
       await register({ email, username, password });
-      router.replace(returnPath(search));
+      router.replace(returnPath(search, '/packs'));
     } catch (err) {
       if (err instanceof ApiRequestError) {
         setError(err.message);

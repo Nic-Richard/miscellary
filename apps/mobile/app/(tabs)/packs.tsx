@@ -1,5 +1,5 @@
 import { cardCode, personName } from '@miscellary/shared';
-import type { PackEntry, PackOpening } from '@miscellary/shared';
+import type { CardSetSummary, PackEntry, PackOpening } from '@miscellary/shared';
 import Feather from '@expo/vector-icons/Feather';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
@@ -19,9 +19,10 @@ import FilterField from '@/components/FilterField';
 import LoginGate from '@/components/LoginGate';
 import PackPreview from '@/components/PackPreview';
 import PackReveal from '@/components/PackReveal';
+import StartShelf from '@/components/StartShelf';
 import TagChips from '@/components/TagChips';
 import { Button, ErrorText, Loading, Muted } from '@/components/ui';
-import { followSet, getMyPacks, openPack } from '@/lib/endpoints';
+import { followSet, getMyPacks, listPublicSets, openPack } from '@/lib/endpoints';
 import { colors, fonts } from '@/lib/theme';
 
 function countdown(until: string, now: number): string {
@@ -260,6 +261,7 @@ function Packs() {
   const [busy, setBusy] = useState(false);
   const [now, setNow] = useState(() => Date.now());
   const [filter, setFilter] = useState('');
+  const [starters, setStarters] = useState<CardSetSummary[]>([]);
 
   const load = useCallback(async () => {
     try {
@@ -277,6 +279,14 @@ function Packs() {
       void load();
     }, [load]),
   );
+
+  const empty = entries?.length === 0;
+  useEffect(() => {
+    if (!empty) return;
+    listPublicSets('popular')
+      .then((page) => setStarters(page.results.slice(0, 8)))
+      .catch(() => setStarters([]));
+  }, [empty]);
 
   useEffect(() => {
     if (!entries?.some((e) => !e.free_available)) return;
@@ -367,7 +377,9 @@ function Packs() {
         </View>
       ) : null}
 
-      {entries.length === 0 ? (
+      {entries.length === 0 && starters.length > 0 ? (
+        <StartShelf sets={starters} onDone={() => void load()} />
+      ) : entries.length === 0 ? (
         <View style={styles.empty}>
           <Feather name="package" size={30} color={colors.cloth} />
           <Text style={styles.emptyTitle}>No sets followed yet</Text>

@@ -24,7 +24,7 @@ export default function RegisterScreen() {
     setFields({});
     try {
       await register({ email, username, password });
-      router.replace(next ?? '/(tabs)');
+      router.replace(next ?? '/(tabs)/packs');
     } catch (e) {
       if (e instanceof ApiRequestError) {
         setError(e.message);

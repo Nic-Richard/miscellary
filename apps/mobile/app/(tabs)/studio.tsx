@@ -47,7 +47,12 @@ function Studio() {
       />
       <Button title="Create draft" onPress={() => void create()} disabled={!title.trim()} />
       <ErrorText>{error}</ErrorText>
-      {sets.length === 0 ? <Muted>No sets yet.</Muted> : null}
+      {sets.length === 0 ? (
+        <Muted>
+          Name a set above to start a draft. Add cards, design its pack, and publish it when every
+          card is ready. Drafts stay private until then.
+        </Muted>
+      ) : null}
       {sets.map((s) => (
         <Link key={s.id} href={{ pathname: '/studio/[id]', params: { id: s.id } }} asChild>
           <Pressable style={styles.row}>

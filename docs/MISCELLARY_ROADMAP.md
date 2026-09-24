@@ -485,11 +485,12 @@ Done:
   a deleted user; the collection, drafts, follows, likes, notifications and open trades go, and the
   username and email are released.
 
+- Signing up lands on Packs, where a collector who follows nothing picks sets from a shelf of
+  popular packs and follows them in place, on web and mobile.
+- Account emails are sent as HTML alongside plain text.
+
 Remaining:
 
-- First-run: land new collectors somewhere that shows them how packs, following and verification
-  work, rather than on the homepage.
-- HTML versions of the account emails.
 - Production email delivery confirmed from the live site.
 - Expired-session and mobile token behaviour checked on a real device.
 

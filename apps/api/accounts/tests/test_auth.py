@@ -27,6 +27,8 @@ def test_register_creates_user_profile_and_session(api_client):
     assert response.cookies[settings.REFRESH_COOKIE_NAME]["httponly"]
     assert User.objects.get(email="nic@example.com").profile.display_name == "nic_01"
     assert len(mail.outbox) == 1 and "verify-email?token=" in mail.outbox[0].body
+    html, _ = mail.outbox[0].alternatives[0]
+    assert "verify-email?token=" in str(html) and "@nic_01" in str(html)
 
 
 def test_register_rejects_duplicates_and_bad_usernames(api_client):

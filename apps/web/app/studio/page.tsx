@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { SET_TITLE_MAX_LENGTH } from '@miscellary/shared';
 import type { CardSetSummary } from '@miscellary/shared';
+import { Empty } from '@/components/Sheet';
 import SetTile from '@/components/SetTile';
 import tileStyles from '@/components/SetTile.module.css';
 import { useAuth } from '@/lib/auth';
@@ -70,7 +71,12 @@ export default function StudioPage() {
       </form>
       {error ? <p className={ui.error}>{error}</p> : null}
 
-      {sets?.length === 0 ? <p className={ui.muted}>No sets yet.</p> : null}
+      {sets?.length === 0 ? (
+        <Empty icon="binder">
+          Name a set above to start a draft. Add cards, design its pack, and publish it when every
+          card is ready. Drafts stay private until then.
+        </Empty>
+      ) : null}
       <ul className={tileStyles.grid}>
         {sets?.map((s) => (
           <li key={s.id} className={styles.item}>

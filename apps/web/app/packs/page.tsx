@@ -12,6 +12,7 @@ import DemoBadge from '@/components/DemoBadge';
 import PackReveal from '@/components/PackReveal';
 import PackStage from '@/components/PackStage';
 import SearchField from '@/components/SearchField';
+import StartShelf from '@/components/StartShelf';
 import Sheet, { Empty } from '@/components/Sheet';
 import TagList from '@/components/TagList';
 import { useAuth } from '@/lib/auth';
@@ -25,6 +26,7 @@ import wide from '@/components/pageWide.module.css';
 import styles from './page.module.css';
 
 const SUGGESTIONS = 3;
+const SHELF_SIZE = 8;
 
 const STAT_ICONS = {
   opened: 'M6 3h12l-1 18H7ZM8 8h8M9 17h6',
@@ -427,6 +429,10 @@ export default function PacksPage() {
                 None of the sets you follow match &ldquo;{filter}&rdquo;.
               </Empty>
             </Sheet>
+          ) : entries.length === 0 && suggested.length ? (
+            <Sheet title="Choose your first sets">
+              <StartShelf sets={suggested.slice(0, SHELF_SIZE)} onDone={reload} />
+            </Sheet>
           ) : entries.length === 0 ? (
             <Sheet>
               <Empty
@@ -509,7 +515,7 @@ export default function PacksPage() {
             </section>
           ) : null}
 
-          {suggested.length ? (
+          {suggested.length > 0 && (entries?.length ?? 0) > 0 ? (
             <section className={`${ui.panel} ${wide.railPanel}`}>
               <h2 className={ui.panelTitle}>Worth following</h2>
               <ul className={styles.suggestList}>

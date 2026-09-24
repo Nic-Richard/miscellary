@@ -48,8 +48,11 @@ export function registerHref(path: string, action?: string): string {
   return authHref('/register', path, action);
 }
 
-export function returnPath(search: { get(name: string): string | null }): string {
-  return internalPath(search.get(RETURN_PARAM)) ?? DEFAULT_RETURN;
+export function returnPath(
+  search: { get(name: string): string | null },
+  fallback: string = DEFAULT_RETURN,
+): string {
+  return internalPath(search.get(RETURN_PARAM)) ?? fallback;
 }
 
 export function swapAuthHref(to: '/login' | '/register', search: { toString(): string }): string {
