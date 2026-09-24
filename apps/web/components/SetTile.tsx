@@ -18,13 +18,17 @@ export default function SetTile({
     <Link href={href ?? `/sets/${set.slug}`} className={styles.tile}>
       <span className={styles.stage}>
         <PackStage set={set} />
+        {set.creator.is_demo ? (
+          <span className={styles.demo}>
+            <DemoBadge compact />
+          </span>
+        ) : null}
       </span>
       <span className={styles.label}>
         <strong>{set.title}</strong>
         <small>
           {meta ?? `${set.card_count} cards · ♥ ${set.like_count} · ${personHandle(set.creator)}`}
         </small>
-        {set.creator.is_demo ? <DemoBadge compact /> : null}
       </span>
     </Link>
   );

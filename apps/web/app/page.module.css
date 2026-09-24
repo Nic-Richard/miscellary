@@ -81,20 +81,6 @@
   z-index: 4;
 }
 
-.sectionHead {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 6px 18px;
-  margin-bottom: 18px;
-}
-.h2 {
-  margin: 0;
-  font: 400 clamp(24px, 2.4vw, 30px) / 1 var(--display);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
 .packRow {
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 22px 16px;
@@ -113,23 +99,6 @@
   .packRow {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-}
-.sectionNote {
-  max-width: 52ch;
-  margin: 6px 0 0;
-  color: var(--muted);
-  font-size: 16px;
-  line-height: 1.5;
-}
-.more {
-  flex: none;
-  color: var(--muted);
-  font-family: var(--body);
-  font-size: 15px;
-  font-weight: 700;
-}
-.more:hover {
-  color: var(--accent);
 }
 
 .binderBand {

@@ -13,7 +13,6 @@ import CardPreview from '@/components/CardPreview';
 import ProfileBinder from '@/components/ProfileBinder';
 import { OwnedCardInspector } from '@/components/CardInspector';
 import ui from '@/components/ui.module.css';
-import wide from '@/components/pageWide.module.css';
 import { updateProfile } from '@/lib/account';
 import { useAuth } from '@/lib/auth';
 import { useRequireAccount } from '@/lib/requireAccount';
@@ -126,11 +125,6 @@ export default function AccountPage() {
   if (!user) return <p className={styles.muted}>Taking you to create an account…</p>;
 
   const byId = new Map([...pinned, ...cards.map((c) => [c.id, c] as const)]);
-  const back = (
-    <Link className={ui.btnOutline} href={`/users/${user.profile.username}`}>
-      ← Back to profile
-    </Link>
-  );
 
   const pickNeedle = pickFilter.trim().toLowerCase();
   const choosable = cards
@@ -143,8 +137,16 @@ export default function AccountPage() {
     );
 
   return (
-    <section className={wide.column}>
-      <PageHeader title="Account" description="Your profile, your binder and how you sign in" />
+    <section className={`${styles.page} ${section === 'binder' ? styles.pageBinder : ''}`}>
+      <PageHeader
+        title="Account"
+        description="Your profile, your binder and how you sign in"
+        actions={
+          <Link className={ui.link} href={`/users/${user.profile.username}`}>
+            View your profile
+          </Link>
+        }
+      />
       {error ? <p className={styles.error}>{error}</p> : null}
 
       <div className={styles.tabs}>
@@ -211,7 +213,6 @@ export default function AccountPage() {
             <button className={ui.btnPrimary} type="submit">
               Save profile
             </button>
-            {back}
             {saved ? <span className={styles.saved}>Saved</span> : null}
           </div>
         </form>
@@ -305,16 +306,10 @@ export default function AccountPage() {
               ) : null}
             </div>
           ) : null}
-          <div className={styles.row}>{back}</div>
         </>
       ) : null}
 
-      {section === 'account' ? (
-        <>
-          <AccountSecurity user={user} onChanged={refreshUser} />
-          <div className={styles.row}>{back}</div>
-        </>
-      ) : null}
+      {section === 'account' ? <AccountSecurity user={user} onChanged={refreshUser} /> : null}
 
       {inspect ? <OwnedCardInspector owned={inspect} onClose={() => setInspect(null)} /> : null}
     </section>

@@ -199,20 +199,8 @@
   font-size: 15px;
 }
 .openBtn {
+  composes: btnOutline btnSmall from './ui.module.css';
   flex: none;
-  padding: 9px 18px;
-  background: var(--accent);
-  border: 0;
-  border-radius: var(--radius-pill, 999px);
-  color: var(--accent-text);
-  font-family: var(--display);
-  font-size: 14px;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  cursor: pointer;
-}
-.openBtn:hover {
-  background: var(--accent-deep);
 }
 .shutBtn {
   margin-left: 12px;

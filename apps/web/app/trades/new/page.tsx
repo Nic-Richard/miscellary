@@ -152,7 +152,7 @@ function Side({
                           {stack.copies.length > 1 ? picked : '✓'}
                         </span>
                       ) : null}
-                      {free === 0 ? <span className={styles.held}>held</span> : null}
+                      {free === 0 ? <span className={styles.held}>In a trade</span> : null}
                     </button>
                   </li>
                 );

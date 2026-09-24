@@ -16,6 +16,7 @@
 }
 
 .stage {
+  position: relative;
   border-radius: 10px;
   overflow: hidden;
   box-shadow:
@@ -48,6 +49,9 @@
   color: #6f6355;
   font-size: 15px;
 }
-.label :global(span) {
-  align-self: center;
+.demo {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: flex;
 }

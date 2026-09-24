@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { cardCode, cardPath, personName, setPath } from '@miscellary/shared';
+import { cardCode, cardPath, personName, RARITY_LABELS, setPath } from '@miscellary/shared';
 import type { Card, CardSetDetail, OwnedCard } from '@miscellary/shared';
 import PersonLink from '@/components/PersonLink';
 import Binder from '@/components/binder/Binder';
@@ -11,6 +11,8 @@ import type { BinderPage as BinderPageData } from '@/components/binder/Binder';
 import CardGrid, { CardCell } from '@/components/CardGrid';
 import FolderTabs from '@/components/binder/FolderTabs';
 import CardInspector from '@/components/CardInspector';
+import MoreMenu from '@/components/MoreMenu';
+import ReportDialog from '@/components/ReportDialog';
 import ShareButton from '@/components/ShareButton';
 import CardPreview from '@/components/CardPreview';
 import Comments from '@/components/Comments';
@@ -50,16 +52,38 @@ function StatIcon({ name }: { name: keyof typeof STAT_ICONS }) {
   );
 }
 
+const PERSON =
+  'M10 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm-6 9c0-3.6 2.7-5.8 6-5.8 1.2 0 2.3.3 3.2.8';
+
+// Following shows a tick; hovering it offers the undo, as an x.
+function FollowGlyph({ following }: { following: boolean }) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d={PERSON} />
+      {following ? (
+        <>
+          <path className={styles.followTick} d="m15.5 17.5 2.2 2.2 4.3-4.7" />
+          <path className={styles.followCross} d="m16 15 5 5m0-5-5 5" />
+        </>
+      ) : (
+        <path d="M18.5 14v6m-3-3h6" />
+      )}
+    </svg>
+  );
+}
+
 function SetCard({
   card,
   detail,
   published,
   onInspect,
+  onLike,
 }: {
   card: Card;
   detail: CardSetDetail;
   published: boolean;
   onInspect: (card: Card) => void;
+  onLike: (card: Card, like: boolean) => Promise<{ liked: boolean; like_count: number }>;
 }) {
   return (
     <div className={styles.cardCell}>
@@ -92,7 +116,7 @@ function SetCard({
             liked={detail.liked_card_ids.includes(card.id)}
             count={card.like_count}
             label={card.title}
-            onToggle={(like) => likeCard(card.id, like)}
+            onToggle={(like) => onLike(card, like)}
             action={LIKE_CARD_ACTION}
             carries={{ card: card.id }}
           />
@@ -131,6 +155,7 @@ export default function BinderClient({
   const [spread, setSpread] = useState(0);
   const [owned, setOwned] = useState<OwnedCard[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [reportingCard, setReportingCard] = useState<Card | null>(null);
   const [inspect, setInspect] = useState<Card | null>(
     () => initialSet?.cards.find((card) => card.position + 1 === initialCard) ?? null,
   );
@@ -181,6 +206,25 @@ export default function BinderClient({
       .catch(() => setOwned([]));
   }, [tab, user, owned, slug]);
 
+  // One path for liking a card, so the binder, the grid and the inspector agree on the count.
+  const likeSetCard = useCallback(async (card: Card, like: boolean) => {
+    const result = await likeCard(card.id, like);
+    setSet((current) =>
+      current
+        ? {
+            ...current,
+            liked_card_ids: result.liked
+              ? [...current.liked_card_ids.filter((id) => id !== card.id), card.id]
+              : current.liked_card_ids.filter((id) => id !== card.id),
+            cards: current.cards.map((entry) =>
+              entry.id === card.id ? { ...entry, like_count: result.like_count } : entry,
+            ),
+          }
+        : current,
+    );
+    return result;
+  }, []);
+
   const binderPages = useMemo<BinderPageData[]>(() => {
     if (!set) return [];
     const published = set.status === 'published';
@@ -195,11 +239,12 @@ export default function BinderClient({
             detail={set}
             published={published}
             onInspect={setInspect}
+            onLike={likeSetCard}
           />
         ) : null;
       }),
     }));
-  }, [set]);
+  }, [set, likeSetCard]);
 
   async function onRecycle(copy: OwnedCard) {
     setRecycling(copy.id);
@@ -282,7 +327,15 @@ export default function BinderClient({
   const detail = set;
 
   function renderCard(card: Card) {
-    return <SetCard card={card} detail={detail} published={isPublished} onInspect={setInspect} />;
+    return (
+      <SetCard
+        card={card}
+        detail={detail}
+        published={isPublished}
+        onInspect={setInspect}
+        onLike={likeSetCard}
+      />
+    );
   }
 
   function navigateSpread(direction: -1 | 1) {
@@ -332,15 +385,26 @@ export default function BinderClient({
             {following !== null ? (
               <button
                 type="button"
-                className={`${ui.action} ${following ? ui.actionOn : ''}`}
+                className={`${styles.creatorFollow} ${following ? styles.creatorFollowing : ''}`}
                 disabled={followBusy}
+                aria-label={`${following ? 'Unfollow' : 'Follow'} ${creatorName}`}
+                title={
+                  following
+                    ? `Following ${creatorName}. Click to unfollow.`
+                    : `Follow ${creatorName}`
+                }
                 onClick={() => void toggleFollow()}
               >
-                {following ? 'Following' : 'Follow creator'}
+                <FollowGlyph following={following} />
               </button>
-            ) : !user && isPublished ? (
-              <Link href={loginHref(pathname, FOLLOW_ACTION)} className={ui.action}>
-                Follow creator
+            ) : !user && isPublished && !set.creator.deleted ? (
+              <Link
+                href={loginHref(pathname, FOLLOW_ACTION)}
+                className={styles.creatorFollow}
+                aria-label={`Follow ${creatorName}`}
+                title={`Follow ${creatorName}`}
+              >
+                <FollowGlyph following={false} />
               </Link>
             ) : null}
           </div>
@@ -578,7 +642,7 @@ export default function BinderClient({
                     <img src={card.image.url} alt="" draggable={false} />
                     <span>
                       <strong>{card.title}</strong>
-                      <small data-rarity={card.rarity}>{card.rarity}</small>
+                      <small data-rarity={card.rarity}>{RARITY_LABELS[card.rarity]}</small>
                     </span>
                     <b>
                       {card.like_count} {card.like_count === 1 ? 'like' : 'likes'}
@@ -601,21 +665,6 @@ export default function BinderClient({
               </button>
             </section>
           ) : null}
-
-          <section className={ui.panel}>
-            <h2 className={ui.panelTitle}>Collector</h2>
-            <p className={styles.railText}>
-              {set.creator.deleted
-                ? 'The account that made this set has been closed. The set stays so its collectors keep their cards.'
-                : `${creatorName}${set.creator.display_name ? ` (@${set.creator.username})` : ''} keeps this set.`}{' '}
-              Every card here is a display record; open a pack to collect your own copies.
-            </p>
-            {set.creator.deleted ? null : (
-              <Link href={`/users/${set.creator.username}`} className={styles.railLink}>
-                View creator profile →
-              </Link>
-            )}
-          </section>
         </aside>
       </div>
 
@@ -629,10 +678,40 @@ export default function BinderClient({
           creator={set.creator}
           actions={
             isPublished ? (
-              <ShareButton path={cardPath(set.slug, inspect.position)} title={inspect.title} />
+              <>
+                <LikeButton
+                  chip
+                  liked={set.liked_card_ids.includes(inspect.id)}
+                  count={set.cards.find((entry) => entry.id === inspect.id)?.like_count ?? 0}
+                  label={inspect.title}
+                  onToggle={(like) => likeSetCard(inspect, like)}
+                  action={LIKE_CARD_ACTION}
+                  carries={{ card: inspect.id }}
+                />
+                <ShareButton path={cardPath(set.slug, inspect.position)} title={inspect.title} />
+                {user && user.profile.username !== set.creator.username ? (
+                  <MoreMenu
+                    label={`More for ${inspect.title}`}
+                    items={[
+                      {
+                        label: 'Report this card',
+                        onSelect: () => setReportingCard(inspect),
+                        danger: true,
+                      },
+                    ]}
+                  />
+                ) : null}
+              </>
             ) : undefined
           }
           onClose={() => setInspect(null)}
+        />
+      ) : null}
+      {reportingCard ? (
+        <ReportDialog
+          target={{ card_id: reportingCard.id }}
+          subject={`“${reportingCard.title}”`}
+          onClose={() => setReportingCard(null)}
         />
       ) : null}
     </section>

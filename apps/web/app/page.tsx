@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { HomeAuthBanner, StartSetLink } from './HomeAuthActions';
 import { cardCode, personHandle } from '@miscellary/shared';
 import type { Card, CardSetDetail, CardSetSummary } from '@miscellary/shared';
+import SectionHeader from '@/components/SectionHeader';
 import Binder from '@/components/binder/Binder';
 import SetTile from '@/components/SetTile';
 import CardPreview from '@/components/CardPreview';
@@ -136,17 +137,11 @@ export default async function HomePage() {
 
       {featured ? (
         <section className={styles.binderBand}>
-          <div className={styles.sectionHead}>
-            <div>
-              <h2 className={styles.h2}>Inside a set</h2>
-              <p className={styles.sectionNote}>
-                Every set is an interactive binder you can turn a page at a time.
-              </p>
-            </div>
-            <Link href={`/sets/${featured.slug}`} className={styles.more}>
-              Open {featured.title} →
-            </Link>
-          </div>
+          <SectionHeader
+            title="Inside a set"
+            note="Every set is an interactive binder you can turn a page at a time."
+            link={{ href: `/sets/${featured.slug}`, label: `Open ${featured.title}` }}
+          />
           <Link
             href={`/sets/${featured.slug}`}
             className={styles.binderLink}
@@ -181,15 +176,11 @@ export default async function HomePage() {
 
       {sets.length ? (
         <section className={styles.shelfSection}>
-          <div className={styles.sectionHead}>
-            <div>
-              <h2 className={styles.h2}>Open packs</h2>
-              <p className={styles.sectionNote}>Tear one open and flip to reveal your cards.</p>
-            </div>
-            <Link href="/sets" className={styles.more}>
-              Every set →
-            </Link>
-          </div>
+          <SectionHeader
+            title="Open packs"
+            note="Tear one open and flip to reveal your cards."
+            link={{ href: '/sets', label: 'Every set' }}
+          />
           <ul className={`${tileStyles.grid} ${styles.packRow}`}>
             {packRow.map((s) => (
               <li key={s.id}>

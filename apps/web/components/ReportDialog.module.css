@@ -1,0 +1,60 @@
+.dialog {
+  width: min(460px, calc(100vw - 32px));
+  padding: 0;
+  background: var(--sur);
+  border: 1px solid var(--bdr2);
+  border-radius: 10px;
+  box-shadow: var(--shadow-lg);
+  color: var(--text);
+}
+.dialog::backdrop {
+  background: rgba(36, 29, 22, 0.45);
+}
+.body {
+  display: grid;
+  gap: 12px;
+  padding: 22px 24px 20px;
+}
+.title {
+  margin: 0;
+  font: 400 26px / 1 var(--display);
+  letter-spacing: 0.02em;
+}
+.note {
+  margin: 0;
+  padding: 0;
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1.45;
+}
+.reasons {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.reasons legend {
+  margin-bottom: 8px;
+}
+.reason {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+}
+.reason:hover {
+  background: rgba(39, 139, 130, 0.07);
+}
+.reason input {
+  accent-color: var(--accent);
+}
+.buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 6px;
+}

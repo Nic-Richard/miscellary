@@ -5,13 +5,14 @@ import { usePathname } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import type { OwnedCard, ProfilePage } from '@miscellary/shared';
 import { profilePath, SHOWCASE_SLOTS } from '@miscellary/shared';
+import SectionHeader from '@/components/SectionHeader';
 import SetTile from '@/components/SetTile';
 import tileStyles from '@/components/SetTile.module.css';
-import Sheet, { Empty } from '@/components/Sheet';
 import { OwnedCardInspector } from '@/components/CardInspector';
 import PeopleList from '@/components/PeopleList';
 import ProfileBinder from '@/components/ProfileBinder';
-import ReportButton from '@/components/ReportButton';
+import MoreMenu from '@/components/MoreMenu';
+import ReportDialog from '@/components/ReportDialog';
 import ShareButton from '@/components/ShareButton';
 import DemoBadge from '@/components/DemoBadge';
 import { useAuth } from '@/lib/auth';
@@ -45,6 +46,7 @@ export default function ProfileClient({
   const [error, setError] = useState<string | null>(null);
   const [inspect, setInspect] = useState<OwnedCard | null>(null);
   const [people, setPeople] = useState<'followers' | 'following' | null>(null);
+  const [reporting, setReporting] = useState(false);
   const [followBusy, setFollowBusy] = useState(false);
   const [followError, setFollowError] = useState<string | null>(null);
 
@@ -121,12 +123,6 @@ export default function ProfileClient({
         </div>
 
         <div className={styles.identity}>
-          <p className={ui.eyebrow}>
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 9c0-4 3-6.5 7-6.5s7 2.5 7 6.5" />
-            </svg>
-            Collector profile
-          </p>
           <h1 className={ui.title}>{name}</h1>
           {profile.is_demo ? <DemoBadge /> : null}
           <p className={ui.subtitle}>@{profile.username}</p>
@@ -149,9 +145,9 @@ export default function ProfileClient({
                 {followError ? <span className={ui.error}>{followError}</span> : null}
                 <Link
                   href={`/trades/new?with=${profile.username}`}
-                  className={`${ui.btnQuiet} ${ui.btnSmall}`}
+                  className={`${ui.btnOutline} ${ui.btnSmall}`}
                 >
-                  Trade
+                  Offer a trade
                 </Link>
               </>
             ) : (
@@ -159,12 +155,28 @@ export default function ProfileClient({
                 href={loginHref(pathname, FOLLOW_ACTION)}
                 className={`${ui.btnPrimary} ${ui.btnSmall}`}
               >
-                Log in to follow
+                Follow
               </Link>
             )}
             <ShareButton path={profilePath(profile.username)} title={`${name} on Miscellary`} />
             {user && !profile.is_me ? (
-              <ReportButton target={{ username: profile.username }} />
+              <MoreMenu
+                label={`More for @${profile.username}`}
+                items={[
+                  {
+                    label: 'Report this collector',
+                    onSelect: () => setReporting(true),
+                    danger: true,
+                  },
+                ]}
+              />
+            ) : null}
+            {reporting ? (
+              <ReportDialog
+                target={{ username: profile.username }}
+                subject={`@${profile.username}`}
+                onClose={() => setReporting(false)}
+              />
             ) : null}
           </div>
         </div>
@@ -239,26 +251,26 @@ export default function ProfileClient({
       </div>
 
       <div className={styles.section} id="sets">
-        <Sheet
-          title={`Sets by @${profile.username}`}
-          meta={profile.sets.length ? `${profile.sets.length} published` : undefined}
-        >
-          {profile.sets.length === 0 ? (
-            <Empty icon="binder">
-              {profile.is_me
+        <SectionHeader
+          title={profile.is_me ? 'Your sets' : `Sets by ${name}`}
+          note={
+            profile.sets.length
+              ? `${profile.sets.length} published`
+              : profile.is_me
                 ? 'You have not published a set yet. Anything you collect can become one.'
-                : `@${profile.username} has not published a set yet.`}
-            </Empty>
-          ) : (
-            <ul className={tileStyles.grid}>
-              {profile.sets.map((s) => (
-                <li key={s.id}>
-                  <SetTile set={s} meta={`${s.card_count} cards · ♥ ${s.like_count}`} />
-                </li>
-              ))}
-            </ul>
-          )}
-        </Sheet>
+                : `${name} has not published a set yet.`
+          }
+          link={profile.is_me ? { href: '/studio', label: 'Open the studio' } : undefined}
+        />
+        {profile.sets.length ? (
+          <ul className={tileStyles.grid}>
+            {profile.sets.map((s) => (
+              <li key={s.id}>
+                <SetTile set={s} meta={`${s.card_count} cards · ♥ ${s.like_count}`} />
+              </li>
+            ))}
+          </ul>
+        ) : null}
       </div>
 
       {inspect ? <OwnedCardInspector owned={inspect} onClose={() => setInspect(null)} /> : null}

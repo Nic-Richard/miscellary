@@ -210,7 +210,11 @@ function Note({
           comment.author &&
           !comment.author.deleted &&
           user.profile.username !== comment.author.username ? (
-            <ReportButton target={{ comment_id: comment.id }} />
+            <ReportButton
+              target={{ comment_id: comment.id }}
+              subject="this comment"
+              className={styles.tool}
+            />
           ) : null}
         </div>
 

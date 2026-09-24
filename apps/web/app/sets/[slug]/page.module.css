@@ -47,7 +47,6 @@
   display: inline-flex;
   align-items: center;
   gap: 11px;
-  margin-right: auto;
   color: #3a2f26;
   text-decoration: none;
 }
@@ -64,6 +63,59 @@
 }
 .creatorLink:hover .creatorName strong {
   color: var(--accent-deep);
+}
+.creatorFollow {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid var(--bdr2);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.45);
+  color: #5e5346;
+  cursor: pointer;
+  transition:
+    color var(--dur-fast),
+    border-color var(--dur-fast),
+    background var(--dur-fast);
+}
+.creatorFollow svg {
+  width: 19px;
+  height: 19px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.creatorFollow:hover {
+  border-color: var(--accent);
+  color: var(--accent-deep);
+}
+.creatorFollowing {
+  border-color: var(--accent);
+  background: rgba(39, 139, 130, 0.1);
+  color: var(--accent-deep);
+}
+.followCross {
+  display: none;
+}
+.creatorFollowing:hover:not(:disabled) {
+  border-color: var(--danger);
+  background: rgba(174, 74, 58, 0.08);
+  color: var(--danger);
+}
+.creatorFollowing:hover:not(:disabled) .followTick {
+  display: none;
+}
+.creatorFollowing:hover:not(:disabled) .followCross {
+  display: inline;
+}
+.creatorFollow:disabled {
+  opacity: 0.6;
+  cursor: default;
 }
 .creatorName small {
   color: var(--faint);

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { cardCode, personHandle, personName } from '@miscellary/shared';
 import type { CardSetSummary, PackEntry, PackOpening } from '@miscellary/shared';
@@ -11,6 +11,7 @@ import CardBack from '@/components/CardBack';
 import CardPreview from '@/components/CardPreview';
 import DemoBadge from '@/components/DemoBadge';
 import PackReveal from '@/components/PackReveal';
+import MoreMenu from '@/components/MoreMenu';
 import PackStage from '@/components/PackStage';
 import SearchField from '@/components/SearchField';
 import StartShelf from '@/components/StartShelf';
@@ -95,20 +96,9 @@ function Post({
   onOpen: (usePoints: boolean) => void;
   busy: boolean;
 }) {
-  const [menu, setMenu] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
   const set = entry.card_set;
   const creator = personName(set.creator);
   const affordable = entry.points >= entry.pack_cost;
-
-  useEffect(() => {
-    if (!menu) return;
-    function away(event: MouseEvent) {
-      if (!menuRef.current?.contains(event.target as Node)) setMenu(false);
-    }
-    document.addEventListener('mousedown', away);
-    return () => document.removeEventListener('mousedown', away);
-  }, [menu]);
 
   return (
     <article id={`post-${set.slug}`} className={styles.post}>
@@ -123,30 +113,14 @@ function Post({
             {set.creator.deleted ? null : <small>@{set.creator.username}</small>}
           </span>
         </PersonLink>
-        <div className={styles.more} ref={menuRef}>
-          <button
-            type="button"
-            className={styles.moreBtn}
-            aria-label={`More for ${set.title}`}
-            aria-expanded={menu}
-            onClick={() => setMenu(!menu)}
-          >
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <circle cx="12" cy="5" r="1.4" />
-              <circle cx="12" cy="12" r="1.4" />
-              <circle cx="12" cy="19" r="1.4" />
-            </svg>
-          </button>
-          {menu ? (
-            <div className={styles.menu}>
-              <Link href={`/sets/${set.slug}`}>Open the binder</Link>
-              <Link href={`/collection?set=${set.slug}`}>Your cards from it</Link>
-              <button type="button" onClick={onUnfollow}>
-                Stop following
-              </button>
-            </div>
-          ) : null}
-        </div>
+        <MoreMenu
+          label={`More for ${set.title}`}
+          items={[
+            { label: 'Open the binder', href: `/sets/${set.slug}` },
+            { label: 'Your cards from this set', href: `/collection?set=${set.slug}` },
+            { label: 'Stop following', onSelect: onUnfollow, danger: true },
+          ]}
+        />
       </header>
 
       <div className={styles.body}>

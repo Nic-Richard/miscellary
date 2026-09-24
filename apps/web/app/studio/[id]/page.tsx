@@ -31,6 +31,13 @@ import type { SetWrite } from '@/lib/sets';
 import ui from '@/components/ui.module.css';
 import styles from './page.module.css';
 
+const STATUS_LABELS: Record<CardSetDetail['status'], string> = {
+  draft: 'Draft set',
+  published: 'Published set',
+  deleted: 'Deleted set',
+  removed: 'Removed set',
+};
+
 export default function SetEditorPage() {
   const { id } = useParams<{ id: string }>();
   const { user, loading } = useAuth();
@@ -211,7 +218,7 @@ export default function SetEditorPage() {
         />
 
         <div className={`${ui.panel} ${styles.details}`}>
-          <p className={ui.eyebrow}>{isDraft ? 'Draft set' : set.status}</p>
+          <p className={ui.eyebrow}>{STATUS_LABELS[set.status]}</p>
           {isDraft ? (
             <>
               <input

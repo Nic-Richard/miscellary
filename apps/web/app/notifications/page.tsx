@@ -12,7 +12,6 @@ import { useRequireAccount } from '@/lib/requireAccount';
 import { getNotifications, markNotificationsRead } from '@/lib/social';
 import { timeAgo } from '@/lib/time';
 import ui from '@/components/ui.module.css';
-import wide from '@/components/pageWide.module.css';
 import styles from './page.module.css';
 
 const HEART =
@@ -30,7 +29,7 @@ const MARKS: Record<NotificationKind, string> = {
 const FILLED: NotificationKind[] = ['set_like', 'card_like'];
 
 const FILTERS: { value: 'all' | NotificationKind; label: string }[] = [
-  { value: 'all', label: 'Everything' },
+  { value: 'all', label: 'All' },
   { value: 'set_like', label: 'Set likes' },
   { value: 'card_like', label: 'Card likes' },
   { value: 'set_comment', label: 'Comments' },
@@ -162,15 +161,6 @@ export default function NotificationsPage() {
     return tally;
   }, [rows]);
 
-  const followers = useMemo(
-    () => [
-      ...new Map(
-        (rows ?? []).filter((r) => r.kind === 'follow').map((r) => [r.actor.username, r.actor]),
-      ).values(),
-    ],
-    [rows],
-  );
-
   const shown = useMemo(
     () => (filter === 'all' ? (rows ?? []) : (rows ?? []).filter((r) => r.kind === filter)),
     [rows, filter],
@@ -191,11 +181,8 @@ export default function NotificationsPage() {
   if (loading || !user) return <p className={ui.muted}>Loading…</p>;
 
   return (
-    <div className={wide.page}>
-      <span className={wide.lamp} aria-hidden="true" />
-
+    <div className={styles.page}>
       <PageHeader
-        className={`${wide.pairHeader} ${styles.pairHeader}`}
         title="Notifications"
         description={unread > 0 ? `${unread} unread` : 'All caught up'}
         actions={
@@ -208,94 +195,62 @@ export default function NotificationsPage() {
       />
       {error ? <p className={ui.error}>{error}</p> : null}
 
-      <div className={`${wide.layout} ${wide.layoutPair} ${styles.layout}`}>
-        <main className={styles.column}>
-          <Sheet>
-            {rows === null ? (
-              <Empty icon="cards">Loading…</Empty>
-            ) : (
-              <>
-                {shown.length === 0 ? (
-                  <Empty
-                    icon="cards"
-                    action={
-                      filter === 'all' ? (
-                        <Link className={ui.btnOutline} href="/sets">
-                          Browse sets
-                        </Link>
-                      ) : (
-                        <button
-                          type="button"
-                          className={ui.action}
-                          onClick={() => setFilter('all')}
-                        >
-                          Show everything
-                        </button>
-                      )
-                    }
-                  >
-                    {filter === 'all'
-                      ? 'Nothing yet. You will hear when someone likes or comments on a set of yours, replies to you, or follows you — and nothing else.'
-                      : 'Nothing of that kind yet.'}
-                  </Empty>
-                ) : (
-                  <ul className={styles.rows}>
-                    {shown.map((n) => (
-                      <Row key={n.id} notification={n} />
-                    ))}
-                  </ul>
-                )}
-                {more ? (
-                  <button type="button" className={styles.more} disabled={busy} onClick={loadMore}>
-                    {busy ? 'Loading…' : `Show older (${total - (rows?.length ?? 0)} further back)`}
-                  </button>
-                ) : null}
-              </>
-            )}
-          </Sheet>
-        </main>
-
-        <aside className={wide.rail}>
-          <section className={`${ui.panel} ${wide.railPanel}`}>
-            <h2 className={ui.panelTitle}>Show</h2>
-            <ul className={styles.filters}>
-              {FILTERS.filter((f) => f.value === 'all' || counts[f.value] > 0).map((f) => (
-                <li key={f.value}>
-                  <button
-                    type="button"
-                    aria-pressed={filter === f.value}
-                    className={`${styles.filter} ${filter === f.value ? styles.filterOn : ''}`}
-                    onClick={() => setFilter(f.value)}
-                  >
-                    {f.label}
-                    <b>{counts[f.value]}</b>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </section>
-
-          {followers.length ? (
-            <section className={`${ui.panel} ${wide.railPanel}`}>
-              <h2 className={ui.panelTitle}>New followers</h2>
-              <ul className={styles.followers}>
-                {followers.slice(0, 8).map((person) => (
-                  <li key={person.username}>
-                    <Link href={`/users/${person.username}`} title={`@${person.username}`}>
-                      <span className={styles.followerMark}>
-                        {(person.display_name || person.username)[0]?.toUpperCase()}
-                      </span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-              <p className={wide.railNote}>
-                {followers.length} {followers.length === 1 ? 'collector' : 'collectors'} started
-                following you.
-              </p>
-            </section>
-          ) : null}
-        </aside>
+      <div className={styles.column}>
+        {FILTERS.some((f) => f.value !== 'all' && counts[f.value] > 0) ? (
+          <div className={`${ui.segments} ${styles.filters}`} role="tablist" aria-label="Show">
+            {FILTERS.filter((f) => f.value === 'all' || counts[f.value] > 0).map((f) => (
+              <button
+                key={f.value}
+                type="button"
+                role="tab"
+                aria-selected={filter === f.value}
+                className={`${ui.segment} ${filter === f.value ? ui.segmentOn : ''}`}
+                onClick={() => setFilter(f.value)}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+        ) : null}
+        <Sheet>
+          {rows === null ? (
+            <Empty icon="cards">Loading…</Empty>
+          ) : (
+            <>
+              {shown.length === 0 ? (
+                <Empty
+                  icon="cards"
+                  action={
+                    filter === 'all' ? (
+                      <Link className={ui.btnOutline} href="/sets">
+                        Browse sets
+                      </Link>
+                    ) : (
+                      <button type="button" className={ui.action} onClick={() => setFilter('all')}>
+                        Show everything
+                      </button>
+                    )
+                  }
+                >
+                  {filter === 'all'
+                    ? 'Nothing yet. You will hear when someone likes or comments on a set of yours, replies to you, or follows you — and nothing else.'
+                    : 'Nothing of that kind yet.'}
+                </Empty>
+              ) : (
+                <ul className={styles.rows}>
+                  {shown.map((n) => (
+                    <Row key={n.id} notification={n} />
+                  ))}
+                </ul>
+              )}
+              {more ? (
+                <button type="button" className={styles.more} disabled={busy} onClick={loadMore}>
+                  {busy ? 'Loading…' : `Show older (${total - (rows?.length ?? 0)} further back)`}
+                </button>
+              ) : null}
+            </>
+          )}
+        </Sheet>
       </div>
     </div>
   );

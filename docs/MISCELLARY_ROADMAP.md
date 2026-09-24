@@ -523,7 +523,15 @@ Done on web:
 - The sidebar shows only what a visitor can use, and gives a signed-in collector an account row
   with a menu for their profile, settings and logging out.
 
-Remaining: the page-by-page pass below, then the same on mobile.
+- One action row everywhere a thing can be acted on: the main action, then Follow, Like, Share,
+  and a ⋯ menu holding Report, Stop following and the other secondary actions. Reporting opens a
+  dialog instead of expanding a form in place.
+- Following a creator is a small icon beside their name that shows a tick, and an x on hover.
+- Profiles, search results and the homepage use plain titled sections instead of panels wrapped
+  around one or two tiles; notifications and account settings are single reading columns.
+- Packs without a render yet (drafts) show a blank wrapper with the set title.
+
+Remaining: the same pass on mobile.
 
 The product still has loose ends in how controls are laid out and ordered from page to page. Before
 launch, audit the web and mobile surfaces and settle one pattern for:

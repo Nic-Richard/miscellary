@@ -36,3 +36,28 @@
   height: 100%;
   object-fit: cover;
 }
+
+.blank {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(90% 70% at 50% 35%, #efe7d6, #ddd2bd);
+}
+.blank img {
+  width: 62%;
+  filter: drop-shadow(0 10px 12px rgba(20, 13, 4, 0.3));
+}
+.blankTitle {
+  position: absolute;
+  inset: 0 24%;
+  display: grid;
+  place-items: center;
+  color: #f4efe2;
+  font: 400 clamp(16px, 1.6vw, 26px) / 0.95 var(--display);
+  letter-spacing: 0.03em;
+  text-align: center;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  overflow-wrap: anywhere;
+}

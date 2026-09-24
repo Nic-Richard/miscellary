@@ -16,10 +16,9 @@
   right: 8px;
   z-index: 2;
   padding: 4px 10px;
-  border-radius: 3px;
-  font-size: 10px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  border-radius: 5px;
+  font-size: 14px;
+  font-weight: 600;
   text-decoration: none;
 }
 .viewLink {

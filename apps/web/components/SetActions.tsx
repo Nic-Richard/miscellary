@@ -9,7 +9,8 @@ import { useAuth } from '@/lib/auth';
 import { loginHref } from '@/lib/returnTo';
 import { followSet, likeSet } from '@/lib/social';
 import { useContinuation } from '@/lib/useContinuation';
-import ReportButton from './ReportButton';
+import MoreMenu from './MoreMenu';
+import ReportDialog from './ReportDialog';
 import ShareButton from './ShareButton';
 import ui from './ui.module.css';
 import styles from './SetActions.module.css';
@@ -40,6 +41,7 @@ export default function SetActions({ set }: { set: CardSetDetail }) {
   const [followBusy, setFollowBusy] = useState(false);
   const [likeBusy, setLikeBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [reporting, setReporting] = useState(false);
 
   useEffect(() => {
     setFollowing(set.following);
@@ -97,7 +99,7 @@ export default function SetActions({ set }: { set: CardSetDetail }) {
           className={`${ui.action} ${styles.follow}`}
         >
           <Glyph d={PACK} />
-          Follow
+          Follow set
           {followers > 0 ? <b>{followers}</b> : null}
         </Link>
         <Link href={loginHref(pathname, LIKE_SET_ACTION)} className={ui.action}>
@@ -122,7 +124,7 @@ export default function SetActions({ set }: { set: CardSetDetail }) {
         onClick={() => void toggleFollow(!following)}
       >
         <Glyph d={following ? CHECK : PACK} />
-        {following ? 'Following' : 'Follow'}
+        {following ? 'Following' : 'Follow set'}
         {followers > 0 ? <b>{followers}</b> : null}
       </button>
 
@@ -140,10 +142,24 @@ export default function SetActions({ set }: { set: CardSetDetail }) {
 
       <ShareButton path={setPath(set.slug)} title={set.title} />
 
+      <MoreMenu
+        label={`More for ${set.title}`}
+        items={[
+          { label: 'Your cards from this set', href: `/collection?set=${set.slug}` },
+          ...(user.profile.username === set.creator.username
+            ? []
+            : [{ label: 'Report this set', onSelect: () => setReporting(true), danger: true }]),
+        ]}
+      />
+
       {error ? <span className={ui.error}>{error}</span> : null}
-      <span className={styles.report}>
-        <ReportButton target={{ set_slug: set.slug }} />
-      </span>
+      {reporting ? (
+        <ReportDialog
+          target={{ set_slug: set.slug }}
+          subject="this set"
+          onClose={() => setReporting(false)}
+        />
+      ) : null}
     </div>
   );
 }

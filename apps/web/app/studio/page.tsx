@@ -83,11 +83,11 @@ export default function StudioPage() {
             <SetTile
               set={s}
               href={`/studio/${s.id}`}
-              meta={`${s.card_count} cards · ${s.status}`}
+              meta={`${s.card_count} ${s.card_count === 1 ? 'card' : 'cards'}`}
             />
             {s.status !== 'draft' ? (
               <Link href={`/sets/${s.slug}`} className={styles.viewLink}>
-                View binder →
+                View binder
               </Link>
             ) : (
               <span className={`${styles.statusTag} ${styles.draft}`}>Draft</span>

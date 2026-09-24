@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { cardCode, cardPath, personHandle } from '@miscellary/shared';
+import SectionHeader from '@/components/SectionHeader';
 import PageHeader from '@/components/PageHeader';
 import SetTile from '@/components/SetTile';
 import CardPreview from '@/components/CardPreview';
@@ -57,13 +58,15 @@ export default async function SearchPage({
       ) : null}
 
       {results.tags.length ? (
-        <Sheet className={styles.sheet} title="Tags" meta={`${results.tags.length} found`}>
+        <section className={styles.group}>
+          <SectionHeader title="Tags" note={`${results.tags.length} found`} />
           <TagList tags={results.tags} label={`Tags matching ${results.query}`} />
-        </Sheet>
+        </section>
       ) : null}
 
       {results.users.length ? (
-        <Sheet className={styles.sheet} title="Users" meta={`${results.users.length} found`}>
+        <section className={styles.group}>
+          <SectionHeader title="Collectors" note={`${results.users.length} found`} />
           <ul className={styles.list}>
             {results.users.map((u) => (
               <li key={u.username}>
@@ -73,11 +76,12 @@ export default async function SearchPage({
               </li>
             ))}
           </ul>
-        </Sheet>
+        </section>
       ) : null}
 
       {results.sets.length ? (
-        <Sheet className={styles.sheet} title="Sets" meta={`${results.sets.length} found`}>
+        <section className={styles.group}>
+          <SectionHeader title="Sets" note={`${results.sets.length} found`} />
           <ul className={tileStyles.grid}>
             {results.sets.map((s) => (
               <li key={s.id}>
@@ -85,11 +89,12 @@ export default async function SearchPage({
               </li>
             ))}
           </ul>
-        </Sheet>
+        </section>
       ) : null}
 
       {results.cards.length ? (
-        <Sheet className={styles.sheet} title="Cards" meta={`${results.cards.length} found`}>
+        <section className={styles.group}>
+          <SectionHeader title="Cards" note={`${results.cards.length} found`} />
           <div className={styles.grid}>
             {results.cards.map((c) => (
               <Link key={c.id} href={cardPath(c.set_slug, c.position)} className={styles.cardLink}>
@@ -108,7 +113,7 @@ export default async function SearchPage({
               </Link>
             ))}
           </div>
-        </Sheet>
+        </section>
       ) : null}
     </section>
   );

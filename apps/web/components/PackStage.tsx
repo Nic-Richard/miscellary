@@ -15,7 +15,13 @@ export default function PackStage({ set }: { set: CardSetSummary }) {
           height={image.height}
           draggable={false}
         />
-      ) : null}
+      ) : (
+        // Drafts and packs still baking have no render yet; a plain wrapper stands in.
+        <span className={styles.blank}>
+          <img src="/materials/pack-blank.png" alt="" draggable={false} />
+          <span className={styles.blankTitle}>{set.title}</span>
+        </span>
+      )}
     </span>
   );
 }

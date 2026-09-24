@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth';
 import { loginHref } from '@/lib/returnTo';
+import ui from './ui.module.css';
 import styles from './LikeButton.module.css';
 
 interface LikeButtonProps {
@@ -14,6 +15,8 @@ interface LikeButtonProps {
   onToggle: (like: boolean) => Promise<{ liked: boolean; like_count: number }>;
   action?: string;
   carries?: Record<string, string>;
+  /** Draw as one of the action-row chips rather than the bare heart used on binder cards. */
+  chip?: boolean;
 }
 
 function Heart() {
@@ -31,6 +34,7 @@ export default function LikeButton({
   onToggle,
   action,
   carries,
+  chip = false,
 }: LikeButtonProps) {
   const { user } = useAuth();
   const pathname = usePathname();
@@ -70,7 +74,7 @@ export default function LikeButton({
     return (
       <Link
         href={loginHref(pathname, action, carries)}
-        className={styles.root}
+        className={chip ? ui.action : styles.root}
         title="Log in to like"
       >
         <Heart />
@@ -86,7 +90,11 @@ export default function LikeButton({
       disabled={busy}
       title={error ?? undefined}
       aria-label={label ? (liked ? `Unlike ${label}` : `Like ${label}`) : 'Like'}
-      className={`${styles.root} ${liked ? styles.on : ''}`}
+      className={
+        chip
+          ? `${ui.action} ${liked ? ui.actionLiked : ''}`
+          : `${styles.root} ${liked ? styles.on : ''}`
+      }
       onClick={() => void toggle()}
     >
       <Heart />
