@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import type { OwnedCard, ProfilePage } from '@miscellary/shared';
-import { SHOWCASE_SLOTS } from '@miscellary/shared';
+import { profilePath, SHOWCASE_SLOTS } from '@miscellary/shared';
 import SetTile from '@/components/SetTile';
 import tileStyles from '@/components/SetTile.module.css';
 import Sheet, { Empty } from '@/components/Sheet';
@@ -12,6 +12,7 @@ import { OwnedCardInspector } from '@/components/CardInspector';
 import PeopleList from '@/components/PeopleList';
 import ProfileBinder from '@/components/ProfileBinder';
 import ReportButton from '@/components/ReportButton';
+import ShareButton from '@/components/ShareButton';
 import DemoBadge from '@/components/DemoBadge';
 import { useAuth } from '@/lib/auth';
 import { loginHref } from '@/lib/returnTo';
@@ -152,7 +153,6 @@ export default function ProfileClient({
                 >
                   Trade
                 </Link>
-                <ReportButton target={{ username: profile.username }} />
               </>
             ) : (
               <Link
@@ -162,6 +162,10 @@ export default function ProfileClient({
                 Log in to follow
               </Link>
             )}
+            <ShareButton path={profilePath(profile.username)} title={`${name} on Miscellary`} />
+            {user && !profile.is_me ? (
+              <ReportButton target={{ username: profile.username }} />
+            ) : null}
           </div>
         </div>
 

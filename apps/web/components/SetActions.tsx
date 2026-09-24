@@ -3,12 +3,14 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { setPath } from '@miscellary/shared';
 import type { CardSetDetail } from '@miscellary/shared';
 import { useAuth } from '@/lib/auth';
 import { loginHref } from '@/lib/returnTo';
 import { followSet, likeSet } from '@/lib/social';
 import { useContinuation } from '@/lib/useContinuation';
 import ReportButton from './ReportButton';
+import ShareButton from './ShareButton';
 import ui from './ui.module.css';
 import styles from './SetActions.module.css';
 
@@ -102,6 +104,7 @@ export default function SetActions({ set }: { set: CardSetDetail }) {
           <Glyph d={HEART} />
           <b>{likes}</b>
         </Link>
+        <ShareButton path={setPath(set.slug)} title={set.title} />
       </div>
     );
 
@@ -134,6 +137,8 @@ export default function SetActions({ set }: { set: CardSetDetail }) {
         <Glyph d={HEART} />
         <b>{likes}</b>
       </button>
+
+      <ShareButton path={setPath(set.slug)} title={set.title} />
 
       {error ? <span className={ui.error}>{error}</span> : null}
       <span className={styles.report}>

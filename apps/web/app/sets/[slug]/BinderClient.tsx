@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { cardCode, personName } from '@miscellary/shared';
+import { cardCode, cardPath, personName, setPath } from '@miscellary/shared';
 import type { Card, CardSetDetail, OwnedCard } from '@miscellary/shared';
 import PersonLink from '@/components/PersonLink';
 import Binder from '@/components/binder/Binder';
@@ -11,6 +11,7 @@ import type { BinderPage as BinderPageData } from '@/components/binder/Binder';
 import CardGrid, { CardCell } from '@/components/CardGrid';
 import FolderTabs from '@/components/binder/FolderTabs';
 import CardInspector from '@/components/CardInspector';
+import ShareButton from '@/components/ShareButton';
 import CardPreview from '@/components/CardPreview';
 import Comments from '@/components/Comments';
 import Description from '@/components/Description';
@@ -113,9 +114,11 @@ function stack(owned: OwnedCard[]): OwnedCard[] {
 export default function BinderClient({
   slug,
   initialSet,
+  initialCard = null,
 }: {
   slug: string;
   initialSet: CardSetDetail | null;
+  initialCard?: number | null;
 }) {
   const pathname = usePathname();
   const { loading, user } = useAuth();
@@ -128,7 +131,9 @@ export default function BinderClient({
   const [spread, setSpread] = useState(0);
   const [owned, setOwned] = useState<OwnedCard[] | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [inspect, setInspect] = useState<Card | null>(null);
+  const [inspect, setInspect] = useState<Card | null>(
+    () => initialSet?.cards.find((card) => card.position + 1 === initialCard) ?? null,
+  );
   const [recycling, setRecycling] = useState<string | null>(null);
   const [gain, setGain] = useState<{ cardId: string; amount: number; key: number } | null>(null);
   const [packPoints, setPackPoints] = useState<number | undefined>();
@@ -150,6 +155,16 @@ export default function BinderClient({
       })
       .catch(() => undefined);
   }, [slug, loading, user]);
+
+  // The address follows the open card, so whatever is copied from it opens the same view.
+  useEffect(() => {
+    if (set?.status !== 'published') return;
+    const target = inspect ? cardPath(set.slug, inspect.position) : setPath(set.slug);
+    if (window.location.pathname !== target) {
+      window.history.replaceState(window.history.state, '', target + window.location.search);
+    }
+    document.title = `${inspect ? `${inspect.title} from ${set.title}` : set.title} | Miscellary`;
+  }, [inspect, set?.slug, set?.title, set?.status]);
 
   useEffect(() => {
     if (!set || !user || set.creator.deleted || user.profile.username === set.creator.username)
@@ -612,6 +627,11 @@ export default function BinderClient({
           mark={set.mark}
           packColour={set.pack_colour}
           creator={set.creator}
+          actions={
+            isPublished ? (
+              <ShareButton path={cardPath(set.slug, inspect.position)} title={inspect.title} />
+            ) : undefined
+          }
           onClose={() => setInspect(null)}
         />
       ) : null}

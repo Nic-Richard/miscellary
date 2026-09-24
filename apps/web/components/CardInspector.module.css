@@ -214,6 +214,18 @@
   gap: 8px;
   margin-top: 12px;
 }
+/* Actions are shared controls drawn for the paper surface; this panel is dark. */
+.actions > button,
+.actions > a {
+  border-color: rgba(247, 241, 227, 0.32);
+  background: rgba(247, 241, 227, 0.08);
+  color: #f7f1e3;
+}
+.actions > button:not(:disabled):hover,
+.actions > a:hover {
+  border-color: rgba(247, 241, 227, 0.6);
+  color: #fff;
+}
 .credit {
   margin: 14px 0 0;
   font-size: 11px;

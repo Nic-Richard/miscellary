@@ -1,4 +1,4 @@
-import { cardCode, personHandle } from '@miscellary/shared';
+import { cardCode, cardPath, personHandle, setPath } from '@miscellary/shared';
 import type { Card, CardSetDetail, OwnedCard, PackOpening, PackStatus } from '@miscellary/shared';
 import Feather from '@expo/vector-icons/Feather';
 import { Link, router, useLocalSearchParams } from 'expo-router';
@@ -23,6 +23,7 @@ import DemoBadge from '@/components/DemoBadge';
 import PackPreview from '@/components/PackPreview';
 import PackReveal from '@/components/PackReveal';
 import PointGain from '@/components/PointGain';
+import ShareButton from '@/components/ShareButton';
 import TagChips from '@/components/TagChips';
 import { useAuth } from '@/lib/auth';
 import { CONTINUE_PARAM, loginRoute } from '@/lib/returnTo';
@@ -435,6 +436,7 @@ export default function BinderScreen() {
               {set.following ? 'On your packs' : 'Follow set'}
             </Text>
           </Pressable>
+          <ShareButton path={setPath(set.slug)} title={set.title} />
           {user ? (
             <Pressable onPress={report}>
               <Text style={{ color: colors.faint, fontSize: 12 }}>Report</Text>
@@ -642,6 +644,15 @@ export default function BinderScreen() {
             packColour={set.pack_colour}
             creator={set.creator}
             copies={selected.copies}
+            actions={
+              set.status === 'published' ? (
+                <ShareButton
+                  dark
+                  path={cardPath(set.slug, selected.card.position)}
+                  title={selected.card.title}
+                />
+              ) : undefined
+            }
             onClose={() => setSelected(null)}
           />
         </Modal>

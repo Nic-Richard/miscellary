@@ -1,10 +1,11 @@
-import { SHOWCASE_SLOTS } from '@miscellary/shared';
+import { profilePath, SHOWCASE_SLOTS } from '@miscellary/shared';
 import type { OwnedCard, ProfilePage } from '@miscellary/shared';
 import { Link, router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useAuth } from '@/lib/auth';
 import { sendReport, setFollow } from '@/lib/endpoints';
+import ShareButton from '@/components/ShareButton';
 import PeopleList from './PeopleList';
 import { colors } from '@/lib/theme';
 import CardInspector from './CardInspector';
@@ -144,8 +145,14 @@ export default function ProfileView({
                 router.push({ pathname: '/trades/new', params: { with: profile.username } })
               }
             />
-            <Button title="Report" kind="secondary" onPress={report} />
           </>
+        ) : null}
+        <ShareButton
+          path={profilePath(profile.username)}
+          title={`${profile.display_name || profile.username} on Miscellary`}
+        />
+        {!profile.is_me && user ? (
+          <Button title="Report" kind="secondary" onPress={report} />
         ) : null}
       </View>
 

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { cardCode, personHandle } from '@miscellary/shared';
+import { cardCode, cardPath, personHandle } from '@miscellary/shared';
 import SetTile from '@/components/SetTile';
 import CardPreview from '@/components/CardPreview';
 import DemoBadge from '@/components/DemoBadge';
@@ -92,7 +92,7 @@ export default async function SearchPage({
         <Sheet className={styles.sheet} title="Cards" meta={`${results.cards.length} found`}>
           <div className={styles.grid}>
             {results.cards.map((c) => (
-              <Link key={c.id} href={`/sets/${c.set_slug}`} className={styles.cardLink}>
+              <Link key={c.id} href={cardPath(c.set_slug, c.position)} className={styles.cardLink}>
                 <CardPreview
                   size="small"
                   title={c.title}

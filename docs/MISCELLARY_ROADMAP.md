@@ -494,19 +494,20 @@ Remaining:
 - Production email delivery confirmed from the live site.
 - Expired-session and mobile token behaviour checked on a real device.
 
-## SEO / sharing
+## SEO / sharing: Complete
 
-For the public web product:
+- Every card has its own address, `/sets/{slug}/cards/{number}`, which opens the binder with that
+  card in the inspector. Opening and closing a card on a set page keeps the address and tab title
+  on the card, so what is copied is what is on screen.
+- Sets, cards and profiles have titles, descriptions, canonical URLs and generated share images: the
+  pack, the card face or the creator's packs beside the name.
+- A share control sits with the other actions on sets, cards and profiles: the system share sheet
+  in the app and on touch devices, copy link on desktop.
+- Favicon, Apple touch icon and web manifest from the Miscellary mark.
+- `robots.txt` keeps crawlers out of account pages, and `sitemap.xml` lists every published set,
+  card and creator.
 
-- title/description metadata
-- canonical URLs
-- social/Open Graph cards for sets, cards and profiles
-- favicon/app icons
-- sitemap
-- robots.txt
-- a URL for every card, not only for its set
-- a share control on sets, cards and profiles that behaves like the major social platforms: the
-  native share sheet where there is one, copy link otherwise
+Remaining: check the share images in the real unfurlers (iMessage, Slack, Discord, X) once live.
 
 ## Interaction and control consistency
 

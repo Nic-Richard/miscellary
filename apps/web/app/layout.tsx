@@ -19,6 +19,7 @@ import {
 } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/lib/auth';
+import { SITE_URL } from '@/lib/seo';
 import Nav from '@/components/Nav';
 import styles from './layout.module.css';
 
@@ -65,9 +66,16 @@ const fonts = [
   .map((f) => f.variable)
   .join(' ');
 
+const DESCRIPTION =
+  'Turn collections into trading cards. Make your own set, open free packs every day, and trade for the ones you’re missing.';
+
 export const metadata: Metadata = {
-  title: 'Miscellary',
-  description: 'Everything can be a collection.',
+  metadataBase: new URL(SITE_URL),
+  title: { default: 'Miscellary', template: '%s | Miscellary' },
+  description: DESCRIPTION,
+  applicationName: 'Miscellary',
+  openGraph: { siteName: 'Miscellary', type: 'website', locale: 'en', description: DESCRIPTION },
+  twitter: { card: 'summary_large_image' },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

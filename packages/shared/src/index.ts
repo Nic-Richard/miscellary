@@ -12,3 +12,4 @@ export * from './credit';
 export * from './setMarks';
 export * from './setIdentity';
 export * from './people';
+export * from './paths';
