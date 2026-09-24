@@ -12,6 +12,7 @@ import {
   resendVerificationEmail,
 } from '@/lib/account';
 import { useAuth } from '@/lib/auth';
+import PasswordInput from './PasswordInput';
 import ui from './ui.module.css';
 import styles from './AccountSecurity.module.css';
 
@@ -87,9 +88,8 @@ function Username({ user, onChanged }: { user: CurrentUser; onChanged: () => Pro
           {locked ? null : (
             <label className={styles.field}>
               <span className={ui.label}>Current password</span>
-              <input
+              <PasswordInput
                 className={ui.input}
-                type="password"
                 value={password}
                 autoComplete="current-password"
                 onChange={(e) => setPassword(e.target.value)}
@@ -204,9 +204,8 @@ function Password() {
         <div className={styles.pair}>
           <label className={styles.field}>
             <span className={ui.label}>Current password</span>
-            <input
+            <PasswordInput
               className={ui.input}
-              type="password"
               value={current}
               autoComplete="current-password"
               onChange={(e) => setCurrent(e.target.value)}
@@ -214,9 +213,8 @@ function Password() {
           </label>
           <label className={styles.field}>
             <span className={ui.label}>New password</span>
-            <input
+            <PasswordInput
               className={ui.input}
-              type="password"
               value={next}
               autoComplete="new-password"
               onChange={(e) => setNext(e.target.value)}
@@ -266,9 +264,8 @@ function CloseAccount() {
         <form className={styles.form} onSubmit={(e) => void submit(e)}>
           <label className={styles.field}>
             <span className={ui.label}>Current password</span>
-            <input
+            <PasswordInput
               className={ui.input}
-              type="password"
               value={password}
               autoComplete="current-password"
               autoFocus

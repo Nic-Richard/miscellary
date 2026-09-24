@@ -1,9 +1,11 @@
 import type { Card, CardSetDetail } from '@miscellary/shared';
 import { useState } from 'react';
-import { Modal, Pressable, Text, View, useWindowDimensions } from 'react-native';
+import { View, useWindowDimensions } from 'react-native';
+import InspectorModal from './InspectorModal';
 import SharedSurface from './SharedSurface';
 import BinderDetails from './BinderDetails';
 import CardInspector from './CardInspector';
+import InspectorActions from './InspectorActions';
 import { Button, Muted } from './ui';
 
 export default function BinderPages({
@@ -68,13 +70,7 @@ export default function BinderPages({
         </View>
       </View>
       {selected ? (
-        <Modal
-          visible
-          statusBarTranslucent
-          navigationBarTranslucent
-          supportedOrientations={['portrait', 'landscape']}
-          onRequestClose={() => setSelected(null)}
-        >
+        <InspectorModal open onClose={() => setSelected(null)}>
           <View
             style={{
               flex: 1,
@@ -90,45 +86,17 @@ export default function BinderPages({
               creator={set.creator}
               onClose={() => setSelected(null)}
               actions={
-                onLike ? (
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel={
-                      likedIds.includes(selected.id) ? 'Unlike card' : 'Like card'
-                    }
-                    hitSlop={8}
-                    onPress={() => onLike(selected.id)}
-                    style={({ pressed }) => ({
-                      width: 40,
-                      height: 40,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      borderRadius: 20,
-                      borderWidth: 1,
-                      borderColor: likedIds.includes(selected.id)
-                        ? 'rgba(213, 109, 100, 0.72)'
-                        : 'rgba(247, 241, 227, 0.24)',
-                      backgroundColor: 'rgba(30, 24, 17, 0.76)',
-                      opacity: pressed ? 0.62 : 1,
-                    })}
-                  >
-                    <Text
-                      style={{
-                        color: likedIds.includes(selected.id)
-                          ? '#d56d64'
-                          : 'rgba(247, 241, 227, 0.7)',
-                        fontSize: 19,
-                        lineHeight: 21,
-                      }}
-                    >
-                      ♥
-                    </Text>
-                  </Pressable>
-                ) : null
+                <InspectorActions
+                  card={selected}
+                  set={set}
+                  liked={likedIds.includes(selected.id)}
+                  likeCount={cards.find((entry) => entry.id === selected.id)?.like_count ?? 0}
+                  onLike={onLike ? () => onLike(selected.id) : undefined}
+                />
               }
             />
           </View>
-        </Modal>
+        </InspectorModal>
       ) : null}
     </View>
   );

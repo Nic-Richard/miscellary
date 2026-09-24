@@ -1,4 +1,4 @@
-import { cardCode, cardPath, personHandle, setPath } from '@miscellary/shared';
+import { cardCode, personHandle, setPath } from '@miscellary/shared';
 import type { Card, CardSetDetail, OwnedCard, PackOpening, PackStatus } from '@miscellary/shared';
 import Feather from '@expo/vector-icons/Feather';
 import { Link, router, useLocalSearchParams } from 'expo-router';
@@ -6,7 +6,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Alert,
-  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -14,6 +13,7 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
+import InspectorModal from '@/components/InspectorModal';
 import BinderPages from '@/components/BinderPages';
 import CardInspector from '@/components/CardInspector';
 import Comments from '@/components/Comments';
@@ -23,6 +23,10 @@ import DemoBadge from '@/components/DemoBadge';
 import PackPreview from '@/components/PackPreview';
 import PackReveal from '@/components/PackReveal';
 import PointGain from '@/components/PointGain';
+import ActionChip from '@/components/ActionChip';
+import InspectorActions from '@/components/InspectorActions';
+import MoreButton from '@/components/MoreButton';
+import ReportSheet from '@/components/ReportSheet';
 import ShareButton from '@/components/ShareButton';
 import TagChips from '@/components/TagChips';
 import { useAuth } from '@/lib/auth';
@@ -30,13 +34,14 @@ import { CONTINUE_PARAM, loginRoute } from '@/lib/returnTo';
 import {
   followSet,
   getPackStatus,
+  getProfile,
   getPublicSet,
   likeCard,
   likeSet,
   listMyCards,
   openPack,
   recycleCard,
-  sendReport,
+  setFollow,
 } from '@/lib/endpoints';
 import { readPublicCache, writePublicCache } from '@/lib/publicCache';
 import { colors, fonts } from '@/lib/theme';
@@ -60,6 +65,8 @@ export default function BinderScreen() {
   const insets = useSafeAreaInsets();
   const { width: viewportWidth } = useWindowDimensions();
   const { user, loading } = useAuth();
+  const [reporting, setReporting] = useState(false);
+  const [creatorFollowing, setCreatorFollowing] = useState<boolean | null>(null);
   const [set, setSet] = useState<CardSetDetail | null>(null);
   const [status, setStatus] = useState<PackStatus | null>(null);
   const [opening, setOpening] = useState<PackOpening | null>(null);
@@ -239,6 +246,47 @@ export default function BinderScreen() {
     }
   }
 
+  const creatorName = set?.creator.username ?? '';
+  const creatorIsMe = user?.profile.username === creatorName;
+  const creatorGone = set?.creator.deleted ?? true;
+  useEffect(() => {
+    if (!user || !creatorName || creatorIsMe || creatorGone) {
+      setCreatorFollowing(null);
+      return;
+    }
+    getProfile(creatorName)
+      .then((profile) => setCreatorFollowing(profile.is_following))
+      .catch(() => setCreatorFollowing(null));
+  }, [user, creatorName, creatorIsMe, creatorGone]);
+
+  async function changeCreatorFollow(next: boolean) {
+    setCreatorFollowing(next);
+    try {
+      const result = await setFollow(creatorName, next);
+      setCreatorFollowing(result.following);
+    } catch (e) {
+      setCreatorFollowing(!next);
+      setError(e instanceof Error ? e.message : 'Could not update follow.');
+    }
+  }
+
+  // No hover on a phone, so unfollowing asks first instead of revealing an x.
+  function toggleCreatorFollow() {
+    if (!set) return;
+    if (!user) {
+      router.push(loginRoute(`/sets/${set.slug}`));
+      return;
+    }
+    if (!creatorFollowing) {
+      void changeCreatorFollow(true);
+      return;
+    }
+    Alert.alert(`Unfollow @${creatorName}?`, undefined, [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Unfollow', style: 'destructive', onPress: () => void changeCreatorFollow(false) },
+    ]);
+  }
+
   async function toggleSetFollow() {
     if (!set) return;
     if (!user) {
@@ -332,29 +380,6 @@ export default function BinderScreen() {
     }
   }
 
-  function report() {
-    if (!set) return;
-    Alert.alert('Report this set', 'Why are you reporting it?', [
-      {
-        text: 'Explicit content',
-        onPress: () => void sendReport({ set_slug: set.slug, reason: 'explicit', details: '' }),
-      },
-      {
-        text: 'Stolen photos',
-        onPress: () => void sendReport({ set_slug: set.slug, reason: 'stolen', details: '' }),
-      },
-      {
-        text: 'Real person misuse',
-        onPress: () => void sendReport({ set_slug: set.slug, reason: 'real_person', details: '' }),
-      },
-      {
-        text: 'Spam',
-        onPress: () => void sendReport({ set_slug: set.slug, reason: 'spam', details: '' }),
-      },
-      { text: 'Cancel', style: 'cancel' },
-    ]);
-  }
-
   if (error && !set) return <ErrorText>{error}</ErrorText>;
   if (!set) return <Loading />;
 
@@ -385,7 +410,7 @@ export default function BinderScreen() {
         >
           <Feather name="arrow-left" size={22} color={colors.text} />
         </Pressable>
-        <Tag>{set.status === 'draft' ? 'Draft preview' : 'Binder'}</Tag>
+        {set.status === 'draft' ? <Tag>Draft preview</Tag> : null}
       </View>
       <Title>{set.title}</Title>
       <View style={styles.metaRow}>
@@ -395,15 +420,32 @@ export default function BinderScreen() {
           <Link
             href={{ pathname: '/users/[username]', params: { username: set.creator.username } }}
           >
-            <Text style={{ color: colors.accent }}>@{set.creator.username}</Text>
+            <Text style={styles.creator}>@{set.creator.username}</Text>
           </Link>
         )}
         {set.creator.is_demo ? <DemoBadge /> : null}
-        <Muted>
-          {' '}
-          · {set.card_count} cards · {set.opening_count} packs opened
-        </Muted>
+        {creatorFollowing !== null || (!user && !set.creator.deleted) ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`${creatorFollowing ? 'Unfollow' : 'Follow'} @${set.creator.username}`}
+            onPress={toggleCreatorFollow}
+            style={({ pressed }) => [
+              styles.creatorFollow,
+              creatorFollowing && styles.creatorFollowing,
+              pressed && { opacity: 0.7 },
+            ]}
+          >
+            <Feather
+              name={creatorFollowing ? 'user-check' : 'user-plus'}
+              size={16}
+              color={creatorFollowing ? colors.accent : colors.muted}
+            />
+          </Pressable>
+        ) : null}
       </View>
+      <Muted style={styles.counts}>
+        {set.card_count} cards · {set.opening_count} packs opened
+      </Muted>
       {set.description ? <Description text={set.description} /> : null}
       {set.tags.length ? (
         <View style={styles.tags}>
@@ -412,37 +454,39 @@ export default function BinderScreen() {
       ) : null}
 
       {set.status === 'published' ? (
-        <View style={styles.social}>
-          <Pressable
-            onPress={() => void toggleSetLike()}
-            style={[styles.like, set.liked && { borderColor: colors.danger }]}
-          >
-            <Text style={{ color: set.liked ? colors.danger : colors.muted }}>
-              ♥ {set.like_count}
-            </Text>
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityState={{ selected: set.following }}
-            onPress={() => void toggleSetFollow()}
-            style={[styles.follow, set.following && styles.followOn]}
-          >
-            <Feather
-              name="package"
-              size={14}
-              color={set.following ? colors.accent : colors.muted}
+        <>
+          <View style={styles.social}>
+            <ActionChip
+              icon={set.following ? 'check' : 'package'}
+              label={set.following ? 'Following' : 'Follow set'}
+              count={set.follower_count || undefined}
+              tone={set.following ? 'on' : 'plain'}
+              onPress={() => void toggleSetFollow()}
             />
-            <Text style={{ color: set.following ? colors.accent : colors.muted, fontSize: 13 }}>
-              {set.following ? 'On your packs' : 'Follow set'}
-            </Text>
-          </Pressable>
-          <ShareButton path={setPath(set.slug)} title={set.title} />
-          {user ? (
-            <Pressable onPress={report}>
-              <Text style={{ color: colors.faint, fontSize: 12 }}>Report</Text>
-            </Pressable>
-          ) : null}
-        </View>
+            <ActionChip
+              icon="heart"
+              count={set.like_count}
+              tone={set.liked ? 'liked' : 'plain'}
+              accessibilityLabel={`${set.liked ? 'Unlike' : 'Like'} ${set.title}`}
+              onPress={() => void toggleSetLike()}
+            />
+            <ShareButton path={setPath(set.slug)} title={set.title} />
+            <MoreButton
+              title={set.title}
+              items={
+                user && user.profile.username !== set.creator.username
+                  ? [{ label: 'Report this set', icon: 'flag', onSelect: () => setReporting(true) }]
+                  : []
+              }
+            />
+          </View>
+          <ReportSheet
+            visible={reporting}
+            subject="this set"
+            target={{ set_slug: set.slug }}
+            onClose={() => setReporting(false)}
+          />
+        </>
       ) : null}
       {set.status === 'published' && !set.following ? (
         <Muted style={styles.followNote}>Keeps its free pack on your Packs tab.</Muted>
@@ -518,7 +562,7 @@ export default function BinderScreen() {
         <View style={styles.cardSection}>
           <View style={styles.sectionHead}>
             <Text style={styles.sectionTitle}>All cards</Text>
-            <Muted style={{ fontSize: 12 }}>{set.card_count} in this set</Muted>
+            <Muted style={{ fontSize: 14 }}>{set.card_count} in this set</Muted>
           </View>
           <View style={styles.grid}>
             {set.cards.map((card) => (
@@ -552,7 +596,7 @@ export default function BinderScreen() {
         <View style={styles.cardSection}>
           <View style={styles.sectionHead}>
             <Text style={styles.sectionTitle}>Collected</Text>
-            <Muted style={{ fontSize: 12 }}>
+            <Muted style={{ fontSize: 14 }}>
               {owned === null
                 ? 'Loading'
                 : `${collected.length} of ${set.card_count} · ${owned.length} copies`}
@@ -595,7 +639,7 @@ export default function BinderScreen() {
                       <View style={styles.gainSlot} />
                       <View style={styles.recycleControl}>
                         {copy.held ? (
-                          <Muted style={{ fontSize: 11 }}>In a pending trade</Muted>
+                          <Muted style={{ fontSize: 13 }}>In a pending trade</Muted>
                         ) : copy.copies > 1 ? (
                           <Pressable
                             disabled={recycling === copy.id}
@@ -608,7 +652,7 @@ export default function BinderScreen() {
                             <Text style={styles.recycleText}>×{copy.copies} · Recycle one</Text>
                           </Pressable>
                         ) : (
-                          <Muted style={{ fontSize: 11 }}>Only copy</Muted>
+                          <Muted style={{ fontSize: 13 }}>Only copy</Muted>
                         )}
                       </View>
                       <View style={styles.gainSlot}>
@@ -629,13 +673,7 @@ export default function BinderScreen() {
 
       {opening ? <PackReveal opening={opening} onClose={() => setOpening(null)} /> : null}
       {selected ? (
-        <Modal
-          visible
-          statusBarTranslucent
-          navigationBarTranslucent
-          supportedOrientations={['portrait', 'landscape']}
-          onRequestClose={() => setSelected(null)}
-        >
+        <InspectorModal open onClose={() => setSelected(null)}>
           <CardInspector
             card={selected.card}
             setTitle={set.title}
@@ -646,16 +684,28 @@ export default function BinderScreen() {
             copies={selected.copies}
             actions={
               set.status === 'published' ? (
-                <ShareButton
-                  dark
-                  path={cardPath(set.slug, selected.card.position)}
-                  title={selected.card.title}
+                <InspectorActions
+                  card={selected.card}
+                  set={set}
+                  liked={set.liked_card_ids.includes(selected.card.id)}
+                  likeCount={
+                    set.cards.find((entry) => entry.id === selected.card.id)?.like_count ?? 0
+                  }
+                  onLike={
+                    user
+                      ? () => {
+                          void toggleCardLike(selected.card.id).catch((e: Error) =>
+                            setError(e.message),
+                          );
+                        }
+                      : undefined
+                  }
                 />
               ) : undefined
             }
             onClose={() => setSelected(null)}
           />
-        </Modal>
+        </InspectorModal>
       ) : null}
     </ScrollView>
   );
@@ -663,18 +713,19 @@ export default function BinderScreen() {
 
 const styles = StyleSheet.create({
   tags: { marginTop: 10 },
-  follow: {
-    flexDirection: 'row',
+  creator: { color: colors.accent, fontFamily: fonts.medium, fontSize: 16 },
+  creatorFollow: {
+    width: 32,
+    height: 32,
     alignItems: 'center',
-    gap: 7,
+    justifyContent: 'center',
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: colors.bdr2,
-    borderRadius: 6,
-    paddingHorizontal: 11,
-    paddingVertical: 8,
   },
-  followOn: { borderColor: colors.accent, backgroundColor: 'rgba(30,110,103,0.09)' },
-  followNote: { fontSize: 12, marginTop: 6 },
+  creatorFollowing: { borderColor: colors.accent, backgroundColor: 'rgba(30,110,103,0.09)' },
+  counts: { marginBottom: 8 },
+  followNote: { fontSize: 14, marginTop: 6 },
   topline: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 4 },
   back: {
     width: 36,
@@ -686,14 +737,19 @@ const styles = StyleSheet.create({
     borderColor: colors.bdr2,
     backgroundColor: colors.sur,
   },
-  metaRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
-  social: { flexDirection: 'row', gap: 14, alignItems: 'center', marginVertical: 10 },
-  like: {
-    borderWidth: 1,
-    borderColor: colors.bdr2,
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 3,
+  metaRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
+  },
+  social: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    alignItems: 'center',
+    marginVertical: 10,
   },
   packs: {
     backgroundColor: colors.sur,
@@ -747,5 +803,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
   },
-  recycleText: { color: colors.muted, fontSize: 11 },
+  recycleText: { color: colors.muted, fontSize: 13 },
 });

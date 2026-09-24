@@ -2,7 +2,16 @@ import { cardCode, SHOWCASE_SLOTS } from '@miscellary/shared';
 import type { OwnedCard, ProfilePage } from '@miscellary/shared';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import CardPreview from '@/components/CardPreview';
 import FilterField from '@/components/FilterField';
 import LoginGate from '@/components/LoginGate';
@@ -10,7 +19,7 @@ import ProfileView from '@/components/ProfileView';
 import SharedSurface from '@/components/SharedSurface';
 import { useAuth } from '@/lib/auth';
 import { getProfile, getShowcase, listMyCards, saveShowcase, updateProfile } from '@/lib/endpoints';
-import { colors } from '@/lib/theme';
+import { colors, fonts } from '@/lib/theme';
 import { Button, ErrorText, Input, Loading, Muted, Title } from '@/components/ui';
 
 function Me() {
@@ -25,6 +34,10 @@ function Me() {
   const [pickFilter, setPickFilter] = useState('');
   const [error, setError] = useState<string | null>(null);
   const pickerScrollRef = useRef<ScrollView>(null);
+  const insets = useSafeAreaInsets();
+  const { width: screenWidth } = useWindowDimensions();
+  const pickColumns = screenWidth >= 700 ? 5 : 3;
+  const pickWidth = Math.floor((screenWidth - 32 - 10 * (pickColumns - 1)) / pickColumns);
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -150,25 +163,41 @@ function Me() {
         <Modal
           visible={picking !== null}
           animationType="slide"
+          statusBarTranslucent
+          navigationBarTranslucent
           onShow={() => pickerScrollRef.current?.scrollTo({ y: 0, animated: false })}
           onRequestClose={() => setPicking(null)}
         >
           <ScrollView
             ref={pickerScrollRef}
             style={{ backgroundColor: colors.bg }}
-            contentContainerStyle={{ padding: 16, gap: 12, paddingTop: 48 }}
+            contentContainerStyle={{
+              padding: 16,
+              gap: 12,
+              paddingTop: insets.top + 16,
+              paddingBottom: insets.bottom + 24,
+            }}
           >
-            <Title>{`Pick a card for slot ${(picking ?? 0) + 1}`}</Title>
-            <View style={styles.row}>
-              {picking !== null && slots[picking] ? (
-                <Button
-                  title="Clear slot"
-                  kind="danger"
-                  onPress={() => void persistSlots(slots.map((s, i) => (i === picking ? null : s)))}
-                />
-              ) : null}
-              <Button title="Cancel" kind="secondary" onPress={() => setPicking(null)} />
+            <View style={styles.pickerHead}>
+              <Text
+                style={styles.pickerTitle}
+              >{`Pick a card for sleeve ${(picking ?? 0) + 1}`}</Text>
+              <Pressable
+                accessibilityRole="button"
+                hitSlop={10}
+                onPress={() => setPicking(null)}
+                style={({ pressed }) => pressed && { opacity: 0.6 }}
+              >
+                <Text style={styles.pickerCancel}>Cancel</Text>
+              </Pressable>
             </View>
+            {picking !== null && slots[picking] ? (
+              <Button
+                title="Empty this sleeve"
+                kind="danger"
+                onPress={() => void persistSlots(slots.map((s, i) => (i === picking ? null : s)))}
+              />
+            ) : null}
             <FilterField
               value={pickFilter}
               onChange={setPickFilter}
@@ -189,7 +218,7 @@ function Me() {
                   onPress={() => void persistSlots(slots.map((s, i) => (i === picking ? c.id : s)))}
                 >
                   <CardPreview
-                    width={140}
+                    width={pickWidth}
                     title={c.card.title}
                     printedText={c.card.printed_text}
                     code={cardCode(c.card.printed_set_code, c.card.position, c.card.set_total)}
@@ -212,17 +241,12 @@ function Me() {
       key={profile.display_name + profile.bio + String(profile.showcase.length)}
       profile={profile}
       headerExtra={
-        <>
-          <Button title="Edit profile" kind="secondary" onPress={() => setEditing(true)} />
-          <Button
-            title="Notifications"
-            kind="secondary"
-            onPress={() => router.push('/notifications')}
-          />
-          <Button title="Account" kind="secondary" onPress={() => router.push('/settings')} />
-          <Button title="Log out" kind="secondary" onPress={() => void logout()} />
-        </>
+        <Button title="Edit profile" kind="secondary" onPress={() => setEditing(true)} />
       }
+      ownItems={[
+        { label: 'Account settings', icon: 'settings', onSelect: () => router.push('/settings') },
+        { label: 'Log out', icon: 'log-out', onSelect: () => void logout() },
+      ]}
     />
   );
 }
@@ -238,5 +262,8 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   h2: { color: colors.text, fontSize: 16, fontWeight: '700', marginTop: 8 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  pickerHead: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  pickerTitle: { flex: 1, color: colors.text, fontFamily: fonts.display, fontSize: 28 },
+  pickerCancel: { color: colors.accent, fontFamily: fonts.medium, fontSize: 16 },
   row: { flexDirection: 'row', gap: 8 },
 });

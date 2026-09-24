@@ -64,5 +64,5 @@ const styles = StyleSheet.create({
     gap: 6,
     flexWrap: 'wrap',
   },
-  meta: { fontFamily: fonts.body, fontSize: 12, color: colors.muted },
+  meta: { fontFamily: fonts.body, fontSize: 14, color: colors.muted },
 });

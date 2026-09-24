@@ -24,7 +24,7 @@ function Picker({
     <View style={styles.column}>
       <View style={styles.columnHeader}>
         <Text style={{ color: colors.text, fontWeight: '600' }}>{title}</Text>
-        <Muted style={{ fontSize: 12 }}>{selected.size} selected</Muted>
+        <Muted style={{ fontSize: 14 }}>{selected.size} selected</Muted>
       </View>
       <View style={styles.grid}>
         {cards.length === 0 ? <Muted>No cards.</Muted> : null}
@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
     top: 6,
     left: 6,
     color: colors.faint,
-    fontSize: 10,
+    fontSize: 13,
     backgroundColor: colors.bg,
     paddingHorizontal: 4,
     borderRadius: 3,

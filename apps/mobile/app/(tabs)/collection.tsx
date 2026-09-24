@@ -2,7 +2,8 @@ import { cardCode, RARITIES, RARITY_LABELS } from '@miscellary/shared';
 import type { OwnedCard, SetPointsBalance } from '@miscellary/shared';
 import { Link, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import InspectorModal from '@/components/InspectorModal';
 import CardInspector from '@/components/CardInspector';
 import CardPreview from '@/components/CardPreview';
 import FilterField from '@/components/FilterField';
@@ -10,7 +11,7 @@ import LoginGate from '@/components/LoginGate';
 import PointGain from '@/components/PointGain';
 import { listAllMyCards, listMyPoints, recycleCard } from '@/lib/endpoints';
 import { colors, fonts, rarityColors } from '@/lib/theme';
-import { ErrorText, Muted, Tag, Title } from '@/components/ui';
+import { ErrorText, Muted } from '@/components/ui';
 
 function stack(owned: OwnedCard[]): OwnedCard[] {
   const seen = new Map<string, OwnedCard>();
@@ -96,8 +97,6 @@ function Collection() {
       style={{ backgroundColor: colors.bg }}
       contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
     >
-      <Tag>Collection</Tag>
-      <Title>My cards</Title>
       <ErrorText>{error}</ErrorText>
 
       {cards.length ? (
@@ -166,7 +165,7 @@ function Collection() {
             <Link href={{ pathname: '/sets/[slug]', params: { slug } }}>
               <Text style={{ color: colors.text, fontWeight: '600' }}>{list[0]?.set_title}</Text>
             </Link>
-            <Muted style={{ fontSize: 12 }}>
+            <Muted style={{ fontSize: 14 }}>
               {list.length} cards · {list.reduce((total, card) => total + card.copies, 0)} copies ·{' '}
               {points.find((p) => p.set_slug === slug)?.points ?? 0} points
             </Muted>
@@ -203,7 +202,7 @@ function Collection() {
                     <View style={styles.gainSlot} />
                     <View style={styles.recycleControl}>
                       {owned.held ? (
-                        <Muted style={{ fontSize: 11 }}>In a pending trade</Muted>
+                        <Muted style={{ fontSize: 13 }}>In a pending trade</Muted>
                       ) : owned.copies > 1 ? (
                         <Pressable
                           disabled={recycling === owned.id}
@@ -213,12 +212,12 @@ function Collection() {
                             (pressed || recycling === owned.id) && { opacity: 0.55 },
                           ]}
                         >
-                          <Text style={{ color: colors.muted, fontSize: 11 }}>
+                          <Text style={{ color: colors.muted, fontSize: 13 }}>
                             Recycle (×{owned.copies})
                           </Text>
                         </Pressable>
                       ) : (
-                        <Muted style={{ fontSize: 11 }}>Only copy</Muted>
+                        <Muted style={{ fontSize: 13 }}>Only copy</Muted>
                       )}
                     </View>
                     <View style={styles.gainSlot}>
@@ -234,13 +233,7 @@ function Collection() {
         </View>
       ))}
       {selected ? (
-        <Modal
-          visible
-          statusBarTranslucent
-          navigationBarTranslucent
-          supportedOrientations={['portrait', 'landscape']}
-          onRequestClose={() => setSelected(null)}
-        >
+        <InspectorModal open onClose={() => setSelected(null)}>
           <CardInspector
             card={selected.card}
             setTitle={selected.set_title}
@@ -250,7 +243,7 @@ function Collection() {
             copies={selected.copies}
             onClose={() => setSelected(null)}
           />
-        </Modal>
+        </InspectorModal>
       ) : null}
     </ScrollView>
   );
@@ -277,10 +270,10 @@ const styles = StyleSheet.create({
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between' },
   figure: { alignItems: 'center', gap: 2 },
   figureValue: { color: colors.text, fontFamily: fonts.display, fontSize: 26 },
-  figureLabel: { color: colors.faint, fontFamily: fonts.body, fontSize: 11 },
+  figureLabel: { color: colors.faint, fontFamily: fonts.body, fontSize: 13 },
   tiers: { gap: 7, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.bdr },
   tier: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  tierName: { width: 72, color: colors.muted, fontFamily: fonts.body, fontSize: 11 },
+  tierName: { width: 72, color: colors.muted, fontFamily: fonts.body, fontSize: 13 },
   tierTrack: {
     flex: 1,
     height: 7,

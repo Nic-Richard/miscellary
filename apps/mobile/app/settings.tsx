@@ -2,7 +2,7 @@ import { Stack, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import LoginGate from '@/components/LoginGate';
-import { Button, ErrorText, Input, Muted } from '@/components/ui';
+import { Button, ErrorText, Input, Muted, PasswordInput } from '@/components/ui';
 import { ApiRequestError } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import {
@@ -64,12 +64,11 @@ function CloseAccount() {
     >
       {open ? (
         <>
-          <Input
+          <PasswordInput
             accessibilityLabel="Current password"
             placeholder="Current password"
             value={password}
             onChangeText={setPassword}
-            secureTextEntry
           />
           <ErrorText>{error}</ErrorText>
           <Text style={styles.warning}>This cannot be undone.</Text>
@@ -173,12 +172,11 @@ function Account() {
           autoCorrect={false}
         />
         {locked ? null : (
-          <Input
+          <PasswordInput
             accessibilityLabel="Current password"
             placeholder="Current password"
             value={usernamePassword}
             onChangeText={setUsernamePassword}
-            secureTextEntry
           />
         )}
         <ErrorText>{usernameError}</ErrorText>
@@ -202,7 +200,7 @@ function Account() {
       >
         <Text style={styles.value}>{user.email}</Text>
         <Text style={user.email_verified ? styles.verified : styles.unverified}>
-          {user.email_verified ? 'VERIFIED' : 'UNVERIFIED'}
+          {user.email_verified ? 'Verified' : 'Unverified'}
         </Text>
         {user.email_verified ? null : (
           <>
@@ -218,19 +216,17 @@ function Account() {
       </Card>
 
       <Card title="Password" note="Changing it signs you out on every other device and browser.">
-        <Input
+        <PasswordInput
           accessibilityLabel="Current password"
           placeholder="Current password"
           value={current}
           onChangeText={setCurrent}
-          secureTextEntry
         />
-        <Input
+        <PasswordInput
           accessibilityLabel="New password"
           placeholder="New password"
           value={next}
           onChangeText={setNext}
-          secureTextEntry
         />
         <ErrorText>{passwordError}</ErrorText>
         {passwordDone ? <Text style={styles.done}>Your password has been changed.</Text> : null}
@@ -269,10 +265,10 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   cardTitle: { color: colors.text, fontFamily: fonts.display, fontSize: 24 },
-  note: { fontSize: 13, lineHeight: 19 },
+  note: { fontSize: 14, lineHeight: 19 },
   value: { color: colors.text, fontFamily: fonts.body, fontSize: 16 },
-  verified: { color: colors.accent, fontFamily: fonts.medium, fontSize: 11, letterSpacing: 1.3 },
-  unverified: { color: colors.gold, fontFamily: fonts.medium, fontSize: 11, letterSpacing: 1.3 },
+  verified: { color: colors.accent, fontFamily: fonts.medium, fontSize: 15 },
+  unverified: { color: colors.gold, fontFamily: fonts.medium, fontSize: 15 },
   done: { color: colors.accent, fontFamily: fonts.body, fontSize: 14 },
   warning: { color: colors.danger, fontFamily: fonts.body, fontSize: 14 },
 });

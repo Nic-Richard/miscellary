@@ -1,7 +1,7 @@
 import { SITE_URL } from '@miscellary/shared';
 import Feather from '@expo/vector-icons/Feather';
 import { Pressable, Share, StyleSheet, Text } from 'react-native';
-import { colors } from '@/lib/theme';
+import { colors, fonts } from '@/lib/theme';
 
 const SITE = process.env.EXPO_PUBLIC_SITE_URL ?? SITE_URL;
 
@@ -23,8 +23,8 @@ export default function ShareButton({
       onPress={() => void Share.share({ title, message: url, url }).catch(() => undefined)}
       style={({ pressed }) => [styles.button, dark && styles.dark, pressed && { opacity: 0.7 }]}
     >
-      <Feather name="share" size={14} color={tint} />
-      <Text style={{ color: tint, fontSize: 13 }}>Share</Text>
+      <Feather name="share" size={15} color={tint} />
+      <Text style={{ color: tint, fontFamily: fonts.medium, fontSize: 15 }}>Share</Text>
     </Pressable>
   );
 }
@@ -34,11 +34,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 7,
+    minHeight: 38,
     borderWidth: 1,
     borderColor: colors.bdr2,
     borderRadius: 6,
-    paddingHorizontal: 11,
-    paddingVertical: 8,
+    paddingHorizontal: 12,
   },
   dark: { borderColor: 'rgba(247, 241, 227, 0.32)', backgroundColor: 'rgba(247, 241, 227, 0.08)' },
 });

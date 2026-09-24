@@ -6,7 +6,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import LoginGate from '@/components/LoginGate';
 import { createSet, listMySets } from '@/lib/endpoints';
 import { colors } from '@/lib/theme';
-import { Button, ErrorText, Input, Muted, Tag, Title } from '@/components/ui';
+import { Button, ErrorText, Input, Muted } from '@/components/ui';
 
 function Studio() {
   const [sets, setSets] = useState<CardSetSummary[]>([]);
@@ -37,8 +37,7 @@ function Studio() {
       style={{ backgroundColor: colors.bg }}
       contentContainerStyle={{ padding: 16, gap: 10 }}
     >
-      <Tag>Studio</Tag>
-      <Title>Your sets</Title>
+      <Muted>Your sets. Drafts stay private until you publish.</Muted>
       <Input
         placeholder="New set title (e.g. Rocks from the backyard)"
         value={title}
@@ -58,7 +57,7 @@ function Studio() {
           <Pressable style={styles.row}>
             <View style={{ flex: 1 }}>
               <Text style={{ color: colors.text, fontWeight: '600' }}>{s.title}</Text>
-              <Muted style={{ fontSize: 12 }}>{s.card_count} cards</Muted>
+              <Muted style={{ fontSize: 14 }}>{s.card_count} cards</Muted>
             </View>
             <Text
               style={[
@@ -66,7 +65,7 @@ function Studio() {
                 s.status === 'published' && { color: colors.green, borderColor: colors.green },
               ]}
             >
-              {s.status}
+              {s.status === 'published' ? 'Published' : 'Draft'}
             </Text>
           </Pressable>
         </Link>
@@ -96,9 +95,8 @@ const styles = StyleSheet.create({
   },
   status: {
     color: colors.muted,
-    fontSize: 10,
+    fontSize: 13,
     fontWeight: '700',
-    textTransform: 'uppercase',
     borderWidth: 1,
     borderColor: colors.bdr2,
     borderRadius: 3,

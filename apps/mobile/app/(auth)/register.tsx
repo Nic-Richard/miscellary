@@ -5,7 +5,7 @@ import { ApiRequestError } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { internalRoute, RETURN_PARAM } from '@/lib/returnTo';
 import { colors } from '@/lib/theme';
-import { Button, ErrorText, Input, Screen, Title } from '@/components/ui';
+import { Button, ErrorText, Input, Screen, Title, PasswordInput } from '@/components/ui';
 
 export default function RegisterScreen() {
   const { register } = useAuth();
@@ -37,7 +37,7 @@ export default function RegisterScreen() {
 
   const fieldError = (name: string) =>
     fields[name]?.map((m) => (
-      <Text key={m} style={{ color: colors.danger, fontSize: 12 }}>
+      <Text key={m} style={{ color: colors.danger, fontSize: 14 }}>
         {m}
       </Text>
     ));
@@ -61,7 +61,7 @@ export default function RegisterScreen() {
         onChangeText={setUsername}
       />
       {fieldError('username')}
-      <Input placeholder="Password" secureTextEntry value={password} onChangeText={setPassword} />
+      <PasswordInput placeholder="Password" value={password} onChangeText={setPassword} />
       {fieldError('password')}
       <Button
         title={busy ? 'Creating…' : 'Sign up'}

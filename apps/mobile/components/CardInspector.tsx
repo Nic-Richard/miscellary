@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react';
 import type { Card, Creator } from '@miscellary/shared';
+
 import { StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import SharedSurface from './SharedSurface';
 
 export default function CardInspector({
@@ -24,6 +26,7 @@ export default function CardInspector({
   actions?: ReactNode;
   onClose: () => void;
 }) {
+  const insets = useSafeAreaInsets();
   return (
     <View style={styles.web}>
       <SharedSurface
@@ -33,12 +36,14 @@ export default function CardInspector({
           if (type === 'close') onClose();
         }}
       />
-      {actions ? <View style={styles.webActions}>{actions}</View> : null}
+      {actions ? (
+        <View style={[styles.webActions, { bottom: insets.bottom + 14 }]}>{actions}</View>
+      ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   web: { flex: 1, backgroundColor: '#241d16' },
-  webActions: { position: 'absolute', right: 14, bottom: 14 },
+  webActions: { position: 'absolute', right: 14 },
 });

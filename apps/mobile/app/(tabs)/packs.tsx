@@ -3,16 +3,8 @@ import type { CardSetSummary, PackEntry, PackOpening } from '@miscellary/shared'
 import Feather from '@expo/vector-icons/Feather';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import {
-  Alert,
-  Image,
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import MoreButton from '@/components/MoreButton';
 import CardPreview from '@/components/CardPreview';
 import DemoBadge from '@/components/DemoBadge';
 import FilterField from '@/components/FilterField';
@@ -87,14 +79,6 @@ function Post({
   const affordable = entry.points >= entry.pack_cost;
   const open = () => router.push({ pathname: '/sets/[slug]', params: { slug: set.slug } });
 
-  function more() {
-    Alert.alert(set.title, undefined, [
-      { text: 'Open the binder', onPress: open },
-      { text: 'Stop following', style: 'destructive', onPress: onUnfollow },
-      { text: 'Cancel', style: 'cancel' },
-    ]);
-  }
-
   return (
     <View style={[styles.post, entry.free_available && styles.ready]}>
       <View style={styles.byline}>
@@ -124,15 +108,13 @@ function Post({
             )}
           </View>
         </Pressable>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={`More for ${set.title}`}
-          hitSlop={10}
-          onPress={more}
-          style={({ pressed }) => [styles.more, pressed && { opacity: 0.6 }]}
-        >
-          <Feather name="more-horizontal" size={19} color={colors.faint} />
-        </Pressable>
+        <MoreButton
+          title={set.title}
+          items={[
+            { label: 'Open the binder', icon: 'book-open', onSelect: open },
+            { label: 'Stop following', icon: 'x-circle', onSelect: onUnfollow },
+          ]}
+        />
       </View>
 
       <View style={styles.body}>
@@ -205,10 +187,10 @@ function Post({
       <View style={styles.pulls}>
         <Text style={styles.pullsLabel}>
           {entry.recent_cards.length
-            ? 'YOUR LATEST FROM THIS SET'
+            ? 'Your latest from this set'
             : entry.free_available
-              ? 'NOTHING YET — TODAY’S PACK IS WAITING'
-              : 'NOTHING FROM THIS SET YET'}
+              ? 'Nothing yet — today’s pack is waiting'
+              : 'Nothing from this set yet'}
         </Text>
         {entry.recent_cards.length ? (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.pullsRow}>
@@ -425,9 +407,9 @@ export default function PacksScreen() {
 
 const styles = StyleSheet.create({
   content: { padding: 16, paddingBottom: 40, gap: 14 },
-  heading: { color: colors.text, fontFamily: fonts.display, fontSize: 30 },
+  heading: { color: colors.text, fontFamily: fonts.medium, fontSize: 18 },
   filter: { marginTop: 14 },
-  standing: { color: colors.muted, fontFamily: fonts.body, fontSize: 13, marginTop: -8 },
+  standing: { color: colors.muted, fontFamily: fonts.body, fontSize: 14, marginTop: -8 },
 
   post: {
     padding: 14,
@@ -460,8 +442,7 @@ const styles = StyleSheet.create({
   monogramText: { color: colors.sur, fontFamily: fonts.display, fontSize: 17 },
   bylineName: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   bylineStrong: { color: colors.text, fontFamily: fonts.medium, fontSize: 15 },
-  bylineHandle: { color: colors.faint, fontFamily: fonts.body, fontSize: 12 },
-  more: { padding: 4 },
+  bylineHandle: { color: colors.faint, fontFamily: fonts.body, fontSize: 14 },
 
   body: { flexDirection: 'row', gap: 14, paddingTop: 14 },
   packPress: { position: 'relative' },
@@ -484,7 +465,7 @@ const styles = StyleSheet.create({
 
   detail: { flex: 1, minWidth: 0, gap: 7 },
   name: { color: colors.text, fontFamily: fonts.display, fontSize: 25, lineHeight: 27 },
-  sub: { color: colors.faint, fontFamily: fonts.body, fontSize: 12, marginTop: -4 },
+  sub: { color: colors.faint, fontFamily: fonts.body, fontSize: 14, marginTop: -4 },
 
   progress: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   track: {
@@ -497,23 +478,23 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   fill: { height: '100%' },
-  count: { color: colors.muted, fontFamily: fonts.medium, fontSize: 12 },
+  count: { color: colors.muted, fontFamily: fonts.medium, fontSize: 14 },
 
   stats: { flexDirection: 'row', flexWrap: 'wrap', gap: 14 },
   stat: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   statValue: { color: colors.text, fontFamily: fonts.display, fontSize: 15 },
-  statLabel: { color: colors.faint, fontFamily: fonts.body, fontSize: 11 },
+  statLabel: { color: colors.faint, fontFamily: fonts.body, fontSize: 13 },
 
   actions: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 12, marginTop: 14 },
   waiting: { flexDirection: 'row', alignItems: 'baseline', gap: 8 },
   clock: { color: colors.muted, fontFamily: fonts.display, fontSize: 22 },
-  waitingLabel: { color: colors.faint, fontFamily: fonts.body, fontSize: 11 },
+  waitingLabel: { color: colors.faint, fontFamily: fonts.body, fontSize: 13 },
   points: { flexDirection: 'row', alignItems: 'baseline', gap: 12 },
-  pointsText: { color: colors.muted, fontFamily: fonts.medium, fontSize: 12 },
-  pointsLink: { color: colors.accent, fontFamily: fonts.body, fontSize: 12 },
+  pointsText: { color: colors.muted, fontFamily: fonts.medium, fontSize: 14 },
+  pointsLink: { color: colors.accent, fontFamily: fonts.body, fontSize: 14 },
 
   pulls: { marginTop: 14, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.bdr },
-  pullsLabel: { color: colors.faint, fontFamily: fonts.medium, fontSize: 10, letterSpacing: 1.1 },
+  pullsLabel: { color: colors.muted, fontFamily: fonts.medium, fontSize: 15 },
   pullsRow: { marginTop: 10 },
   pull: { marginRight: 8 },
   facedownRow: { flexDirection: 'row', gap: 8, marginTop: 10, opacity: 0.5 },

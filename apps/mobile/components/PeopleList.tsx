@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
     borderColor: colors.bdr2,
     borderRadius: 6,
   },
-  moreText: { color: colors.accent, fontFamily: fonts.medium, fontSize: 13 },
+  moreText: { color: colors.accent, fontFamily: fonts.medium, fontSize: 14 },
   root: {
     gap: 8,
     padding: 12,
@@ -121,9 +121,7 @@ const styles = StyleSheet.create({
   close: {
     color: colors.accent,
     fontFamily: fonts.medium,
-    fontSize: 12,
-    letterSpacing: 1,
-    textTransform: 'uppercase',
+    fontSize: 14,
   },
   person: {
     paddingVertical: 9,
@@ -131,5 +129,5 @@ const styles = StyleSheet.create({
     borderTopColor: colors.bdr,
   },
   name: { color: colors.text, fontFamily: fonts.medium, fontSize: 15 },
-  handle: { color: colors.faint, fontFamily: fonts.body, fontSize: 13 },
+  handle: { color: colors.faint, fontFamily: fonts.body, fontSize: 14 },
 });

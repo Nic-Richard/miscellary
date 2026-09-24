@@ -1,9 +1,9 @@
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
 import { ActivityIndicator, View } from 'react-native';
 import { AuthProvider } from '@/lib/auth';
-import DevMenu from '@/components/DevMenu';
 import { colors, fonts } from '@/lib/theme';
 import displayFont from '../assets/fonts/BebasNeue-Regular.ttf';
 import bodyFont from '../assets/fonts/RobotoCondensed-Regular.ttf';
@@ -14,6 +14,25 @@ import archivo from '../assets/fonts/ArchivoBlack_400Regular.ttf';
 import spacemono from '../assets/fonts/SpaceMono_400Regular.ttf';
 import caveat from '../assets/fonts/Caveat_400Regular.ttf';
 import alfa from '../assets/fonts/AlfaSlabOne_400Regular.ttf';
+
+// Android draws the app edge to edge, so headerless screens would scroll under the
+// status bar. A strip in the page colour keeps the clock and icons readable.
+function StatusBarScrim() {
+  const insets = useSafeAreaInsets();
+  return (
+    <View
+      pointerEvents="none"
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: insets.top,
+        backgroundColor: colors.bg,
+      }}
+    />
+  );
+}
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
@@ -40,7 +59,7 @@ export default function RootLayout() {
       <StatusBar style="dark" />
       <Stack
         screenOptions={{
-          headerStyle: { backgroundColor: colors.sur },
+          headerStyle: { backgroundColor: colors.bg },
           headerTintColor: colors.text,
           headerTitleStyle: { fontFamily: fonts.display, fontSize: 24 },
           headerShadowVisible: false,
@@ -58,7 +77,7 @@ export default function RootLayout() {
         <Stack.Screen name="trades/new" options={{ title: 'New offer' }} />
         <Stack.Screen name="search" options={{ title: 'Search' }} />
       </Stack>
-      <DevMenu />
+      <StatusBarScrim />
     </AuthProvider>
   );
 }

@@ -23,7 +23,6 @@ const styles = StyleSheet.create({
   text: {
     color: colors.accent,
     fontFamily: fonts.medium,
-    fontSize: 9,
-    textTransform: 'uppercase',
+    fontSize: 13,
   },
 });

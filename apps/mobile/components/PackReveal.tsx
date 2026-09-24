@@ -1,6 +1,6 @@
 import type { PackOpening } from '@miscellary/shared';
-import { StatusBar } from 'expo-status-bar';
-import { Modal, View } from 'react-native';
+import { View } from 'react-native';
+import InspectorModal from './InspectorModal';
 import SharedSurface from './SharedSurface';
 
 export default function PackReveal({
@@ -11,14 +11,7 @@ export default function PackReveal({
   onClose: () => void;
 }) {
   return (
-    <Modal
-      visible
-      statusBarTranslucent
-      navigationBarTranslucent
-      onRequestClose={onClose}
-      supportedOrientations={['portrait', 'landscape']}
-    >
-      <StatusBar style="light" backgroundColor="#103832" translucent />
+    <InspectorModal open onClose={onClose}>
       <View
         style={{
           flex: 1,
@@ -33,6 +26,6 @@ export default function PackReveal({
           }}
         />
       </View>
-    </Modal>
+    </InspectorModal>
   );
 }

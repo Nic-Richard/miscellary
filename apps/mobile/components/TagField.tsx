@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
     paddingRight: 8,
     paddingVertical: 6,
   },
-  chipText: { color: colors.text, fontFamily: fonts.body, fontSize: 13 },
+  chipText: { color: colors.text, fontFamily: fonts.body, fontSize: 14 },
   suggestion: {
     borderWidth: 1,
     borderStyle: 'dashed',
@@ -168,6 +168,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 5,
   },
-  suggestionText: { color: colors.muted, fontFamily: fonts.body, fontSize: 12 },
-  note: { fontSize: 12 },
+  suggestionText: { color: colors.muted, fontFamily: fonts.body, fontSize: 14 },
+  note: { fontSize: 14 },
 });

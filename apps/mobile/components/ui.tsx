@@ -1,3 +1,5 @@
+import Feather from '@expo/vector-icons/Feather';
+import { useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import type { PressableProps, TextInputProps, ViewProps } from 'react-native';
 import { colors, fonts } from '@/lib/theme';
@@ -38,6 +40,31 @@ export function Input(props: TextInputProps) {
       {...props}
       style={[styles.input, props.style]}
     />
+  );
+}
+
+export function PasswordInput(props: Omit<TextInputProps, 'secureTextEntry'>) {
+  const [shown, setShown] = useState(false);
+  return (
+    <View style={styles.passwordWrap}>
+      <Input
+        autoCapitalize="none"
+        autoCorrect={false}
+        {...props}
+        secureTextEntry={!shown}
+        style={[styles.passwordInput, props.style]}
+      />
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={shown ? 'Hide password' : 'Show password'}
+        accessibilityState={{ selected: shown }}
+        hitSlop={8}
+        onPress={() => setShown((current) => !current)}
+        style={styles.passwordToggle}
+      >
+        <Feather name={shown ? 'eye-off' : 'eye'} size={20} color={colors.faint} />
+      </Pressable>
+    </View>
   );
 }
 
@@ -108,15 +135,13 @@ export function Chip({
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg, padding: 16 },
   tag: {
-    color: colors.gold,
+    color: colors.accent,
     fontFamily: fonts.medium,
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 1.5,
-    textTransform: 'uppercase',
+    fontSize: 15,
+    marginBottom: 2,
   },
   title: { color: colors.text, fontFamily: fonts.display, fontSize: 34, marginBottom: 12 },
-  muted: { color: colors.muted, fontFamily: fonts.body, fontSize: 15 },
+  muted: { color: colors.muted, fontFamily: fonts.body, fontSize: 16, lineHeight: 22 },
   error: { color: colors.danger, fontFamily: fonts.body, fontSize: 15, marginVertical: 6 },
   input: {
     backgroundColor: colors.sur,
@@ -138,7 +163,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     alignItems: 'center',
   },
-  buttonText: { fontFamily: fonts.display, fontSize: 20, letterSpacing: 0.6 },
+  buttonText: { fontFamily: fonts.medium, fontSize: 17 },
   chip: {
     borderWidth: 1,
     borderColor: colors.bdr2,
@@ -149,4 +174,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   chipActive: { borderColor: colors.accent, backgroundColor: colors.accent },
+  passwordWrap: { justifyContent: 'center' },
+  passwordInput: { paddingRight: 48 },
+  passwordToggle: {
+    position: 'absolute',
+    right: 6,
+    width: 38,
+    height: 38,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });

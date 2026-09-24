@@ -97,7 +97,7 @@ function Row({ notification }: { notification: Notification }) {
 }
 
 const FILTERS: { value: 'all' | Notification['kind']; label: string }[] = [
-  { value: 'all', label: 'Everything' },
+  { value: 'all', label: 'All' },
   { value: 'set_like', label: 'Set likes' },
   { value: 'card_like', label: 'Card likes' },
   { value: 'set_comment', label: 'Comments' },
@@ -291,8 +291,8 @@ const styles = StyleSheet.create({
   said: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 5 },
   actor: { color: colors.text, fontFamily: fonts.medium, fontSize: 15 },
   text: { color: colors.text, fontFamily: fonts.body, fontSize: 15 },
-  quote: { color: colors.muted, fontFamily: fonts.body, fontSize: 13, fontStyle: 'italic' },
-  when: { color: colors.faint, fontFamily: fonts.body, fontSize: 11 },
+  quote: { color: colors.muted, fontFamily: fonts.body, fontSize: 14, fontStyle: 'italic' },
+  when: { color: colors.faint, fontFamily: fonts.body, fontSize: 13 },
   more: {
     alignItems: 'center',
     marginTop: 14,
@@ -301,7 +301,7 @@ const styles = StyleSheet.create({
     borderColor: colors.bdr2,
     borderRadius: 7,
   },
-  moreText: { color: colors.accent, fontFamily: fonts.medium, fontSize: 13 },
+  moreText: { color: colors.accent, fontFamily: fonts.medium, fontSize: 14 },
   empty: {
     padding: 24,
     gap: 12,
@@ -329,6 +329,6 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
   },
   filterOn: { borderColor: colors.accent, backgroundColor: 'rgba(30,110,103,0.1)' },
-  filterText: { color: colors.muted, fontFamily: fonts.body, fontSize: 13 },
+  filterText: { color: colors.muted, fontFamily: fonts.body, fontSize: 14 },
   filterTextOn: { color: colors.accent, fontFamily: fonts.medium },
 });

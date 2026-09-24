@@ -1,5 +1,6 @@
 import Feather from '@expo/vector-icons/Feather';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, fonts } from '@/lib/theme';
 
 export interface SheetChoice<T extends string> {
@@ -22,11 +23,21 @@ export default function ChoiceSheet<T extends string>({
   onChoose: (value: T) => void;
   onClose: () => void;
 }) {
+  const insets = useSafeAreaInsets();
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
+    // Drawn under the system bars so the sheet reaches the screen edge on Android;
+    // the inset padding keeps its buttons clear of the gesture bar.
+    <Modal
+      visible={visible}
+      animationType="slide"
+      transparent
+      statusBarTranslucent
+      navigationBarTranslucent
+      onRequestClose={onClose}
+    >
       <View style={styles.fill}>
         <Pressable style={styles.scrim} onPress={onClose} accessibilityLabel="Close" />
-        <View style={styles.sheet}>
+        <View style={[styles.sheet, { paddingBottom: 24 + insets.bottom }]}>
           <View style={styles.grip} />
           <Text accessibilityRole="header" style={styles.title}>
             {title}
@@ -76,7 +87,6 @@ const styles = StyleSheet.create({
     borderColor: colors.bdr2,
     paddingHorizontal: 18,
     paddingTop: 10,
-    paddingBottom: 30,
   },
   grip: {
     alignSelf: 'center',
@@ -110,13 +120,11 @@ const styles = StyleSheet.create({
   },
   words: { flex: 1, gap: 2 },
   label: { color: colors.text, fontFamily: fonts.medium, fontSize: 16 },
-  note: { color: colors.muted, fontFamily: fonts.body, fontSize: 13 },
+  note: { color: colors.muted, fontFamily: fonts.body, fontSize: 14 },
   cancel: { alignSelf: 'center', marginTop: 16, padding: 8 },
   cancelText: {
     color: colors.muted,
     fontFamily: fonts.medium,
-    fontSize: 13,
-    letterSpacing: 1,
-    textTransform: 'uppercase',
+    fontSize: 16,
   },
 });

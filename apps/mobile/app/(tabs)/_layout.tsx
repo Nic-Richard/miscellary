@@ -1,4 +1,5 @@
-import { Tabs } from 'expo-router';
+import { router, Tabs } from 'expo-router';
+import { Pressable } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 import Svg, { Path } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -42,7 +43,7 @@ export default function TabsLayout() {
           paddingBottom: Math.max(insets.bottom, 8),
           elevation: 0,
         },
-        tabBarLabelStyle: { fontFamily: fonts.medium, fontSize: 11, marginTop: 3 },
+        tabBarLabelStyle: { fontFamily: fonts.medium, fontSize: 13, marginTop: 3 },
         tabBarActiveTintColor: colors.accent,
         tabBarInactiveTintColor: colors.muted,
         tabBarHideOnKeyboard: true,
@@ -57,7 +58,24 @@ export default function TabsLayout() {
       <Tabs.Screen name="collection" options={{ title: 'My cards', tabBarIcon: cardsIcon }} />
       <Tabs.Screen name="trades" options={{ title: 'Trades', tabBarIcon: icon('repeat') }} />
       <Tabs.Screen name="studio" options={{ title: 'Studio', tabBarIcon: icon('edit-3') }} />
-      <Tabs.Screen name="profile" options={{ title: 'Profile', tabBarIcon: icon('user') }} />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Profile',
+          tabBarIcon: icon('user'),
+          headerRight: () => (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Notifications"
+              hitSlop={10}
+              onPress={() => router.push('/notifications')}
+              style={({ pressed }) => ({ marginRight: 16, opacity: pressed ? 0.6 : 1 })}
+            >
+              <Feather name="bell" size={22} color={colors.text} />
+            </Pressable>
+          ),
+        }}
+      />
     </Tabs>
   );
 }

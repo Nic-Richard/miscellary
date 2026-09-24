@@ -35,5 +35,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 5,
   },
-  text: { color: colors.muted, fontFamily: fonts.body, fontSize: 13 },
+  text: { color: colors.muted, fontFamily: fonts.body, fontSize: 14 },
 });

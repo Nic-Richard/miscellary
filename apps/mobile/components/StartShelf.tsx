@@ -111,6 +111,6 @@ const styles = StyleSheet.create({
   pack: { marginBottom: 6, borderRadius: 4, overflow: 'hidden' },
   packOn: { borderWidth: 3, borderColor: colors.accent, transform: [{ translateY: -6 }] },
   name: { color: colors.text, fontFamily: fonts.medium, fontSize: 14 },
-  meta: { color: colors.faint, fontFamily: fonts.body, fontSize: 12 },
-  metaOn: { color: colors.accent, fontFamily: fonts.medium, fontSize: 12 },
+  meta: { color: colors.faint, fontFamily: fonts.body, fontSize: 14 },
+  metaOn: { color: colors.accent, fontFamily: fonts.medium, fontSize: 14 },
 });

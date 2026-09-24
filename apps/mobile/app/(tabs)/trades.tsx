@@ -1,17 +1,24 @@
 import type { OwnedCard, TradeOffer } from '@miscellary/shared';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import InspectorModal from '@/components/InspectorModal';
 import CardInspector from '@/components/CardInspector';
 import LoginGate from '@/components/LoginGate';
 import OfferCard from '@/components/OfferCard';
 import { useAuth } from '@/lib/auth';
 import { actOnOffer, listOffers } from '@/lib/endpoints';
 import { colors, fonts } from '@/lib/theme';
-import { Button, Chip, ErrorText, Input, Muted, Tag, Title } from '@/components/ui';
+import { Button, Chip, ErrorText, Input, Muted } from '@/components/ui';
 import VerifyEmailNotice from '@/components/VerifyEmailNotice';
 
 type Box = 'inbox' | 'outbox' | 'history';
+
+const BOX_LABELS: Record<Box, string> = {
+  inbox: 'Received',
+  outbox: 'Sent',
+  history: 'History',
+};
 
 const NOTHING: Record<Box, string> = {
   inbox: 'Nothing on the table. When another collector offers you a trade, it lands here.',
@@ -24,7 +31,7 @@ function DealMat({ box }: { box: Box }) {
     <View style={styles.mat}>
       <View style={styles.matSides}>
         <View style={styles.matSide}>
-          <Text style={styles.matLabel}>YOU GIVE</Text>
+          <Text style={styles.matLabel}>You give</Text>
           <View style={styles.matSlots}>
             {[0, 1, 2].map((i) => (
               <View key={i} style={styles.matSlot} />
@@ -32,7 +39,7 @@ function DealMat({ box }: { box: Box }) {
           </View>
         </View>
         <View style={styles.matSide}>
-          <Text style={styles.matLabel}>THEY GIVE</Text>
+          <Text style={styles.matLabel}>They give</Text>
           <View style={styles.matSlots}>
             {[0, 1, 2].map((i) => (
               <View key={i} style={styles.matSlot} />
@@ -86,8 +93,6 @@ function Trades() {
       style={{ backgroundColor: colors.bg }}
       contentContainerStyle={{ padding: 16, gap: 10, paddingBottom: 40 }}
     >
-      <Tag>Trading</Tag>
-      <Title>Trade offers</Title>
       <View style={styles.row}>
         <Input
           placeholder="Start a trade with @username"
@@ -109,12 +114,7 @@ function Trades() {
       </View>
       <View style={styles.row}>
         {(['inbox', 'outbox', 'history'] as Box[]).map((b) => (
-          <Chip
-            key={b}
-            label={b[0]!.toUpperCase() + b.slice(1)}
-            active={b === box}
-            onPress={() => setBox(b)}
-          />
+          <Chip key={b} label={BOX_LABELS[b]} active={b === box} onPress={() => setBox(b)} />
         ))}
       </View>
       <ErrorText>{error}</ErrorText>
@@ -131,13 +131,7 @@ function Trades() {
         />
       ))}
       {selected ? (
-        <Modal
-          visible
-          statusBarTranslucent
-          navigationBarTranslucent
-          supportedOrientations={['portrait', 'landscape']}
-          onRequestClose={() => setSelected(null)}
-        >
+        <InspectorModal open onClose={() => setSelected(null)}>
           <CardInspector
             card={selected.card}
             setTitle={selected.set_title}
@@ -147,7 +141,7 @@ function Trades() {
             copies={selected.copies}
             onClose={() => setSelected(null)}
           />
-        </Modal>
+        </InspectorModal>
       ) : null}
     </ScrollView>
   );
@@ -173,7 +167,7 @@ const styles = StyleSheet.create({
   },
   matSides: { flexDirection: 'row', justifyContent: 'space-around', gap: 14 },
   matSide: { alignItems: 'center', gap: 8 },
-  matLabel: { color: colors.faint, fontFamily: fonts.medium, fontSize: 10, letterSpacing: 1.3 },
+  matLabel: { color: colors.muted, fontFamily: fonts.medium, fontSize: 15 },
   matSlots: { flexDirection: 'row', gap: 6 },
   matSlot: {
     width: 40,

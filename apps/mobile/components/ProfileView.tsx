@@ -2,9 +2,13 @@ import { profilePath, SHOWCASE_SLOTS } from '@miscellary/shared';
 import type { OwnedCard, ProfilePage } from '@miscellary/shared';
 import { Link, router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useAuth } from '@/lib/auth';
-import { sendReport, setFollow } from '@/lib/endpoints';
+import { setFollow } from '@/lib/endpoints';
+import InspectorModal from './InspectorModal';
+import MoreButton from '@/components/MoreButton';
+import type { MoreItem } from '@/components/MoreButton';
+import ReportSheet from '@/components/ReportSheet';
 import ShareButton from '@/components/ShareButton';
 import PeopleList from './PeopleList';
 import { colors } from '@/lib/theme';
@@ -16,15 +20,19 @@ import { Button, Muted } from './ui';
 export default function ProfileView({
   profile: initial,
   headerExtra,
+  ownItems = [],
 }: {
   profile: ProfilePage;
   headerExtra?: React.ReactNode;
+  /** Menu items for your own profile, where there is nothing to report. */
+  ownItems?: MoreItem[];
 }) {
   const { user } = useAuth();
   const [profile, setProfile] = useState(initial);
   const [selected, setSelected] = useState<OwnedCard | null>(null);
   const [people, setPeople] = useState<'followers' | 'following' | null>(null);
   const [followBusy, setFollowBusy] = useState(false);
+  const [reporting, setReporting] = useState(false);
   const showcase = useMemo(
     () =>
       Array.from(
@@ -59,26 +67,6 @@ export default function ProfileView({
     } finally {
       setFollowBusy(false);
     }
-  }
-
-  function report() {
-    Alert.alert(`Report @${profile.username}`, undefined, [
-      {
-        text: 'Harassment',
-        onPress: () =>
-          void sendReport({ username: profile.username, reason: 'harassment', details: '' }),
-      },
-      {
-        text: 'Spam',
-        onPress: () => void sendReport({ username: profile.username, reason: 'spam', details: '' }),
-      },
-      {
-        text: 'Something else',
-        onPress: () =>
-          void sendReport({ username: profile.username, reason: 'other', details: '' }),
-      },
-      { text: 'Cancel', style: 'cancel' },
-    ]);
   }
 
   return (
@@ -139,7 +127,7 @@ export default function ProfileView({
               onPress={() => void toggleFollow()}
             />
             <Button
-              title="Trade"
+              title="Offer a trade"
               kind="secondary"
               onPress={() =>
                 router.push({ pathname: '/trades/new', params: { with: profile.username } })
@@ -151,10 +139,29 @@ export default function ProfileView({
           path={profilePath(profile.username)}
           title={`${profile.display_name || profile.username} on Miscellary`}
         />
-        {!profile.is_me && user ? (
-          <Button title="Report" kind="secondary" onPress={report} />
-        ) : null}
+        <MoreButton
+          title={`@${profile.username}`}
+          items={
+            profile.is_me
+              ? ownItems
+              : user
+                ? [
+                    {
+                      label: 'Report this collector',
+                      icon: 'flag',
+                      onSelect: () => setReporting(true),
+                    },
+                  ]
+                : []
+          }
+        />
       </View>
+      <ReportSheet
+        visible={reporting}
+        subject={`@${profile.username}`}
+        target={{ username: profile.username }}
+        onClose={() => setReporting(false)}
+      />
 
       <Text style={styles.h2}>Binder</Text>
       <SharedSurface
@@ -182,20 +189,14 @@ export default function ProfileView({
           style={styles.setRow}
         >
           <Text style={{ color: colors.accent }}>{s.title}</Text>
-          <Text style={{ color: colors.faint, fontSize: 12 }}>
+          <Text style={{ color: colors.faint, fontSize: 14 }}>
             {'  '}
             {s.card_count} cards · ♥ {s.like_count}
           </Text>
         </Link>
       ))}
       {selected ? (
-        <Modal
-          visible
-          statusBarTranslucent
-          navigationBarTranslucent
-          supportedOrientations={['portrait', 'landscape']}
-          onRequestClose={() => setSelected(null)}
-        >
+        <InspectorModal open onClose={() => setSelected(null)}>
           <View style={styles.inspector}>
             <CardInspector
               card={selected.card}
@@ -207,7 +208,7 @@ export default function ProfileView({
               onClose={() => setSelected(null)}
             />
           </View>
-        </Modal>
+        </InspectorModal>
       ) : null}
     </ScrollView>
   );
@@ -227,8 +228,8 @@ const styles = StyleSheet.create({
   },
   actions: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
   counts: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6 },
-  count: { fontSize: 13 },
-  countLink: { color: colors.accent, fontSize: 13 },
+  count: { fontSize: 14 },
+  countLink: { color: colors.accent, fontSize: 14 },
   h2: { color: colors.text, fontSize: 16, fontWeight: '700', marginTop: 8 },
   inspector: { flex: 1, backgroundColor: '#241d16' },
   setRow: {

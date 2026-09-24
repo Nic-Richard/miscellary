@@ -140,7 +140,7 @@ export default function BrowseScreen() {
                   ) : null}
                 </Pressable>
               ) : (
-                <Text style={styles.edition}>COLLECT{'\n'}TRADE · CREATE</Text>
+                <Text style={styles.edition}>Collect, trade, create</Text>
               )}
             </View>
             <Text accessibilityRole="header" style={styles.heading}>
@@ -349,13 +349,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accent,
     alignItems: 'center',
   },
-  badgeText: { color: colors.accentText, fontFamily: fonts.medium, fontSize: 10 },
+  badgeText: { color: colors.accentText, fontFamily: fonts.medium, fontSize: 13 },
   wordmark: { fontFamily: fonts.display, fontSize: 28, letterSpacing: 1.7, color: colors.text },
   edition: {
-    fontFamily: fonts.medium,
-    fontSize: 9,
-    lineHeight: 13,
-    letterSpacing: 1.6,
+    fontFamily: fonts.body,
+    fontSize: 15,
     textAlign: 'right',
     color: colors.muted,
   },
@@ -400,18 +398,16 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   bandTitle: { fontFamily: fonts.display, fontSize: 26, color: colors.text },
-  bandNote: { fontFamily: fonts.body, fontSize: 12, color: colors.muted, marginTop: 2 },
+  bandNote: { fontFamily: fonts.body, fontSize: 14, color: colors.muted, marginTop: 2 },
   bandLink: {
     fontFamily: fonts.medium,
-    fontSize: 12,
-    letterSpacing: 1,
-    textTransform: 'uppercase',
+    fontSize: 14,
     color: colors.accent,
   },
   bandRow: { gap: 10, paddingVertical: 12, paddingRight: 4 },
   sectionHead: { marginTop: 26 },
   sectionTitle: { fontFamily: fonts.display, fontSize: 29, color: colors.text },
-  total: { fontFamily: fonts.body, fontSize: 13, color: colors.muted, marginTop: 2 },
+  total: { fontFamily: fonts.body, fontSize: 14, color: colors.muted, marginTop: 2 },
   filters: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 14 },
   filterGap: { height: 14 },
   row: { gap: 20 },
@@ -442,5 +438,5 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   footer: { alignItems: 'center', gap: 12, paddingBottom: 16 },
-  progress: { fontFamily: fonts.body, fontSize: 12, color: colors.muted },
+  progress: { fontFamily: fonts.body, fontSize: 14, color: colors.muted },
 });

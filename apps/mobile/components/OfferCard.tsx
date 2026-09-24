@@ -27,7 +27,7 @@ function Side({
         contentContainerStyle={styles.cards}
         showsHorizontalScrollIndicator={false}
       >
-        {cards.length === 0 ? <Muted style={{ fontSize: 12 }}>nothing</Muted> : null}
+        {cards.length === 0 ? <Muted style={{ fontSize: 14 }}>nothing</Muted> : null}
         {cards.map((c) => (
           <Pressable
             key={c.id}
@@ -65,6 +65,14 @@ interface OfferCardProps {
   onInspect?: (owned: OwnedCard) => void;
 }
 
+const STATUS_WORD: Record<string, string> = {
+  pending: 'Waiting',
+  accepted: 'Accepted',
+  rejected: 'Rejected',
+  cancelled: 'Cancelled',
+  countered: 'Countered',
+};
+
 export default function OfferCard({ offer, me, busy, onAction, onInspect }: OfferCardProps) {
   const incoming = offer.recipient.username === me;
   const other = incoming ? offer.sender : offer.recipient;
@@ -88,16 +96,15 @@ export default function OfferCard({ offer, me, busy, onAction, onInspect }: Offe
         <Text
           style={{
             color: statusColor,
-            fontSize: 11,
+            fontSize: 13,
             fontFamily: fonts.medium,
             backgroundColor: colors.sur2,
             paddingHorizontal: 8,
             paddingVertical: 5,
             borderRadius: 4,
-            textTransform: 'uppercase',
           }}
         >
-          {offer.status}
+          {STATUS_WORD[offer.status] ?? offer.status}
         </Text>
       </View>
       {offer.message ? (
@@ -169,10 +176,8 @@ const styles = StyleSheet.create({
   },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   sideLabel: {
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: fonts.medium,
-    textTransform: 'uppercase',
-    letterSpacing: 0.7,
   },
   sides: { flexDirection: 'row', gap: 8 },
   cards: { gap: 8, paddingBottom: 8 },

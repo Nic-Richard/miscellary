@@ -4,7 +4,7 @@ import { Text, View } from 'react-native';
 import { useAuth } from '@/lib/auth';
 import { internalRoute, RETURN_PARAM } from '@/lib/returnTo';
 import { colors } from '@/lib/theme';
-import { Button, ErrorText, Input, Screen, Title } from '@/components/ui';
+import { Button, ErrorText, Input, Screen, Title, PasswordInput } from '@/components/ui';
 
 export default function LoginScreen() {
   const { login } = useAuth();
@@ -40,7 +40,7 @@ export default function LoginScreen() {
         value={email}
         onChangeText={setEmail}
       />
-      <Input placeholder="Password" secureTextEntry value={password} onChangeText={setPassword} />
+      <PasswordInput placeholder="Password" value={password} onChangeText={setPassword} />
       <Button
         title={busy ? 'Logging in…' : 'Log in'}
         disabled={busy}

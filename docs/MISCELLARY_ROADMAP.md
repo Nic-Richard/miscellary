@@ -531,7 +531,17 @@ Done on web:
   around one or two tiles; notifications and account settings are single reading columns.
 - Packs without a render yet (drafts) show a blank wrapper with the set title.
 
-Remaining: the same pass on mobile.
+Done on mobile:
+
+- The same type scale and sentence case, and the same action row on sets, profiles, the card
+  inspector and pack posts, with the ⋯ menu and reporting as bottom sheets. Android shows at most
+  three Alert buttons, which had been hiding most of the report reasons.
+- Following a creator is the same person icon; unfollowing asks first, since a phone has no hover.
+
+- Checked on a Pixel: headerless screens get a strip behind the status bar, sheets and full-screen
+  modals reach the screen edge with their controls clear of the gesture bar, and dark modals switch
+  the status bar to light. Tab titles are no longer repeated inside the page.
+- Password fields on web and mobile have a show/hide toggle.
 
 The product still has loose ends in how controls are laid out and ordered from page to page. Before
 launch, audit the web and mobile surfaces and settle one pattern for:

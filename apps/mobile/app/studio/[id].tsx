@@ -34,6 +34,13 @@ import { colors, fonts } from '@/lib/theme';
 import { Button, ErrorText, Input, Loading, Muted, Tag, Title } from '@/components/ui';
 import VerifyEmailNotice, { useEmailVerified } from '@/components/VerifyEmailNotice';
 
+const STATUS_LABELS: Record<CardSetDetail['status'], string> = {
+  draft: 'Draft set',
+  published: 'Published set',
+  deleted: 'Deleted set',
+  removed: 'Removed set',
+};
+
 export default function SetEditorScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const verified = useEmailVerified();
@@ -210,7 +217,7 @@ export default function SetEditorScreen() {
       contentContainerStyle={{ padding: 16, gap: 10, paddingBottom: 40 }}
       scrollEnabled={!dragging}
     >
-      <Tag>{set.status}</Tag>
+      <Tag>{STATUS_LABELS[set.status]}</Tag>
       {isDraft ? (
         <>
           <Input

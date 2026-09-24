@@ -230,18 +230,14 @@ const styles = StyleSheet.create({
   creatorMark: {
     color: colors.gold,
     fontFamily: fonts.medium,
-    fontSize: 10,
-    letterSpacing: 1.2,
-    textTransform: 'uppercase',
+    fontSize: 13,
   },
-  when: { color: colors.faint, fontFamily: fonts.body, fontSize: 12 },
+  when: { color: colors.faint, fontFamily: fonts.body, fontSize: 14 },
   body: { color: colors.text, fontFamily: fonts.body, fontSize: 15, lineHeight: 21 },
   removed: { fontStyle: 'italic' },
   action: {
     color: colors.accent,
     fontFamily: fonts.medium,
-    fontSize: 12,
-    letterSpacing: 1,
-    textTransform: 'uppercase',
+    fontSize: 14,
   },
 });

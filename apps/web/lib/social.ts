@@ -77,11 +77,4 @@ export const sendReport = (body: {
 export const search = (q: string) =>
   apiFetch<SearchResults>(`/api/v1/search/?q=${encodeURIComponent(q)}`, { auth: false });
 
-export const REPORT_REASONS: { value: ReportReason; label: string }[] = [
-  { value: 'explicit', label: 'Explicit or adult content' },
-  { value: 'real_person', label: 'Inappropriate use of a real person' },
-  { value: 'stolen', label: 'Stolen photo or content' },
-  { value: 'harassment', label: 'Harassment or abuse' },
-  { value: 'spam', label: 'Spam' },
-  { value: 'other', label: 'Something else' },
-];
+export { REPORT_REASONS } from '@miscellary/shared';

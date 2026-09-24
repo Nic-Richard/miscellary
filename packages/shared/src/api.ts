@@ -420,6 +420,15 @@ export interface CommentThread {
 
 export type ReportReason = 'explicit' | 'real_person' | 'stolen' | 'harassment' | 'spam' | 'other';
 
+export const REPORT_REASONS: { value: ReportReason; label: string }[] = [
+  { value: 'explicit', label: 'Explicit or adult content' },
+  { value: 'real_person', label: 'Inappropriate use of a real person' },
+  { value: 'stolen', label: 'Stolen photo or content' },
+  { value: 'harassment', label: 'Harassment or abuse' },
+  { value: 'spam', label: 'Spam' },
+  { value: 'other', label: 'Something else' },
+];
+
 export interface SearchResults {
   query: string;
   users: Creator[];
