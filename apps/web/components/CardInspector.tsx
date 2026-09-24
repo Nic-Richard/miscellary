@@ -3,7 +3,13 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent, ReactNode } from 'react';
-import { cardCode, creditLine, RARITY_LABELS, resolveCardTokens } from '@miscellary/shared';
+import {
+  cardCode,
+  creditLine,
+  personName,
+  RARITY_LABELS,
+  resolveCardTokens,
+} from '@miscellary/shared';
 import type { Card, Creator, OwnedCard } from '@miscellary/shared';
 import CardBack from './CardBack';
 import CardPreview from './CardPreview';
@@ -298,7 +304,7 @@ export default function CardInspector({
           </div>
           <p className={styles.from}>
             <Link href={`/sets/${setSlug}`}>{setTitle}</Link>
-            {creator ? <> · {creator.display_name}</> : null}
+            {creator ? <> · {personName(creator)}</> : null}
             {copies ? ` · ${copies} ${copies === 1 ? 'copy' : 'copies'}` : ''}
             {creator?.is_demo ? (
               <>

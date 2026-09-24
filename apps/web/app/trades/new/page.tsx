@@ -13,6 +13,7 @@ import SearchField from '@/components/SearchField';
 import { listAllMyCards } from '@/lib/packs';
 import { counterOffer, createOffer, getOffer, listUserCards } from '@/lib/trades';
 import ui from '@/components/ui.module.css';
+import VerifyEmailNotice from '@/components/VerifyEmailNotice';
 import styles from './page.module.css';
 
 interface Stack {
@@ -263,6 +264,7 @@ function NewTrade() {
       <h1 className={ui.title}>Trade with @{partner}</h1>
       <p className={ui.subtitle}>Pick from either side, then send</p>
       {error ? <p className={ui.error}>{error}</p> : null}
+      <VerifyEmailNotice>Verify your email address to send offers.</VerifyEmailNotice>
 
       <div className={styles.columns}>
         <Side
@@ -306,7 +308,7 @@ function NewTrade() {
           <button
             className={ui.btnPrimary}
             type="button"
-            disabled={busy || (want.size === 0 && give.size === 0)}
+            disabled={busy || !user.email_verified || (want.size === 0 && give.size === 0)}
             onClick={() => void send()}
           >
             {busy ? 'Sending…' : counterId ? 'Send counter' : 'Send offer'}

@@ -15,7 +15,13 @@ Django owns accounts. Auth is JWT via `djangorestframework-simplejwt`:
   - `mobile`: refresh token in the response body; Expo stores it in SecureStore.
 - Email verification and password reset use signed, expiring tokens
   (`django.core.signing` and `PasswordResetTokenGenerator`), so no extra tables.
-- Every error response is `{ "error": string, "fields"?: { [name]: string[] } }`.
+- Every error response is `{ "error": string, "fields"?: { [name]: string[] }, "code"?: string }`.
+- Changing or resetting a password blacklists every outstanding refresh token for the account.
+  A password change hands the requesting client a fresh pair.
+- Clients refresh single-flight: rotation blacklists the old token on first use, so parallel
+  refreshes with the same token would fail.
+- Closing an account keeps the user row so published sets and comments stay attached. The row is
+  renamed `deleted_<id>`, its email, password and profile are cleared, and it is deactivated.
 
 ## Why not Clerk
 

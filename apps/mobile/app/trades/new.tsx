@@ -7,6 +7,7 @@ import CardPreview from '@/components/CardPreview';
 import { counterOffer, createOffer, getOffer, listMyCards, listUserCards } from '@/lib/endpoints';
 import { colors } from '@/lib/theme';
 import { Button, ErrorText, Input, Muted, Tag, Title } from '@/components/ui';
+import VerifyEmailNotice, { useEmailVerified } from '@/components/VerifyEmailNotice';
 
 function Picker({
   title,
@@ -65,6 +66,7 @@ function Picker({
 
 export default function NewTradeScreen() {
   const params = useLocalSearchParams<{ with?: string; counter?: string }>();
+  const verified = useEmailVerified();
   const [partner, setPartner] = useState(params.with ?? '');
   const [theirs, setTheirs] = useState<OwnedCard[]>([]);
   const [mine, setMine] = useState<OwnedCard[]>([]);
@@ -120,6 +122,7 @@ export default function NewTradeScreen() {
       <Tag>{params.counter ? 'Counter offer' : 'New offer'}</Tag>
       <Title>{`Trade with @${partner}`}</Title>
       <ErrorText>{error}</ErrorText>
+      <VerifyEmailNotice>Verify your email address to send offers.</VerifyEmailNotice>
       <Picker
         title={`@${partner}'s cards you want`}
         cards={theirs}
@@ -140,7 +143,7 @@ export default function NewTradeScreen() {
       />
       <Button
         title={busy ? 'Sending…' : params.counter ? 'Send counter offer' : 'Send offer'}
-        disabled={busy || (want.size === 0 && give.size === 0)}
+        disabled={busy || !verified || (want.size === 0 && give.size === 0)}
         onPress={() => void send()}
       />
     </ScrollView>

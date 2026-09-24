@@ -23,7 +23,7 @@ import type {
   TradeOffer,
   TradeOfferWrite,
 } from '@miscellary/shared';
-import { apiFetch } from './api';
+import { apiFetch, saveRefreshToken, setAccessToken } from './api';
 
 export const listPublicSets = (
   sort: 'new' | 'popular' = 'new',
@@ -190,10 +190,19 @@ export const changeUsername = (username: string, currentPassword: string) =>
     method: 'POST',
     body: { username, current_password: currentPassword },
   });
-export const changePassword = (currentPassword: string, newPassword: string) =>
-  apiFetch<void>('/api/v1/auth/password/change/', {
+// Changing the password revokes every refresh token, this device's included, so keep the new one.
+export async function changePassword(currentPassword: string, newPassword: string) {
+  const session = await apiFetch<{ access: string; refresh: string }>(
+    '/api/v1/auth/password/change/',
+    { method: 'POST', body: { current_password: currentPassword, new_password: newPassword } },
+  );
+  setAccessToken(session.access);
+  await saveRefreshToken(session.refresh);
+}
+export const deleteAccount = (currentPassword: string) =>
+  apiFetch<void>('/api/v1/auth/delete/', {
     method: 'POST',
-    body: { current_password: currentPassword, new_password: newPassword },
+    body: { current_password: currentPassword },
   });
 export const resendVerificationEmail = () =>
   apiFetch<void>('/api/v1/auth/verify-email/request/', { method: 'POST' });

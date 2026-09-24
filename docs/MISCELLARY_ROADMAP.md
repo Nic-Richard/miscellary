@@ -471,19 +471,27 @@ Backend rules exist, but the public product should have complete UI flows for:
 - creator deletion vs platform removal
 - moderation-facing messaging that does not expose internal implementation
 
-## Authentication / account UX
+## Authentication / account UX: In progress
 
-Before launch:
+Done:
 
-- registration
-- verification
-- forgot/reset password
-- logout
-- expired session refresh
-- mobile token behavior
-- account deletion (the only account-management flow still missing a UI)
-- error messages
-- production email delivery
+- Registration, verification, forgot/reset password, logout and username changes on web and mobile.
+- Token refresh is single-flight on both clients, so parallel 401s no longer race the rotation.
+- A failed verification email no longer fails signup; the account stands and can ask for a link.
+- Changing or resetting a password signs out every other session.
+- Publishing and trading (sending, countering, accepting) wait on a verified email, with a notice
+  and resend link where those actions live.
+- Account deletion: password-confirmed, on web and mobile. Published sets and comments stay under
+  a deleted user; the collection, drafts, follows, likes, notifications and open trades go, and the
+  username and email are released.
+
+Remaining:
+
+- First-run: land new collectors somewhere that shows them how packs, following and verification
+  work, rather than on the homepage.
+- HTML versions of the account emails.
+- Production email delivery confirmed from the live site.
+- Expired-session and mobile token behaviour checked on a real device.
 
 ## SEO / sharing
 
@@ -491,11 +499,23 @@ For the public web product:
 
 - title/description metadata
 - canonical URLs
-- social/Open Graph cards for sets and profiles
+- social/Open Graph cards for sets, cards and profiles
 - favicon/app icons
 - sitemap
 - robots.txt
-- shareable set/profile/card URLs where appropriate
+- a URL for every card, not only for its set
+- a share control on sets, cards and profiles that behaves like the major social platforms: the
+  native share sheet where there is one, copy link otherwise
+
+## Interaction and control consistency
+
+The product still has loose ends in how controls are laid out and ordered from page to page. Before
+launch, audit the web and mobile surfaces and settle one pattern for:
+
+- where primary, secondary and overflow actions sit on a set, card, profile and post
+- what goes in an overflow menu (share, report, unfollow) versus on the surface
+- button hierarchy and sizing, following the conventions people know from major social platforms
+- repeated byline, header and empty-state compositions, drawn once and reused
 
 ## Browser support
 

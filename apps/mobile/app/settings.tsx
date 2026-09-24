@@ -1,11 +1,16 @@
-import { Stack, useFocusEffect } from 'expo-router';
+import { Stack, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import LoginGate from '@/components/LoginGate';
 import { Button, ErrorText, Input, Muted } from '@/components/ui';
 import { ApiRequestError } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
-import { changePassword, changeUsername, resendVerificationEmail } from '@/lib/endpoints';
+import {
+  changePassword,
+  changeUsername,
+  deleteAccount,
+  resendVerificationEmail,
+} from '@/lib/endpoints';
 import { colors, fonts } from '@/lib/theme';
 
 function fieldError(error: unknown, name: string): string {
@@ -28,6 +33,67 @@ function Card({
       {note ? <Muted style={styles.note}>{note}</Muted> : null}
       {children}
     </View>
+  );
+}
+
+function CloseAccount() {
+  const { logout } = useAuth();
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  async function close() {
+    setBusy(true);
+    setError(null);
+    try {
+      await deleteAccount(password);
+      await logout();
+      router.replace('/');
+    } catch (e) {
+      setError(fieldError(e, 'current_password'));
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Card
+      title="Close account"
+      note="Your cards, drafts, follows, likes and open trades go. Published sets stay, so the people who collected them keep their cards; those sets and your comments show as a deleted user."
+    >
+      {open ? (
+        <>
+          <Input
+            accessibilityLabel="Current password"
+            placeholder="Current password"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+          />
+          <ErrorText>{error}</ErrorText>
+          <Text style={styles.warning}>This cannot be undone.</Text>
+          <Button
+            title={busy ? 'Closing…' : 'Close my account'}
+            kind="danger"
+            disabled={busy || !password}
+            onPress={() => void close()}
+          />
+          <Button
+            title="Keep it"
+            kind="secondary"
+            disabled={busy}
+            onPress={() => {
+              setOpen(false);
+              setPassword('');
+              setError(null);
+            }}
+          />
+        </>
+      ) : (
+        <Button title="Close account…" kind="danger" onPress={() => setOpen(true)} />
+      )}
+    </Card>
   );
 }
 
@@ -151,7 +217,7 @@ function Account() {
         )}
       </Card>
 
-      <Card title="Password">
+      <Card title="Password" note="Changing it signs you out on every other device and browser.">
         <Input
           accessibilityLabel="Current password"
           placeholder="Current password"
@@ -175,6 +241,8 @@ function Account() {
           onPress={() => void savePassword()}
         />
       </Card>
+
+      <CloseAccount />
     </ScrollView>
   );
 }
@@ -206,4 +274,5 @@ const styles = StyleSheet.create({
   verified: { color: colors.accent, fontFamily: fonts.medium, fontSize: 11, letterSpacing: 1.3 },
   unverified: { color: colors.gold, fontFamily: fonts.medium, fontSize: 11, letterSpacing: 1.3 },
   done: { color: colors.accent, fontFamily: fonts.body, fontSize: 14 },
+  warning: { color: colors.danger, fontFamily: fonts.body, fontSize: 14 },
 });

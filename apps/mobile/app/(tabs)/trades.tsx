@@ -9,6 +9,7 @@ import { useAuth } from '@/lib/auth';
 import { actOnOffer, listOffers } from '@/lib/endpoints';
 import { colors, fonts } from '@/lib/theme';
 import { Button, Chip, ErrorText, Input, Muted, Tag, Title } from '@/components/ui';
+import VerifyEmailNotice from '@/components/VerifyEmailNotice';
 
 type Box = 'inbox' | 'outbox' | 'history';
 
@@ -117,6 +118,7 @@ function Trades() {
         ))}
       </View>
       <ErrorText>{error}</ErrorText>
+      <VerifyEmailNotice>Verify your email address to send or accept offers.</VerifyEmailNotice>
       {offers.length === 0 ? <DealMat box={box} /> : null}
       {offers.map((o) => (
         <OfferCard

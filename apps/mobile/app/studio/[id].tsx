@@ -32,9 +32,11 @@ import {
 } from '@/lib/endpoints';
 import { colors, fonts } from '@/lib/theme';
 import { Button, ErrorText, Input, Loading, Muted, Tag, Title } from '@/components/ui';
+import VerifyEmailNotice, { useEmailVerified } from '@/components/VerifyEmailNotice';
 
 export default function SetEditorScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const verified = useEmailVerified();
   const [set, setSet] = useState<CardSetDetail | null>(null);
   const [problems, setProblems] = useState<string[]>([]);
   const [title, setTitle] = useState('');
@@ -292,12 +294,17 @@ export default function SetEditorScreen() {
       {isDraft ? (
         <View style={styles.publish}>
           <Text style={{ color: colors.text, fontWeight: '700' }}>Publish</Text>
+          <VerifyEmailNotice>Verify your email address to publish.</VerifyEmailNotice>
           {problems.length ? (
             problems.map((p) => <Muted key={p}>• {p}</Muted>)
           ) : (
             <Text style={{ color: colors.green }}>Ready to publish.</Text>
           )}
-          <Button title="Publish set" disabled={problems.length > 0} onPress={publish} />
+          <Button
+            title="Publish set"
+            disabled={problems.length > 0 || !verified}
+            onPress={publish}
+          />
         </View>
       ) : null}
 

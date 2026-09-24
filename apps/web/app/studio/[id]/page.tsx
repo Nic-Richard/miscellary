@@ -12,6 +12,7 @@ import SetCover from '@/components/SetCover';
 import CardPreview from '@/components/CardPreview';
 import CardForm from '@/components/CardForm';
 import TagEditor from '@/components/TagEditor';
+import VerifyEmailNotice from '@/components/VerifyEmailNotice';
 import { ApiRequestError } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import {
@@ -259,6 +260,7 @@ export default function SetEditorPage() {
         {isDraft ? (
           <aside className={`${ui.ticket} ${styles.publish}`}>
             <h2 className={styles.publishTitle}>Publish</h2>
+            <VerifyEmailNotice>Verify your email address to publish.</VerifyEmailNotice>
             {problems && problems.length > 0 ? (
               <ul className={styles.problems}>
                 {problems.map((p) => (
@@ -272,7 +274,7 @@ export default function SetEditorPage() {
               className={ui.btnPrimary}
               type="button"
               onClick={() => void onPublish()}
-              disabled={!problems || problems.length > 0}
+              disabled={!problems || problems.length > 0 || !user?.email_verified}
             >
               Publish set
             </button>

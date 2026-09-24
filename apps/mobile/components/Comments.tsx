@@ -1,3 +1,4 @@
+import { personName } from '@miscellary/shared';
 import type { Comment } from '@miscellary/shared';
 import { Link, router } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
@@ -96,12 +97,16 @@ function Entry({
       ) : (
         <>
           <View style={styles.head}>
-            <Link
-              href={{ pathname: '/users/[username]', params: { username: author.username } }}
-              style={styles.author}
-            >
-              <Text style={styles.authorText}>{author.display_name || author.username}</Text>
-            </Link>
+            {author.deleted ? (
+              <Text style={[styles.author, styles.authorText]}>{personName(author)}</Text>
+            ) : (
+              <Link
+                href={{ pathname: '/users/[username]', params: { username: author.username } }}
+                style={styles.author}
+              >
+                <Text style={styles.authorText}>{personName(author)}</Text>
+              </Link>
+            )}
             {author.is_demo ? <DemoBadge /> : null}
             {comment.is_creator ? <Text style={styles.creatorMark}>Creator</Text> : null}
             <Text style={styles.when}>{when(comment.created_at)}</Text>

@@ -1,4 +1,4 @@
-import { cardCode } from '@miscellary/shared';
+import { cardCode, personHandle } from '@miscellary/shared';
 import type { Card, CardSetDetail, OwnedCard, PackOpening, PackStatus } from '@miscellary/shared';
 import Feather from '@expo/vector-icons/Feather';
 import { Link, router, useLocalSearchParams } from 'expo-router';
@@ -388,9 +388,15 @@ export default function BinderScreen() {
       </View>
       <Title>{set.title}</Title>
       <View style={styles.metaRow}>
-        <Link href={{ pathname: '/users/[username]', params: { username: set.creator.username } }}>
-          <Text style={{ color: colors.accent }}>@{set.creator.username}</Text>
-        </Link>
+        {set.creator.deleted ? (
+          <Muted>{personHandle(set.creator)}</Muted>
+        ) : (
+          <Link
+            href={{ pathname: '/users/[username]', params: { username: set.creator.username } }}
+          >
+            <Text style={{ color: colors.accent }}>@{set.creator.username}</Text>
+          </Link>
+        )}
         {set.creator.is_demo ? <DemoBadge /> : null}
         <Muted>
           {' '}

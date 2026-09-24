@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { cardCode } from '@miscellary/shared';
+import { cardCode, personHandle } from '@miscellary/shared';
 import SetTile from '@/components/SetTile';
 import CardPreview from '@/components/CardPreview';
 import DemoBadge from '@/components/DemoBadge';
@@ -81,7 +81,7 @@ export default async function SearchPage({
           <ul className={tileStyles.grid}>
             {results.sets.map((s) => (
               <li key={s.id}>
-                <SetTile set={s} meta={`${s.card_count} cards · @${s.creator.username}`} />
+                <SetTile set={s} meta={`${s.card_count} cards · ${personHandle(s.creator)}`} />
               </li>
             ))}
           </ul>

@@ -37,4 +37,6 @@ def exception_handler(exc: Exception, context: dict[str, Any]) -> Response | Non
     if response.status_code == status.HTTP_429_TOO_MANY_REQUESTS:
         messages = ["Too many attempts. Please wait a moment and try again."]
     response.data = {"error": messages[0] if messages else "Something went wrong."}
+    if code := getattr(exc, "error_code", None):
+        response.data["code"] = code
     return response

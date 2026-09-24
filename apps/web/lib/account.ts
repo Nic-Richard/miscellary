@@ -1,5 +1,5 @@
 import type { CurrentUser } from '@miscellary/shared';
-import { apiFetch } from './api';
+import { apiFetch, setAccessToken } from './api';
 
 export interface ProfileWrite {
   display_name: string;
@@ -17,10 +17,19 @@ export const changeUsername = (username: string, currentPassword: string) =>
     body: { username, current_password: currentPassword },
   });
 
-export const changePassword = (currentPassword: string, newPassword: string) =>
-  apiFetch<void>('/api/v1/auth/password/change/', {
+// Changing the password signs out every other session and hands this one a fresh token.
+export async function changePassword(currentPassword: string, newPassword: string) {
+  const session = await apiFetch<{ access: string }>('/api/v1/auth/password/change/', {
     method: 'POST',
     body: { current_password: currentPassword, new_password: newPassword },
+  });
+  setAccessToken(session.access);
+}
+
+export const deleteAccount = (currentPassword: string) =>
+  apiFetch<void>('/api/v1/auth/delete/', {
+    method: 'POST',
+    body: { current_password: currentPassword },
   });
 
 export const resendVerificationEmail = () =>

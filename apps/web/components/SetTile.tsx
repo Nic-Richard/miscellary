@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { personHandle } from '@miscellary/shared';
 import type { CardSetSummary } from '@miscellary/shared';
 import DemoBadge from './DemoBadge';
 import PackStage from './PackStage';
@@ -21,7 +22,7 @@ export default function SetTile({
       <span className={styles.label}>
         <strong>{set.title}</strong>
         <small>
-          {meta ?? `${set.card_count} cards · ♥ ${set.like_count} · @${set.creator.username}`}
+          {meta ?? `${set.card_count} cards · ♥ ${set.like_count} · ${personHandle(set.creator)}`}
         </small>
         {set.creator.is_demo ? <DemoBadge compact /> : null}
       </span>

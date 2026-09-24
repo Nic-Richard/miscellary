@@ -1,4 +1,4 @@
-import { cardCode } from '@miscellary/shared';
+import { cardCode, personHandle } from '@miscellary/shared';
 import type { OwnedCard, TradeOffer } from '@miscellary/shared';
 import { router } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -81,7 +81,7 @@ export default function OfferCard({ offer, me, busy, onAction, onInspect }: Offe
       <View style={styles.header}>
         <Text style={{ color: colors.muted, fontFamily: fonts.body, fontSize: 16, flexShrink: 1 }}>
           {incoming ? 'From' : 'To'}{' '}
-          <Text style={{ color: colors.text, fontWeight: '700' }}>@{other.username}</Text>
+          <Text style={{ color: colors.text, fontWeight: '700' }}>{personHandle(other)}</Text>
           {other.is_demo ? <DemoBadge /> : null}
           {offer.counter_of ? <Text style={{ color: colors.gold }}> · counter</Text> : null}
         </Text>

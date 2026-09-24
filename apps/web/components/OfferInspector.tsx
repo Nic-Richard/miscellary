@@ -1,11 +1,12 @@
 'use client';
 
-import Link from 'next/link';
 import { useEffect, useRef } from 'react';
+import { personHandle } from '@miscellary/shared';
 import type { OwnedCard, TradeOffer } from '@miscellary/shared';
 import SwapArrow from './SwapArrow';
 import DemoBadge from './DemoBadge';
 import { OfferActions, OfferSide, STATUS_WORD, readOffer } from './OfferCard';
+import PersonLink from '@/components/PersonLink';
 import { useDialog } from '@/lib/useDialog';
 import styles from './OfferInspector.module.css';
 
@@ -56,9 +57,9 @@ export default function OfferInspector({
         <header className={styles.head}>
           <span className={styles.who}>
             <span className={styles.dir}>{incoming ? 'From' : 'To'}</span>
-            <Link href={`/users/${other.username}`} className={styles.handle}>
-              @{other.username}
-            </Link>
+            <PersonLink person={other} className={styles.handle}>
+              {personHandle(other)}
+            </PersonLink>
             {other.is_demo ? <DemoBadge compact /> : null}
             {offer.counter_of ? <span className={styles.badge}>counter</span> : null}
           </span>

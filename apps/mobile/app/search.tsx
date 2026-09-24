@@ -2,7 +2,7 @@ import type { SearchResults } from '@miscellary/shared';
 import { Link, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { cardCode } from '@miscellary/shared';
+import { cardCode, personHandle } from '@miscellary/shared';
 import CardPreview from '@/components/CardPreview';
 import DemoBadge from '@/components/DemoBadge';
 import { search } from '@/lib/endpoints';
@@ -69,7 +69,7 @@ export default function SearchScreen() {
           <Text style={{ color: colors.accent }}>{s.title}</Text>
           <Text style={{ color: colors.faint }}>
             {' '}
-            {s.card_count} cards · @{s.creator.username}
+            {s.card_count} cards · {personHandle(s.creator)}
           </Text>
           {s.creator.is_demo ? <DemoBadge /> : null}
         </Link>

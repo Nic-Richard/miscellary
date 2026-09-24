@@ -11,3 +11,4 @@ export * from './cardTokens';
 export * from './credit';
 export * from './setMarks';
 export * from './setIdentity';
+export * from './people';

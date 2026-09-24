@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { cardCode } from '@miscellary/shared';
+import { cardCode, personHandle } from '@miscellary/shared';
 import type { OwnedCard, TradeOffer } from '@miscellary/shared';
+import PersonLink from './PersonLink';
 import CardPreview from './CardPreview';
 import SwapArrow from './SwapArrow';
 import DemoBadge from './DemoBadge';
@@ -136,7 +137,7 @@ export function OfferActions({
         </>
       ) : (
         <>
-          <span className={styles.await}>Waiting on @{other.username}</span>
+          <span className={styles.await}>Waiting on {personHandle(other)}</span>
           <button
             className={styles.quietDanger}
             type="button"
@@ -166,9 +167,9 @@ export default function OfferCard({
       <header className={styles.header}>
         <span className={styles.who}>
           <span className={styles.dir}>{incoming ? 'From' : 'To'}</span>
-          <Link href={`/users/${other.username}`} className={styles.handle}>
-            @{other.username}
-          </Link>
+          <PersonLink person={other} className={styles.handle}>
+            {personHandle(other)}
+          </PersonLink>
           {other.is_demo ? <DemoBadge compact /> : null}
           {offer.counter_of ? <span className={styles.badge}>counter</span> : null}
         </span>

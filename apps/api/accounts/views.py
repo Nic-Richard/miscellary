@@ -1,4 +1,5 @@
 import contextlib
+import logging
 
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
@@ -14,9 +15,11 @@ from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from . import cookies, emails
+from .lifecycle import delete_account, revoke_sessions
 from .models import ReservedUsername, User
 from .serializers import (
     ChangePasswordSerializer,
+    ConfirmPasswordSerializer,
     CurrentUserSerializer,
     EmailSerializer,
     LoginSerializer,
@@ -28,6 +31,8 @@ from .serializers import (
     cooldown_error,
 )
 from .tokens import password_reset_tokens, read_email_verification_token
+
+logger = logging.getLogger(__name__)
 
 
 def _current_user(request: Request) -> User:
@@ -48,12 +53,16 @@ class RegisterView(APIView):
     permission_classes = [permissions.AllowAny]
     throttle_scope = "auth.register"
 
-    @transaction.atomic
     def post(self, request: Request) -> Response:
         serializer = RegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = serializer.save()
-        emails.send_verification_email(user)
+        with transaction.atomic():
+            user = serializer.save()
+        # The account stands without the email; the collector can ask for another link.
+        try:
+            emails.send_verification_email(user)
+        except Exception:
+            logger.exception("Verification email failed for %s", user.pk)
         return _session_response(request, user, status.HTTP_201_CREATED)
 
 
@@ -159,7 +168,20 @@ class ChangePasswordView(APIView):
         user = _current_user(request)
         user.set_password(serializer.validated_data["new_password"])
         user.save(update_fields=["password"])
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        revoke_sessions(user)
+        return _session_response(request, user)
+
+
+class DeleteAccountView(APIView):
+    throttle_scope = "auth.login"
+
+    def post(self, request: Request) -> Response:
+        serializer = ConfirmPasswordSerializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        delete_account(_current_user(request))
+        response = Response(status=status.HTTP_204_NO_CONTENT)
+        cookies.clear_refresh_cookie(response)
+        return response
 
 
 class EmailVerificationRequestView(APIView):
@@ -225,4 +247,5 @@ class PasswordResetConfirmView(APIView):
             raise ValidationError({"password": exc.messages}) from exc
         user.set_password(data["password"])
         user.save(update_fields=["password"])
+        revoke_sessions(user)
         return Response(status=status.HTTP_204_NO_CONTENT)

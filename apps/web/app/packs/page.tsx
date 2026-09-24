@@ -3,8 +3,9 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
-import { cardCode } from '@miscellary/shared';
+import { cardCode, personHandle, personName } from '@miscellary/shared';
 import type { CardSetSummary, PackEntry, PackOpening } from '@miscellary/shared';
+import PersonLink from '@/components/PersonLink';
 import CardBack from '@/components/CardBack';
 import CardPreview from '@/components/CardPreview';
 import DemoBadge from '@/components/DemoBadge';
@@ -94,7 +95,7 @@ function Post({
   const [menu, setMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const set = entry.card_set;
-  const creator = set.creator.display_name || set.creator.username;
+  const creator = personName(set.creator);
   const affordable = entry.points >= entry.pack_cost;
 
   useEffect(() => {
@@ -109,16 +110,16 @@ function Post({
   return (
     <article id={`post-${set.slug}`} className={styles.post}>
       <header className={styles.byline}>
-        <Link href={`/users/${set.creator.username}`} className={styles.bylineLink}>
+        <PersonLink person={set.creator} className={styles.bylineLink}>
           <span className={styles.monogram}>{creator[0]?.toUpperCase()}</span>
           <span className={styles.bylineName}>
             <strong>
               {creator}
               {set.creator.is_demo ? <DemoBadge compact /> : null}
             </strong>
-            <small>@{set.creator.username}</small>
+            {set.creator.deleted ? null : <small>@{set.creator.username}</small>}
           </span>
-        </Link>
+        </PersonLink>
         <div className={styles.more} ref={menuRef}>
           <button
             type="button"
@@ -521,7 +522,7 @@ export default function PacksPage() {
                       <span className={styles.suggestName}>
                         <strong>{set.title}</strong>
                         <small>
-                          {set.card_count} cards · @{set.creator.username}
+                          {set.card_count} cards · {personHandle(set.creator)}
                         </small>
                       </span>
                     </Link>

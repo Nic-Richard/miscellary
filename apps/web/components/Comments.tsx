@@ -3,7 +3,9 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { personName } from '@miscellary/shared';
 import type { Comment } from '@miscellary/shared';
+import PersonLink from '@/components/PersonLink';
 import { deleteComment, getComments, postComment } from '@/lib/social';
 import { useAuth } from '@/lib/auth';
 import { loginHref } from '@/lib/returnTo';
@@ -151,7 +153,7 @@ function Note({
     );
   }
 
-  const name = comment.author?.display_name || comment.author?.username || 'Someone';
+  const name = comment.author ? personName(comment.author) : 'Someone';
 
   return (
     <li className={styles.note} data-depth={depth}>
@@ -159,9 +161,9 @@ function Note({
         <div className={styles.head}>
           <Monogram name={name} />
           {comment.author ? (
-            <Link href={`/users/${comment.author.username}`} className={styles.name}>
+            <PersonLink person={comment.author} className={styles.name}>
               {name}
-            </Link>
+            </PersonLink>
           ) : (
             <span className={styles.name}>{name}</span>
           )}
@@ -204,7 +206,10 @@ function Note({
               </button>
             )
           ) : null}
-          {user && comment.author && user.profile.username !== comment.author.username ? (
+          {user &&
+          comment.author &&
+          !comment.author.deleted &&
+          user.profile.username !== comment.author.username ? (
             <ReportButton target={{ comment_id: comment.id }} />
           ) : null}
         </div>

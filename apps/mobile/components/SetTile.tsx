@@ -1,3 +1,4 @@
+import { personHandle, personName } from '@miscellary/shared';
 import type { CardSetSummary } from '@miscellary/shared';
 import { Link } from 'expo-router';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -10,7 +11,7 @@ export default function SetTile({ set }: { set: CardSetSummary }) {
     <Link href={{ pathname: '/sets/[slug]', params: { slug: set.slug } }} asChild>
       <Pressable
         accessibilityRole="link"
-        accessibilityLabel={`${set.title}, ${set.card_count} cards, by ${set.creator.display_name || set.creator.username}`}
+        accessibilityLabel={`${set.title}, ${set.card_count} cards, by ${personName(set.creator)}`}
         style={({ pressed }) => [styles.root, pressed && { opacity: 0.85 }]}
       >
         <View
@@ -28,7 +29,7 @@ export default function SetTile({ set }: { set: CardSetSummary }) {
         </Text>
         <View style={styles.metaRow}>
           <Text numberOfLines={1} style={styles.meta}>
-            {set.card_count} cards · @{set.creator.username}
+            {set.card_count} cards · {personHandle(set.creator)}
           </Text>
           {set.creator.is_demo ? <DemoBadge /> : null}
         </View>

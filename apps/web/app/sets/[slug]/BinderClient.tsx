@@ -3,8 +3,9 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { cardCode } from '@miscellary/shared';
+import { cardCode, personName } from '@miscellary/shared';
 import type { Card, CardSetDetail, OwnedCard } from '@miscellary/shared';
+import PersonLink from '@/components/PersonLink';
 import Binder from '@/components/binder/Binder';
 import type { BinderPage as BinderPageData } from '@/components/binder/Binder';
 import CardGrid, { CardCell } from '@/components/CardGrid';
@@ -151,7 +152,8 @@ export default function BinderClient({
   }, [slug, loading, user]);
 
   useEffect(() => {
-    if (!set || !user || user.profile.username === set.creator.username) return;
+    if (!set || !user || set.creator.deleted || user.profile.username === set.creator.username)
+      return;
     getProfile(set.creator.username)
       .then((p) => setFollowing(p.is_following))
       .catch(() => setFollowing(null));
@@ -259,7 +261,7 @@ export default function BinderClient({
   const rarityCount = new Set(set.cards.map((c) => c.rarity)).size;
   const popularCards = [...set.cards].sort((a, b) => b.like_count - a.like_count).slice(0, 3);
   const released = set.published_at ? new Date(set.published_at).getFullYear() : null;
-  const creatorName = set.creator.display_name || set.creator.username;
+  const creatorName = personName(set.creator);
   const isPublished = set.status === 'published';
 
   const detail = set;
@@ -302,16 +304,16 @@ export default function BinderClient({
             </p>
           ) : null}
           <div className={styles.creator}>
-            <Link href={`/users/${set.creator.username}`} className={styles.creatorLink}>
+            <PersonLink person={set.creator} className={styles.creatorLink}>
               <span className={styles.monogram}>{creatorName[0]?.toUpperCase()}</span>
               <span className={styles.creatorName}>
                 <strong>
                   {creatorName}
                   {set.creator.is_demo ? <DemoBadge compact /> : null}
                 </strong>
-                <small>@{set.creator.username}</small>
+                {set.creator.deleted ? null : <small>@{set.creator.username}</small>}
               </span>
-            </Link>
+            </PersonLink>
             {following !== null ? (
               <button
                 type="button"
@@ -588,13 +590,16 @@ export default function BinderClient({
           <section className={ui.panel}>
             <h2 className={ui.panelTitle}>Collector</h2>
             <p className={styles.railText}>
-              {creatorName}
-              {set.creator.display_name ? ` (@${set.creator.username})` : ''} keeps this set. Every
-              card here is a display record; open a pack to collect your own copies.
+              {set.creator.deleted
+                ? 'The account that made this set has been closed. The set stays so its collectors keep their cards.'
+                : `${creatorName}${set.creator.display_name ? ` (@${set.creator.username})` : ''} keeps this set.`}{' '}
+              Every card here is a display record; open a pack to collect your own copies.
             </p>
-            <Link href={`/users/${set.creator.username}`} className={styles.railLink}>
-              View creator profile →
-            </Link>
+            {set.creator.deleted ? null : (
+              <Link href={`/users/${set.creator.username}`} className={styles.railLink}>
+                View creator profile →
+              </Link>
+            )}
           </section>
         </aside>
       </div>

@@ -43,6 +43,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     username_changed_at = models.DateTimeField(null=True, blank=True)
+    deleted_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     objects = UserManager()
@@ -92,6 +93,9 @@ class ReservedUsername(models.Model):
 
 
 def username_taken(username: str, by_other_than: User | None = None) -> bool:
+    # Closed accounts are renamed deleted_<id>; nobody else may look like one.
+    if username.startswith("deleted"):
+        return True
     users = User.objects.filter(username=username)
     reserved = ReservedUsername.objects.filter(username=username)
     if by_other_than is not None:

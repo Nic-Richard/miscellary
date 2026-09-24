@@ -1,10 +1,17 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
 import type { CurrentUser } from '@miscellary/shared';
 import { ApiRequestError } from '@/lib/api';
-import { changePassword, changeUsername, resendVerificationEmail } from '@/lib/account';
+import {
+  changePassword,
+  changeUsername,
+  deleteAccount,
+  resendVerificationEmail,
+} from '@/lib/account';
+import { useAuth } from '@/lib/auth';
 import ui from './ui.module.css';
 import styles from './AccountSecurity.module.css';
 
@@ -189,7 +196,10 @@ function Password() {
   }
 
   return (
-    <Row title="Password" note="At least eight characters, and not one you use elsewhere.">
+    <Row
+      title="Password"
+      note="At least eight characters, and not one you use elsewhere. Changing it signs you out everywhere else."
+    >
       <form className={styles.form} onSubmit={(e) => void submit(e)}>
         <div className={styles.pair}>
           <label className={styles.field}>
@@ -225,6 +235,77 @@ function Password() {
   );
 }
 
+function CloseAccount() {
+  const { logout } = useAuth();
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  async function submit(e: FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setError(null);
+    try {
+      await deleteAccount(password);
+      await logout();
+      router.replace('/');
+    } catch (err) {
+      setError(fieldError(err, 'current_password'));
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Row
+      title="Close account"
+      note="Your cards, drafts, follows, likes and open trades go. Published sets stay, so the people who collected them keep their cards; those sets and your comments show as a deleted user."
+    >
+      {open ? (
+        <form className={styles.form} onSubmit={(e) => void submit(e)}>
+          <label className={styles.field}>
+            <span className={ui.label}>Current password</span>
+            <input
+              className={ui.input}
+              type="password"
+              value={password}
+              autoComplete="current-password"
+              autoFocus
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </label>
+          {error ? <p className={ui.error}>{error}</p> : null}
+          <p className={styles.warning}>This cannot be undone.</p>
+          <div className={styles.buttons}>
+            <button type="submit" className={ui.btnDanger} disabled={busy || !password}>
+              {busy ? 'Closing…' : 'Close my account'}
+            </button>
+            <button
+              type="button"
+              className={ui.btnQuiet}
+              disabled={busy}
+              onClick={() => {
+                setOpen(false);
+                setPassword('');
+                setError(null);
+              }}
+            >
+              Keep it
+            </button>
+          </div>
+        </form>
+      ) : (
+        <div>
+          <button type="button" className={ui.btnDanger} onClick={() => setOpen(true)}>
+            Close account…
+          </button>
+        </div>
+      )}
+    </Row>
+  );
+}
+
 export default function AccountSecurity({
   user,
   onChanged,
@@ -238,6 +319,7 @@ export default function AccountSecurity({
         <Username user={user} onChanged={onChanged} />
         <Email user={user} />
         <Password />
+        <CloseAccount />
       </div>
     </div>
   );

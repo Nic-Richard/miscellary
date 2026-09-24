@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from accounts.models import User
+from accounts.permissions import EmailVerified
 from packs.models import OwnedCard
 from packs.views import with_copies
 
@@ -30,6 +31,8 @@ def my_offer(request: Request, offer_id) -> TradeOffer:
 
 
 class OfferListView(APIView):
+    permission_classes = [EmailVerified]
+
     def get(self, request: Request) -> Response:
         box = request.query_params.get("box", "inbox")
         queryset = offers_for(request.user)
@@ -74,6 +77,8 @@ def _act(request: Request, offer_id, fn) -> Response:
 
 
 class AcceptOfferView(APIView):
+    permission_classes = [EmailVerified]
+
     def post(self, request: Request, offer_id) -> Response:
         return _act(request, offer_id, actions.accept_offer)
 
@@ -89,6 +94,8 @@ class CancelOfferView(APIView):
 
 
 class CounterOfferView(APIView):
+    permission_classes = [EmailVerified]
+
     def post(self, request: Request, offer_id) -> Response:
         offer = my_offer(request, offer_id)
         serializer = OfferWriteSerializer(data=request.data)

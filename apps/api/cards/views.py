@@ -9,6 +9,8 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from accounts.permissions import EmailVerified
+
 from . import tags as tagging
 from . import templates
 from .models import CardDefinition, CardSet, CardTag, SetTag, Tag
@@ -188,6 +190,8 @@ class MySetDetailView(APIView):
 
 
 class PublishSetView(APIView):
+    permission_classes = [EmailVerified]
+
     def get(self, request: Request, set_id) -> Response:
         """Preview: what would stop this set from publishing right now."""
         return Response({"problems": publish_problems(my_set(request, set_id))})

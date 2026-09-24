@@ -11,9 +11,12 @@ _counter = itertools.count()
 
 def make_user(**overrides) -> User:
     n = next(_counter)
-    fields = {"email": f"user{n}@example.com", "username": f"user{n}", "password": PASSWORD}
-    fields.update(overrides)
-    return User.objects.create_user(**fields)
+    return User.objects.create_user(
+        email=overrides.pop("email", f"user{n}@example.com"),
+        username=overrides.pop("username", f"user{n}"),
+        password=overrides.pop("password", PASSWORD),
+        **{"email_verified": True, **overrides},
+    )
 
 
 @pytest.fixture

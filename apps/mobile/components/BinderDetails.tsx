@@ -1,3 +1,4 @@
+import { personName } from '@miscellary/shared';
 import type { CardSetDetail } from '@miscellary/shared';
 import { Link } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
@@ -62,15 +63,19 @@ export default function BinderDetails({
         <Text style={heading}>Collector</Text>
         {set.creator.is_demo ? <DemoBadge /> : null}
         <Text style={{ fontFamily: fonts.body, color: colors.muted, fontSize: 15 }}>
-          {set.creator.display_name || set.creator.username} keeps this set. Open a pack to collect
-          your own copies.
+          {set.creator.deleted
+            ? 'The account that made this set has been closed. The set stays so its collectors keep their cards.'
+            : `${personName(set.creator)} keeps this set.`}{' '}
+          Open a pack to collect your own copies.
         </Text>
-        <Link
-          href={{ pathname: '/users/[username]', params: { username: set.creator.username } }}
-          style={{ color: colors.accent, fontFamily: fonts.medium, paddingVertical: 12 }}
-        >
-          View @{set.creator.username} →
-        </Link>
+        {set.creator.deleted ? null : (
+          <Link
+            href={{ pathname: '/users/[username]', params: { username: set.creator.username } }}
+            style={{ color: colors.accent, fontFamily: fonts.medium, paddingVertical: 12 }}
+          >
+            View @{set.creator.username} →
+          </Link>
+        )}
       </View>
     </View>
   );

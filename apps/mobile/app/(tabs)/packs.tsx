@@ -1,4 +1,4 @@
-import { cardCode } from '@miscellary/shared';
+import { cardCode, personName } from '@miscellary/shared';
 import type { PackEntry, PackOpening } from '@miscellary/shared';
 import Feather from '@expo/vector-icons/Feather';
 import { router, useFocusEffect } from 'expo-router';
@@ -82,7 +82,7 @@ function Post({
   busy: boolean;
 }) {
   const set = entry.card_set;
-  const creator = set.creator.display_name || set.creator.username;
+  const creator = personName(set.creator);
   const affordable = entry.points >= entry.pack_cost;
   const open = () => router.push({ pathname: '/sets/[slug]', params: { slug: set.slug } });
 
@@ -99,6 +99,7 @@ function Post({
       <View style={styles.byline}>
         <Pressable
           accessibilityRole="link"
+          disabled={set.creator.deleted}
           onPress={() =>
             router.push({
               pathname: '/users/[username]',
@@ -117,7 +118,9 @@ function Post({
               </Text>
               {set.creator.is_demo ? <DemoBadge /> : null}
             </View>
-            <Text style={styles.bylineHandle}>@{set.creator.username}</Text>
+            {set.creator.deleted ? null : (
+              <Text style={styles.bylineHandle}>@{set.creator.username}</Text>
+            )}
           </View>
         </Pressable>
         <Pressable

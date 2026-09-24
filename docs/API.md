@@ -1,6 +1,8 @@
 # API surface
 
-Base path: `/api/v1`. All bodies are JSON. Errors are `{ "error": string, "fields"?: {...} }`.
+Base path: `/api/v1`. All bodies are JSON. Errors are `{ "error": string, "fields"?: {...}, "code"?: string }`.
+A `403` with `code: "email_unverified"` means the action waits on a verified email: publishing a set,
+and sending, countering or accepting a trade offer.
 Interactive docs: `/api/v1/docs/` (OpenAPI at `/api/v1/schema/`).
 
 | Method | Path                            | Auth                 | Notes                                                                        |
@@ -13,11 +15,12 @@ Interactive docs: `/api/v1/docs/` (OpenAPI at `/api/v1/schema/`).
 | GET    | `/auth/me/`                     | bearer               | current user + profile                                                       |
 | PATCH  | `/auth/me/`                     | bearer               | `{display_name?, bio?, showcase_title?, binder_colour?}`                     |
 | POST   | `/auth/username/`               | bearer               | `{username, current_password}` → user; 30-day cooldown, old name reserved    |
-| POST   | `/auth/password/change/`        | bearer               | `{current_password, new_password}` → 204                                     |
+| POST   | `/auth/password/change/`        | bearer               | `{current_password, new_password}` → new session; other sessions revoked     |
+| POST   | `/auth/delete/`                 | bearer               | `{current_password}` → 204; closes the account, published work stays         |
 | POST   | `/auth/verify-email/request/`   | bearer               | resend verification → 204                                                    |
 | POST   | `/auth/verify-email/confirm/`   | –                    | `{token}` → 204                                                              |
 | POST   | `/auth/password-reset/request/` | –                    | `{email}` → 204 always                                                       |
-| POST   | `/auth/password-reset/confirm/` | –                    | `{uid, token, password}` → 204                                               |
+| POST   | `/auth/password-reset/confirm/` | –                    | `{uid, token, password}` → 204; every session revoked                        |
 
 Send `X-Client-Platform: mobile` to receive refresh tokens in the body instead of a cookie.
 

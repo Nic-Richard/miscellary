@@ -52,4 +52,33 @@ describe('apiFetch', () => {
     const retried = fetchMock.mock.calls[2]?.[1] as RequestInit;
     expect((retried.headers as Record<string, string>).Authorization).toBe('Bearer fresh');
   });
+
+  it('shares one refresh between concurrent 401s', async () => {
+    setAccessToken('expired');
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
+      if (String(input).includes('/auth/refresh/')) {
+        return new Response(JSON.stringify({ access: 'fresh' }), { status: 200 });
+      }
+      return new Response(JSON.stringify({ ok: true }), { status: 200 });
+    });
+    fetchMock
+      .mockResolvedValueOnce(new Response(null, { status: 401 }))
+      .mockResolvedValueOnce(new Response(null, { status: 401 }));
+
+    await Promise.all([apiFetch('/a'), apiFetch('/b')]);
+
+    const refreshes = fetchMock.mock.calls.filter(([input]) =>
+      String(input).includes('/auth/refresh/'),
+    );
+    expect(refreshes).toHaveLength(1);
+  });
+
+  it('keeps the error code the client can act on', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ error: 'Verify first.', code: 'email_unverified' }), {
+        status: 403,
+      }),
+    );
+    await expect(apiFetch('/x')).rejects.toMatchObject({ code: 'email_unverified' });
+  });
 });

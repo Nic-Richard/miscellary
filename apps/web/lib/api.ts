@@ -8,11 +8,18 @@ export const API_URL =
 export class ApiRequestError extends Error {
   status: number;
   fields: Record<string, string[]>;
+  code: string | undefined;
 
-  constructor(status: number, message: string, fields: Record<string, string[]> = {}) {
+  constructor(
+    status: number,
+    message: string,
+    fields: Record<string, string[]> = {},
+    code?: string,
+  ) {
     super(message);
     this.status = status;
     this.fields = fields;
+    this.code = code;
   }
 }
 
@@ -70,12 +77,28 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
 
   if (!res.ok) {
     const err = data as Partial<ApiError>;
-    throw new ApiRequestError(res.status, err.error ?? 'Something went wrong.', err.fields ?? {});
+    throw new ApiRequestError(
+      res.status,
+      err.error ?? 'Something went wrong.',
+      err.fields ?? {},
+      err.code,
+    );
   }
   return data as T;
 }
 
-export async function refreshAccessToken(): Promise<boolean> {
+// Refresh tokens rotate on use, so concurrent 401s must share one refresh:
+// a second request with the same token would find it already blacklisted.
+let refreshing: Promise<boolean> | null = null;
+
+export function refreshAccessToken(): Promise<boolean> {
+  refreshing ??= rotateRefreshToken().finally(() => {
+    refreshing = null;
+  });
+  return refreshing;
+}
+
+async function rotateRefreshToken(): Promise<boolean> {
   try {
     const res = await fetch(`${API_URL}/api/v1/auth/refresh/`, {
       method: 'POST',

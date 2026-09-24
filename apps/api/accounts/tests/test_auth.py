@@ -4,6 +4,7 @@ import pytest
 from django.conf import settings
 from django.core import mail
 from django.urls import reverse
+from rest_framework_simplejwt.token_blacklist.models import OutstandingToken
 
 from accounts.models import User
 from conftest import PASSWORD, make_user
@@ -167,15 +168,34 @@ def test_update_profile(auth_client, user):
     assert user.profile.bio == "Rocks and vinyl."
 
 
-def test_change_password(auth_client, user):
+def test_change_password_signs_out_other_sessions(api_client, auth_client, user):
+    elsewhere = api_client.post(
+        reverse("accounts:login"),
+        {"email": user.email, "password": PASSWORD},
+        format="json",
+        HTTP_X_CLIENT_PLATFORM="mobile",
+    ).json()["refresh"]
+
     response = auth_client.post(
         reverse("accounts:password-change"),
         {"current_password": PASSWORD, "new_password": "another-long-one-42"},
         format="json",
+        HTTP_X_CLIENT_PLATFORM="mobile",
     )
-    assert response.status_code == 204
+    assert response.status_code == 200
     user.refresh_from_db()
     assert user.check_password("another-long-one-42")
+
+    def refresh(token: str) -> int:
+        return api_client.post(
+            reverse("accounts:refresh"),
+            {"refresh": token},
+            format="json",
+            HTTP_X_CLIENT_PLATFORM="mobile",
+        ).status_code
+
+    assert refresh(elsewhere) == 401
+    assert refresh(response.json()["refresh"]) == 200
 
 
 def test_change_password_wrong_current(auth_client):
@@ -195,6 +215,8 @@ def _link_param(body: str, name: str) -> str:
 
 
 def test_email_verification_flow(api_client, auth_client, user):
+    user.email_verified = False
+    user.save(update_fields=["email_verified"])
     assert auth_client.post(reverse("accounts:verify-request")).status_code == 204
     token = _link_param(str(mail.outbox[-1].body), "token")
 
@@ -211,6 +233,9 @@ def test_email_verification_bad_token(api_client):
 
 
 def test_password_reset_flow(api_client, user):
+    api_client.post(
+        reverse("accounts:login"), {"email": user.email, "password": PASSWORD}, format="json"
+    )
     response = api_client.post(
         reverse("accounts:reset-request"), {"email": user.email.upper()}, format="json"
     )
@@ -226,6 +251,7 @@ def test_password_reset_flow(api_client, user):
     assert confirm.status_code == 204
     user.refresh_from_db()
     assert user.check_password("fresh-passphrase-77")
+    assert not OutstandingToken.objects.filter(user=user, blacklistedtoken__isnull=True).exists()
 
     # Tokens are single use: the password hash changed, so the stamp no longer matches.
     reused = api_client.post(
@@ -252,3 +278,13 @@ def test_inactive_user_cannot_login(api_client):
         format="json",
     )
     assert response.status_code == 400
+
+
+def test_register_survives_a_failed_verification_email(api_client, monkeypatch):
+    def fail(user):
+        raise OSError("smtp down")
+
+    monkeypatch.setattr("accounts.emails.send_verification_email", fail)
+    response = api_client.post(reverse("accounts:register"), REGISTER, format="json")
+    assert response.status_code == 201
+    assert User.objects.filter(username="nic_01").exists()

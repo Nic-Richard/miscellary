@@ -102,14 +102,17 @@ class PasswordResetConfirmSerializer(serializers.Serializer[None]):
     password = serializers.CharField(write_only=True, trim_whitespace=False)
 
 
-class ChangePasswordSerializer(serializers.Serializer[None]):
+class ConfirmPasswordSerializer(serializers.Serializer[None]):
     current_password = serializers.CharField(write_only=True, trim_whitespace=False)
-    new_password = serializers.CharField(write_only=True, trim_whitespace=False)
 
     def validate_current_password(self, value: str) -> str:
         if not self.context["request"].user.check_password(value):
             raise serializers.ValidationError("Current password is incorrect.")
         return value
+
+
+class ChangePasswordSerializer(ConfirmPasswordSerializer):
+    new_password = serializers.CharField(write_only=True, trim_whitespace=False)
 
     def validate_new_password(self, value: str) -> str:
         try:

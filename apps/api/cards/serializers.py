@@ -44,6 +44,10 @@ class CreatorSerializer(serializers.Serializer):
     display_name = serializers.CharField(source="profile.display_name")
     avatar_url = serializers.CharField(source="profile.avatar_url", allow_null=True)
     is_demo = serializers.BooleanField()
+    deleted = serializers.SerializerMethodField()
+
+    def get_deleted(self, obj) -> bool:
+        return obj.deleted_at is not None
 
 
 class CardSerializer(serializers.ModelSerializer):

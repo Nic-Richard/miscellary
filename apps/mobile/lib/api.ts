@@ -15,11 +15,18 @@ let accessToken: string | null = null;
 export class ApiRequestError extends Error {
   status: number;
   fields: Record<string, string[]>;
+  code: string | undefined;
 
-  constructor(status: number, message: string, fields: Record<string, string[]> = {}) {
+  constructor(
+    status: number,
+    message: string,
+    fields: Record<string, string[]> = {},
+    code?: string,
+  ) {
     super(message);
     this.status = status;
     this.fields = fields;
+    this.code = code;
   }
 }
 
@@ -32,7 +39,18 @@ export async function saveRefreshToken(token: string | null) {
   else await SecureStore.deleteItemAsync(REFRESH_KEY);
 }
 
-export async function refreshAccessToken(): Promise<boolean> {
+// Refresh tokens rotate on use, so concurrent 401s must share one refresh:
+// a second request with the same token would find it blacklisted and sign the user out.
+let refreshing: Promise<boolean> | null = null;
+
+export function refreshAccessToken(): Promise<boolean> {
+  refreshing ??= rotateRefreshToken().finally(() => {
+    refreshing = null;
+  });
+  return refreshing;
+}
+
+async function rotateRefreshToken(): Promise<boolean> {
   const refresh = await SecureStore.getItemAsync(REFRESH_KEY);
   if (!refresh) return false;
   try {
@@ -92,6 +110,7 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
       res.status,
       data?.error ?? 'Something went wrong.',
       data?.fields ?? {},
+      data?.code,
     );
   }
   return data as T;

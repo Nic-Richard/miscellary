@@ -3,6 +3,8 @@ import type { Rarity } from './rarity';
 export interface ApiError {
   error: string;
   fields?: Record<string, string[]>;
+  /** Set when the client can act on the failure, e.g. `email_unverified`. */
+  code?: string;
 }
 
 export interface PublicProfile {
@@ -188,6 +190,8 @@ export interface Creator {
   display_name: string;
   avatar_url: string | null;
   is_demo: boolean;
+  /** A closed account: show it as a deleted user and do not link to it. */
+  deleted: boolean;
 }
 
 export interface Card {

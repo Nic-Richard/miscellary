@@ -17,6 +17,7 @@ import { actOnOffer, listOffers } from '@/lib/trades';
 import { OwnedCardInspector } from '@/components/CardInspector';
 import ui from '@/components/ui.module.css';
 import wide from '@/components/pageWide.module.css';
+import VerifyEmailNotice from '@/components/VerifyEmailNotice';
 import styles from './page.module.css';
 
 type Box = 'inbox' | 'outbox' | 'history';
@@ -142,6 +143,7 @@ export default function TradesPage() {
         <p className={ui.subtitle}>Offer, counter, accept</p>
       </div>
       {error ? <p className={ui.error}>{error}</p> : null}
+      <VerifyEmailNotice>Verify your email address to send or accept offers.</VerifyEmailNotice>
 
       <div className={`${wide.layout} ${wide.layoutPair} ${styles.layout}`}>
         <main className={styles.column}>

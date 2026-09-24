@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { HomeAuthBanner, StartSetLink } from './HomeAuthActions';
-import { cardCode } from '@miscellary/shared';
+import { cardCode, personHandle } from '@miscellary/shared';
 import type { Card, CardSetDetail, CardSetSummary } from '@miscellary/shared';
 import Binder from '@/components/binder/Binder';
 import SetTile from '@/components/SetTile';
@@ -193,7 +193,7 @@ export default async function HomePage() {
           <ul className={`${tileStyles.grid} ${styles.packRow}`}>
             {packRow.map((s) => (
               <li key={s.id}>
-                <SetTile set={s} meta={`${s.card_count} cards · @${s.creator.username}`} />
+                <SetTile set={s} meta={`${s.card_count} cards · ${personHandle(s.creator)}`} />
               </li>
             ))}
           </ul>
