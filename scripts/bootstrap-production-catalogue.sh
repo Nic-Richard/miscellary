@@ -15,9 +15,9 @@ fi
 : "${AWS_REGION:?Set AWS_REGION in .env.deploy or the environment}"
 : "${MEDIA_BUCKET:?Set MEDIA_BUCKET in .env.deploy or the environment}"
 
-export MSYS_NO_PATHCONV=1
 cd "$ROOT_DIR"
-docker compose exec -T api uv run python manage.py bootstrap_catalogue \
+# Git Bash would otherwise rewrite the container path.
+MSYS_NO_PATHCONV=1 docker compose exec -T api uv run python manage.py bootstrap_catalogue \
   --export-photos /repo/tmp/seed-photos-staged
 
 DESTINATION="s3://$MEDIA_BUCKET/staging/seed-photos"

@@ -139,8 +139,6 @@
   right: 0;
 }
 
-/* A matrix, not a run: a row per hue family, each light to dark. No headings,
-   because the rows are the structure. */
 .swatchRows {
   display: flex;
   flex-direction: column;

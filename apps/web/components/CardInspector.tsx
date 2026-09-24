@@ -27,7 +27,6 @@ export interface CardInspectorProps {
 const SPEED = 0.42;
 const MAX_TILT = 52;
 const FRICTION = 0.9;
-// Scale release velocity before inertia.
 const THROW = 0.3;
 const MAX_THROW = 9;
 const TURN_MS = 420;

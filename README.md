@@ -94,16 +94,14 @@ unbaked, and an unbaked published card renders as an empty frame. It is availabl
 docker compose exec api uv run python manage.py verify_renders
 ```
 
-A baked render is keyed to `CARD_RENDERER_VERSION` in `apps/api/cards/rendering.py`, which starts at
+A baked render is keyed to `CARD_RENDERER_VERSION` in `apps/api/cards/rendering.py`. Raise it whenever
+a change to the renderer or to the artwork it draws must invalidate what is already stored: every render
+is then stale, and every published set has to be baked again before its cards will display.
+`pnpm reseed --bake-only` does that in development. In production it is a migration of the asset store
+rather than a code deploy, so plan for it.
 
-1. Raise it whenever a change to the renderer or to the artwork it draws must invalidate what is
-   already stored: every render is then stale, and every published set has to be baked again before its
-   cards will display. `pnpm reseed --bake-only` does that in development. In production it is a
-   migration of the asset store rather than a code deploy, so plan for it.
-
-All local reset users use the password `demopass123`. The main accounts are
-`ellis@example.com`, `mara@example.com`, and `devon@example.com`; additional accounts
-use `orla`, `kit`, `bex`, `sol`, or `wren` followed by `@example.com`.
+Demo creators have no usable password. Register a local account to collect, like and trade alongside
+them.
 
 ### Host-native development
 

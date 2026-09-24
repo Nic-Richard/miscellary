@@ -3,7 +3,6 @@ import type {
   CardSetDetail,
   CardSetSummary,
   CardTemplate,
-  CardWrite,
   Comment,
   CommentThread,
   Creator,
@@ -58,10 +57,6 @@ export const publishProblems = (id: string) =>
   apiFetch<{ problems: string[] }>(`/api/v1/me/sets/${id}/publish/`);
 export const publishSet = (id: string) =>
   apiFetch<CardSetDetail>(`/api/v1/me/sets/${id}/publish/`, { method: 'POST' });
-export const createCard = (setId: string, body: CardWrite) =>
-  apiFetch<Card>(`/api/v1/me/sets/${setId}/cards/`, { method: 'POST', body });
-export const updateCard = (setId: string, cardId: string, body: Partial<CardWrite>) =>
-  apiFetch<Card>(`/api/v1/me/sets/${setId}/cards/${cardId}/`, { method: 'PATCH', body });
 export const reorderCards = (setId: string, cardIds: string[]) =>
   apiFetch<Card[]>(`/api/v1/me/sets/${setId}/cards/order/`, {
     method: 'POST',

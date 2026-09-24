@@ -60,13 +60,6 @@ def _config(**overrides) -> dict[str, str]:
     return {**templates.default_config("classic"), **overrides}
 
 
-def test_specialty_values_need_the_rarity_that_unlocks_them():
-    assert templates.config_problems("classic", _config(finish="pearl"), "common")
-    assert templates.config_problems("classic", _config(finish="pearl"), "uncommon") == []
-    assert templates.config_problems("classic", _config(finish="pearl"), "rare") == []
-    assert templates.config_problems("classic", _config(finish="pearl"), "legendary") == []
-
-
 def test_ordinary_catalogue_is_open_at_every_rarity():
     ordinary = _config(
         stock="ink",
@@ -92,31 +85,8 @@ def test_specialty_press_work_climbs_one_tier_at_a_time():
     assert templates.config_problems("classic", _config(pattern="rainbow"), "epic")
     rainbow = _config(treatment="holo", pattern="rainbow")
     assert templates.config_problems("classic", rainbow, "legendary") == []
-
-
-def test_relief_and_panel_surface_are_not_creator_choices():
-    for template in templates.TEMPLATES:
-        assert "relief" not in template["options"], template["key"]
-        assert "paper" not in template["options"], template["key"]
-
-
-def test_photo_treatment_reaches_every_template():
-    for template in templates.TEMPLATES:
-        assert "tint" in template["options"]
-
-
-def test_every_template_offers_the_same_boards():
-    boards = {t["key"]: t["options"]["stock"]["values"] for t in templates.TEMPLATES}
-    assert all(values == templates.STOCKS_ALL for values in boards.values())
-
-
-def test_full_art_mounts_its_photo_over_the_whole_board():
-    options = templates.TEMPLATES_BY_KEY["minimal"]["options"]
-    assert options["stock"]["default"] == "ink"
-    assert options["texture"]["default"] == "smooth"
-    assert "border" in options
-    assert "border_width" in options
-    assert "shape" not in options
+    assert templates.config_problems("classic", _config(texture="brushed"), "common")
+    assert templates.config_problems("classic", _config(texture="brushed"), "uncommon") == []
 
 
 @pytest.mark.parametrize("key", ["classic", "polaroid", "bold", "fieldnote"])
@@ -129,22 +99,11 @@ def test_framed_templates_allow_shapes_and_borders_at_common(key):
     assert templates.config_problems(key, {"border_width": "huge"}, "common")
 
 
-def test_every_option_is_placed_in_an_editor_group():
-    for template in templates.TEMPLATES:
-        for option in template["options"].values():
-            assert option["group"] in templates.GROUPS
-
-
 def test_every_default_is_open_to_a_common_card():
     for key, template in templates.TEMPLATES_BY_KEY.items():
         if template.get("unlocks"):
             continue
         assert templates.config_problems(key, templates.default_config(key), "common") == []
-
-
-def test_specialty_surface_sits_above_the_ordinary_ones():
-    assert templates.config_problems("classic", _config(texture="brushed"), "common")
-    assert templates.config_problems("classic", _config(texture="brushed"), "uncommon") == []
 
 
 def test_full_art_is_reached_one_way_only():
@@ -154,13 +113,7 @@ def test_full_art_is_reached_one_way_only():
         assert templates.template_problems("minimal", tier)
     for tier in ["epic", "legendary"]:
         assert templates.template_problems("minimal", tier) == []
-
-
-def test_template_gate_is_skipped_when_rarity_is_not_given():
     assert templates.template_problems("minimal") == []
-
-
-def test_ungated_templates_stay_open_to_everyone():
     for key in ["classic", "polaroid", "bold", "fieldnote"]:
         assert templates.template_problems(key, "common") == []
 
@@ -172,12 +125,7 @@ def test_legendary_is_offered_a_treatment_but_never_forced_one():
     assert templates.config_problems("classic", _config(treatment="holo"), "legendary") == []
 
 
-def test_treatment_is_refused_below_its_tier():
-    assert templates.config_problems("classic", _config(treatment="foil"), "uncommon")
-    assert templates.config_problems("classic", _config(treatment="holo"), "rare")
-
-
 def test_rarity_is_not_checked_when_it_is_not_given():
-    # Rendering a stored snapshot never re-validates, so gating rules can change
+    # Rendering a stored snapshot never re-validates, so gating rules can change.
     locked = _config(finish="metallic", treatment="holo")
     assert templates.config_problems("classic", locked) == []

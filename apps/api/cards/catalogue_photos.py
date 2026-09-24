@@ -111,31 +111,6 @@ def _commons_query(parameters: dict[str, str]) -> dict:
         return {}
 
 
-def search_commons(term: str) -> tuple[bytes, dict[str, str]] | None:
-    payload = _commons_query(
-        {
-            "action": "query",
-            "format": "json",
-            "generator": "search",
-            "gsrsearch": f"filetype:bitmap {term}",
-            "gsrnamespace": "6",
-            "gsrlimit": "6",
-            "prop": "imageinfo",
-            "iiprop": "url|mime|extmetadata",
-            "iiurlwidth": "900",
-        }
-    )
-    pages = (payload.get("query") or {}).get("pages") or {}
-    for page in sorted(pages.values(), key=lambda item: item.get("index", 0)):
-        info = (page.get("imageinfo") or [{}])[0]
-        if not str(info.get("mime", "")).startswith("image/"):
-            continue
-        data = _get(info.get("thumburl", ""))
-        if data:
-            return data, _commons_source(page)
-    return None
-
-
 def fetch_commons_file(filename: str) -> tuple[bytes, dict[str, str]] | None:
     payload = _commons_query(
         {
@@ -178,11 +153,7 @@ def fetch_photo(spec: str) -> bytes | None:
                 return cached.read_bytes()
             except (OSError, ValueError):
                 pass
-        result = (
-            search_commons(spec.removeprefix("search:"))
-            if spec.startswith("search:")
-            else fetch_commons_file(spec)
-        )
+        result = fetch_commons_file(spec)
         data = result[0] if result else None
         if result:
             PHOTO_SOURCES[spec] = _normalize_source(spec, result[1])

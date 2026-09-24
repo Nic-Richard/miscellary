@@ -65,8 +65,6 @@
   pointer-events: none;
 }
 
-/* The baked face carries the print work. What is left to the scene is the coat
-   the card is lit through and the spot material laid over its own region. */
 .finish {
   background: var(--baked-coat), var(--baked-ambient);
   background-size:

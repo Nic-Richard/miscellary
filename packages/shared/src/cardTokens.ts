@@ -112,8 +112,7 @@ const STOCKS: Record<string, { stock: string; edge: string }> = {
   pine: { stock: '#1c3327', edge: '#12241a' },
 };
 
-/* The same palette as ink. A colour is itself whichever way it is printed, so
-   this is the board table's colour without its edge. */
+// The board palette as ink: each board colour without its edge.
 const INKS: Record<string, string> = {
   white: '#fdfbf6',
   haze: '#dfe0e2',

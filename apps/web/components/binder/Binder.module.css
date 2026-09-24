@@ -41,7 +41,6 @@
     brightness(var(--binder-brightness, 1));
 }
 
-/* Binder-page light matches the slot lighting model. */
 .lamp {
   position: absolute;
   inset: 0;
@@ -64,7 +63,6 @@
     )
     brightness(min(1.06, calc(0.74 + var(--lit-strength, 1) * 0.28)));
 }
-/* Sleeve highlight is offset from the card coat. */
 .slot::after {
   content: '';
   position: absolute;

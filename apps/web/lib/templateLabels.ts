@@ -11,8 +11,8 @@ export const GROUP_NOTES: Partial<Record<OptionGroup, string>> = {
   press: 'Applied after printing.',
 };
 
-/* Labels for tokens whose stored value is not suitable display copy.
-   needed where a token cannot be a phrase. Everything else is title-cased. */
+// Labels for tokens whose stored value cannot be shown as it is; everything else is
+// title-cased.
 const VALUE_LABELS: Record<string, Record<string, string>> = {
   border: { auto: 'Auto', rarity: 'Rarity metal' },
   accent: { rarity: 'Rarity' },

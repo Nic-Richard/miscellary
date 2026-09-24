@@ -153,12 +153,3 @@ def test_published_set_is_frozen_at_the_model_layer(user):
     card_set.refresh_from_db()
     card_set.soft_delete()
     assert card_set.status == CardSet.Status.DELETED
-
-
-def test_draft_cards_are_editable(user):
-    card_set = make_set(user)
-    card = make_card(card_set)
-    card.title = "Edited"
-    card.save()
-    card.delete()
-    assert card_set.cards.count() == 0

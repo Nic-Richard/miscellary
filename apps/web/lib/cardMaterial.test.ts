@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { resolveCardMaterial, resolveCardSpot } from '@miscellary/shared';
+import { resolveCardMaterial } from '@miscellary/shared';
 import { describe, expect, it } from 'vitest';
 
 const css = readFileSync(new URL('../components/CardPreview.module.css', import.meta.url), 'utf8');
@@ -47,29 +47,6 @@ describe('card material matches the stylesheet', () => {
       }
       expect(declared, finish).toContain(`${material.coat.angle}deg`);
     }
-  });
-
-  it('gives a foiled card a spot treatment the mask can follow, and others none', () => {
-    expect(resolveCardSpot({}, 'common')).toBeNull();
-    expect(resolveCardSpot({}, 'uncommon')).toBeNull();
-    expect(resolveCardSpot({ finish: 'pearl' }, 'rare')).toBeNull();
-    expect(resolveCardSpot({ finish: 'metallic' }, 'epic')).toBeNull();
-    expect(resolveCardSpot({ treatment: 'foil', finish: 'metallic' }, 'epic')).toEqual({
-      material: 'foil',
-      area: 'spot',
-      pattern: 'linear',
-    });
-    expect(
-      resolveCardSpot({ treatment: 'holo', coverage: 'full', pattern: 'cosmos' }, 'legendary'),
-    ).toEqual({ material: 'holo', area: 'full', pattern: 'cosmos' });
-    expect(resolveCardSpot({ treatment: 'holo', coverage: 'reverse' }, 'legendary')?.area).toBe(
-      'reverse',
-    );
-    expect(resolveCardSpot({ treatment: 'foil', coverage: 'reverse' }, 'rare')).toEqual({
-      material: 'foil',
-      area: 'reverse',
-      pattern: 'linear',
-    });
   });
 
   it('keeps the struck rim aligned with the tier that gets it', () => {

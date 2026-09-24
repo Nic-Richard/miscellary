@@ -1,6 +1,3 @@
-/* Compact layout sketches for the template picker.
-   Enough to tell the layouts apart at a glance without rendering a card. */
-
 interface Block {
   x: number;
   y: number;

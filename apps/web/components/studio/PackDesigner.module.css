@@ -1,6 +1,5 @@
 .root {
   display: grid;
-  /* Centre the pack in the space left after the controls. */
   grid-template-columns: minmax(0, 620px) minmax(280px, 1fr);
   gap: 32px;
   align-items: start;

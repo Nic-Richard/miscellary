@@ -378,13 +378,7 @@ KEYED_ADAPTATION = "Background keyed out for pack artwork."
 
 
 def _pack_cutouts(design: dict) -> list[dict[str, str]]:
-    if "cutouts" in design:
-        return design["cutouts"]
-    if design.get("cutout"):
-        return [{"spec": design["cutout"]}]
-    if design.get("keyed"):
-        return [{"keyed": design["keyed"]}]
-    return []
+    return design.get("cutouts", [])
 
 
 def _cutout_spec(cutout: dict[str, str]) -> str:
@@ -455,8 +449,7 @@ def _pack_values(
             layers.append(emblem)
             continue
         if "cutout" in spec:
-            # True is the original single-cutout form and means the first one.
-            index = 0 if spec["cutout"] is True else spec["cutout"]
+            index = spec["cutout"]
             if not isinstance(index, int) or not 0 <= index < len(cutouts):
                 raise CommandError(f"{definition['title']} pack art has no cutout {index}.")
             image_id = cutouts[index].id

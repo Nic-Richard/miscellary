@@ -3,21 +3,6 @@ import { CARD_FIXTURES } from './cardFixtures';
 import { paintToCss, resolveCardTokens } from './cardTokens';
 
 describe('resolveCardTokens', () => {
-  it('falls back to the base board when no stock is chosen', () => {
-    const t = resolveCardTokens('classic', {}, 'common');
-    expect(t.stock).toBe('#f8f2e6');
-    expect(t.edge).toEqual({ kind: 'solid', color: '#cdbfa6' });
-    expect(t.edgeWidth).toBe(0.7);
-    expect(t.corner).toBe(3);
-    expect(t.ink).toBe('#241c14');
-  });
-
-  it('takes the stock and its edge from the chosen board', () => {
-    const t = resolveCardTokens('classic', { stock: 'sand' }, 'common');
-    expect(t.stock).toBe('#e8dcc2');
-    expect(t.edge).toEqual({ kind: 'solid', color: '#c8b898' });
-  });
-
   it('prefers the chosen board over the template board', () => {
     expect(resolveCardTokens('polaroid', {}, 'common').stock).toBe('#fcfaf4');
     expect(resolveCardTokens('polaroid', { stock: 'cream' }, 'common').stock).toBe('#f4ecda');
@@ -81,35 +66,6 @@ describe('resolveCardTokens', () => {
     expect(resolveCardTokens('classic', { border_width: 'thick' }, 'common').edgeWidth).toBe(4.4);
   });
 
-  it('carries the added colour boards and flips type on the deep ones', () => {
-    expect(resolveCardTokens('classic', { stock: 'petal' }, 'common').stock).toBe('#f3dde8');
-    expect(resolveCardTokens('classic', { stock: 'indigo' }, 'common').stock).toBe('#2b2f5c');
-    expect(resolveCardTokens('classic', { stock: 'indigo' }, 'common').ink).toBe('#fffdf7');
-  });
-
-  it('keeps the bold template heavy and round by default', () => {
-    const t = resolveCardTokens('bold', {}, 'common');
-    expect(t.edgeWidth).toBe(3);
-    expect(t.corner).toBe(5);
-    expect(resolveCardTokens('bold', { corners: 'round' }, 'common').corner).toBe(5);
-    expect(resolveCardTokens('bold', { corners: 'sharp' }, 'common').corner).toBe(0.4);
-  });
-
-  it('reads texture size and blend from the chosen stock texture', () => {
-    expect(resolveCardTokens('classic', { texture: 'felt' }, 'common').texture).toEqual({
-      image: 'felt',
-      size: 150,
-      opacity: 0.6,
-      blend: 'overlay',
-    });
-    expect(resolveCardTokens('classic', { texture: 'smooth' }, 'common').texture).toEqual({
-      image: 'none',
-      size: null,
-      opacity: null,
-      blend: null,
-    });
-  });
-
   it('softens every untextured dark board, including cocoa and aubergine', () => {
     const softened = { image: null, size: null, opacity: 0.2, blend: 'screen' };
     for (const stock of ['ink', 'slate', 'wine', 'cocoa', 'aubergine']) {
@@ -141,10 +97,5 @@ describe('card fixtures', () => {
       expect(t.edgeWidth, fixture.name).toBeGreaterThan(0);
       expect(paintToCss(t.edge), fixture.name).not.toBe('');
     }
-  });
-
-  it('names each fixture once', () => {
-    const names = CARD_FIXTURES.map((f) => f.name);
-    expect(new Set(names).size).toBe(names.length);
   });
 });

@@ -46,8 +46,6 @@ FOIL_PATTERN_UNLOCKS = {"rainbow": "legendary"}
 
 TYPEFACES = FONTS
 
-GROUPS = ["board", "print", "type", "press"]
-
 
 def _opt(
     label: str,
@@ -123,7 +121,7 @@ def _accent(default: str) -> dict[str, dict[str, Any]]:
 
     The accent is its second colour, and the set mark is drawn in it. The title
     and body inks are the type itself: 'auto' leaves each region the colour the
-    board gives it, which is what every card did before they could be picked.
+    board gives it.
     """
     return {
         "accent": _opt("Accent", INKS, default, "type", "swatch"),
@@ -135,12 +133,8 @@ def _accent(default: str) -> dict[str, dict[str, Any]]:
 def _press(coverages: list[str] | None = None) -> dict[str, dict[str, Any]]:
     """Production options shared by every template.
 
-    Relief is not here: the recessed image window and description panel are
-    part of every card, and the struck rim follows the tier. None of that is a
-    creator decision, so the renderer applies it rather than the config.
-
-    Coverage is the one press option a template narrows: reverse is everything
-    but the picture, which needs a card that has somewhere else to be.
+    Relief is applied by the renderer, not configured. Coverage is the one option a
+    template narrows: reverse needs a card with something besides the picture.
     """
     return {
         "finish": _opt("Finish", FINISHES, "matte", "press", unlocks=FINISH_UNLOCKS),

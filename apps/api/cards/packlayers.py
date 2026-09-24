@@ -1,21 +1,9 @@
 """What is printed on the front of a pack, as a stack of layers.
 
-The same reasoning as cards/packtext.py: the count and order are the creator's
-choice, so this is a list on the set rather than fixed columns, and the API
-validates the shape itself.
-
-A layer is either an uploaded image or the set's built-in lockup. Making the
-lockup a layer is what lets a creator keep their badge and lay artwork under or
-over it, rather than choosing between the two. Its design still lives in the
-emblem fields on the set; the layer decides where it sits, whether it shows, and
-where in the stack it is painted.
-
-There is deliberately no "placed or full" setting. A layer is sized by width as a
-percentage of the pack and positioned from the centre, and a big enough scale
-covers the wrapper, so one set of controls does both jobs.
-
-Ownership of each image is checked in the serializer, the only place that knows
-who is asking; everything else about a layer is checked here.
+A layer is an uploaded image or the set's built-in lockup, whose design lives in
+the set's emblem fields. The count and order are the creator's, so the API
+validates the list itself. Image ownership is checked in the serializer, the only
+place that knows who is asking.
 """
 
 from typing import Any

@@ -1,5 +1,3 @@
-/* A dark bench, like the inspector's. A specular has nothing to be brighter
-   than on a pale page, which is most of why a coat reads flat there. */
 .stage {
   display: flex;
   justify-content: center;

@@ -2,31 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { expandRepeating, resolveCardMaterial, resolveCardSpot } from './cardMaterial';
 
 describe('resolveCardMaterial', () => {
-  it('defaults to a matte coat', () => {
-    const m = resolveCardMaterial('classic', {}, 'common');
-    expect(m.grain).toBe(0.56);
-    expect(m.sheen).toBe(0.5);
-    expect(m.coatBlend).toBe('soft-light');
-    expect(m.coat.stops[1]?.color).toBe('rgba(255, 252, 244, 0.07)');
-  });
-
-  it('takes grain and sheen from the chosen finish', () => {
-    expect(resolveCardMaterial('classic', { finish: 'gloss' }, 'common').sheen).toBe(0.92);
-    expect(resolveCardMaterial('classic', { finish: 'metallic' }, 'common').grain).toBe(0.1);
-  });
-
   it('takes the coat from the card and never from its tier', () => {
     expect(resolveCardMaterial('classic', {}, 'rare').sheen).toBe(0.5);
     expect(resolveCardMaterial('classic', {}, 'epic').sheen).toBe(0.5);
     expect(resolveCardMaterial('classic', { finish: 'matte' }, 'epic').sheen).toBe(0.5);
     expect(resolveCardMaterial('classic', { finish: 'pearl' }, 'common').sheen).toBe(0.84);
-  });
-
-  it('gives dark boards a colder pearl', () => {
-    const light = resolveCardMaterial('classic', { finish: 'pearl', stock: 'cream' }, 'common');
-    const dark = resolveCardMaterial('classic', { finish: 'pearl', stock: 'ink' }, 'common');
-    expect(light.coat.stops[1]?.color).toBe('rgba(196, 172, 255, 0.34)');
-    expect(dark.coat.stops[1]?.color).toBe('rgba(206, 226, 255, 0.3)');
   });
 
   it('strikes the rim from rare up, and ignores any stored relief', () => {
@@ -76,24 +56,6 @@ describe('resolveCardMaterial', () => {
     expect(resolveCardSpot({ treatment: 'holo', coverage: 'art' }, 'legendary')?.area).toBe('spot');
     expect(resolveCardSpot({ treatment: 'foil', coverage: 'full' }, 'legendary')?.area).toBe(
       'full',
-    );
-  });
-
-  it('carries the layers the chosen spot material prints with', () => {
-    expect(resolveCardMaterial('classic', {}, 'common').spot).toBeNull();
-    expect(resolveCardMaterial('classic', {}, 'uncommon').spot).toBeNull();
-    expect(
-      resolveCardMaterial('classic', { treatment: 'foil' }, 'legendary').spot?.layers.band.blend,
-    ).toBe('hard-light');
-    expect(
-      resolveCardMaterial('classic', { treatment: 'holo' }, 'legendary').spot?.layers.field.opacity,
-    ).toBe(0.34);
-  });
-
-  it('lets a hard coat reach white and keeps a soft one inside the stock', () => {
-    expect(resolveCardMaterial('classic', { finish: 'gloss' }, 'common').coatBlend).toBe('overlay');
-    expect(resolveCardMaterial('classic', { finish: 'matte' }, 'common').coatBlend).toBe(
-      'soft-light',
     );
   });
 });

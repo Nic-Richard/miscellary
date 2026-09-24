@@ -1,11 +1,6 @@
 import type { CSSProperties } from 'react';
 
-/* One palette, one value per colour, wherever a colour is picked: the board,
-   the border ink, the accent and the set mark all draw from this. A colour is
-   itself whatever it is printed as, so the picker shows the same swatch in
-   every control.
-
-   Eight rows of nine. A row is a hue, running light to dark. */
+// Every picker (board, border ink, accent, set mark) draws from this one palette.
 export const COLOUR_ROWS: string[][] = [
   ['white', 'haze', 'ash', 'silver', 'graphite', 'slate', 'steel', 'charcoal', 'ink'],
   ['bone', 'cream', 'butter', 'linen', 'sand', 'straw', 'ochre', 'gold', 'bronze'],

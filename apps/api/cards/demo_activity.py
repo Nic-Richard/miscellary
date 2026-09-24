@@ -21,7 +21,6 @@ from trades.models import TradeOffer, TradeOfferItem
 SEED = "miscellary-demo-activity"
 SHOWCASE_SIZE = 8
 
-# What each demo account calls its profile binder, and the cover it picked.
 BINDERS = {
     "ellisgrant": ("", "moss"),
     "marabell": ("don't ask", "oxblood"),
@@ -190,7 +189,6 @@ def _collections(rng: random.Random, users, sets) -> dict:
         collected[user] = _weighted_sample(
             rng, available, [weight[card_set.slug] for card_set in available], count
         )
-    # Every set has at least one collector, taken on by whoever collects least.
     for card_set in ordered:
         if not any(card_set in picks for picks in collected.values()):
             candidates = [user for user in users if card_set.creator_id != user.id]
@@ -200,7 +198,6 @@ def _collections(rng: random.Random, users, sets) -> dict:
     today = timezone.now().date()
     for user_index, user in enumerate(users):
         for set_index, card_set in enumerate(collected[user]):
-            # The first set someone picks is their favourite, and they open more of it.
             opens = rng.randint(2, 4) if set_index == 0 else 1
             for number, days_ago in enumerate(sorted(rng.sample(range(1, 60), opens))):
                 opening = PackOpening.objects.create(
@@ -265,7 +262,6 @@ def _social(rng: random.Random, users, sets, collected) -> None:
             follow_chance = 0.6 if card_set in mine else 0.15 * set_weight[card_set.slug]
             if rng.random() < follow_chance:
                 set_follows.append(SetFollow(user=user, card_set=card_set))
-        # Cards get liked in the sets people collect, the ones they own most of all.
         owned = set(user.owned_cards.values_list("card_id", flat=True))
         liked: set = set()
         for card_set in mine:
@@ -285,7 +281,6 @@ def _social(rng: random.Random, users, sets, collected) -> None:
             rng, others, [person_weight[other.username] for other in others], rng.randint(2, 6)
         ):
             follows.append(Follow(follower=user, following=other))
-    # Nobody is left without a follower.
     followed = {follow.following_id for follow in follows}
     for user in users:
         if user.id not in followed:

@@ -221,7 +221,6 @@ FONTS = [
     "spacemono",
     "caveat",
 ]
-FONT_CHOICES = [(f, f.title()) for f in FONTS]
 
 PACK_TEXT_MAX_LAYERS = 6
 PACK_TEXT_MAX_LENGTH = 40

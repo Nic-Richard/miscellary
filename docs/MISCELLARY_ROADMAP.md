@@ -214,12 +214,18 @@ The detailed implementation plan is [MOBILE_BUILDOUT_PLAN.md](MOBILE_BUILDOUT_PL
   back handling.
 - Repeat the accepted binder, inspector, pack, and editor phone pass after any performance changes.
 
-## 10. Production-quality seed / launch content: Remaining
+## 10. Production-quality seed / launch content: Complete
 
-The next major product batch is a production-quality bootstrap catalogue. The current demo seed is
-useful for development, but most of it should not be treated as launch content. Rework the strongest
-grounded subjects such as rocks/minerals, records, and film cameras, and replace weaker or overly
-whimsical sets with subjects that feel like things real collectors and hobbyists would actually make.
+### Completed
+
+- Eighteen curated demo sets in production, from 15 to 24 cards, with varied pack sizes, rarity
+  orders, colour, creators and pack designs.
+- Demo accounts carry a Demo badge with an accessible label on web and mobile.
+- Seeded demo activity follows real pull odds, with uneven likes, follows, comments and binders.
+- Production bootstraps from the reviewed photos staged by hash, never from a fresh download.
+- `pnpm reseed --set <slug>` rebuilds one set in development.
+
+More sets can follow the standards below; the catalogue is no longer a launch blocker.
 
 ### Demo-account transparency
 
@@ -278,9 +284,10 @@ Launch content uses a versioned manifest and the idempotent `bootstrap_catalogue
 published rows are verified and never rewritten; a manifest mismatch aborts. Synthetic social activity
 has a separate `refresh_demo_activity` lifecycle. None of these commands runs automatically on application startup.
 
-## 11. Production deployment and live URL: Remaining
+## 11. Production deployment and live URL: In progress
 
-Miscellary still needs to go live.
+`miscellary.com` and `api.miscellary.com` are live on Vercel and ECS, with the catalogue bootstrapped and
+its renders served from the media CDN. Confirm the remaining items below before calling it launched.
 
 ### Deployment checklist
 
@@ -511,13 +518,12 @@ Observability should stay lightweight and proportional to a portfolio project.
 
 # Suggested remaining order of work
 
-1. Production-quality launch content and transparent demo-account identity.
-2. Card editor finalization using the launch sets as the stress test.
-3. Production-like web/Android performance measurement and targeted smoothness fixes.
-4. Responsive, accessibility, empty-state, and inspector QA.
-5. Image/upload, auth, moderation, browser, and real-device QA.
-6. SEO/sharing and lightweight production observability.
-7. Deployment and production configuration.
-8. Go live.
+1. Card editor finalization using the launch sets as the stress test.
+2. Production-like web/Android performance measurement and targeted smoothness fixes.
+3. Responsive, accessibility, empty-state, and inspector QA.
+4. Image/upload, auth, moderation, browser, and real-device QA.
+5. SEO/sharing and lightweight production observability.
+6. Deployment and production configuration.
+7. Go live.
 
-The order can move as dependencies become clearer, but completed sections 2-8 should not be reopened without a specific reason.
+The order can move as dependencies become clearer, but completed sections 2-8 and 10 should not be reopened without a specific reason.

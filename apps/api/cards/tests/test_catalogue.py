@@ -54,7 +54,6 @@ def small_manifest(set_count=1):
 def test_catalogue_sources_are_pinned():
     manifest = load_manifest()
     specs = required_photo_specs(manifest)
-    assert not [spec for spec in specs if spec.startswith("search:")]
     assert set(specs) == set(manifest["sources"])
     assert all(len(source["sha256"]) == 64 for source in manifest["sources"].values())
     for spec, source in manifest["sources"].items():
@@ -62,10 +61,6 @@ def test_catalogue_sources_are_pinned():
             continue
         filename = unquote(source["source_url"].split("/wiki/File:", 1)[1])
         assert spec.replace(" ", "_") == filename.replace(" ", "_")
-
-
-def test_empty_photo_url_is_unavailable():
-    assert catalogue_photos._open("") is None
 
 
 @pytest.mark.django_db
@@ -163,7 +158,7 @@ def layered_manifest(art):
     manifest = small_manifest()
     design = manifest["sets"][0]["pack_design"]
     extra = manifest["sets"][0]["cards"][1][5]
-    design["cutouts"] = [{"spec": design.pop("cutout")}, {"spec": extra}]
+    design["cutouts"].append({"spec": extra})
     design["art"] = art
     return manifest
 
@@ -214,40 +209,24 @@ def test_pack_can_hide_its_lockup_and_set_text_off_centre(monkeypatch):
 
 
 @pytest.mark.django_db
-def test_pack_art_rejects_a_missing_cutout(monkeypatch):
+@pytest.mark.parametrize(
+    ("change", "error"),
+    [
+        (lambda s: s["pack_design"].update(art=[{"cutout": 2}]), "has no cutout 2"),
+        (
+            lambda s: s["pack_design"].update(art=[{"cutout": i % 2} for i in range(6)]),
+            "pack art is invalid",
+        ),
+        (lambda s: s.update(pack_colour="not-a-colour"), "pack_colour"),
+        (lambda s: s.update(title="A Set Title Too Long for the Back"), "fit the card back"),
+    ],
+)
+def test_bootstrap_refuses_an_invalid_set(monkeypatch, change, error):
     monkeypatch.setattr(catalogue.storage, "put_object", lambda *args: None)
-    manifest = layered_manifest([{"cutout": 2}])
+    manifest = layered_manifest([])
+    change(manifest["sets"][0])
 
-    with pytest.raises(CommandError, match="has no cutout 2"):
-        bootstrap_catalogue(manifest, photos_for(manifest))
-
-
-@pytest.mark.django_db
-def test_pack_art_is_held_to_the_editor_layer_limit(monkeypatch):
-    monkeypatch.setattr(catalogue.storage, "put_object", lambda *args: None)
-    manifest = layered_manifest([{"cutout": index % 2} for index in range(6)])
-
-    with pytest.raises(CommandError, match="pack art is invalid"):
-        bootstrap_catalogue(manifest, photos_for(manifest))
-
-
-@pytest.mark.django_db
-def test_set_identity_is_held_to_the_model_choices(monkeypatch):
-    monkeypatch.setattr(catalogue.storage, "put_object", lambda *args: None)
-    manifest = small_manifest()
-    manifest["sets"][0]["pack_colour"] = "not-a-colour"
-
-    with pytest.raises(CommandError, match="pack_colour"):
-        bootstrap_catalogue(manifest, photos_for(manifest))
-
-
-@pytest.mark.django_db
-def test_set_title_is_held_to_what_the_card_back_fits(monkeypatch):
-    monkeypatch.setattr(catalogue.storage, "put_object", lambda *args: None)
-    manifest = small_manifest()
-    manifest["sets"][0]["title"] = "A Set Title Too Long for the Back"
-
-    with pytest.raises(CommandError, match="does not fit the card back"):
+    with pytest.raises(CommandError, match=error):
         bootstrap_catalogue(manifest, photos_for(manifest))
 
 

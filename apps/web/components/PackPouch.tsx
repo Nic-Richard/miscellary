@@ -10,7 +10,6 @@ import styles from './PackPouch.module.css';
 // Coordinates are in the pack image's own pixel space (530 x 886).
 const FACE = { cx: 265, cy: 440, r: 176 };
 
-// Pale ink uses a dark plate to maintain contrast.
 const PLATE_DARK = '#241f1a';
 const PLATE_LIGHT = '#f4eee0';
 
@@ -481,7 +480,6 @@ export default function PackPouch({
   const lines = (identity.pack_text ?? []).filter((line) => !line.hidden);
   const covered = front.some(coversPack);
   const finish = identity.pack_finish || 'gloss';
-  // Full-coverage art needs more of the wrapper's shading restored.
   const relight = finish === 'matte' ? (covered ? 0.7 : 0.3) : covered ? 0.92 : 0.45;
 
   return (

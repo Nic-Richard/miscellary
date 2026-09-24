@@ -94,12 +94,7 @@ def test_an_unpublished_set_leaves_the_packs_page(auth_client, user, sets):
 
 
 def test_recent_cards_are_chosen_per_set(auth_client, user, sets):
-    """A heavily opened set must not starve the others.
-
-    These used to come from one global slice of the newest copies, so a set the
-    collector had been opening could fill it and leave the rest reporting
-    nothing pulled while they plainly held cards.
-    """
+    """A heavily opened set must not starve the others of recent cards."""
     busy, quiet = sets
     for card_set in sets:
         SetFollow.objects.create(user=user, card_set=card_set)

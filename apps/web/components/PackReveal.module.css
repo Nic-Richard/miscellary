@@ -119,9 +119,6 @@
   white-space: nowrap;
 }
 
-/* The reveal is lit head-on by the spot behind the card, not from a corner
-   like a binder page, so its coat and chase catch light across the middle of
-   the face rather than off one edge. */
 .current {
   position: relative;
   display: flex;
@@ -241,7 +238,6 @@
 .ledgeCard {
   width: 100px;
   flex: 0 1 100px;
-  /* Off the spot and further back, so the shelf sits below the reveal. */
   --lit-strength: 0.78;
   transform: translateY(6px);
   opacity: 0.55;

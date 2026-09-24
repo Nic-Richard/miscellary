@@ -67,7 +67,6 @@ body {
   margin: 0;
   padding: 0;
 }
-/* Non-repeating desk lighting and surface variation. */
 body {
   background:
     radial-gradient(128% 96% at 26% 2%, rgba(255, 252, 242, 0.82), rgba(255, 252, 242, 0) 58%),

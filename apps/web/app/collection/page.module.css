@@ -42,8 +42,6 @@
   color: var(--accent);
 }
 
-/* A tally of the tiers a collection is made of. The bar is relative to the
-   commonest tier held, so the shape reads at a glance rather than the totals. */
 .rarities {
   display: grid;
   gap: 9px;

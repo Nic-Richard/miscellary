@@ -27,15 +27,5 @@ def drawn_marks() -> list[str]:
     return re.findall(r"^  ([a-z]+): \[", body, re.M)
 
 
-def test_every_accepted_mark_has_artwork():
-    missing = [mark for mark in SET_MARKS if mark not in drawn_marks()]
-    assert not missing, f"marks the API accepts but nothing can draw: {missing}"
-
-
-def test_every_drawn_mark_is_offered():
-    extra = [mark for mark in drawn_marks() if mark not in SET_MARKS]
-    assert not extra, f"marks with artwork that no one can choose: {extra}"
-
-
-def test_the_two_lists_are_in_the_same_order():
+def test_accepted_and_drawn_marks_are_one_list():
     assert list(SET_MARKS) == drawn_marks()

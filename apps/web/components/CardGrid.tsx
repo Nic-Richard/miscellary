@@ -27,7 +27,6 @@ export function CardCell({
 }: {
   children: ReactNode;
   footer?: ReactNode;
-  // Pointer events support the same reorder path for mouse and touch.
   reorder?: {
     id: string;
     dragging: boolean;

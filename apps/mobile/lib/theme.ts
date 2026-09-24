@@ -43,11 +43,3 @@ export const rarityColors: Record<string, string> = {
   epic: '#c0568c',
   legendary: '#c9a24a',
 };
-
-export const accentColors: Record<string, string> = {
-  gold: '#b8903a',
-  blue: '#4f6f9e',
-  green: '#4c7a5a',
-  purple: '#7b5fa3',
-  red: '#b04c3c',
-};

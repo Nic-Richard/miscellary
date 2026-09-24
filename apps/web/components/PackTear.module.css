@@ -29,7 +29,6 @@
 .body {
   z-index: 1;
 }
-/* Foil interior revealed by the opening. */
 .inside {
   position: absolute;
   inset: 0;
@@ -41,7 +40,6 @@
   z-index: 3;
   will-change: transform;
 }
-/* Inline gradient follows the moving tear front. */
 .foldShade {
   position: absolute;
   inset: 0;

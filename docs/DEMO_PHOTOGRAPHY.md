@@ -1,10 +1,7 @@
 # Curated demo photography and launch-content direction
 
-The existing development seed contains a small group of manually curated collections and a larger
-legacy set of search-selected images. It remains useful for local development, but it is not the target
-production bootstrap catalogue. The launch-content pass can replace most of it and rework the strongest
-grounded subjects, including records, film cameras, rocks/minerals, and other collections that feel like
-things real hobbyists would make.
+The demo catalogue in `apps/api/cards/catalogue_manifest.json` is the production bootstrap content:
+eighteen curated sets by demo creators. This document is the standard new sets are held to.
 
 ## Launch photography standard
 
