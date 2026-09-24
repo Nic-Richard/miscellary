@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useCallback, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import { useAuth } from '@/lib/auth';
 import { loginHref, registerHref, swapAuthHref } from '@/lib/returnTo';
@@ -52,6 +52,25 @@ export default function Nav() {
   const pathname = usePathname();
   const [q, setQ] = useState('');
   const [unread, setUnread] = useState(0);
+  const [menu, setMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => setMenu(false), [pathname]);
+  useEffect(() => {
+    if (!menu) return;
+    function away(event: MouseEvent) {
+      if (!menuRef.current?.contains(event.target as Node)) setMenu(false);
+    }
+    function escape(event: KeyboardEvent) {
+      if (event.key === 'Escape') setMenu(false);
+    }
+    document.addEventListener('mousedown', away);
+    document.addEventListener('keydown', escape);
+    return () => {
+      document.removeEventListener('mousedown', away);
+      document.removeEventListener('keydown', escape);
+    };
+  }, [menu]);
 
   const recount = useCallback(() => {
     if (!user) {
@@ -79,17 +98,23 @@ export default function Nav() {
     if (q.trim().length >= 2) router.push(`/search?q=${encodeURIComponent(q.trim())}`);
   }
 
-  const gated = (href: string) => (user ? href : loginHref(href));
-  const profileHref = user ? `/users/${user.profile.username}` : loginHref('/account');
+  const profileHref = user ? `/users/${user.profile.username}` : '/';
+  const name = user ? user.profile.display_name || user.profile.username : '';
 
+  // Signed out, the collector-only pages would all lead to the login form. While
+  // the session is still resolving they hold their space, so the rail does not jump.
   const links: { href: string; label: string; icon: IconName; match: string }[] = [
     { href: '/', label: 'Home', icon: 'home', match: '/' },
     { href: '/sets', label: 'Sets', icon: 'binders', match: '/sets' },
-    { href: gated('/packs'), label: 'Packs', icon: 'packs', match: '/packs' },
-    { href: gated('/collection'), label: 'My cards', icon: 'cards', match: '/collection' },
-    { href: gated('/trades'), label: 'Trades', icon: 'trades', match: '/trades' },
-    { href: gated('/studio'), label: 'Studio', icon: 'studio', match: '/studio' },
-    { href: profileHref, label: 'Profile', icon: 'profile', match: '/users' },
+    ...(user || loading
+      ? ([
+          { href: '/packs', label: 'Packs', icon: 'packs', match: '/packs' },
+          { href: '/collection', label: 'My cards', icon: 'cards', match: '/collection' },
+          { href: '/trades', label: 'Trades', icon: 'trades', match: '/trades' },
+          { href: '/studio', label: 'Studio', icon: 'studio', match: '/studio' },
+          { href: profileHref, label: 'Profile', icon: 'profile', match: '/users' },
+        ] as const)
+      : []),
   ];
 
   function isActive(match: string) {
@@ -102,21 +127,26 @@ export default function Nav() {
       <Link href="/" className={styles.brand}>
         <BrandMark className={styles.brandMark} />
         <span className={styles.wordmark}>Miscellary</span>
-        <small>Collect · Trade · Create</small>
+        <small>Collect, trade, create</small>
       </Link>
 
       <nav className={styles.links} aria-label="Main">
-        {links.map((l) => (
-          <Link
-            key={l.label}
-            href={l.href}
-            className={isActive(l.match) ? styles.active : undefined}
-            aria-current={isActive(l.match) ? 'page' : undefined}
-          >
-            <NavIcon name={l.icon} />
-            {l.label}
-          </Link>
-        ))}
+        {links.map((l) => {
+          const held = loading && l.match !== '/' && l.match !== '/sets';
+          return (
+            <Link
+              key={l.label}
+              href={l.href}
+              className={`${isActive(l.match) ? styles.active : ''} ${held ? styles.pending : ''}`}
+              aria-current={isActive(l.match) ? 'page' : undefined}
+              aria-hidden={held || undefined}
+              tabIndex={held ? -1 : undefined}
+            >
+              <NavIcon name={l.icon} />
+              {l.label}
+            </Link>
+          );
+        })}
       </nav>
 
       <div className={styles.foot}>
@@ -131,14 +161,29 @@ export default function Nav() {
           />
         </form>
 
-        <Link href={gated('/studio')} className={styles.newBtn}>
-          <NavIcon name="plus" />
-          New
-        </Link>
+        {loading ? null : user ? (
+          <>
+            <Link href="/studio" className={styles.newBtn}>
+              <NavIcon name="plus" />
+              <span>New set</span>
+            </Link>
 
-        <div className={styles.account}>
-          {loading ? null : user ? (
-            <>
+            <div className={styles.account} ref={menuRef}>
+              <button
+                type="button"
+                className={styles.me}
+                aria-haspopup="menu"
+                aria-expanded={menu}
+                onClick={() => setMenu((open) => !open)}
+              >
+                <span className={styles.monogram} aria-hidden="true">
+                  {name[0]?.toUpperCase()}
+                </span>
+                <span className={styles.who}>
+                  <strong>{name}</strong>
+                  <small>@{user.profile.username}</small>
+                </span>
+              </button>
               <Link
                 href="/notifications"
                 className={`${styles.bell} ${isActive('/notifications') ? styles.bellActive : ''}`}
@@ -149,21 +194,28 @@ export default function Nav() {
                   <span className={styles.badge}>{unread > 99 ? '99+' : unread}</span>
                 ) : null}
               </Link>
-              <Link href={profileHref} className={styles.profileLink}>
-                @{user.profile.username}
-              </Link>
-              <button type="button" className={styles.linkBtn} onClick={() => void logout()}>
-                Log out
-              </button>
-            </>
-          ) : (
-            <>
-              <Suspense fallback={<AuthLinks pathname={pathname} />}>
-                <AuthLinksCarryingQuery pathname={pathname} />
-              </Suspense>
-            </>
-          )}
-        </div>
+              {menu ? (
+                <div className={styles.menu} role="menu">
+                  <Link role="menuitem" href={profileHref}>
+                    Your profile
+                  </Link>
+                  <Link role="menuitem" href="/account">
+                    Account settings
+                  </Link>
+                  <button role="menuitem" type="button" onClick={() => void logout()}>
+                    Log out
+                  </button>
+                </div>
+              ) : null}
+            </div>
+          </>
+        ) : (
+          <div className={styles.auth}>
+            <Suspense fallback={<AuthLinks pathname={pathname} />}>
+              <AuthLinksCarryingQuery pathname={pathname} />
+            </Suspense>
+          </div>
+        )}
       </div>
     </header>
   );

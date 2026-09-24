@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import type { OwnedCard, ShowcaseSlot } from '@miscellary/shared';
 import { cardCode, SHOWCASE_SLOTS } from '@miscellary/shared';
+import PageHeader from '@/components/PageHeader';
 import AccountSecurity from '@/components/AccountSecurity';
 import BinderColourPicker from '@/components/BinderColourPicker';
 import SearchField from '@/components/SearchField';
@@ -12,6 +13,7 @@ import CardPreview from '@/components/CardPreview';
 import ProfileBinder from '@/components/ProfileBinder';
 import { OwnedCardInspector } from '@/components/CardInspector';
 import ui from '@/components/ui.module.css';
+import wide from '@/components/pageWide.module.css';
 import { updateProfile } from '@/lib/account';
 import { useAuth } from '@/lib/auth';
 import { useRequireAccount } from '@/lib/requireAccount';
@@ -20,6 +22,8 @@ import { getShowcase, saveShowcase } from '@/lib/social';
 import styles from './page.module.css';
 
 type Section = 'profile' | 'binder' | 'account';
+
+const SECTION_LABELS = { profile: 'Profile', binder: 'Binder', account: 'Sign-in' } as const;
 
 export default function AccountPage() {
   const { user, loading, refreshUser } = useAuth();
@@ -139,10 +143,8 @@ export default function AccountPage() {
     );
 
   return (
-    <section>
-      <p className={ui.eyebrow}>Account</p>
-      <h1 className={ui.title}>@{user.profile.username}</h1>
-      <p className={ui.subtitle}>Your profile, your binder, and how you sign in</p>
+    <section className={wide.column}>
+      <PageHeader title="Account" description="Your profile, your binder and how you sign in" />
       {error ? <p className={styles.error}>{error}</p> : null}
 
       <div className={styles.tabs}>
@@ -156,7 +158,7 @@ export default function AccountPage() {
               className={`${ui.segment} ${section === name ? ui.segmentOn : ''}`}
               onClick={() => setSection(name)}
             >
-              {name}
+              {SECTION_LABELS[name]}
             </button>
           ))}
         </div>

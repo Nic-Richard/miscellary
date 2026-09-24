@@ -1,12 +1,5 @@
-.header {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: flex-end;
-  gap: 16px;
-}
-
-.layout {
+.layout,
+.pairHeader {
   --measure: 720px;
 }
 
@@ -95,7 +88,7 @@ a.link:hover {
   min-width: 0;
 }
 .said {
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1.45;
 }
 .said strong {
@@ -105,7 +98,7 @@ a.link:hover {
   display: block;
   overflow: hidden;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 16px;
   font-style: italic;
   line-height: 1.4;
   text-overflow: ellipsis;
@@ -113,9 +106,7 @@ a.link:hover {
 }
 .when {
   color: var(--faint);
-  font-size: 11px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  font-size: 15px;
 }
 
 .object {
@@ -168,7 +159,7 @@ a.link:hover {
   background: none;
   color: #4b4238;
   font: inherit;
-  font-size: 13px;
+  font-size: 15px;
   text-align: left;
   cursor: pointer;
   transition:
@@ -248,7 +239,7 @@ a.link:hover {
   border-radius: 6px;
   color: var(--accent);
   font: inherit;
-  font-size: 13px;
+  font-size: 15px;
   cursor: pointer;
 }
 .more:hover:not(:disabled) {

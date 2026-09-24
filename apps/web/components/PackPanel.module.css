@@ -27,9 +27,7 @@
 .sub {
   margin: -2px 0 6px;
   color: #5e5346;
-  font-size: 12px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  font-size: 15px;
 }
 .cta {
   min-width: 176px;
@@ -39,9 +37,7 @@
 .note {
   margin: 8px 0 0;
   color: #5e5346;
-  font-size: 11px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  font-size: 15px;
   font-variant-numeric: tabular-nums;
 }
 .pointsBtn {
@@ -49,7 +45,7 @@
   background: none;
   border: 0;
   color: #8a7d6c;
-  font-size: 11px;
+  font-size: 13px;
   text-align: left;
   cursor: pointer;
 }

@@ -35,10 +35,8 @@
 }
 .label {
   color: #5e5346;
-  font-size: 11px;
+  font-size: 15px;
   font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
 }
 .input {
   padding: 10px 12px;
@@ -54,14 +52,14 @@
 }
 .fieldError {
   color: var(--danger);
-  font-size: 12px;
+  font-size: 15px;
 }
 .error {
   padding: 10px 12px;
   border: 1px solid var(--danger);
   border-radius: 4px;
   color: var(--danger);
-  font-size: 13px;
+  font-size: 15px;
 }
 .submit {
   min-height: 44px;
@@ -83,6 +81,6 @@
 .alt {
   margin: 4px 0 0;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 15px;
   text-align: center;
 }

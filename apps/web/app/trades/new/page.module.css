@@ -8,9 +8,7 @@
   margin-bottom: 14px;
   color: var(--muted);
   font-family: var(--body);
-  font-size: 12px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  font-size: 15px;
 }
 .back:hover {
   color: var(--accent);
@@ -37,10 +35,8 @@
   margin: 0 0 12px;
   color: var(--muted);
   font-family: var(--body);
-  font-size: 11px;
+  font-size: 15px;
   font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
 }
 .grid {
   display: grid;
@@ -100,7 +96,7 @@
   border-radius: 999px;
   color: #fff;
   font-family: var(--display);
-  font-size: 13px;
+  font-size: 14px;
   letter-spacing: 0.04em;
   box-shadow: 0 1px 3px rgba(58, 42, 20, 0.3);
 }
@@ -113,7 +109,7 @@
   border-radius: 999px;
   color: #f3ecdd;
   font-family: var(--display);
-  font-size: 11px;
+  font-size: 13px;
   letter-spacing: 0.06em;
 }
 .held {
@@ -125,10 +121,8 @@
   border-radius: 3px;
   color: #f3ecdd;
   font-family: var(--body);
-  font-size: 9px;
+  font-size: 15px;
   font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
 }
 
 .deal {
@@ -167,10 +161,8 @@
 .dealLabel {
   color: var(--muted);
   font-family: var(--body);
-  font-size: 10px;
+  font-size: 15px;
   font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
 }
 .dealLabel b {
   color: var(--accent);
@@ -198,7 +190,7 @@
 .dealNone {
   align-self: center;
   color: var(--faint);
-  font-size: 12px;
+  font-size: 15px;
   font-style: italic;
 }
 
@@ -243,5 +235,5 @@
   border: 1px solid rgba(184, 144, 58, 0.4);
   border-radius: var(--radius-sm, 7px);
   color: var(--ink);
-  font-size: 13px;
+  font-size: 15px;
 }

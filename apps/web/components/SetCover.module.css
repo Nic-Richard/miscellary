@@ -58,7 +58,7 @@
   border: 0;
   color: var(--accent);
   font-family: var(--body);
-  font-size: 12px;
+  font-size: 15px;
   text-decoration: underline;
   cursor: pointer;
 }

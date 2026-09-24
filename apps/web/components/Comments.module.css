@@ -37,10 +37,8 @@
 .meta {
   color: var(--faint);
   font-family: var(--body);
-  font-size: 11px;
+  font-size: 15px;
   font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
 }
 
 .composer {
@@ -66,15 +64,13 @@
   flex: 1;
   min-height: 1em;
   color: var(--faint);
-  font-size: 11px;
+  font-size: 15px;
   font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
 }
 .error {
   flex: 1;
   color: var(--danger);
-  font-size: 12px;
+  font-size: 15px;
 }
 
 .signedOut {
@@ -134,13 +130,13 @@
   border-radius: 50%;
   color: var(--muted);
   font-family: var(--display);
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1;
 }
 .name {
   color: var(--text);
   font-weight: 700;
-  font-size: 13px;
+  font-size: 15px;
   text-decoration: none;
 }
 .name:hover {
@@ -152,15 +148,13 @@
   border-radius: var(--radius-pill);
   color: var(--accent-text);
   font-family: var(--body);
-  font-size: 9px;
+  font-size: 15px;
   font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
 }
 .when {
   margin-left: auto;
   color: var(--faint);
-  font-size: 11px;
+  font-size: 13px;
   white-space: nowrap;
 }
 
@@ -185,7 +179,7 @@
   border: none;
   color: var(--faint);
   font-family: var(--body);
-  font-size: 12px;
+  font-size: 15px;
   cursor: pointer;
 }
 .tool:hover {
@@ -204,7 +198,7 @@
   border: 1px dashed var(--bdr2);
   border-radius: var(--radius-md);
   color: var(--faint);
-  font-size: 12px;
+  font-size: 15px;
   font-style: italic;
 }
 
@@ -223,10 +217,10 @@
 .replies .monogram {
   width: 22px;
   height: 22px;
-  font-size: 11px;
+  font-size: 13px;
 }
 .replies .text {
-  font-size: 13px;
+  font-size: 15px;
 }
 
 .empty {

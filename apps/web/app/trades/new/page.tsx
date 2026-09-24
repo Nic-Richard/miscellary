@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import { cardCode, TRADE_MAX_PER_SIDE } from '@miscellary/shared';
 import type { OwnedCard } from '@miscellary/shared';
+import PageHeader from '@/components/PageHeader';
 import CardPreview from '@/components/CardPreview';
 import SwapArrow from '@/components/SwapArrow';
 import Sheet, { Empty } from '@/components/Sheet';
@@ -258,11 +259,13 @@ function NewTrade() {
   return (
     <section className={styles.root}>
       <Link href="/trades" className={styles.back}>
-        ← Trade offers
+        ← Trades
       </Link>
-      <p className={ui.eyebrow}>{counterId ? 'Counter offer' : 'New offer'}</p>
-      <h1 className={ui.title}>Trade with @{partner}</h1>
-      <p className={ui.subtitle}>Pick from either side, then send</p>
+      <PageHeader
+        context={counterId ? 'Counter offer' : 'New offer'}
+        title={`Trade with @${partner}`}
+        description="Pick cards from either side, then send the offer."
+      />
       {error ? <p className={ui.error}>{error}</p> : null}
       <VerifyEmailNotice>Verify your email address to send offers.</VerifyEmailNotice>
 

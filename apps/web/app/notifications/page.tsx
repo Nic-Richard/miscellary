@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Notification, NotificationKind } from '@miscellary/shared';
+import PageHeader from '@/components/PageHeader';
 import DemoBadge from '@/components/DemoBadge';
 import { NOTICE_EVENT } from '@/components/Nav';
 import Sheet, { Empty } from '@/components/Sheet';
@@ -193,18 +194,18 @@ export default function NotificationsPage() {
     <div className={wide.page}>
       <span className={wide.lamp} aria-hidden="true" />
 
-      <div className={`${wide.header} ${styles.header}`}>
-        <div>
-          <p className={ui.eyebrow}>Your desk</p>
-          <h1 className={ui.title}>Notifications</h1>
-          <p className={ui.subtitle}>{unread > 0 ? `${unread} unread` : 'All caught up'}</p>
-        </div>
-        {unread > 0 ? (
-          <button type="button" className={ui.action} onClick={() => void markAll()}>
-            Mark all read
-          </button>
-        ) : null}
-      </div>
+      <PageHeader
+        className={`${wide.pairHeader} ${styles.pairHeader}`}
+        title="Notifications"
+        description={unread > 0 ? `${unread} unread` : 'All caught up'}
+        actions={
+          unread > 0 ? (
+            <button type="button" className={ui.btnQuiet} onClick={() => void markAll()}>
+              Mark all read
+            </button>
+          ) : null
+        }
+      />
       {error ? <p className={ui.error}>{error}</p> : null}
 
       <div className={`${wide.layout} ${wide.layoutPair} ${styles.layout}`}>

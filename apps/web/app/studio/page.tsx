@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { SET_TITLE_MAX_LENGTH } from '@miscellary/shared';
 import type { CardSetSummary } from '@miscellary/shared';
+import PageHeader from '@/components/PageHeader';
 import { Empty } from '@/components/Sheet';
 import SetTile from '@/components/SetTile';
 import tileStyles from '@/components/SetTile.module.css';
@@ -13,6 +14,7 @@ import { useAuth } from '@/lib/auth';
 import { useRequireAccount } from '@/lib/requireAccount';
 import { createSet, listMySets } from '@/lib/sets';
 import ui from '@/components/ui.module.css';
+import wide from '@/components/pageWide.module.css';
 import styles from './page.module.css';
 
 export default function StudioPage() {
@@ -45,10 +47,8 @@ export default function StudioPage() {
   if (!user) return <p className={ui.muted}>Taking you to create an account…</p>;
 
   return (
-    <section>
-      <p className={ui.eyebrow}>Studio</p>
-      <h1 className={ui.title}>Your sets</h1>
-      <p className={ui.subtitle}>Drafts stay private until you publish</p>
+    <section className={wide.page}>
+      <PageHeader title="Studio" description="Your sets. Drafts stay private until you publish." />
 
       <form className={`${ui.ticket} ${styles.create}`} onSubmit={onCreate}>
         <label className={ui.label} htmlFor="new-set-title">

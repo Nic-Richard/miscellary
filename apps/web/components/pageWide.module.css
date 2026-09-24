@@ -74,20 +74,20 @@
 .railNote {
   margin: 12px 0 0;
   color: var(--faint);
-  font-size: 12px;
+  font-size: 16px;
   line-height: 1.5;
 }
 .railLink {
   display: inline-block;
   margin-top: 12px;
-  color: var(--accent);
-  font-size: 12px;
-  letter-spacing: 0.1em;
+  color: var(--accent-deep);
+  font-size: 15px;
+  font-weight: 600;
   text-decoration: none;
-  text-transform: uppercase;
 }
 .railLink:hover {
   text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .summary {
@@ -110,7 +110,7 @@
 }
 .summary span {
   color: var(--muted);
-  font-size: 12px;
+  font-size: 16px;
   line-height: 1.4;
 }
 
@@ -135,7 +135,7 @@
 .pointsList a {
   overflow: hidden;
   color: #4b4238;
-  font-size: 13px;
+  font-size: 15px;
   text-decoration: none;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -177,6 +177,19 @@
     --wide: 100%;
     margin-inline: 0;
   }
+}
+
+/* Headers above a pair line up with the pair, not the page edge. */
+.pairHeader {
+  max-width: calc(var(--measure, 720px) + 296px + 34px);
+  margin-inline: auto;
+}
+
+/* A single reading column for forms and settings. */
+.column {
+  width: 100%;
+  max-width: 880px;
+  margin-inline: auto;
 }
 
 /* Keep the pair grid here so CSS module load order cannot change its layout. */

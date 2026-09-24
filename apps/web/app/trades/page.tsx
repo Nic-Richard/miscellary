@@ -5,11 +5,11 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import type { Creator, OwnedCard, TradeOffer } from '@miscellary/shared';
+import PageHeader from '@/components/PageHeader';
 import OfferCard from '@/components/OfferCard';
 import OfferInspector from '@/components/OfferInspector';
 import Sheet, { Empty } from '@/components/Sheet';
 import SwapArrow from '@/components/SwapArrow';
-import { Segmented } from '@/components/controls';
 import { useAuth } from '@/lib/auth';
 import { useRequireAccount } from '@/lib/requireAccount';
 import { loginHref } from '@/lib/returnTo';
@@ -21,6 +21,12 @@ import VerifyEmailNotice from '@/components/VerifyEmailNotice';
 import styles from './page.module.css';
 
 type Box = 'inbox' | 'outbox' | 'history';
+
+const BOXES: [Box, string][] = [
+  ['inbox', 'Received'],
+  ['outbox', 'Sent'],
+  ['history', 'History'],
+];
 
 function DealMat({ box }: { box: Box }) {
   return (
@@ -116,8 +122,7 @@ export default function TradesPage() {
   if (!user)
     return (
       <section>
-        <p className={ui.eyebrow}>Trading</p>
-        <h1 className={ui.title}>Trade offers</h1>
+        <PageHeader title="Trades" />
         <Sheet className={styles.sheet}>
           <Empty
             icon="trade"
@@ -137,29 +142,37 @@ export default function TradesPage() {
     <div className={wide.page}>
       <span className={wide.lamp} aria-hidden="true" />
 
-      <div className={wide.header}>
-        <p className={ui.eyebrow}>Trading</p>
-        <h1 className={ui.title}>Trade offers</h1>
-        <p className={ui.subtitle}>Offer, counter, accept</p>
-      </div>
+      <PageHeader
+        className={`${wide.pairHeader} ${styles.pairHeader}`}
+        title="Trades"
+        description="Offers you have sent and received"
+      />
       {error ? <p className={ui.error}>{error}</p> : null}
       <VerifyEmailNotice>Verify your email address to send or accept offers.</VerifyEmailNotice>
 
       <div className={`${wide.layout} ${wide.layoutPair} ${styles.layout}`}>
         <main className={styles.column}>
           <Sheet
-            title={box}
             meta={
               offers === null
                 ? 'Loading'
                 : `${offers.length} ${offers.length === 1 ? 'offer' : 'offers'}`
             }
             actions={
-              <Segmented
-                value={box}
-                values={['inbox', 'outbox', 'history']}
-                onChange={(v) => setBox(v as Box)}
-              />
+              <div className={ui.segments} role="tablist" aria-label="Offers">
+                {BOXES.map(([value, label]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    role="tab"
+                    aria-selected={box === value}
+                    className={`${ui.segment} ${box === value ? ui.segmentOn : ''}`}
+                    onClick={() => setBox(value)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
             }
           >
             {offers === null ? (

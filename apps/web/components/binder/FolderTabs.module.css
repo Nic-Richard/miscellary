@@ -61,7 +61,7 @@
   border: 1px solid currentColor;
   border-radius: 3px;
   font-weight: 400;
-  font-size: 13px;
+  font-size: 15px;
   letter-spacing: 0.08em;
   opacity: 0.85;
 }
@@ -85,7 +85,7 @@
     margin-right: -30px;
     padding: 6px 2px 0;
     border-width: 0 30px;
-    font-size: 12px;
+    font-size: 15px;
     letter-spacing: 0.06em;
     gap: 6px;
   }

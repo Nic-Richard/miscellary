@@ -21,9 +21,7 @@
 .meta {
   margin-left: 8px;
   color: var(--faint);
-  font-size: 12px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-size: 15px;
 }
 .grid {
   display: grid;

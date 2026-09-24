@@ -1,21 +1,16 @@
-.header {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: flex-end;
-  gap: 16px;
-}
 .find {
   min-width: 250px;
 }
 
 .crumbs {
-  margin: 10px 0 0;
-  color: var(--muted);
-  font-size: 13px;
+  display: flex;
+  gap: 16px;
+  margin-top: 8px;
+  font-size: 15px;
+  font-weight: 600;
 }
 .crumbs a {
-  color: var(--accent);
+  color: var(--accent-deep);
   text-decoration: none;
 }
 .crumbs a:hover {
@@ -57,9 +52,7 @@
 }
 .rarityName {
   color: var(--muted);
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: 15px;
 }
 .rarityBar {
   display: block;

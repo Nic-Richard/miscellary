@@ -46,9 +46,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   color: #6f6355;
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: 15px;
 }
 .label :global(span) {
   align-self: center;

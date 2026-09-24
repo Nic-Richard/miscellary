@@ -509,7 +509,21 @@ Remaining:
 
 Remaining: check the share images in the real unfurlers (iMessage, Slack, Discord, X) once live.
 
-## Interaction and control consistency
+## Interaction and control consistency: In progress
+
+Done on web:
+
+- Interface type is sentence case in the body font on one size scale (lead 18, copy 16, meta 15,
+  badges 13-14); the display face is kept for titles, section headings and set and card names, and
+  printed card and pack faces keep their caps.
+- One button family: one height, radius and weight, with primary, outline, quiet, danger, social
+  chips and a plain text link.
+- One page header (title, one-line description, actions on the right), aligned with the content
+  it heads.
+- The sidebar shows only what a visitor can use, and gives a signed-in collector an account row
+  with a menu for their profile, settings and logging out.
+
+Remaining: the page-by-page pass below, then the same on mobile.
 
 The product still has loose ends in how controls are laid out and ordered from page to page. Before
 launch, audit the web and mobile surfaces and settle one pattern for:

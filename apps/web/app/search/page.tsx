@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { cardCode, cardPath, personHandle } from '@miscellary/shared';
+import PageHeader from '@/components/PageHeader';
 import SetTile from '@/components/SetTile';
 import CardPreview from '@/components/CardPreview';
 import DemoBadge from '@/components/DemoBadge';
@@ -8,6 +9,7 @@ import TagList from '@/components/TagList';
 import tileStyles from '@/components/SetTile.module.css';
 import { search } from '@/lib/social';
 import ui from '@/components/ui.module.css';
+import wide from '@/components/pageWide.module.css';
 import styles from './page.module.css';
 
 export const dynamic = 'force-dynamic';
@@ -21,9 +23,8 @@ export default async function SearchPage({
 
   if (q.trim().length < 2)
     return (
-      <section>
-        <p className={ui.eyebrow}>Search</p>
-        <h1 className={ui.title}>Search</h1>
+      <section className={wide.page}>
+        <PageHeader title="Search" />
         <Sheet className={styles.sheet}>
           <Empty icon="search">
             Type at least two characters. You can look for a collector, a tag, or words in a set or
@@ -37,9 +38,8 @@ export default async function SearchPage({
     !results.users.length && !results.sets.length && !results.cards.length && !results.tags.length;
 
   return (
-    <section>
-      <p className={ui.eyebrow}>Search</p>
-      <h1 className={ui.title}>“{results.query}”</h1>
+    <section className={wide.page}>
+      <PageHeader context="Search" title={`“${results.query}”`} />
       {empty ? (
         <Sheet className={styles.sheet}>
           <Empty

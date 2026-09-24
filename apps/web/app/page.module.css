@@ -40,11 +40,9 @@
   margin: 22px 0 0;
   color: var(--faint);
   font-family: var(--body);
-  font-size: 11px;
+  font-size: 16px;
   font-weight: 700;
-  letter-spacing: 0.12em;
   line-height: 1.7;
-  text-transform: uppercase;
 }
 .stats b {
   color: var(--accent);
@@ -120,17 +118,15 @@
   max-width: 52ch;
   margin: 6px 0 0;
   color: var(--muted);
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1.5;
 }
 .more {
   flex: none;
   color: var(--muted);
   font-family: var(--body);
-  font-size: 11px;
+  font-size: 15px;
   font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
 }
 .more:hover {
   color: var(--accent);

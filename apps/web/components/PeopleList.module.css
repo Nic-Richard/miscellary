@@ -40,13 +40,13 @@
 }
 .names strong {
   overflow: hidden;
-  font-size: 14px;
+  font-size: 15px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .names small {
   color: var(--faint);
-  font-size: 11px;
+  font-size: 13px;
   letter-spacing: 0.08em;
 }
 
@@ -55,9 +55,7 @@
   border: 0;
   background: none;
   color: var(--accent);
-  font-size: 12px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  font-size: 15px;
   cursor: pointer;
 }
 
@@ -71,7 +69,7 @@
   border-radius: 6px;
   color: var(--accent);
   font: inherit;
-  font-size: 13px;
+  font-size: 15px;
   cursor: pointer;
 }
 .more:hover:not(:disabled) {

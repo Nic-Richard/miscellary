@@ -9,11 +9,9 @@
   background: color-mix(in srgb, var(--accent) 8%, var(--sur));
   color: var(--accent-deep);
   font-family: var(--body);
-  font-size: 10px;
+  font-size: 15px;
   font-weight: 700;
   line-height: 1.2;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
   vertical-align: middle;
 }
 .badge svg {
@@ -27,5 +25,5 @@
 }
 .compact {
   padding-right: 5px;
-  font-size: 9px;
+  font-size: 13px;
 }

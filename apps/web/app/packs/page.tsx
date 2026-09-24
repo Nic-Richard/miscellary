@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { cardCode, personHandle, personName } from '@miscellary/shared';
 import type { CardSetSummary, PackEntry, PackOpening } from '@miscellary/shared';
+import PageHeader from '@/components/PageHeader';
 import PersonLink from '@/components/PersonLink';
 import CardBack from '@/components/CardBack';
 import CardPreview from '@/components/CardPreview';
@@ -373,28 +374,27 @@ export default function PacksPage() {
     <div className={wide.page}>
       <span className={wide.lamp} aria-hidden="true" />
 
-      <div className={`${wide.header} ${styles.header}`}>
-        <div>
-          <p className={ui.eyebrow}>Following</p>
-          <h1 className={ui.title}>Packs</h1>
-          <p className={ui.subtitle}>
-            {entries === null
-              ? 'Sets you follow'
-              : freeCount > 0
-                ? `${freeCount} free ${freeCount === 1 ? 'pack' : 'packs'} waiting`
-                : `${entries.length} ${entries.length === 1 ? 'set' : 'sets'} followed`}
-          </p>
-        </div>
-        {entries && entries.length > 1 ? (
-          <SearchField
-            className={styles.find}
-            value={filter}
-            onChange={setFilter}
-            placeholder="Filter by set or creator"
-            label="Filter the sets you follow"
-          />
-        ) : null}
-      </div>
+      <PageHeader
+        title="Packs"
+        description={
+          entries === null
+            ? 'The sets you follow'
+            : freeCount > 0
+              ? `${freeCount} free ${freeCount === 1 ? 'pack' : 'packs'} waiting`
+              : `${entries.length} ${entries.length === 1 ? 'set' : 'sets'} followed`
+        }
+        actions={
+          entries && entries.length > 1 ? (
+            <SearchField
+              className={styles.find}
+              value={filter}
+              onChange={setFilter}
+              placeholder="Filter by set or creator"
+              label="Filter the sets you follow"
+            />
+          ) : null
+        }
+      />
       {error ? <p className={ui.error}>{error}</p> : null}
 
       <div className={wide.layout}>

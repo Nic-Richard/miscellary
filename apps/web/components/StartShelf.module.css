@@ -70,7 +70,7 @@
 
 .name {
   overflow: hidden;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
   line-height: 1.25;
   text-overflow: ellipsis;
@@ -79,7 +79,7 @@
 
 .meta {
   color: var(--faint);
-  font-size: 12px;
+  font-size: 15px;
 }
 .on .meta {
   color: var(--accent-deep);

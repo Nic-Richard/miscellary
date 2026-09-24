@@ -75,7 +75,7 @@ body {
   background-attachment: fixed;
   color: var(--text);
   font-family: var(--body);
-  font-size: 15px;
+  font-size: 16px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }

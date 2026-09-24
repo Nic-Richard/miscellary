@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { cardCode, RARITIES, RARITY_LABELS, RECYCLE_VALUE } from '@miscellary/shared';
 import type { CardSetSummary, OwnedCard, Rarity, SetPointsBalance } from '@miscellary/shared';
+import PageHeader from '@/components/PageHeader';
 import CardGrid, { CardCell } from '@/components/CardGrid';
 import PackStage from '@/components/PackStage';
 import SearchField from '@/components/SearchField';
@@ -142,31 +143,32 @@ function Collection() {
     <div className={wide.page}>
       <span className={wide.lamp} aria-hidden="true" />
 
-      <div className={`${wide.header} ${styles.header}`}>
-        <div>
-          <p className={ui.eyebrow}>Collection</p>
-          <h1 className={ui.title}>{setSlug ? 'Your cards from this set' : 'My cards'}</h1>
-          <p className={ui.subtitle}>
+      <PageHeader
+        title={setSlug ? 'Your cards from this set' : 'My cards'}
+        description={
+          <>
             {tally.distinct} {tally.distinct === 1 ? 'card' : 'cards'} across {bySet.size}{' '}
             {bySet.size === 1 ? 'set' : 'sets'}
-          </p>
-          {setSlug ? (
-            <p className={styles.crumbs}>
-              <Link href="/collection">All sets</Link> ·{' '}
-              <Link href={`/sets/${setSlug}`}>Back to binder</Link>
-            </p>
-          ) : null}
-        </div>
-        {cards && cards.length > 1 ? (
-          <SearchField
-            className={styles.find}
-            value={filter}
-            onChange={setFilter}
-            placeholder="Filter by card or set"
-            label="Filter your collection by card or set"
-          />
-        ) : null}
-      </div>
+            {setSlug ? (
+              <span className={styles.crumbs}>
+                <Link href="/collection">All my cards</Link>
+                <Link href={`/sets/${setSlug}`}>Back to the binder</Link>
+              </span>
+            ) : null}
+          </>
+        }
+        actions={
+          cards && cards.length > 1 ? (
+            <SearchField
+              className={styles.find}
+              value={filter}
+              onChange={setFilter}
+              placeholder="Filter by card or set"
+              label="Filter your collection by card or set"
+            />
+          ) : null
+        }
+      />
       {error ? <p className={ui.error}>{error}</p> : null}
 
       <div className={wide.layout}>

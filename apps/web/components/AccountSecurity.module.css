@@ -48,10 +48,8 @@
 .unverified {
   padding: 2px 7px 3px;
   border-radius: 3px;
-  font-size: 10px;
+  font-size: 15px;
   font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
 }
 .verified {
   border: 1px solid var(--accent);
@@ -65,7 +63,7 @@
 .warning {
   margin: 0;
   color: var(--danger);
-  font-size: 13px;
+  font-size: 15px;
 }
 .buttons {
   display: flex;
@@ -76,7 +74,7 @@
 .done {
   margin: 0;
   color: var(--accent-deep);
-  font-size: 13px;
+  font-size: 15px;
 }
 
 @media (max-width: 760px) {

@@ -30,7 +30,7 @@
   border: 1px solid var(--bdr2);
   border-radius: 3px 9px 9px 3px;
   color: #4b4238;
-  font-size: 12px;
+  font-size: 15px;
 }
 .remove {
   display: grid;
@@ -42,7 +42,7 @@
   border-radius: 50%;
   background: none;
   color: var(--faint);
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1;
   cursor: pointer;
 }
@@ -59,7 +59,7 @@
   background: none;
   color: var(--text);
   font: inherit;
-  font-size: 13px;
+  font-size: 15px;
 }
 .input:focus {
   outline: none;
@@ -83,12 +83,12 @@
   border-radius: 3px 9px 9px 3px;
   color: var(--muted);
   font: inherit;
-  font-size: 12px;
+  font-size: 15px;
   cursor: pointer;
 }
 .suggestion small {
   color: var(--faint);
-  font-size: 10px;
+  font-size: 13px;
   letter-spacing: 0.08em;
 }
 .suggestion:hover {
@@ -100,6 +100,6 @@
 .note {
   margin: 0;
   color: var(--faint);
-  font-size: 12px;
+  font-size: 16px;
   line-height: 1.4;
 }

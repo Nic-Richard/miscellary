@@ -24,16 +24,14 @@
 .dir {
   color: var(--faint);
   font-family: var(--body);
-  font-size: 11px;
+  font-size: 15px;
   font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
 }
 .handle {
   color: var(--text);
-  font-family: var(--display);
-  font-size: 17px;
-  letter-spacing: 0.06em;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
 }
 .handle:hover {
   color: var(--accent);
@@ -46,10 +44,8 @@
   border-radius: var(--radius-pill, 999px);
   color: var(--muted);
   font-family: var(--body);
-  font-size: 10px;
+  font-size: 15px;
   font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
   white-space: nowrap;
 }
 .badge {
@@ -74,7 +70,7 @@
 .message {
   margin: 0;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 15px;
   font-style: italic;
 }
 
@@ -97,10 +93,8 @@
 .sideLabel {
   color: var(--muted);
   font-family: var(--body);
-  font-size: 10px;
+  font-size: 15px;
   font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
 }
 .sideLabel b {
   color: var(--accent);
@@ -116,7 +110,7 @@
 }
 .nothing {
   color: var(--faint);
-  font-size: 12px;
+  font-size: 15px;
   font-style: italic;
 }
 
@@ -143,22 +137,18 @@
   margin-right: auto;
   color: var(--faint);
   font-family: var(--body);
-  font-size: 11px;
+  font-size: 15px;
   font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
 }
 
 .quietDanger {
   padding: 8px 14px;
   background: none;
   border: 1px solid transparent;
-  border-radius: var(--radius-pill, 999px);
+  border-radius: 6px;
   color: var(--muted);
-  font-family: var(--display);
-  font-size: 14px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: 15px;
+  font-weight: 600;
   cursor: pointer;
 }
 .quietDanger:hover:not(:disabled) {
@@ -204,10 +194,8 @@
   background: none;
   color: var(--accent);
   font-family: var(--body);
-  font-size: 12px;
+  font-size: 15px;
   font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
   text-decoration: underline;
   text-underline-offset: 3px;
   cursor: pointer;
