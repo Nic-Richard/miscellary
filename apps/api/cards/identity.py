@@ -74,6 +74,15 @@ COLOURS = [
     "forest",
     "moss",
     "pine",
+    "scarlet",
+    "tangerine",
+    "lemon",
+    "lime",
+    "emerald",
+    "cyan",
+    "cobalt",
+    "iris",
+    "pink",
 ]
 
 SET_MARKS = [
@@ -172,7 +181,7 @@ PACK_LAYER_KINDS = ["image", "emblem"]
 PACK_FINISHES = ["gloss", "satin", "matte", "holo"]
 PACK_FINISH_CHOICES = [(f, f.title()) for f in PACK_FINISHES]
 
-EMBLEM_LAYOUTS = ["seal", "stacked", "wordmark", "badge", "crest"]
+EMBLEM_LAYOUTS = ["seal", "stacked", "wordmark", "badge", "crest", "mark"]
 EMBLEM_LAYOUT_CHOICES = [(v, v.title()) for v in EMBLEM_LAYOUTS]
 
 EMBLEM_SHAPES = ["disc", "shield", "banner", "diamond", "hex", "rosette", "tablet", "none"]

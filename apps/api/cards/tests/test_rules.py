@@ -89,6 +89,21 @@ def test_specialty_press_work_climbs_one_tier_at_a_time():
     assert templates.config_problems("classic", _config(texture="brushed"), "uncommon") == []
 
 
+def test_photo_framing_takes_a_focal_point_and_zoom_in_range():
+    framed = _config(photo_x="12.5", photo_y="80", photo_zoom="2.25")
+    assert templates.config_problems("classic", framed, "common") == []
+    assert templates.config_problems("classic", _config(), "common") == []
+    for bad in [
+        {"photo_x": "101"},
+        {"photo_y": "-1"},
+        {"photo_zoom": "0.5"},
+        {"photo_zoom": "5"},
+        {"photo_x": "left"},
+        {"photo_x": "nan"},
+    ]:
+        assert templates.config_problems("classic", _config(**bad), "common")
+
+
 @pytest.mark.parametrize("key", ["classic", "polaroid", "bold", "fieldnote"])
 def test_framed_templates_allow_shapes_and_borders_at_common(key):
     options = templates.TEMPLATES_BY_KEY[key]["options"]

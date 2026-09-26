@@ -6,6 +6,7 @@ from django.conf import settings
 from django.urls import reverse
 from moto import mock_aws
 
+from conftest import make_user
 from uploads import storage
 from uploads.models import Image
 
@@ -76,8 +77,6 @@ def test_oversized_upload_completion_removes_object_and_record(auth_client, buck
 
 
 def test_cannot_complete_someone_elses_upload(auth_client, bucket):
-    from conftest import make_user
-
     other = make_user()
     image = Image.objects.create(
         owner=other, kind="card", key="card/x.jpg", content_type="image/jpeg"
@@ -159,3 +158,49 @@ def test_source_urls_are_signed_in_production(settings, bucket):
     query = parse_qs(urlsplit(url).query)
     assert query["X-Amz-Expires"] == [str(storage.SOURCE_URL_SECONDS)]
     assert "X-Amz-Signature" in query
+
+
+def _image(owner) -> Image:
+    return Image.objects.create(
+        owner=owner, kind=Image.Kind.CARD, key=f"card/{owner.pk}.jpg", content_type="image/jpeg"
+    )
+
+
+def test_credit_names_the_source_and_its_licence(auth_client, user):
+    image = _image(user)
+    url = reverse("uploads:credit", args=[image.id])
+    response = auth_client.patch(
+        url,
+        {"licence": "cc-by", "author": " Ada Lens ", "source_url": "https://example.com/p/1"},
+        format="json",
+    )
+    assert response.status_code == 200
+    assert response.json()["credit"] == {
+        "author": "Ada Lens",
+        "license": "CC BY 4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "source_url": "https://example.com/p/1",
+    }
+
+    own = auth_client.patch(url, {"licence": "own"}, format="json")
+    assert own.status_code == 200
+    assert own.json()["credit"] is None
+
+
+def test_credit_needs_a_name_unless_the_photo_is_your_own(auth_client, user):
+    image = _image(user)
+    response = auth_client.patch(
+        reverse("uploads:credit", args=[image.id]), {"licence": "permission"}, format="json"
+    )
+    assert response.status_code == 400
+    assert "author" in response.json()["fields"]
+
+
+def test_only_the_owner_can_credit_a_photo(auth_client):
+    image = _image(make_user())
+    response = auth_client.patch(
+        reverse("uploads:credit", args=[image.id]),
+        {"licence": "cc-by", "author": "Someone"},
+        format="json",
+    )
+    assert response.status_code == 404

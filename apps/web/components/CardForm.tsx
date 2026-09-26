@@ -9,6 +9,12 @@ import {
   RARITY_LABELS,
   validateDescription,
   prepareCardDesign,
+  licenceOf,
+  photoFrame,
+  photoFrameKeys,
+  PHOTO_LICENCES,
+  PHOTO_ZOOM_MAX,
+  withPhotoFrame,
 } from '@miscellary/shared';
 import type {
   Card,
@@ -32,6 +38,7 @@ import { GROUP_LABELS, GROUP_NOTES, valueLabel, valueLabels } from '@/lib/templa
 import ui from './ui.module.css';
 import { ApiRequestError } from '@/lib/api';
 import { createCard, updateCard } from '@/lib/sets';
+import { savePhotoCredit } from '@/lib/upload';
 import styles from './CardForm.module.css';
 
 interface CardFormProps {
@@ -40,6 +47,7 @@ interface CardFormProps {
   code?: string;
   templates: CardTemplate[];
   card: Card | null;
+  design?: Card | null;
   onDone: () => Promise<void>;
   onCancel: () => void;
 }
@@ -107,12 +115,21 @@ function settle(
   return { config: next, moved };
 }
 
+function creditDraft(image: ImageRef | null) {
+  return {
+    licence: licenceOf(image?.credit) as string,
+    author: image?.credit?.author ?? '',
+    source_url: image?.credit?.source_url ?? '',
+  };
+}
+
 export default function CardForm({
   setId,
   mark,
   code,
   templates,
   card,
+  design = null,
   onDone,
   onCancel,
 }: CardFormProps) {
@@ -122,12 +139,15 @@ export default function CardForm({
   const [rarity, setRarity] = useState<Rarity>(card?.rarity ?? 'common');
   const [description, setDescription] = useState(card?.description ?? '');
   const [printedText, setPrintedText] = useState(card?.printed_text ?? '');
+  const source = card ?? design;
   const [templateKey, setTemplateKey] = useState(
-    card?.template_key ?? firstTemplate?.key ?? 'classic',
+    source?.template_key ?? firstTemplate?.key ?? 'classic',
   );
   const [config, setConfig] = useState<TemplateConfig>(() => {
-    const start = card ? templates.find((t) => t.key === card.template_key) : firstTemplate;
-    return { ...(start ? defaults(start) : {}), ...(card?.template_config ?? {}) };
+    const start = source ? templates.find((t) => t.key === source.template_key) : firstTemplate;
+    const stored = { ...(source?.template_config ?? {}) };
+    if (!card) for (const key of Object.keys(photoFrameKeys(stored))) delete stored[key];
+    return { ...(start ? defaults(start) : {}), ...stored };
   });
   const [note, setNote] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -135,6 +155,22 @@ export default function CardForm({
   const [busy, setBusy] = useState(false);
 
   const template = templates.find((t) => t.key === templateKey);
+  const frame = photoFrame(config);
+  const setFrame = (next: ReturnType<typeof photoFrame>) =>
+    setConfig((current) => withPhotoFrame(current, next));
+
+  const [credit, setCredit] = useState(() => creditDraft(card?.image ?? null));
+  const creditChanged =
+    image !== null && JSON.stringify(credit) !== JSON.stringify(creditDraft(image));
+
+  function pickImage(next: ImageRef) {
+    setImage(next);
+    setCredit(creditDraft(next));
+    setConfig((current) => {
+      const { photo_x: _x, photo_y: _y, photo_zoom: _zoom, ...rest } = current;
+      return rest;
+    });
+  }
   const issues = validateDescription(description);
   const opens = ladder(template);
   const nextTier = RARITIES.find((t) => opens.has(t) && !reached(t, rarity));
@@ -143,7 +179,7 @@ export default function CardForm({
     const next = templates.find((t) => t.key === key);
     if (!next) return;
     setTemplateKey(key);
-    setConfig(settle(next, defaults(next), rarity).config);
+    setConfig({ ...settle(next, defaults(next), rarity).config, ...photoFrameKeys(config) });
     setTitle((value) => value.slice(0, next.text.title.max_length));
     setPrintedText((value) =>
       next.text.printed ? value.slice(0, next.text.printed.max_length) : '',
@@ -172,7 +208,7 @@ export default function CardForm({
       );
     }
     const { config: fixed, moved } = settle(chosen, base, next);
-    setConfig(fixed);
+    setConfig({ ...fixed, ...photoFrameKeys(config) });
     if (moved.length) said.push(`${moved.join(', ')} moved back to the standard choice`);
     setNote(said.length ? `${RARITY_LABELS[next]}: ${said.join('; ')}.` : null);
   }
@@ -186,6 +222,16 @@ export default function CardForm({
     setBusy(true);
     setError(null);
     setFields({});
+    if (creditChanged) {
+      try {
+        setImage(await savePhotoCredit(image.id, credit));
+      } catch (err) {
+        if (err instanceof ApiRequestError) setFields(err.fields);
+        setError(err instanceof Error ? err.message : 'Could not save the photo credit.');
+        setBusy(false);
+        return;
+      }
+    }
     const body = {
       image_id: image.id,
       title,
@@ -279,7 +325,83 @@ export default function CardForm({
         {error ? <p className={styles.error}>{error}</p> : null}
 
         <label className={ui.label}>Photo</label>
-        <ImagePicker kind="card" aspect={4 / 5} value={image} onChange={setImage} />
+        <ImagePicker kind="card" value={image} onChange={pickImage} />
+        {image ? (
+          <div className={styles.framing}>
+            <label className={styles.framingLabel} htmlFor="photo-zoom">
+              Zoom
+            </label>
+            <input
+              id="photo-zoom"
+              type="range"
+              min={1}
+              max={PHOTO_ZOOM_MAX}
+              step={0.01}
+              value={frame.zoom}
+              onChange={(e) => setFrame({ ...frame, zoom: Number(e.target.value) })}
+            />
+            <button
+              type="button"
+              className={ui.link}
+              disabled={frame.x === 50 && frame.y === 50 && frame.zoom === 1}
+              onClick={() => setFrame({ x: 50, y: 50, zoom: 1 })}
+            >
+              Center
+            </button>
+            <p className={styles.framingNote}>Drag the photo on the card to choose what shows.</p>
+          </div>
+        ) : null}
+        {image ? (
+          <fieldset className={styles.credit}>
+            <legend className={ui.label}>Photo credit</legend>
+            <select
+              className={ui.input}
+              aria-label="Whose photo this is"
+              value={credit.licence}
+              onChange={(e) => setCredit({ ...credit, licence: e.target.value })}
+            >
+              {PHOTO_LICENCES.map((l) => (
+                <option key={l.value} value={l.value}>
+                  {l.label}
+                </option>
+              ))}
+            </select>
+            {credit.licence === 'own' ? (
+              <p className={styles.framingNote}>Your own photos print without a credit line.</p>
+            ) : (
+              <>
+                <input
+                  className={ui.input}
+                  aria-label="Taken by"
+                  placeholder="Taken by"
+                  maxLength={120}
+                  value={credit.author}
+                  onChange={(e) => setCredit({ ...credit, author: e.target.value })}
+                />
+                {fields.author?.map((m) => (
+                  <p key={m} className={styles.error}>
+                    {m}
+                  </p>
+                ))}
+                <input
+                  className={ui.input}
+                  type="url"
+                  aria-label="Where it is from"
+                  placeholder="Link to where it is from (optional)"
+                  maxLength={500}
+                  value={credit.source_url}
+                  onChange={(e) => setCredit({ ...credit, source_url: e.target.value })}
+                />
+                {fields.source_url?.map((m) => (
+                  <p key={m} className={styles.error}>
+                    {m}
+                  </p>
+                ))}
+                <p className={styles.framingNote}>Printed with the card: Photo: name (licence).</p>
+              </>
+            )}
+          </fieldset>
+        ) : null}
         {fields.image_id?.map((m) => (
           <p key={m} className={styles.error}>
             {m}
@@ -384,7 +506,10 @@ export default function CardForm({
       <div className={styles.preview}>
         <div>
           <span className={styles.copyHeading}>Printed card copy</span>
-          <p className={styles.copyNote}>Type on the card. Drag it to turn it under the light.</p>
+          <p className={styles.copyNote}>
+            Type on the card and drag the photo to frame it. Drag the border to turn it under the
+            light.
+          </p>
         </div>
         <TiltStage className={styles.proof} label="Turn the proof under the light">
           <CardPreview
@@ -399,6 +524,7 @@ export default function CardForm({
             {...(template ? { textRules: template.text } : {})}
             onTitleChange={setTitle}
             onPrintedTextChange={setPrintedText}
+            onPhotoFrameChange={setFrame}
             lit
           />
         </TiltStage>

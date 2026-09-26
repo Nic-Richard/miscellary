@@ -19,6 +19,7 @@ import {
   PACK_SUBTITLE_MAX_LENGTH,
   PACK_COLOUR_NAMES,
   PACK_FINISHES,
+  BADGE_SCALE_MAX,
   SCALE_MAX,
   SCALE_MIN,
   SET_MARKS,
@@ -49,7 +50,10 @@ const FINISH_LABELS: Record<string, string> = {
 
 export default function PackDesigner({ set, onDraft, onSave }: PackDesignerProps) {
   const wordmark = (set.emblem_layout || 'seal') === 'wordmark';
-  const hasEmblem = set.pack_layers.some((layer) => layer.kind === 'emblem');
+  const emblemAt = set.pack_layers.findIndex((layer) => layer.kind === 'emblem');
+  const hasEmblem = emblemAt >= 0;
+  const badgeSized = (scale: number) =>
+    set.pack_layers.map((layer, i) => (i === emblemAt ? { ...layer, scale } : layer));
 
   return (
     <div className={styles.root}>
@@ -83,6 +87,16 @@ export default function PackDesigner({ set, onDraft, onSave }: PackDesignerProps
 
         {hasEmblem ? (
           <Section title="Badge">
+            <Field label="Size">
+              <Slider
+                value={set.pack_layers[emblemAt]?.scale ?? 100}
+                min={SCALE_MIN}
+                max={BADGE_SCALE_MAX}
+                suffix="%"
+                onChange={(v) => onDraft({ pack_layers: badgeSized(v) })}
+                onCommit={(v) => onSave({ pack_layers: badgeSized(v) })}
+              />
+            </Field>
             <Field label="Layout">
               <ChoiceMenu
                 value={set.emblem_layout || 'seal'}

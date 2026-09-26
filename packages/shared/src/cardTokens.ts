@@ -110,6 +110,15 @@ const STOCKS: Record<string, { stock: string; edge: string }> = {
   forest: { stock: '#22402f', edge: '#16301f' },
   moss: { stock: '#2c3a22', edge: '#1d2915' },
   pine: { stock: '#1c3327', edge: '#12241a' },
+  scarlet: { stock: '#d42a2f', edge: '#a81f24' },
+  tangerine: { stock: '#e97619', edge: '#bb5d12' },
+  lemon: { stock: '#f3cb1b', edge: '#c9a614' },
+  lime: { stock: '#7dba2a', edge: '#5f921f' },
+  emerald: { stock: '#129a5b', edge: '#0d7645' },
+  cyan: { stock: '#139fc0', edge: '#0e7d98' },
+  cobalt: { stock: '#2356c7', edge: '#1a419c' },
+  iris: { stock: '#6b45c9', edge: '#52339f' },
+  pink: { stock: '#e2408f', edge: '#b8306f' },
 };
 
 // The board palette as ink: each board colour without its edge.
@@ -186,6 +195,15 @@ const INKS: Record<string, string> = {
   forest: '#22402f',
   moss: '#2c3a22',
   pine: '#1c3327',
+  scarlet: '#d42a2f',
+  tangerine: '#e97619',
+  lemon: '#f3cb1b',
+  lime: '#7dba2a',
+  emerald: '#129a5b',
+  cyan: '#139fc0',
+  cobalt: '#2356c7',
+  iris: '#6b45c9',
+  pink: '#e2408f',
 };
 
 const RARITY_COLOURS: Record<Rarity, string> = {

@@ -64,6 +64,7 @@ def test_create_set_and_card(auth_client, user):
         "shape": "square",
         "title_typeface": "display",
         "body_typeface": "body",
+        "title_align": "auto",
         "accent": "blue",
         "title_ink": "auto",
         "body_ink": "auto",

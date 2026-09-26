@@ -45,6 +45,7 @@ export default function SetEditorPage() {
   const [set, setSet] = useState<CardSetDetail | null>(null);
   const [templates, setTemplates] = useState<CardTemplate[]>([]);
   const [editing, setEditing] = useState<Card | 'new' | null>(null);
+  const [design, setDesign] = useState<Card | null>(null);
   const [problems, setProblems] = useState<string[] | null>(null);
   const [packOpen, setPackOpen] = useState(false);
   const [cardTagsOpen, setCardTagsOpen] = useState(false);
@@ -367,7 +368,14 @@ export default function SetEditorPage() {
       <div className={styles.cardsHeader}>
         <h2 className={ui.subtitle}>Cards · {set.cards.length}</h2>
         {isDraft ? (
-          <button className={ui.btnPrimary} type="button" onClick={() => setEditing('new')}>
+          <button
+            className={ui.btnPrimary}
+            type="button"
+            onClick={() => {
+              setDesign(null);
+              setEditing('new');
+            }}
+          >
             Add card
           </button>
         ) : null}
@@ -375,7 +383,7 @@ export default function SetEditorPage() {
 
       {editing ? (
         <CardForm
-          key={editing === 'new' ? 'new' : editing.id}
+          key={editing === 'new' ? `new-${design?.id ?? ''}` : editing.id}
           setId={set.id}
           mark={set.mark}
           code={cardCode(
@@ -385,6 +393,7 @@ export default function SetEditorPage() {
           )}
           templates={templates}
           card={editing === 'new' ? null : editing}
+          design={editing === 'new' ? design : null}
           onDone={async () => {
             setEditing(null);
             await reload();
@@ -413,6 +422,17 @@ export default function SetEditorPage() {
                 <>
                   <button type="button" className={styles.link} onClick={() => setEditing(c)}>
                     Edit
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.link}
+                    title="Start a new card with this card's template and settings"
+                    onClick={() => {
+                      setDesign(c);
+                      setEditing('new');
+                    }}
+                  >
+                    Copy design
                   </button>
                   <button
                     type="button"

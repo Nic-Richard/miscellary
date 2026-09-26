@@ -5,12 +5,18 @@ import type { ReactNode } from 'react';
 import Cropper from 'react-easy-crop';
 import type { Area } from 'react-easy-crop';
 import type { ImageKind, ImageRef } from '@miscellary/shared';
-import { cropToBlob, hasNativePicker, pickNativeImage, uploadImage } from '@/lib/upload';
+import {
+  cropToBlob,
+  hasNativePicker,
+  photoToBlob,
+  pickNativeImage,
+  uploadImage,
+} from '@/lib/upload';
 import styles from './ImagePicker.module.css';
 
 interface ImagePickerProps {
   kind: ImageKind;
-  aspect: number;
+  aspect?: number | undefined;
   value: ImageRef | null;
   onChange: (image: ImageRef) => void;
 }
@@ -26,6 +32,10 @@ export default function ImagePicker({ kind, aspect, value, onChange }: ImagePick
 
   function pick(f: File | undefined) {
     if (!f) return;
+    if (!aspect) {
+      void uploadWhole(f);
+      return;
+    }
     if (src) URL.revokeObjectURL(src);
     setFile(f);
     setSrc(URL.createObjectURL(f));
@@ -42,8 +52,20 @@ export default function ImagePicker({ kind, aspect, value, onChange }: ImagePick
     setBusy(true);
     setError(null);
     try {
-      const picked = await pickNativeImage(kind, aspect);
+      const picked = await pickNativeImage(kind, aspect ?? 0);
       if (picked) onChange(picked);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Upload failed.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function uploadWhole(f: File) {
+    setBusy(true);
+    setError(null);
+    try {
+      onChange(await uploadImage(await photoToBlob(f), kind));
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Upload failed.');
     } finally {
@@ -77,7 +99,7 @@ export default function ImagePicker({ kind, aspect, value, onChange }: ImagePick
               image={src}
               crop={crop}
               zoom={zoom}
-              aspect={aspect}
+              aspect={aspect ?? 1}
               onCropChange={setCrop}
               onZoomChange={setZoom}
               onCropComplete={onCropComplete}

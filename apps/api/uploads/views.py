@@ -7,7 +7,13 @@ from rest_framework.views import APIView
 
 from . import storage
 from .models import Image
-from .serializers import CompleteUploadSerializer, CreateUploadSerializer, ImageSerializer
+from .serializers import (
+    LICENCES,
+    CompleteUploadSerializer,
+    CreateUploadSerializer,
+    CreditSerializer,
+    ImageSerializer,
+)
 
 
 class CreateUploadView(APIView):
@@ -60,4 +66,26 @@ class CompleteUploadView(APIView):
         image.height = serializer.validated_data["height"]
         image.ready = True
         image.save(update_fields=["size", "width", "height", "ready"])
+        return Response(ImageSerializer(image).data)
+
+
+class ImageCreditView(APIView):
+    # Stays editable after publishing: a credit is not part of the frozen card.
+
+    def patch(self, request: Request, image_id) -> Response:
+        image = get_object_or_404(Image, id=image_id, owner=request.user)
+        serializer = CreditSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        licence, licence_url = LICENCES[data["licence"]]
+        credit = {"author": "", "license": "", "license_url": "", "source_url": ""}
+        if data["licence"] != "own":
+            credit = {
+                "author": data["author"].strip(),
+                "license": licence,
+                "license_url": licence_url,
+                "source_url": data.get("source_url", ""),
+            }
+        image.source_metadata = {**(image.source_metadata or {}), **credit}
+        image.save(update_fields=["source_metadata"])
         return Response(ImageSerializer(image).data)

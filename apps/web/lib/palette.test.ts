@@ -13,7 +13,7 @@ describe('card palette and renderer contract', () => {
   });
 
   it('lays the picker out as whole rows of the same length', () => {
-    expect(CARD_COLOURS.length).toBe(72);
+    expect(CARD_COLOURS.length).toBe(81);
     expect(new Set(CARD_COLOURS).size).toBe(CARD_COLOURS.length);
   });
 });

@@ -68,6 +68,19 @@ which controls, text limits, and template decisions still feel awkward in normal
 - Returned people to what they were doing after signing in, through one internal-only return and
   continuation mechanism rather than a redirect per feature.
 
+### From first outside testing
+
+- A card photo is framed on the card instead of cropped beforehand: the whole photo is uploaded, and
+  the creator drags it in the live preview and sets a zoom. The window's shape follows the layout and
+  the text, so the old fixed 4:5 crop cut off the sides of wide and full-art windows.
+- Creators can credit a photo: taken by, where it came from, and a licence. A creator's own photo
+  prints no credit line.
+- Title ink now shows in the editor, titles can be aligned left, centre or right, and a card can
+  start from another card's design.
+- Full Art's window rule follows the board's curve instead of being clipped at thin borders.
+- Pack images print flat, without a shadow; the badge can be sized from its own section and set to
+  show the mark alone; the palette gained a row of true colours.
+
 ### Remaining editor finalization
 
 - Audit the editor option catalogue as one system before making more piecemeal changes. Confirm which

@@ -65,13 +65,14 @@ export const MARK_LABELS: Record<string, string> = {
 
 export const PACK_COLOUR_NAMES = Object.keys(PACK_COLOURS);
 
-export const EMBLEM_LAYOUTS = ['seal', 'stacked', 'wordmark', 'badge', 'crest'] as const;
+export const EMBLEM_LAYOUTS = ['seal', 'stacked', 'wordmark', 'badge', 'crest', 'mark'] as const;
 export const EMBLEM_LAYOUT_LABELS: Record<string, string> = {
   seal: 'Seal (text around)',
   stacked: 'Stacked',
   wordmark: 'Wordmark only',
   badge: 'Badge',
   crest: 'Crest',
+  mark: 'Mark only',
 };
 
 export const EMBLEM_SHAPES = [
@@ -182,6 +183,7 @@ export function emblemInk(token: string | undefined): string {
 
 export const SCALE_MIN = 60;
 export const SCALE_MAX = 140;
+export const BADGE_SCALE_MAX = 200;
 
 export interface SetIdentity {
   mark?: string;

@@ -11,6 +11,8 @@ import ChoiceSheet from './ChoiceSheet';
 import { ErrorText } from './ui';
 import bundle from '../generated/surfaces.json';
 
+const CREDIT_PATH = /^\/api\/v1\/uploads\/[0-9a-f-]{36}\/credit\/$/;
+
 interface Props {
   mode: string;
   data: object;
@@ -170,11 +172,14 @@ export default function SharedSurface({
                   const input = message.data;
                   const context = data as { setId?: string; set?: { id: string } };
                   const setId = context.setId ?? context.set?.id;
+                  // The one call outside the set; the API checks image ownership.
+                  const credit = input.method === 'PATCH' && CREDIT_PATH.test(String(input.path));
                   if (
-                    !setId ||
-                    !input.path.startsWith(`/api/v1/me/sets/${setId}/`) ||
-                    !['GET', 'POST', 'PATCH'].includes(input.method) ||
-                    input.path.includes('..')
+                    !credit &&
+                    (!setId ||
+                      !input.path.startsWith(`/api/v1/me/sets/${setId}/`) ||
+                      !['GET', 'POST', 'PATCH'].includes(input.method) ||
+                      input.path.includes('..'))
                   )
                     throw new Error('Unsupported editor request.');
                   result = await apiFetch(input.path, { method: input.method, body: input.body });

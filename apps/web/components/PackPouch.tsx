@@ -366,6 +366,10 @@ export function PackEmblem({
     );
   }
 
+  function MarkOnly() {
+    return <Mark size={r * 0.95 * markScale} y={cy} />;
+  }
+
   const arcR = r * 0.7;
   const arcCy = cy + r * 0.05;
   const LAYOUTS: Record<string, () => ReactElement> = {
@@ -374,6 +378,7 @@ export function PackEmblem({
     wordmark: Wordmark,
     badge: Badge,
     crest: Crest,
+    mark: MarkOnly,
   };
   const Body = LAYOUTS[layout] ?? Seal;
 

@@ -4,12 +4,20 @@ import {
   cardTextRules,
   currentConfig,
   paintToCss,
+  photoFrame,
   resolveCardSpot,
   resolveCardTokens,
 } from '@miscellary/shared';
-import type { CardRenderAssets, CardTextRules, Rarity, TemplateConfig } from '@miscellary/shared';
+import type {
+  CardRenderAssets,
+  CardTextRules,
+  PhotoFrame,
+  Rarity,
+  TemplateConfig,
+} from '@miscellary/shared';
 import type { CSSProperties } from 'react';
 import BakedCard, { FlatCard } from './BakedCard';
+import CardPhoto from './CardPhoto';
 import { CopyField, PrintedCopy } from './CardCopy';
 import SetMark from './SetMark';
 import { resolveMark } from '@/lib/setIdentity';
@@ -34,6 +42,7 @@ export interface CardPreviewProps {
   textRules?: CardTextRules;
   onTitleChange?: (value: string) => void;
   onPrintedTextChange?: (value: string) => void;
+  onPhotoFrameChange?: (frame: PhotoFrame) => void;
 }
 
 const TEXT_TEMPLATES = new Set(['fieldnote']);
@@ -103,6 +112,7 @@ export default function CardPreview({
   textRules,
   onTitleChange,
   onPrintedTextChange,
+  onPhotoFrameChange,
 }: CardPreviewProps) {
   const sceneLit = useSceneLit();
   const bakedImage = size === 'small' ? render?.thumbnail : render?.front;
@@ -206,7 +216,11 @@ export default function CardPreview({
         </header>
         <div className={styles.art}>
           {renderMode !== 'mask' && imageUrl ? (
-            <img src={imageUrl} alt="" draggable={false} />
+            <CardPhoto
+              src={imageUrl}
+              frame={photoFrame(templateConfig)}
+              onFrameChange={onPhotoFrameChange}
+            />
           ) : renderMode !== 'mask' ? (
             <div className={styles.placeholder}>No photo yet</div>
           ) : null}

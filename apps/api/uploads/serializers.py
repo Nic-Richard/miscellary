@@ -31,6 +31,30 @@ class ImageSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
+# Mirrors PHOTO_LICENCES in packages/shared; the label is what a credit line prints.
+LICENCES = {
+    "own": ("", ""),
+    "cc-by": ("CC BY 4.0", "https://creativecommons.org/licenses/by/4.0/"),
+    "cc-by-sa": ("CC BY-SA 4.0", "https://creativecommons.org/licenses/by-sa/4.0/"),
+    "public-domain": ("Public domain", "https://creativecommons.org/publicdomain/mark/1.0/"),
+    "permission": ("Used with permission", ""),
+    "other": ("", ""),
+}
+
+
+class CreditSerializer(serializers.Serializer):
+    licence = serializers.ChoiceField(choices=list(LICENCES))
+    author = serializers.CharField(max_length=120, required=False, allow_blank=True)
+    source_url = serializers.URLField(max_length=500, required=False, allow_blank=True)
+
+    def validate(self, attrs):
+        if attrs["licence"] != "own" and not attrs.get("author", "").strip():
+            raise serializers.ValidationError(
+                {"author": ["Name the person or place the photo came from."]}
+            )
+        return attrs
+
+
 class CreateUploadSerializer(serializers.Serializer):
     kind = serializers.ChoiceField(choices=Image.Kind.choices)
     content_type = serializers.ChoiceField(choices=list(storage.ALLOWED_TYPES))

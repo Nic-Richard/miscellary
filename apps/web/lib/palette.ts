@@ -20,6 +20,7 @@ export const COLOUR_ROWS: string[][] = [
   ],
   ['sky', 'sea', 'cornflower', 'blue', 'azure', 'ocean', 'indigo', 'navy', 'teal'],
   ['mint', 'sage', 'fern', 'jade', 'olive', 'green', 'forest', 'moss', 'pine'],
+  ['scarlet', 'tangerine', 'lemon', 'lime', 'emerald', 'cyan', 'cobalt', 'iris', 'pink'],
 ];
 
 export const CARD_COLOURS: string[] = COLOUR_ROWS.flat();
@@ -98,6 +99,15 @@ export const COLOURS: Record<string, string> = {
   forest: '#22402f',
   moss: '#2c3a22',
   pine: '#1c3327',
+  scarlet: '#d42a2f',
+  tangerine: '#e97619',
+  lemon: '#f3cb1b',
+  lime: '#7dba2a',
+  emerald: '#129a5b',
+  cyan: '#139fc0',
+  cobalt: '#2356c7',
+  iris: '#6b45c9',
+  pink: '#e2408f',
 };
 
 /** The offered colours as picker rows, specials removed. Anything the palette

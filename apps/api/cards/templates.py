@@ -10,6 +10,7 @@ to, and any rarity that gates individual values. The web and mobile clients
 render the template from the key + config; the API only validates.
 """
 
+import math
 from typing import Any
 
 from .identity import COLOURS, FONTS
@@ -45,6 +46,11 @@ FOIL_PATTERNS = ["linear", "mirror", "cosmos", "rainbow"]
 FOIL_PATTERN_UNLOCKS = {"rainbow": "legendary"}
 
 TYPEFACES = FONTS
+
+TITLE_ALIGNS = ["auto", "left", "center", "right"]
+
+# Photo focal point (percent) and zoom. Numbers, not choices, so outside the options.
+PHOTO_FRAME = {"photo_x": (0.0, 100.0), "photo_y": (0.0, 100.0), "photo_zoom": (1.0, 4.0)}
 
 
 def _opt(
@@ -113,6 +119,7 @@ def _font(title: str = "display", body: str = "body") -> dict[str, dict[str, Any
     return {
         "title_typeface": _opt("Title typeface", TYPEFACES, title, "type", "font"),
         "body_typeface": _opt("Body typeface", TYPEFACES, body, "type", "font"),
+        "title_align": _opt("Title alignment", TITLE_ALIGNS, "auto", "type"),
     }
 
 
@@ -309,6 +316,15 @@ def config_problems(key: str, config: dict[str, Any], rarity: str | None = None)
         return ["Unknown template."]
     problems = []
     for name, value in config.items():
+        if name in PHOTO_FRAME:
+            low, high = PHOTO_FRAME[name]
+            try:
+                number = float(value)
+            except (TypeError, ValueError):
+                number = math.nan
+            if not math.isfinite(number) or not low <= number <= high:
+                problems.append("The photo framing is out of range.")
+            continue
         option = template["options"].get(name)
         if option is None:
             problems.append(f"Unknown option '{name}'.")

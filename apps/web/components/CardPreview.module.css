@@ -234,6 +234,13 @@
   object-fit: cover;
   filter: var(--img-print, saturate(0.95) contrast(1.05) brightness(1.01));
 }
+.art img.framing {
+  cursor: grab;
+  touch-action: none;
+}
+.art img.framing:active {
+  cursor: grabbing;
+}
 .art::before {
   content: '';
   position: absolute;
@@ -404,6 +411,26 @@
 .bigTitle.copyInput,
 .polaroid .caption.copyInput {
   background: var(--title-bg);
+}
+/* The editable box's colour: inherit would otherwise override the title ink. */
+.name.copyInput,
+.polaroid .caption.copyInput {
+  color: var(--title-ink, var(--ink));
+}
+.bigTitle.copyInput {
+  color: var(--title-ink, var(--rc));
+}
+.card[data-title-align='left'] :is(.name, .bigTitle),
+.polaroid[data-title-align='left'] .caption {
+  text-align: left;
+}
+.card[data-title-align='center'] :is(.name, .bigTitle),
+.polaroid[data-title-align='center'] .caption {
+  text-align: center;
+}
+.card[data-title-align='right'] :is(.name, .bigTitle),
+.polaroid[data-title-align='right'] .caption {
+  text-align: right;
 }
 .copyInput::placeholder {
   color: currentColor;
@@ -1001,7 +1028,8 @@ textarea.copyInput {
 .minimal .art {
   position: absolute;
   inset: 0;
-  border-radius: 0;
+  /* Matches the board's inner curve so the window rule is not clipped at the corners. */
+  border-radius: max(0px, calc(var(--corner) - var(--edge-w)));
 }
 .minimal .head,
 .minimal .foot {

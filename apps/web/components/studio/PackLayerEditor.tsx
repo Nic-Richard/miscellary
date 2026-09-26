@@ -13,9 +13,9 @@ import {
   ART_ROTATE_MIN,
   ART_SCALE_MAX,
   ART_SCALE_MIN,
+  BADGE_SCALE_MAX,
   LAYER_DEFAULT,
   PACK_LAYER_MAX,
-  SCALE_MAX,
   SCALE_MIN,
 } from '@/lib/setIdentity';
 import type { PackLayer } from '@/lib/setIdentity';
@@ -182,7 +182,7 @@ export default function PackLayerEditor({ layers, onDraft, onSave }: PackLayerEd
                   <Slider
                     value={layer.scale}
                     min={emblem ? SCALE_MIN : ART_SCALE_MIN}
-                    max={emblem ? SCALE_MAX : ART_SCALE_MAX}
+                    max={emblem ? BADGE_SCALE_MAX : ART_SCALE_MAX}
                     suffix="%"
                     onChange={(v) => change(i, { scale: v }, false)}
                     onCommit={(v) => change(i, { scale: v }, true)}
