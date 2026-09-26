@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { CARD_FIXTURES } from './cardFixtures';
-import { paintToCss, resolveCardTokens } from './cardTokens';
+import { isHexColour, paintToCss, resolveCardTokens } from './cardTokens';
 
 describe('resolveCardTokens', () => {
   it('prefers the chosen board over the template board', () => {
@@ -72,6 +72,23 @@ describe('resolveCardTokens', () => {
       expect(resolveCardTokens('classic', { stock }, 'common').texture, stock).toEqual(softened);
     }
     expect(resolveCardTokens('classic', { stock: 'cream' }, 'common').texture).toBeNull();
+  });
+});
+
+describe('custom colours', () => {
+  it('prints a picked hex as the board, with a darker cut edge', () => {
+    const t = resolveCardTokens('classic', { stock: '#336699', accent: '#ff8800' }, 'common');
+    expect(t.stock).toBe('#336699');
+    expect(t.edge).toEqual({ kind: 'solid', color: '#285077' });
+    expect(t.accent).toBe('#ff8800');
+    expect(t.ink).toBe('#fffdf7');
+  });
+
+  it('ignores anything that is not a lowercase #rrggbb', () => {
+    expect(isHexColour('#ff8800')).toBe(true);
+    expect(isHexColour('#FF8800')).toBe(false);
+    expect(isHexColour('#f80')).toBe(false);
+    expect(isHexColour('teal')).toBe(false);
   });
 });
 

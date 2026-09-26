@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef } from 'react';
-import type { PointerEvent as ReactPointerEvent } from 'react';
+import type { CSSProperties, PointerEvent as ReactPointerEvent } from 'react';
 import type { PhotoFrame } from '@miscellary/shared';
 import styles from './CardPreview.module.css';
 
@@ -31,15 +31,20 @@ export default function CardPhoto({
     const el = img.current;
     if (!onFrameChange || !current || current.id !== event.pointerId || !el) return;
     event.stopPropagation();
-    const box = el.getBoundingClientRect();
+    // The photo's own box can be rotated (diamond windows), so measure its
+    // layout size and scale it by how large the card is drawn on screen.
+    const card = el.closest<HTMLElement>(`.${styles.card}`);
+    const onScreen = card?.offsetWidth ? card.getBoundingClientRect().width / card.offsetWidth : 1;
+    const w = el.offsetWidth * onScreen;
+    const h = el.offsetHeight * onScreen;
     const { naturalWidth: nw, naturalHeight: nh } = el;
-    if (!nw || !nh || !box.width || !box.height) return;
+    if (!nw || !nh || !w || !h) return;
     // Scaling about the focal point, a 0-100% move shifts the photo by
-    // zoom × cover-fitted size − window size (the box is already scaled).
+    // zoom × cover-fitted size − window size.
     const zoom = current.frame.zoom;
-    const cover = Math.max(box.width / zoom / nw, box.height / zoom / nh);
-    const spanX = nw * cover * zoom - box.width / zoom;
-    const spanY = nh * cover * zoom - box.height / zoom;
+    const cover = Math.max(w / nw, h / nh);
+    const spanX = nw * cover * zoom - w;
+    const spanY = nh * cover * zoom - h;
     const dx = event.clientX - current.x;
     const dy = event.clientY - current.y;
     onFrameChange({
@@ -60,11 +65,14 @@ export default function CardPhoto({
       alt=""
       draggable={false}
       className={onFrameChange ? styles.framing : undefined}
-      style={{
-        objectPosition: `${frame.x}% ${frame.y}%`,
-        transformOrigin: `${frame.x}% ${frame.y}%`,
-        transform: frame.zoom > 1 ? `scale(${frame.zoom})` : undefined,
-      }}
+      style={
+        {
+          objectPosition: `${frame.x}% ${frame.y}%`,
+          '--photo-zoom': frame.zoom,
+          '--photo-dx': `${frame.x - 50}%`,
+          '--photo-dy': `${frame.y - 50}%`,
+        } as CSSProperties
+      }
       onPointerDown={start}
       onPointerMove={move}
       onPointerUp={end}

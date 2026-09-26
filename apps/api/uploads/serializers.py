@@ -12,17 +12,18 @@ class ImageSerializer(serializers.ModelSerializer):
         """The attribution a licence asks for, in a fixed shape.
 
         `source_metadata` is a free-form blob, so only the four fields a credit
-        line needs are published, and only when there is an author to name.
+        line needs are published, and only when there is a name or a link to cite.
         """
         source = obj.source_metadata or {}
         author = str(source.get("author") or "").strip()
-        if not author:
+        source_url = str(source.get("source_url") or "").strip()
+        if not author and not source_url:
             return None
         return {
             "author": author,
             "license": str(source.get("license") or "").strip(),
             "license_url": str(source.get("license_url") or "").strip(),
-            "source_url": str(source.get("source_url") or "").strip(),
+            "source_url": source_url,
         }
 
     class Meta:
@@ -46,13 +47,6 @@ class CreditSerializer(serializers.Serializer):
     licence = serializers.ChoiceField(choices=list(LICENCES))
     author = serializers.CharField(max_length=120, required=False, allow_blank=True)
     source_url = serializers.URLField(max_length=500, required=False, allow_blank=True)
-
-    def validate(self, attrs):
-        if attrs["licence"] != "own" and not attrs.get("author", "").strip():
-            raise serializers.ValidationError(
-                {"author": ["Name the person or place the photo came from."]}
-            )
-        return attrs
 
 
 class CreateUploadSerializer(serializers.Serializer):

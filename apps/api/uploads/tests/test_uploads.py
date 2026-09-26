@@ -187,13 +187,17 @@ def test_credit_names_the_source_and_its_licence(auth_client, user):
     assert own.json()["credit"] is None
 
 
-def test_credit_needs_a_name_unless_the_photo_is_your_own(auth_client, user):
+def test_a_cited_source_can_be_just_a_link_or_nothing(auth_client, user):
     image = _image(user)
-    response = auth_client.patch(
-        reverse("uploads:credit", args=[image.id]), {"licence": "permission"}, format="json"
-    )
-    assert response.status_code == 400
-    assert "author" in response.json()["fields"]
+    url = reverse("uploads:credit", args=[image.id])
+    link = {"licence": "other", "source_url": "https://unsplash.com/photos/1"}
+    response = auth_client.patch(url, link, format="json")
+    assert response.status_code == 200
+    assert response.json()["credit"]["source_url"] == "https://unsplash.com/photos/1"
+    assert response.json()["credit"]["author"] == ""
+    blank = auth_client.patch(url, {"licence": "other"}, format="json")
+    assert blank.status_code == 200
+    assert blank.json()["credit"] is None
 
 
 def test_only_the_owner_can_credit_a_photo(auth_client):

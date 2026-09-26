@@ -11,6 +11,7 @@ render the template from the key + config; the API only validates.
 """
 
 import math
+import re
 from typing import Any
 
 from .identity import COLOURS, FONTS
@@ -50,6 +51,9 @@ TYPEFACES = FONTS
 TITLE_ALIGNS = ["auto", "left", "center", "right"]
 
 # Photo focal point (percent) and zoom. Numbers, not choices, so outside the options.
+# A colour picked outside the palette. Lowercase, so one colour has one spelling.
+HEX = re.compile(r"#[0-9a-f]{6}")
+
 PHOTO_FRAME = {"photo_x": (0.0, 100.0), "photo_y": (0.0, 100.0), "photo_zoom": (1.0, 4.0)}
 
 
@@ -259,6 +263,24 @@ TEMPLATES: list[dict[str, Any]] = [
         },
     },
     {
+        "key": "gallery",
+        "version": 1,
+        "name": "Gallery",
+        "description": "Minimal with no caption, so the framed photo runs the length of the card.",
+        "text": _text(30, 0.72),
+        "unlocks": "epic",
+        "options": {
+            **_board(STOCKS_ALL, "bone"),
+            **_border(),
+            "tint": _photo(),
+            "window": _window(),
+            "shape": _shape(),
+            **_font(),
+            **_accent("gold"),
+            **_press(),
+        },
+    },
+    {
         "key": "minimal",
         "version": 1,
         "name": "Full Art",
@@ -328,6 +350,8 @@ def config_problems(key: str, config: dict[str, Any], rarity: str | None = None)
         option = template["options"].get(name)
         if option is None:
             problems.append(f"Unknown option '{name}'.")
+        elif option["type"] == "swatch" and isinstance(value, str) and HEX.fullmatch(value):
+            continue
         elif value not in option["values"]:
             problems.append(f"'{value}' isn't a valid {option['label'].lower()}.")
         elif rarity is not None:

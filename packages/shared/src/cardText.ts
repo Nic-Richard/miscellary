@@ -6,6 +6,7 @@ import type { CardTextRules, CopyMarkup, TextRegionRules } from './api';
 export const CARD_TEXT_RULES: Record<string, CardTextRules> = {
   classic: rules(30, 0.72, 'Caption', 92, 0.78, 2, 1, 'inline'),
   polaroid: rules(50, 0.72, null, 0, 1, 1, 2),
+  gallery: rules(30, 0.72),
   minimal: rules(27, 0.72, 'Subtitle', 84, 0.78, 2, 1, 'inline'),
   bold: rules(30, 0.5, 'Subtitle', 100, 0.78, 2, 1, 'inline'),
   fieldnote: rules(30, 0.72, 'Printed note', 210, 0.78, 5, 1, 'block'),

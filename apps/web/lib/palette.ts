@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { isHexColour } from '@miscellary/shared';
 
 // Every picker (board, border ink, accent, set mark) draws from this one palette.
 export const COLOUR_ROWS: string[][] = [
@@ -123,6 +124,7 @@ export function colourRows(values: string[]): string[][] {
 }
 
 export function swatchColour(token: string): string {
+  if (isHexColour(token)) return token;
   return COLOURS[token] ?? '#b9b0a0';
 }
 

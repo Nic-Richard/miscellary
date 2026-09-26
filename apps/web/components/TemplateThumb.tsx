@@ -21,6 +21,10 @@ const LAYOUTS: Record<string, Block[]> = {
     { x: 6, y: 12, w: 28, h: 20, kind: 'photo' },
     { x: 6, y: 36, w: 28, h: 15, kind: 'rule' },
   ],
+  gallery: [
+    { x: 6, y: 5, w: 22, h: 3, kind: 'title' },
+    { x: 6, y: 12, w: 28, h: 39, kind: 'photo' },
+  ],
   minimal: [
     { x: 3, y: 3, w: 34, h: 50, kind: 'photo' },
     { x: 7, y: 41, w: 22, h: 3, kind: 'title' },

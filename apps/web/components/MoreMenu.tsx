@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import ui from './ui.module.css';
 import styles from './MoreMenu.module.css';
 
@@ -9,9 +9,28 @@ export type MoreItem =
   | { label: string; href: string; danger?: boolean }
   | { label: string; onSelect: () => void; danger?: boolean };
 
-export default function MoreMenu({ label, items }: { label: string; items: MoreItem[] }) {
+export default function MoreMenu({
+  label,
+  items,
+  opens = 'left',
+}: {
+  label: string;
+  items: MoreItem[];
+  opens?: 'left' | 'right';
+}) {
   const [open, setOpen] = useState(false);
+  const [side, setSide] = useState(opens);
   const root = useRef<HTMLDivElement>(null);
+  const menu = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    if (!open) return setSide(opens);
+    const box = menu.current?.getBoundingClientRect();
+    // Flips once, away from the preferred side, so a menu too wide for either side cannot loop.
+    if (!box || side !== opens) return;
+    if (side === 'right' && box.right > window.innerWidth - 8) setSide('left');
+    if (side === 'left' && box.left < 8) setSide('right');
+  }, [open, opens, side]);
 
   useEffect(() => {
     if (!open) return;
@@ -48,32 +67,39 @@ export default function MoreMenu({ label, items }: { label: string; items: MoreI
         </svg>
       </button>
       {open ? (
-        <div className={styles.menu} role="menu">
-          {items.map((item) =>
-            'href' in item ? (
-              <Link
-                key={item.label}
-                role="menuitem"
-                href={item.href}
-                className={item.danger ? styles.danger : undefined}
-              >
-                {item.label}
-              </Link>
-            ) : (
-              <button
-                key={item.label}
-                type="button"
-                role="menuitem"
-                className={item.danger ? styles.danger : undefined}
-                onClick={() => {
-                  setOpen(false);
-                  item.onSelect();
-                }}
-              >
-                {item.label}
-              </button>
-            ),
-          )}
+        <div
+          ref={menu}
+          className={`${styles.menu} ${side === 'right' ? styles.menuRight : ''}`}
+          role="menu"
+        >
+          {items.map((item, index) => (
+            <Fragment key={item.label}>
+              {item.danger && index > 0 && !items[index - 1]!.danger ? (
+                <hr className={styles.rule} />
+              ) : null}
+              {'href' in item ? (
+                <Link
+                  role="menuitem"
+                  href={item.href}
+                  className={item.danger ? styles.danger : undefined}
+                >
+                  {item.label}
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  role="menuitem"
+                  className={item.danger ? styles.danger : undefined}
+                  onClick={() => {
+                    setOpen(false);
+                    item.onSelect();
+                  }}
+                >
+                  {item.label}
+                </button>
+              )}
+            </Fragment>
+          ))}
         </div>
       ) : null}
     </div>

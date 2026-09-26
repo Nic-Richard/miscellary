@@ -11,11 +11,13 @@ import PackDesigner from '@/components/studio/PackDesigner';
 import SetCover from '@/components/SetCover';
 import CardPreview from '@/components/CardPreview';
 import CardForm from '@/components/CardForm';
+import MoreMenu from '@/components/MoreMenu';
 import TagEditor from '@/components/TagEditor';
 import VerifyEmailNotice from '@/components/VerifyEmailNotice';
 import { ApiRequestError } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import {
+  createCard,
   deleteCard,
   deleteSet,
   getMySet,
@@ -181,6 +183,25 @@ export default function SetEditorPage() {
       window.removeEventListener('pointercancel', end);
     };
   });
+
+  async function onDuplicateCard(card: Card) {
+    if (!set) return;
+    try {
+      await createCard(set.id, {
+        image_id: card.image.id,
+        title: card.title,
+        rarity: card.rarity,
+        description: card.description,
+        printed_text: card.printed_text,
+        template_key: card.template_key,
+        template_config: card.template_config,
+      });
+      setError(null);
+      await reload();
+    } catch (e) {
+      setError(e instanceof ApiRequestError ? e.message : 'Could not duplicate the card.');
+    }
+  }
 
   async function onDeleteCard(card: Card) {
     if (!set || !window.confirm(`Delete "${card.title}"?`)) return;
@@ -420,27 +441,24 @@ export default function SetEditorPage() {
             footer={
               isDraft ? (
                 <>
-                  <button type="button" className={styles.link} onClick={() => setEditing(c)}>
+                  <button type="button" className={ui.action} onClick={() => setEditing(c)}>
                     Edit
                   </button>
-                  <button
-                    type="button"
-                    className={styles.link}
-                    title="Start a new card with this card's template and settings"
-                    onClick={() => {
-                      setDesign(c);
-                      setEditing('new');
-                    }}
-                  >
-                    Copy design
-                  </button>
-                  <button
-                    type="button"
-                    className={styles.linkDanger}
-                    onClick={() => void onDeleteCard(c)}
-                  >
-                    Delete
-                  </button>
+                  <MoreMenu
+                    label={`More for ${c.title}`}
+                    opens="right"
+                    items={[
+                      { label: 'Duplicate', onSelect: () => void onDuplicateCard(c) },
+                      {
+                        label: 'Copy design',
+                        onSelect: () => {
+                          setDesign(c);
+                          setEditing('new');
+                        },
+                      },
+                      { label: 'Delete', onSelect: () => void onDeleteCard(c), danger: true },
+                    ]}
+                  />
                 </>
               ) : null
             }

@@ -233,6 +233,12 @@
   height: 100%;
   object-fit: cover;
   filter: var(--img-print, saturate(0.95) contrast(1.05) brightness(1.01));
+  /* Zoom about the focal point, written as a transform chain so a shape can
+     add its own turn in front of it without moving the transform origin. */
+  --photo-zoom-about: translate(var(--photo-dx, 0%), var(--photo-dy, 0%))
+    scale(var(--photo-zoom, 1))
+    translate(calc(-1 * var(--photo-dx, 0%)), calc(-1 * var(--photo-dy, 0%)));
+  transform: var(--photo-zoom-about);
 }
 .art img.framing {
   cursor: grab;
@@ -461,7 +467,8 @@ textarea.copyInput {
 .card[data-stock='wine'],
 .card[data-stock='bronze'],
 .card[data-stock='cocoa'],
-.card[data-stock='aubergine'] {
+.card[data-stock='aubergine'],
+.card[data-dark] {
   --coat-pearl: linear-gradient(
     var(--lit-angle, 104deg),
     rgba(206, 226, 255, 0.16) 8%,
@@ -492,22 +499,27 @@ textarea.copyInput {
 .card[data-stock='wine'] .mark,
 .card[data-stock='bronze'] .mark,
 .card[data-stock='cocoa'] .mark,
-.card[data-stock='aubergine'] .mark {
+.card[data-stock='aubergine'] .mark,
+.card[data-dark] .mark {
   stroke: color-mix(in srgb, var(--ac) 55%, #e9f0ec);
 }
 
 .card[data-window='none'],
 .card[data-window='inset'] {
-  --window-w: 0;
+  /* A length, not 0: it is summed in calc(), where a unitless 0 voids the whole shadow. */
+  --window-w: 0px;
 }
 .card[data-window='mat'] {
   --window-w: 2.8cqw;
   --window-c: var(--core);
 }
+.card[data-window='none'] {
+  --window-relief: 0 0 transparent;
+}
 .card[data-window='inset'] {
   --window-relief:
-    inset 0 0 0 0.9px rgba(30, 20, 8, 0.34), inset 0 0 1cqw rgba(20, 14, 6, 0.3),
-    inset 0 2.6cqw 3.6cqw rgba(20, 14, 6, 0.3), inset 0 -0.8cqw 1.4cqw rgba(255, 255, 255, 0.14);
+    inset 0 0 0 1px rgba(30, 20, 8, 0.42), inset 0 0 1.4cqw rgba(20, 14, 6, 0.4),
+    inset 0 3.2cqw 4.4cqw rgba(20, 14, 6, 0.4), inset 0 -1cqw 1.6cqw rgba(255, 255, 255, 0.2);
 }
 
 .card[data-tint='warm'] {
@@ -994,7 +1006,10 @@ textarea.copyInput {
   display: none;
 }
 .polaroid {
-  --window-w: 0;
+  --window-w: 0px;
+  --window-relief: 0 0 transparent;
+  --title-bg: transparent;
+  --title-relief: none;
 }
 .polaroid .art {
   border-radius: 0.6cqw;
@@ -1074,6 +1089,28 @@ textarea.copyInput {
 }
 .bold .art {
   border-radius: 2cqw;
+}
+/* The window keeps the size it has in the editor, where the photo was framed,
+   so short or missing copy never stretches it. Spare room goes above the foot. */
+.classic .art {
+  flex: 0 0 92cqw;
+}
+.polaroid .art {
+  flex: 0 0 85.5cqw;
+}
+.bold .art {
+  flex: 0 0 75.75cqw;
+}
+.fieldnote .art {
+  flex: 0 0 50.5cqw;
+}
+.gallery .art {
+  flex: 1 1 auto;
+}
+.classic .foot,
+.polaroid .foot,
+.bold .foot {
+  margin-top: auto;
 }
 .card[data-shape='circle'] .art,
 .card[data-shape='diamond'] .art {
@@ -1171,7 +1208,7 @@ textarea.copyInput {
   transform: rotate(45deg) scale(0.74);
 }
 .card[data-shape='diamond'] .art img {
-  transform: rotate(-45deg) scale(1.42);
+  transform: rotate(-45deg) scale(1.42) var(--photo-zoom-about);
 }
 
 .fieldnote[data-shape='circle'] .art,

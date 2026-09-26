@@ -1,5 +1,5 @@
 import type { TemplateConfig } from './api';
-import { CARD_COLOURS, isDarkStock } from './cardTokens';
+import { isDarkStock, stockColour } from './cardTokens';
 import { currentConfig } from './cardConfig';
 import type { Rarity } from './rarity';
 
@@ -409,7 +409,7 @@ export function resolveCardMaterial(
   rarity: Rarity,
 ): CardMaterial {
   const config = currentConfig(stored);
-  const board = config.stock ? CARD_COLOURS[config.stock] : undefined;
+  const board = stockColour(config.stock);
   const dark = DARK_TEMPLATES.has(key) || (!!board && isDarkStock(board));
   const finish = FINISHES[config.finish ?? ''] ?? BASE_FINISH;
   const coat = (dark ? DARK_COATS[finish.coat] : undefined) ?? COATS[finish.coat] ?? COATS.matte!;

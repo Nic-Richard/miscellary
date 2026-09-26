@@ -300,6 +300,30 @@ export function isDarkStock(hex: string): boolean {
   return luminance(hex) < 0.3;
 }
 
+/** A custom colour: any #rrggbb a creator picked outside the palette. */
+export function isHexColour(value: string | undefined): boolean {
+  return !!value && /^#[0-9a-f]{6}$/.test(value);
+}
+
+function shade(hex: string, by: number): string {
+  const channel = (at: number) =>
+    Math.round(parseInt(hex.slice(at, at + 2), 16) * (1 - by))
+      .toString(16)
+      .padStart(2, '0');
+  return `#${channel(1)}${channel(3)}${channel(5)}`;
+}
+
+function boardFor(token: string | undefined): { stock: string; edge: string } | undefined {
+  if (!token) return undefined;
+  if (isHexColour(token)) return { stock: token, edge: shade(token, 0.22) };
+  return STOCKS[token];
+}
+
+/** A stock's board colour, whether a palette name or a custom colour. */
+export function stockColour(token: string | undefined): string | undefined {
+  return boardFor(token)?.stock;
+}
+
 const TEMPLATE_BOARDS: Record<string, { stock: string; edge: string }> = {
   polaroid: { stock: '#fcfaf4', edge: '#d8cfbd' },
   minimal: { stock: '#14201f', edge: '#2b3c39' },
@@ -325,6 +349,7 @@ const BASE = {
 function inkFor(token: string | undefined, rarityColour: string): string | null {
   if (!token || token === 'auto') return null;
   if (token === 'rarity') return rarityColour;
+  if (isHexColour(token)) return token;
   return INKS[token] ?? null;
 }
 
@@ -351,8 +376,7 @@ export const CARD_COLOURS: Record<string, string> = Object.fromEntries(
 export function resolveCardTokens(key: string, stored: TemplateConfig, rarity: Rarity): CardTokens {
   const config = currentConfig(stored);
   const rarityColour = RARITY_COLOURS[rarity];
-  const stockToken = config.stock;
-  const board = stockToken ? STOCKS[stockToken] : undefined;
+  const board = boardFor(config.stock);
   const template = TEMPLATE_BOARDS[key];
 
   const border = inkFor(config.border, rarityColour) ?? rarityColour;

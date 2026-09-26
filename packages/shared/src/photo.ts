@@ -54,8 +54,10 @@ export const PHOTO_LICENCES = [
 
 export type PhotoLicence = (typeof PHOTO_LICENCES)[number]['value'];
 
-export function licenceOf(credit: { author: string; license: string } | null | undefined) {
-  if (!credit?.author) return 'own' as PhotoLicence;
+export function licenceOf(
+  credit: { author: string; license: string; source_url?: string } | null | undefined,
+) {
+  if (!credit?.author && !credit?.source_url) return 'own' as PhotoLicence;
   const match = PHOTO_LICENCES.find((l) => l.value !== 'own' && l.label === credit.license);
   if (match) return match.value;
   return 'other' as PhotoLicence;

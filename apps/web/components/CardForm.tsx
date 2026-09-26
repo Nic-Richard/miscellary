@@ -9,10 +9,11 @@ import {
   RARITY_LABELS,
   validateDescription,
   prepareCardDesign,
+  creditLine,
   licenceOf,
+  PHOTO_LICENCES,
   photoFrame,
   photoFrameKeys,
-  PHOTO_LICENCES,
   PHOTO_ZOOM_MAX,
   withPhotoFrame,
 } from '@miscellary/shared';
@@ -27,7 +28,7 @@ import type {
 } from '@miscellary/shared';
 import CardPreview from './CardPreview';
 import ImagePicker from './ImagePicker';
-import { ChoiceMenu, ColourMenu, Field, Section, Segmented, TileGrid } from './controls';
+import { ChoiceMenu, ColourMenu, Field, Section, Segmented, Slider, TileGrid } from './controls';
 import { FONT_LABELS } from '@/lib/fonts';
 import { borderTile, coatTile, shapeTile, textureTile } from '@/lib/palette';
 import MarkupBar from './MarkupBar';
@@ -160,6 +161,16 @@ export default function CardForm({
     setConfig((current) => withPhotoFrame(current, next));
 
   const [credit, setCredit] = useState(() => creditDraft(card?.image ?? null));
+  const citedLink = credit.source_url.trim();
+  const citedLine = creditLine({
+    author: credit.author.trim(),
+    license_url: '',
+    source_url: citedLink && !/^https?:\/\//i.test(citedLink) ? `https://${citedLink}` : citedLink,
+    license:
+      PHOTO_LICENCES.find(
+        (l) => l.value === credit.licence && l.value !== 'own' && l.value !== 'other',
+      )?.label ?? '',
+  });
   const creditChanged =
     image !== null && JSON.stringify(credit) !== JSON.stringify(creditDraft(image));
 
@@ -224,7 +235,13 @@ export default function CardForm({
     setFields({});
     if (creditChanged) {
       try {
-        setImage(await savePhotoCredit(image.id, credit));
+        const link = credit.source_url.trim();
+        setImage(
+          await savePhotoCredit(image.id, {
+            ...credit,
+            source_url: link && !/^https?:\/\//i.test(link) ? `https://${link}` : link,
+          }),
+        );
       } catch (err) {
         if (err instanceof ApiRequestError) setFields(err.fields);
         setError(err instanceof Error ? err.message : 'Could not save the photo credit.');
@@ -277,7 +294,14 @@ export default function CardForm({
     }
     if (opt.type === 'swatch') {
       return (
-        <ColourMenu value={value} values={values} labels={labels} locks={locks} onChange={set} />
+        <ColourMenu
+          value={value}
+          values={values}
+          labels={labels}
+          locks={locks}
+          onChange={set}
+          custom
+        />
       );
     }
     const inline =
@@ -328,52 +352,72 @@ export default function CardForm({
         <ImagePicker kind="card" value={image} onChange={pickImage} />
         {image ? (
           <div className={styles.framing}>
-            <label className={styles.framingLabel} htmlFor="photo-zoom">
-              Zoom
-            </label>
-            <input
-              id="photo-zoom"
-              type="range"
-              min={1}
-              max={PHOTO_ZOOM_MAX}
-              step={0.01}
-              value={frame.zoom}
-              onChange={(e) => setFrame({ ...frame, zoom: Number(e.target.value) })}
-            />
-            <button
-              type="button"
-              className={ui.link}
-              disabled={frame.x === 50 && frame.y === 50 && frame.zoom === 1}
-              onClick={() => setFrame({ x: 50, y: 50, zoom: 1 })}
-            >
-              Center
-            </button>
-            <p className={styles.framingNote}>Drag the photo on the card to choose what shows.</p>
+            <Field label="Zoom">
+              <Slider
+                value={Math.round(frame.zoom * 100)}
+                min={100}
+                max={PHOTO_ZOOM_MAX * 100}
+                suffix="%"
+                onChange={(v) => setFrame({ ...frame, zoom: v / 100 })}
+                onCommit={(v) => setFrame({ ...frame, zoom: v / 100 })}
+              />
+            </Field>
+            <div className={styles.framingFoot}>
+              <p className={styles.framingNote}>Drag the photo on the card to choose what shows.</p>
+              <button
+                type="button"
+                className={ui.link}
+                disabled={frame.x === 50 && frame.y === 50}
+                onClick={() => setFrame({ ...frame, x: 50, y: 50 })}
+              >
+                Center
+              </button>
+            </div>
           </div>
         ) : null}
         {image ? (
           <fieldset className={styles.credit}>
-            <legend className={ui.label}>Photo credit</legend>
-            <select
-              className={ui.input}
-              aria-label="Whose photo this is"
-              value={credit.licence}
-              onChange={(e) => setCredit({ ...credit, licence: e.target.value })}
-            >
-              {PHOTO_LICENCES.map((l) => (
-                <option key={l.value} value={l.value}>
-                  {l.label}
-                </option>
-              ))}
-            </select>
-            {credit.licence === 'own' ? (
-              <p className={styles.framingNote}>Your own photos print without a credit line.</p>
-            ) : (
+            <legend className={ui.label}>
+              Photo credit <span className={styles.hint}>optional</span>
+            </legend>
+            <div className={ui.segments} role="radiogroup" aria-label="Photo credit">
+              {(
+                [
+                  ['own', 'I took it'],
+                  ['cite', 'Cite a source'],
+                ] as const
+              ).map(([value, text]) => {
+                const on = (credit.licence === 'own') === (value === 'own');
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    role="radio"
+                    aria-checked={on}
+                    className={`${ui.segment} ${on ? ui.segmentOn : ''}`}
+                    onClick={() =>
+                      setCredit({
+                        ...credit,
+                        licence:
+                          value === 'own'
+                            ? 'own'
+                            : credit.licence === 'own'
+                              ? 'other'
+                              : credit.licence,
+                      })
+                    }
+                  >
+                    {text}
+                  </button>
+                );
+              })}
+            </div>
+            {credit.licence === 'own' ? null : (
               <>
                 <input
                   className={ui.input}
-                  aria-label="Taken by"
-                  placeholder="Taken by"
+                  aria-label="Source name"
+                  placeholder="Name (photographer, site or book)"
                   maxLength={120}
                   value={credit.author}
                   onChange={(e) => setCredit({ ...credit, author: e.target.value })}
@@ -386,8 +430,8 @@ export default function CardForm({
                 <input
                   className={ui.input}
                   type="url"
-                  aria-label="Where it is from"
-                  placeholder="Link to where it is from (optional)"
+                  aria-label="Source link"
+                  placeholder="Link"
                   maxLength={500}
                   value={credit.source_url}
                   onChange={(e) => setCredit({ ...credit, source_url: e.target.value })}
@@ -397,7 +441,11 @@ export default function CardForm({
                     {m}
                   </p>
                 ))}
-                <p className={styles.framingNote}>Printed with the card: Photo: name (licence).</p>
+                <p className={styles.framingNote}>
+                  {citedLine
+                    ? `Prints on the card as “${citedLine}”.`
+                    : 'Add a name, a link, or both. Leave them empty to print no credit.'}
+                </p>
               </>
             )}
           </fieldset>

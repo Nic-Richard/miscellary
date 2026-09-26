@@ -238,6 +238,7 @@ export function CopyField({
   className,
   region,
   label,
+  placeholder = label,
   value,
   onChange,
   required,
@@ -245,6 +246,7 @@ export function CopyField({
   className: string;
   region: TextRegionRules;
   label: string;
+  placeholder?: string;
   value: string;
   onChange: (next: string) => void;
   required?: boolean;
@@ -276,7 +278,7 @@ export function CopyField({
     'aria-label': label,
     value,
     maxLength: region.max_length,
-    placeholder: label,
+    placeholder,
     required: Boolean(required),
     style,
     onChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>

@@ -89,6 +89,14 @@ def test_specialty_press_work_climbs_one_tier_at_a_time():
     assert templates.config_problems("classic", _config(texture="brushed"), "uncommon") == []
 
 
+def test_colour_options_take_a_custom_hex():
+    custom = _config(stock="#1a2b3c", accent="#ff8800", title_ink="#ffffff", border="#000000")
+    assert templates.config_problems("classic", custom, "common") == []
+    for bad in ["#FF8800", "#f80", "ff8800", "#ff88001"]:
+        assert templates.config_problems("classic", _config(accent=bad), "common")
+    assert templates.config_problems("classic", _config(texture="#ff8800"), "common")
+
+
 def test_photo_framing_takes_a_focal_point_and_zoom_in_range():
     framed = _config(photo_x="12.5", photo_y="80", photo_zoom="2.25")
     assert templates.config_problems("classic", framed, "common") == []
@@ -131,6 +139,14 @@ def test_full_art_is_reached_one_way_only():
     assert templates.template_problems("minimal") == []
     for key in ["classic", "polaroid", "bold", "fieldnote"]:
         assert templates.template_problems(key, "common") == []
+
+
+def test_gallery_needs_an_epic_card_and_prints_no_caption():
+    for tier in ["common", "uncommon", "rare"]:
+        assert templates.template_problems("gallery", tier)
+    for tier in ["epic", "legendary"]:
+        assert templates.template_problems("gallery", tier) == []
+    assert templates.TEMPLATES_BY_KEY["gallery"]["text"]["printed"] is None
 
 
 def test_legendary_is_offered_a_treatment_but_never_forced_one():

@@ -81,7 +81,7 @@ class ImageCreditView(APIView):
         credit = {"author": "", "license": "", "license_url": "", "source_url": ""}
         if data["licence"] != "own":
             credit = {
-                "author": data["author"].strip(),
+                "author": data.get("author", "").strip(),
                 "license": licence,
                 "license_url": licence_url,
                 "source_url": data.get("source_url", ""),

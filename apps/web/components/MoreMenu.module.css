@@ -23,6 +23,10 @@
   border-radius: 8px;
   box-shadow: var(--shadow-md);
 }
+.menuRight {
+  right: auto;
+  left: 0;
+}
 .menu a,
 .menu button {
   padding: 9px 10px;
@@ -39,6 +43,11 @@
 .menu a:hover,
 .menu button:hover {
   background: rgba(39, 139, 130, 0.08);
+}
+.rule {
+  margin: 4px 6px;
+  border: 0;
+  border-top: 1px solid var(--bdr2);
 }
 .menu .danger {
   color: var(--danger);

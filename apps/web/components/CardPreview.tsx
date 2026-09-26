@@ -3,6 +3,8 @@
 import {
   cardTextRules,
   currentConfig,
+  isDarkStock,
+  isHexColour,
   paintToCss,
   photoFrame,
   resolveCardSpot,
@@ -157,8 +159,16 @@ export default function CardPreview({
   const data: Record<string, string> = {};
   for (const [k, v] of Object.entries(currentConfig(templateConfig)))
     if (k !== 'pattern' && k !== 'coverage') data[`data-${k.replace(/_/g, '-')}`] = v;
+  // The named dark boards are listed in the stylesheet; a custom one flags itself.
+  const stock = currentConfig(templateConfig).stock;
+  if (stock && isHexColour(stock) && isDarkStock(stock)) data['data-dark'] = '';
   const shownTitle = title || 'Untitled';
   const isText = TEXT_TEMPLATES.has(templateKey);
+  // Gallery is Minimal's frame without the caption.
+  const look =
+    templateKey === 'gallery'
+      ? `${styles.classic} ${styles.gallery}`
+      : (styles[templateKey] ?? styles.classic);
   const rules = textRules ?? cardTextRules(templateKey);
   const line = templateKey === 'polaroid' ? shownTitle : printedText;
   const spot = resolveCardSpot(templateConfig, rarity);
@@ -170,6 +180,7 @@ export default function CardPreview({
         className={className}
         region={rules.title}
         label="Printed card title"
+        placeholder="Title"
         value={title}
         onChange={onTitleChange}
         required
@@ -198,7 +209,7 @@ export default function CardPreview({
 
   return (
     <div
-      className={`${styles.card} ${styles[templateKey] ?? styles.classic} ${size === 'small' ? styles.small : styles.large}`}
+      className={`${styles.card} ${look} ${size === 'small' ? styles.small : styles.large}`}
       data-rarity={rarity}
       data-spot={spot?.material}
       data-spot-area={spot?.area}
@@ -244,7 +255,9 @@ export default function CardPreview({
           </div>
         ) : null}
 
-        {templateKey === 'bold' || (!isText && (editing || line)) ? (
+        {templateKey === 'bold' ||
+        templateKey === 'polaroid' ||
+        (!isText && rules.printed && (editing || line)) ? (
           <footer className={styles.foot}>
             {templateKey === 'bold' ? titleField(styles.bigTitle!) : null}
             {templateKey === 'polaroid'

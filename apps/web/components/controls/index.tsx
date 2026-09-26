@@ -2,6 +2,8 @@
 
 import { createContext, useContext, useEffect, useId, useRef, useState } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
+import { HexColorInput, HexColorPicker } from 'react-colorful';
+import { isHexColour } from '@miscellary/shared';
 import { colourRows, swatchColour } from '@/lib/palette';
 import styles from './Controls.module.css';
 
@@ -77,6 +79,7 @@ function useDismiss(open: boolean, close: () => void) {
 }
 
 function named(labels: Record<string, string> | undefined, token: string): string {
+  if (isHexColour(token)) return token.toUpperCase();
   return labels?.[token] ?? token.charAt(0).toUpperCase() + token.slice(1);
 }
 
@@ -99,6 +102,99 @@ export interface MenuProps {
   align?: 'left' | 'right';
 }
 
+const RECENT_KEY = 'miscellary:custom-colours';
+const RECENT_MAX = 6;
+
+function recentColours(): string[] {
+  try {
+    const stored: unknown = JSON.parse(localStorage.getItem(RECENT_KEY) ?? '[]');
+    return Array.isArray(stored) ? stored.filter(isHexColour).slice(0, RECENT_MAX) : [];
+  } catch {
+    return [];
+  }
+}
+
+function rememberColour(hex: string) {
+  try {
+    const next = [hex, ...recentColours().filter((c) => c !== hex)].slice(0, RECENT_MAX);
+    localStorage.setItem(RECENT_KEY, JSON.stringify(next));
+  } catch {
+    // Recent colours are a convenience; the pick itself is already applied.
+  }
+}
+
+interface EyeDropperWindow {
+  EyeDropper?: new () => { open: () => Promise<{ sRGBHex: string }> };
+}
+
+function CustomColour({
+  start,
+  onChange,
+  onDone,
+}: {
+  start: string;
+  onChange: (hex: string) => void;
+  onDone: (hex: string) => void;
+}) {
+  const [hex, setHex] = useState(start);
+  const [dropper, setDropper] = useState(false);
+  useEffect(() => setDropper('EyeDropper' in window), []);
+
+  function change(next: string) {
+    const clean = next.toLowerCase();
+    setHex(clean);
+    if (isHexColour(clean)) onChange(clean);
+  }
+
+  async function sample() {
+    const Dropper = (window as EyeDropperWindow).EyeDropper;
+    if (!Dropper) return;
+    try {
+      change((await new Dropper().open()).sRGBHex);
+    } catch {
+      // Dismissed with Escape.
+    }
+  }
+
+  return (
+    <div className={styles.custom}>
+      <HexColorPicker className={styles.customPicker} color={hex} onChange={change} />
+      <div className={styles.customRow}>
+        <span className={styles.chip} style={{ background: hex }} />
+        <HexColorInput
+          className={styles.customHex}
+          aria-label="Hex colour"
+          prefixed
+          color={hex}
+          onChange={change}
+        />
+        {dropper ? (
+          <button
+            type="button"
+            className={styles.customTool}
+            title="Pick a colour from the screen"
+            aria-label="Pick a colour from the screen"
+            onClick={sample}
+          >
+            <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
+              <path
+                d="M14.5 5.5l4 4M12 8l4 4-8.5 8.5H4v-3.5L12 8zm3.5-5.5a2.1 2.1 0 013 0l3 3a2.1 2.1 0 010 3L19 11l-6-6 2.5-2.5z"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+        ) : null}
+        <button type="button" className={styles.customDone} onClick={() => onDone(hex)}>
+          Done
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function ColourMenu({
   value,
   values,
@@ -107,18 +203,39 @@ export function ColourMenu({
   labels,
   locks,
   align = 'left',
-}: MenuProps) {
+  custom = false,
+}: MenuProps & { custom?: boolean }) {
   const fieldLabel = useContext(FieldLabelContext);
   const [open, setOpen] = useState(false);
-  const ref = useDismiss(open, () => setOpen(false));
+  const [picking, setPicking] = useState(false);
+  const [recent, setRecent] = useState<string[]>([]);
+  const latest = useRef(value);
+  latest.current = value;
+  const ref = useDismiss(open, close);
   const swatchFor = givenSwatch ?? hexSwatch;
   const rows = colourRows(values);
   const hasRarity = values.includes('rarity');
   const name = (v: string) => named(labels, v);
+  const customRow = [...new Set([...(isHexColour(value) ? [value] : []), ...recent])].slice(
+    0,
+    RECENT_MAX,
+  );
+
+  function close() {
+    if (picking && isHexColour(latest.current)) rememberColour(latest.current);
+    setPicking(false);
+    setOpen(false);
+  }
+
+  function toggle() {
+    if (open) return close();
+    setRecent(recentColours());
+    setOpen(true);
+  }
 
   function pick(v: string) {
     onChange(v);
-    setOpen(false);
+    close();
   }
 
   return (
@@ -129,13 +246,24 @@ export function ColourMenu({
         aria-label={fieldLabel ? `${fieldLabel}: ${value}` : undefined}
         aria-expanded={open}
         aria-haspopup="true"
-        onClick={() => setOpen(!open)}
+        onClick={toggle}
       >
         <Swatch token={value} swatchFor={swatchFor} />
         <span className={styles.triggerName}>{name(value)}</span>
         <span className={styles.triggerCaret}>▼</span>
       </button>
-      {open ? (
+      {open && picking ? (
+        <div className={`${styles.popover} ${align === 'right' ? styles.popoverRight : ''}`}>
+          <CustomColour
+            start={isHexColour(value) ? value : swatchColour(value)}
+            onChange={onChange}
+            onDone={(hex) => {
+              if (isHexColour(hex)) onChange(hex);
+              close();
+            }}
+          />
+        </div>
+      ) : open ? (
         <div className={`${styles.popover} ${align === 'right' ? styles.popoverRight : ''}`}>
           {values.includes('auto') ? (
             <button
@@ -179,6 +307,36 @@ export function ColourMenu({
                 })}
               </div>
             ))}
+            {custom ? (
+              <div className={styles.swatches}>
+                {Array.from({ length: RECENT_MAX }, (_, i) => {
+                  const hex = customRow[i];
+                  if (!hex) return <span key={i} className={styles.swatchEmpty} />;
+                  return (
+                    <button
+                      key={hex}
+                      type="button"
+                      title={hex.toUpperCase()}
+                      aria-label={hex.toUpperCase()}
+                      aria-pressed={value === hex}
+                      className={`${styles.swatch} ${value === hex ? styles.swatchOn : ''}`}
+                      style={{ background: hex }}
+                      onClick={() => {
+                        rememberColour(hex);
+                        pick(hex);
+                      }}
+                    />
+                  );
+                })}
+                <button
+                  type="button"
+                  className={styles.customOpen}
+                  onClick={() => setPicking(true)}
+                >
+                  Custom
+                </button>
+              </div>
+            ) : null}
           </div>
         </div>
       ) : null}
