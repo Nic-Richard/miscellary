@@ -150,6 +150,7 @@ function Surface({ mode, data }: Props) {
         setId={String(data.setId)}
         templates={data.templates as CardTemplate[]}
         card={data.card as Card | null}
+        design={(data.design as Card | null) ?? null}
         mark={data.mark as string}
         onDone={async () => send('saved')}
         onCancel={() => send('close')}

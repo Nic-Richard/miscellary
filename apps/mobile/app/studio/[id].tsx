@@ -1,5 +1,5 @@
 import { CARD_TAG_MAX, cardCode, SET_TAG_MAX, SET_TITLE_MAX_LENGTH } from '@miscellary/shared';
-import type { CardSetDetail } from '@miscellary/shared';
+import type { Card, CardSetDetail } from '@miscellary/shared';
 import Feather from '@expo/vector-icons/Feather';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
@@ -15,11 +15,14 @@ import {
 } from 'react-native';
 import type { LayoutRectangle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import ActionChip from '@/components/ActionChip';
+import MoreButton from '@/components/MoreButton';
 import SharedSurface from '@/components/SharedSurface';
 import TagField from '@/components/TagField';
 import CardPreview from '@/components/CardPreview';
 import PackPreview from '@/components/PackPreview';
 import {
+  createCard,
   deleteCard,
   deleteSet,
   getMySet,
@@ -181,6 +184,22 @@ export default function SetEditorScreen() {
         },
       },
     ]);
+  }
+
+  function duplicateCard(card: Card) {
+    if (!set) return;
+    setError(null);
+    createCard(set.id, {
+      image_id: card.image.id,
+      title: card.title,
+      rarity: card.rarity,
+      description: card.description,
+      printed_text: card.printed_text,
+      template_key: card.template_key,
+      template_config: card.template_config,
+    })
+      .then(load)
+      .catch((reason: Error) => setError(reason.message));
   }
 
   function removeCard(cardId: string, cardTitle: string) {
@@ -422,19 +441,32 @@ export default function SetEditorScreen() {
             </Pressable>
             {isDraft ? (
               <View style={styles.row}>
-                <Pressable
+                <ActionChip
+                  icon="edit-2"
+                  label="Edit"
                   onPress={() =>
                     router.push({
                       pathname: '/studio/card',
                       params: { setId: set.id, cardId: c.id },
                     })
                   }
-                >
-                  <Text style={{ color: colors.accent, fontSize: 13 }}>Edit</Text>
-                </Pressable>
-                <Pressable onPress={() => removeCard(c.id, c.title)}>
-                  <Text style={{ color: colors.danger, fontSize: 13 }}>Delete</Text>
-                </Pressable>
+                />
+                <MoreButton
+                  title={c.title}
+                  items={[
+                    { label: 'Duplicate', icon: 'copy', onSelect: () => duplicateCard(c) },
+                    {
+                      label: 'Copy design',
+                      icon: 'layers',
+                      onSelect: () =>
+                        router.push({
+                          pathname: '/studio/card',
+                          params: { setId: set.id, designId: c.id },
+                        }),
+                    },
+                    { label: 'Delete', icon: 'trash-2', onSelect: () => removeCard(c.id, c.title) },
+                  ]}
+                />
               </View>
             ) : null}
           </View>

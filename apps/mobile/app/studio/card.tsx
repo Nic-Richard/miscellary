@@ -8,7 +8,11 @@ import { getMySet, listTemplates } from '@/lib/endpoints';
 import { colors } from '@/lib/theme';
 
 export default function CardScreen() {
-  const { setId, cardId } = useLocalSearchParams<{ setId: string; cardId?: string }>();
+  const { setId, cardId, designId } = useLocalSearchParams<{
+    setId: string;
+    cardId?: string;
+    designId?: string;
+  }>();
   const [set, setSet] = useState<CardSetDetail | null>(null);
   const [templates, setTemplates] = useState<CardTemplate[]>([]);
   const [error, setError] = useState('');
@@ -46,6 +50,7 @@ export default function CardScreen() {
           mark: set.mark,
           templates,
           card: set.cards.find((card) => card.id === cardId) ?? null,
+          design: set.cards.find((card) => card.id === designId) ?? null,
         }}
         onEvent={(type) => {
           if (type === 'saved' || type === 'close') router.back();

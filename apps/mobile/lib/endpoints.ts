@@ -3,6 +3,7 @@ import type {
   CardSetDetail,
   CardSetSummary,
   CardTemplate,
+  CardWrite,
   Comment,
   CommentThread,
   Creator,
@@ -62,6 +63,8 @@ export const reorderCards = (setId: string, cardIds: string[]) =>
     method: 'POST',
     body: { card_ids: cardIds },
   });
+export const createCard = (setId: string, body: CardWrite) =>
+  apiFetch<Card>(`/api/v1/me/sets/${setId}/cards/`, { method: 'POST', body });
 export const deleteCard = (setId: string, cardId: string) =>
   apiFetch<void>(`/api/v1/me/sets/${setId}/cards/${cardId}/`, { method: 'DELETE' });
 
