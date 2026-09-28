@@ -7,7 +7,8 @@ export default function PrivacyPage() {
   return (
     <article className={styles.page}>
       <h1>Privacy</h1>
-      <p className={styles.updated}>Effective September 14, 2026</p>
+      <p className={styles.updated}>Effective September 28, 2026</p>
+      <p>Miscellary is operated by Nic Richard in New Brunswick, Canada.</p>
 
       <section>
         <h2>Information we collect</h2>
@@ -40,6 +41,21 @@ export default function PrivacyPage() {
       </section>
 
       <section>
+        <h2>Cookies and analytics</h2>
+        <p>
+          The website uses a secure cookie to keep you signed in, and the Android app stores your
+          sign-in in the device’s secure storage. These are needed for your account to work.
+        </p>
+        <p>
+          We use TraceTray to understand how people use the website. It records things like cursor
+          movement, clicks, scrolling, and which pages are visited, and stores a random visitor ID in
+          your browser so visits can be grouped together. It doesn’t record what you type,
+          form entries, passwords, or payment details, and it isn’t used for advertising. See{' '}
+          <a href="https://tracetray.com/privacy.html">TraceTray’s privacy policy</a> for details.
+        </p>
+      </section>
+
+      <section>
         <h2>Service providers</h2>
         <p>
           Miscellary uses service providers to host the website, API, database, uploaded media,
@@ -53,8 +69,10 @@ export default function PrivacyPage() {
         <p>
           Information is retained while an account is active and as reasonably needed for security,
           backups, moderation, legal obligations, and service operation. Published-set deletion may
-          leave archived cards in collectors’ inventories as described by the product. You can ask
-          about access, correction, or deletion of your personal information by contacting us.
+          leave archived cards in collectors’ inventories as described by the product. You can delete
+          your account at any time from your account settings on the website or in the app. You can
+          also ask about access, correction, or deletion of your personal information by contacting
+          us.
         </p>
       </section>
 

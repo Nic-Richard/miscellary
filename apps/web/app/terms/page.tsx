@@ -7,7 +7,8 @@ export default function TermsPage() {
   return (
     <article className={styles.page}>
       <h1>Terms of use</h1>
-      <p className={styles.updated}>Effective September 14, 2026</p>
+      <p className={styles.updated}>Effective September 28, 2026</p>
+      <p>Miscellary is operated by Nic Richard in New Brunswick, Canada.</p>
 
       <section>
         <h2>Using Miscellary</h2>
@@ -46,6 +47,17 @@ export default function TermsPage() {
       </section>
 
       <section>
+        <h2>Copyright complaints</h2>
+        <p>
+          If you believe something on Miscellary uses your photo, writing, or other work without
+          permission, report it with the reporting tools or email{' '}
+          <a href="mailto:support@miscellary.com">support@miscellary.com</a> with a link to the
+          content and a description of your work. Content found to infringe will be removed, and
+          accounts that repeatedly upload others’ work may be closed.
+        </p>
+      </section>
+
+      <section>
         <h2>Cards have no financial value</h2>
         <p>
           Miscellary cards, points, packs, and trades are creative product features. They are not
@@ -61,6 +73,21 @@ export default function TermsPage() {
           errors. Features may be changed or retired, and these terms may be updated as the service
           develops. Material changes will be reflected by a new effective date on this page.
         </p>
+      </section>
+
+      <section>
+        <h2>Limitation of liability</h2>
+        <p>
+          Miscellary is provided as is. To the fullest extent allowed by law, Miscellary is not
+          responsible for indirect, incidental, or consequential losses, lost data, lost cards or
+          collections, or service interruptions. Some laws give you rights that these terms cannot
+          limit.
+        </p>
+      </section>
+
+      <section>
+        <h2>Governing law</h2>
+        <p>These terms are governed by the laws of New Brunswick and Canada.</p>
       </section>
 
       <section>
