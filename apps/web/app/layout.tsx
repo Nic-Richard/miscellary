@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import Script from 'next/script';
 import type { ReactNode } from 'react';
 import {
   Alfa_Slab_One,
@@ -95,6 +96,16 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             </div>
           </div>
         </AuthProvider>
+        {/* TraceTray loads only on the live domain; a site key binds to the first domain that sends it data. */}
+        <Script id="tracetray" strategy="afterInteractive">{`
+          if (["miscellary.com", "www.miscellary.com"].includes(location.hostname)) {
+            window.TraceTray = { endpoint: "https://tracetray.com/collect", key: "tt_QcRDVcN_i4iEMI08" };
+            const s = document.createElement("script");
+            s.src = "https://tracetray.com/client/tracker.js";
+            s.defer = true;
+            document.head.appendChild(s);
+          }
+        `}</Script>
       </body>
     </html>
   );
