@@ -23,14 +23,14 @@ const DESCRIPTION =
 
 // A page's openGraph replaces the layout's rather than merging, so the shared fields are repeated here.
 export const metadata: Metadata = {
-  title: { absolute: 'Miscellary | Turn collections into trading cards' },
+  title: { absolute: 'Miscellary | Turn Collections into Trading Cards' },
   alternates: { canonical: '/' },
   openGraph: {
     siteName: 'Miscellary',
     type: 'website',
     locale: 'en',
     url: '/',
-    title: 'Miscellary | Turn collections into trading cards',
+    title: 'Miscellary | Turn Collections into Trading Cards',
     description: DESCRIPTION,
   },
 };
