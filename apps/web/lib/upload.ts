@@ -19,7 +19,7 @@ export async function uploadImage(blob: Blob, kind: ImageKind): Promise<ImageRef
   const contentType = blob.type || 'image/jpeg';
   const { image, upload_url, max_size } = await apiFetch<CreateUploadResponse>('/api/v1/uploads/', {
     method: 'POST',
-    body: { kind, content_type: contentType },
+    body: { kind, content_type: contentType, size: blob.size },
   });
   if (blob.size > max_size) throw new Error('That image is too large (10 MB max).');
 

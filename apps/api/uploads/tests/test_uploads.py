@@ -1,9 +1,11 @@
+from datetime import timedelta
 from urllib.parse import parse_qs, urlsplit
 
 import boto3
 import pytest
 from django.conf import settings
 from django.urls import reverse
+from django.utils import timezone
 from moto import mock_aws
 
 from conftest import make_user
@@ -74,6 +76,60 @@ def test_oversized_upload_completion_removes_object_and_record(auth_client, buck
     assert not Image.objects.filter(id=image.id).exists()
     objects = bucket.list_objects_v2(Bucket=settings.AWS_STORAGE_BUCKET_NAME).get("Contents", [])
     assert all(obj["Key"] != image.key for obj in objects)
+
+
+def test_declared_size_is_signed_into_the_upload(auth_client, bucket):
+    response = auth_client.post(
+        reverse("uploads:create"),
+        {"kind": "card", "content_type": "image/png", "size": 1234},
+        format="json",
+    )
+    assert response.status_code == 201
+    query = parse_qs(urlsplit(response.json()["upload_url"]).query)
+    assert "content-length" in query["X-Amz-SignedHeaders"][0]
+
+
+def test_declared_size_over_the_limit_is_refused(auth_client, bucket):
+    response = auth_client.post(
+        reverse("uploads:create"),
+        {"kind": "card", "content_type": "image/png", "size": storage.MAX_SIZE + 1},
+        format="json",
+    )
+    assert response.status_code == 400
+    assert not Image.objects.exists()
+
+
+def test_unfinished_uploads_are_capped_per_user(auth_client, user, bucket):
+    for n in range(20):
+        Image.objects.create(
+            owner=user, kind="card", key=f"card/p{n}.png", content_type="image/png"
+        )
+    response = auth_client.post(
+        reverse("uploads:create"), {"kind": "card", "content_type": "image/png"}, format="json"
+    )
+    assert response.status_code == 400
+    assert Image.objects.count() == 20
+
+
+def test_abandoned_uploads_are_swept(auth_client, user, bucket):
+    stale = Image.objects.create(
+        owner=make_user(), kind="card", key="card/old.png", content_type="image/png"
+    )
+    bucket.put_object(Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key=stale.key, Body=b"x")
+    Image.objects.filter(id=stale.id).update(created_at=timezone.now() - timedelta(hours=2))
+    finished = Image.objects.create(
+        owner=user, kind="card", key="card/done.png", content_type="image/png", ready=True
+    )
+    Image.objects.filter(id=finished.id).update(created_at=timezone.now() - timedelta(days=30))
+
+    auth_client.post(
+        reverse("uploads:create"), {"kind": "card", "content_type": "image/png"}, format="json"
+    )
+
+    assert not Image.objects.filter(id=stale.id).exists()
+    assert Image.objects.filter(id=finished.id).exists()
+    objects = bucket.list_objects_v2(Bucket=settings.AWS_STORAGE_BUCKET_NAME).get("Contents", [])
+    assert all(obj["Key"] != stale.key for obj in objects)
 
 
 def test_cannot_complete_someone_elses_upload(auth_client, bucket):

@@ -83,9 +83,17 @@ export default function SharedSurface({
       await FileSystem.writeAsStringAsync(file, input.data, {
         encoding: FileSystem.EncodingType.Base64,
       });
+      const info = await FileSystem.getInfoAsync(file);
       const { image, upload_url, max_size } = await apiFetch<CreateUploadResponse>(
         '/api/v1/uploads/',
-        { method: 'POST', body: { kind: input.kind, content_type: input.contentType } },
+        {
+          method: 'POST',
+          body: {
+            kind: input.kind,
+            content_type: input.contentType,
+            size: info.exists ? info.size : undefined,
+          },
+        },
       );
       if (input.data.length * 0.75 > max_size) throw new Error('Image is too large.');
       const response = await FileSystem.uploadAsync(upload_url, file, {

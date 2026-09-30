@@ -1,4 +1,8 @@
+from datetime import timedelta
+
+from botocore.exceptions import ClientError
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
 from rest_framework.request import Request
@@ -15,6 +19,24 @@ from .serializers import (
     ImageSerializer,
 )
 
+# Uploads that never finish are never referenced (cards, covers and packs only
+# accept ready images), so they can be deleted once they are clearly abandoned.
+PENDING_UPLOAD_LIMIT = 20
+STALE_UPLOAD_AGE = timedelta(hours=1)
+SWEEP_BATCH = 50
+
+
+def sweep_stale_uploads() -> None:
+    cutoff = timezone.now() - STALE_UPLOAD_AGE
+    for image in Image.objects.filter(ready=False, created_at__lt=cutoff).order_by("created_at")[
+        :SWEEP_BATCH
+    ]:
+        try:
+            storage.delete_object(image.key)
+        except ClientError:
+            continue
+        image.delete()
+
 
 class CreateUploadView(APIView):
     """Reserve a key and hand the client a presigned PUT URL."""
@@ -27,6 +49,11 @@ class CreateUploadView(APIView):
         kind = serializer.validated_data["kind"]
         content_type = serializer.validated_data["content_type"]
 
+        sweep_stale_uploads()
+        pending = Image.objects.filter(owner=request.user, ready=False).count()
+        if pending >= PENDING_UPLOAD_LIMIT:
+            raise ValidationError("Too many unfinished uploads. Try again in an hour.")
+
         image = Image.objects.create(
             owner=request.user,  # type: ignore[misc]
             kind=kind,
@@ -37,7 +64,10 @@ class CreateUploadView(APIView):
             {
                 "image": ImageSerializer(image).data,
                 "upload_url": storage.presigned_put_url(
-                    image.key, content_type, request.get_host()
+                    image.key,
+                    content_type,
+                    request.get_host(),
+                    serializer.validated_data.get("size"),
                 ),
                 "max_size": storage.MAX_SIZE,
             },

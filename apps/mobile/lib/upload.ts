@@ -77,12 +77,14 @@ export async function uploadAsset(
     format: ImageManipulator.SaveFormat.JPEG,
   });
 
+  const info = await FileSystem.getInfoAsync(resized.uri);
+  const size = info.exists ? info.size : undefined;
   const { image, upload_url, max_size } = await apiFetch<CreateUploadResponse>('/api/v1/uploads/', {
     method: 'POST',
-    body: { kind, content_type: 'image/jpeg' },
+    body: { kind, content_type: 'image/jpeg', size },
   });
-  const info = await FileSystem.getInfoAsync(resized.uri);
-  if (info.exists && info.size > max_size) throw new Error('That image is too large (10 MB max).');
+  if (size !== undefined && size > max_size)
+    throw new Error('That image is too large (10 MB max).');
 
   const put = await FileSystem.uploadAsync(upload_url, resized.uri, {
     httpMethod: 'PUT',

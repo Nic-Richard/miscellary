@@ -69,18 +69,22 @@ def new_key(kind: str, content_type: str) -> str:
     return f"{kind}/{uuid.uuid4().hex}.{ALLOWED_TYPES[content_type]}"
 
 
-def presigned_put_url(key: str, content_type: str, host: str | None = None) -> str:
+def presigned_put_url(
+    key: str, content_type: str, host: str | None = None, size: int | None = None
+) -> str:
     # SigV4 covers the host, so the signature only matches if the client sends
-    # the request to the same one it was signed for.
+    # the request to the same one it was signed for. A signed Content-Length
+    # holds the upload to the size the client declared.
+    params = {
+        "Bucket": settings.AWS_STORAGE_BUCKET_NAME,
+        "Key": key,
+        "ContentType": content_type,
+        "CacheControl": CACHE_CONTROL,
+    }
+    if size is not None:
+        params["ContentLength"] = size
     return client(public=True, host=host).generate_presigned_url(
-        "put_object",
-        Params={
-            "Bucket": settings.AWS_STORAGE_BUCKET_NAME,
-            "Key": key,
-            "ContentType": content_type,
-            "CacheControl": CACHE_CONTROL,
-        },
-        ExpiresIn=PRESIGN_SECONDS,
+        "put_object", Params=params, ExpiresIn=PRESIGN_SECONDS
     )
 
 

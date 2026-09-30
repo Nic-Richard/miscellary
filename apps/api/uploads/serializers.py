@@ -52,6 +52,13 @@ class CreditSerializer(serializers.Serializer):
 class CreateUploadSerializer(serializers.Serializer):
     kind = serializers.ChoiceField(choices=Image.Kind.choices)
     content_type = serializers.ChoiceField(choices=list(storage.ALLOWED_TYPES))
+    # Optional so app builds that predate it keep uploading.
+    size = serializers.IntegerField(
+        min_value=1,
+        max_value=storage.MAX_SIZE,
+        required=False,
+        error_messages={"max_value": "That image is too large (10 MB max)."},
+    )
 
 
 class CompleteUploadSerializer(serializers.Serializer):
