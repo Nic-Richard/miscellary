@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { HomeAuthBanner, StartSetLink } from './HomeAuthActions';
 import { cardCode, personHandle } from '@miscellary/shared';
@@ -8,6 +9,7 @@ import SetTile from '@/components/SetTile';
 import CardPreview from '@/components/CardPreview';
 import { SceneLight } from '@/lib/lighting';
 import { slotLight } from '@/lib/lightingStyle';
+import { SITE_URL } from '@/lib/seo';
 import { getPublicSet, listPublicSets } from '@/lib/sets';
 import tileStyles from '@/components/SetTile.module.css';
 import ui from '@/components/ui.module.css';
@@ -15,6 +17,39 @@ import wide from '@/components/pageWide.module.css';
 import styles from './page.module.css';
 
 export const revalidate = 300;
+
+const DESCRIPTION =
+  'Turn collections into trading cards. Make your own set, open free packs every day, and trade for the ones you’re missing.';
+
+// A page's openGraph replaces the layout's rather than merging, so the shared fields are repeated here.
+export const metadata: Metadata = {
+  title: { absolute: 'Miscellary | Turn collections into trading cards' },
+  alternates: { canonical: '/' },
+  openGraph: {
+    siteName: 'Miscellary',
+    type: 'website',
+    locale: 'en',
+    url: '/',
+    title: 'Miscellary | Turn collections into trading cards',
+    description: DESCRIPTION,
+  },
+};
+
+const STRUCTURED_DATA = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    { '@type': 'WebSite', name: 'Miscellary', url: `${SITE_URL}/` },
+    {
+      '@type': 'WebApplication',
+      name: 'Miscellary',
+      url: `${SITE_URL}/`,
+      description: DESCRIPTION,
+      applicationCategory: 'GameApplication',
+      operatingSystem: 'Web, Android',
+      offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+    },
+  ],
+};
 
 interface Pick {
   card: Card;
@@ -68,6 +103,10 @@ export default async function HomePage() {
 
   return (
     <div className={`${wide.full} ${styles.page}`}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(STRUCTURED_DATA) }}
+      />
       <section className={styles.hero}>
         <div className={styles.copy}>
           <h1 className={styles.title}>Turn collections into trading cards.</h1>
