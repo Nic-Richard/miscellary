@@ -75,7 +75,7 @@ def presigned_put_url(
     # SigV4 covers the host, so the signature only matches if the client sends
     # the request to the same one it was signed for. A signed Content-Length
     # holds the upload to the size the client declared.
-    params = {
+    params: dict[str, str | int] = {
         "Bucket": settings.AWS_STORAGE_BUCKET_NAME,
         "Key": key,
         "ContentType": content_type,

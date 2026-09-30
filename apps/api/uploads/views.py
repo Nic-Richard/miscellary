@@ -50,7 +50,7 @@ class CreateUploadView(APIView):
         content_type = serializer.validated_data["content_type"]
 
         sweep_stale_uploads()
-        pending = Image.objects.filter(owner=request.user, ready=False).count()
+        pending = Image.objects.filter(owner=request.user, ready=False).count()  # type: ignore[misc]
         if pending >= PENDING_UPLOAD_LIMIT:
             raise ValidationError("Too many unfinished uploads. Try again in an hour.")
 
