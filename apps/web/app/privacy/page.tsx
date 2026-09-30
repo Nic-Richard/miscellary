@@ -48,9 +48,9 @@ export default function PrivacyPage() {
         </p>
         <p>
           We use TraceTray to understand how people use the website. It records things like cursor
-          movement, clicks, scrolling, and which pages are visited, and stores a random visitor ID in
-          your browser so visits can be grouped together. It doesn’t record what you type,
-          form entries, passwords, or payment details, and it isn’t used for advertising. See{' '}
+          movement, clicks, scrolling, and which pages are visited, and stores a random visitor ID
+          in your browser so visits can be grouped together. It doesn’t record what you type, form
+          entries, passwords, or payment details, and it isn’t used for advertising. See{' '}
           <a href="https://tracetray.com/privacy.html">TraceTray’s privacy policy</a> for details.
         </p>
       </section>
@@ -69,10 +69,10 @@ export default function PrivacyPage() {
         <p>
           Information is retained while an account is active and as reasonably needed for security,
           backups, moderation, legal obligations, and service operation. Published-set deletion may
-          leave archived cards in collectors’ inventories as described by the product. You can delete
-          your account at any time from your account settings on the website or in the app. You can
-          also ask about access, correction, or deletion of your personal information by contacting
-          us.
+          leave archived cards in collectors’ inventories as described by the product. You can
+          delete your account at any time from your account settings on the website or in the app.
+          You can also ask about access, correction, or deletion of your personal information by
+          contacting us.
         </p>
       </section>
 
