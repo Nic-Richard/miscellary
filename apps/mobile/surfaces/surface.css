@@ -58,6 +58,18 @@ body[data-surface='card'] #content {
 .binder-viewport[data-half='true'][data-right='true'] > div {
   margin-left: -100%;
 }
+.binder-viewport[data-fill='true'] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100dvh;
+  overflow: visible;
+}
+.binder-viewport[data-fill='true'] > div {
+  width: min(100% - 136px, (100dvh - 84px) * var(--binder-ratio, 1.62));
+  margin: 0;
+  filter: drop-shadow(0 18px 30px rgba(0, 0, 0, 0.55));
+}
 body[data-surface='pack'] #content > div {
   width: 100%;
   max-width: none;

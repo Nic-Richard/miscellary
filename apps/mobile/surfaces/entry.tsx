@@ -116,7 +116,12 @@ function Surface({ mode, data }: Props) {
     );
     const slots = binderPages[spread]?.slots ?? [];
     content = (
-      <div className="binder-viewport" data-half={half} data-right={page % 2 === 1}>
+      <div
+        className="binder-viewport"
+        data-half={half}
+        data-right={page % 2 === 1}
+        data-fill={Boolean(data.fill)}
+      >
         <Binder
           slots={slots}
           page={spread}
@@ -127,6 +132,18 @@ function Surface({ mode, data }: Props) {
           canPrevious={page > 0}
           canNext={page + (half ? 1 : 2) < Math.max(2, Math.ceil(cards.length / 8) * 2)}
           onNavigate={(direction) => send('page', page + direction * (half ? 1 : 2))}
+        />
+      </div>
+    );
+  } else if (mode === 'profile-binder' && (data.fill || data.preview)) {
+    content = (
+      <div className="binder-viewport" data-fill={Boolean(data.fill)}>
+        <ProfileBinder
+          slots={data.slots as (ShowcaseSlot | null)[]}
+          colour={data.colour as string}
+          mine={Boolean(data.mine)}
+          onInspect={(owned) => send('inspect', owned.id)}
+          bare={{ page: Number(data.page ?? 0), onPage: (page) => send('page', page) }}
         />
       </div>
     );

@@ -5,6 +5,7 @@ import { useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useAuth } from '@/lib/auth';
 import { setFollow } from '@/lib/endpoints';
+import BinderViewer from './BinderViewer';
 import InspectorModal from './InspectorModal';
 import MoreButton from '@/components/MoreButton';
 import type { MoreItem } from '@/components/MoreButton';
@@ -30,6 +31,7 @@ export default function ProfileView({
   const { user } = useAuth();
   const [profile, setProfile] = useState(initial);
   const [selected, setSelected] = useState<OwnedCard | null>(null);
+  const [binderOpen, setBinderOpen] = useState(false);
   const [people, setPeople] = useState<'followers' | 'following' | null>(null);
   const [followBusy, setFollowBusy] = useState(false);
   const [reporting, setReporting] = useState(false);
@@ -41,6 +43,11 @@ export default function ProfileView({
       ),
     [profile.showcase],
   );
+  const binderData = {
+    slots: showcase,
+    colour: profile.binder_colour,
+    mine: profile.is_me,
+  };
   async function toggleFollow() {
     if (followBusy) return;
     const next = !profile.is_following;
@@ -162,21 +169,42 @@ export default function ProfileView({
       />
 
       <Text style={styles.h2}>Binder</Text>
-      <SharedSurface
-        mode="profile-binder"
-        data={{
-          slots: showcase,
-          title: profile.showcase_title,
-          colour: profile.binder_colour,
-          mine: profile.is_me,
-        }}
-        autoHeight
-        onEvent={(type, id) => {
-          if (type === 'inspect') {
-            setSelected(showcase.find((slot) => slot?.owned_card.id === id)?.owned_card ?? null);
+      <View style={styles.binder}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Open binder"
+          onPress={() => setBinderOpen(true)}
+          style={({ pressed }) => [styles.binderPreview, { opacity: pressed ? 0.85 : 1 }]}
+        >
+          <SharedSurface
+            mode="profile-binder"
+            data={{ ...binderData, preview: true, page: 0 }}
+            autoHeight
+            passive
+          />
+        </Pressable>
+        <Muted>
+          {profile.showcase_title?.trim() || 'The pride of the collection'} ·{' '}
+          {profile.showcase.length} of {SHOWCASE_SLOTS} sleeves filled
+        </Muted>
+        <Button title="Open binder" onPress={() => setBinderOpen(true)} />
+      </View>
+      {binderOpen ? (
+        <BinderViewer
+          title={profile.showcase_title?.trim() || 'The pride of the collection'}
+          subtitle={`@${profile.username}`}
+          spreads={SHOWCASE_SLOTS / 8}
+          surface={(spread) => ({
+            mode: 'profile-binder',
+            data: { ...binderData, fill: true, page: spread },
+          })}
+          spreadOf={(page) => page}
+          onClose={() => setBinderOpen(false)}
+          onInspect={(id) =>
+            setSelected(showcase.find((slot) => slot?.owned_card.id === id)?.owned_card ?? null)
           }
-        }}
-      />
+        />
+      ) : null}
 
       <Text style={styles.h2}>Sets by @{profile.username}</Text>
       {profile.sets.length === 0 ? <Muted>No published sets.</Muted> : null}
@@ -225,6 +253,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   actions: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
+  binder: {
+    gap: 10,
+    padding: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.bdr,
+    backgroundColor: colors.sur,
+  },
+  binderPreview: { borderRadius: 10, overflow: 'hidden' },
   counts: {
     flexDirection: 'row',
     alignItems: 'center',

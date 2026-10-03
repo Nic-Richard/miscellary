@@ -1,9 +1,11 @@
 import type { Card, CardSetDetail } from '@miscellary/shared';
 import { useState } from 'react';
-import { View, useWindowDimensions } from 'react-native';
+import { Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { colors } from '@/lib/theme';
 import InspectorModal from './InspectorModal';
 import SharedSurface from './SharedSurface';
 import BinderDetails from './BinderDetails';
+import BinderViewer from './BinderViewer';
 import CardInspector from './CardInspector';
 import InspectorActions from './InspectorActions';
 import { Button, Muted } from './ui';
@@ -20,47 +22,31 @@ export default function BinderPages({
   set: CardSetDetail;
 }) {
   const { width, height } = useWindowDimensions();
-  const landscape = width > height;
-  const [page, setPage] = useState(0);
+  const rail = width > height && width >= 800;
+  const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<Card | null>(null);
   const pages = Math.max(2, Math.ceil(cards.length / 8) * 2);
-  const first = landscape ? Math.floor(page / 2) * 2 : page;
-  const rail = landscape && width >= 800;
   return (
     <View style={{ gap: 12 }}>
       <View style={{ flexDirection: rail ? 'row' : 'column', gap: 12 }}>
-        <View style={{ flex: 1 }}>
-          <SharedSurface
-            mode="binder"
-            data={{ set: { ...set, cards }, page: first, half: !landscape }}
-            autoHeight
-            onEvent={(type, id) => {
-              if (type === 'inspect') setSelected(cards.find((card) => card.id === id) ?? null);
-              if (type === 'page' && typeof id === 'number') {
-                setPage(Math.max(0, Math.min(pages - (landscape ? 2 : 1), id)));
-              }
-            }}
-          />
-          <View
-            style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
+        <View style={[styles.cover, rail && { flex: 1 }]}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Open binder"
+            onPress={() => setOpen(true)}
+            style={({ pressed }) => [styles.preview, { opacity: pressed ? 0.85 : 1 }]}
           >
-            <Button
-              title="Previous"
-              kind="secondary"
-              disabled={first === 0}
-              onPress={() => setPage(Math.max(0, first - (landscape ? 2 : 1)))}
+            <SharedSurface
+              mode="binder"
+              data={{ set: { ...set, cards }, page: 0, half: false }}
+              autoHeight
+              passive
             />
-            <Muted>
-              {first + 1}
-              {landscape ? `–${first + 2}` : ''} / {pages}
-            </Muted>
-            <Button
-              title="Next"
-              kind="secondary"
-              disabled={first + (landscape ? 2 : 1) >= pages}
-              onPress={() => setPage(first + (landscape ? 2 : 1))}
-            />
-          </View>
+          </Pressable>
+          <Muted>
+            {cards.length} cards across {pages} pages
+          </Muted>
+          <Button title="Open binder" onPress={() => setOpen(true)} />
         </View>
         <View style={{ width: rail ? 240 : '100%' }}>
           <BinderDetails
@@ -69,6 +55,20 @@ export default function BinderPages({
           />
         </View>
       </View>
+      {open ? (
+        <BinderViewer
+          title={set.title}
+          subtitle={`${cards.length} cards`}
+          spreads={pages / 2}
+          surface={(spread) => ({
+            mode: 'binder',
+            data: { set: { ...set, cards }, page: spread * 2, half: false, fill: true },
+          })}
+          spreadOf={(page) => Math.floor(page / 2)}
+          onClose={() => setOpen(false)}
+          onInspect={(id) => setSelected(cards.find((card) => card.id === id) ?? null)}
+        />
+      ) : null}
       {selected ? (
         <InspectorModal open onClose={() => setSelected(null)}>
           <View
@@ -101,3 +101,15 @@ export default function BinderPages({
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  cover: {
+    gap: 10,
+    padding: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.bdr,
+    backgroundColor: colors.sur,
+  },
+  preview: { borderRadius: 10, overflow: 'hidden' },
+});

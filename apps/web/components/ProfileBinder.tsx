@@ -22,6 +22,8 @@ interface ProfileBinderProps {
   footer?: ReactNode;
 
   open?: boolean;
+  /** Only the binder, with its page controlled by the caller, for the app's full-screen viewer. */
+  bare?: { page: number; onPage: (page: number) => void };
 }
 
 const DEFAULT_TITLE = 'The pride of the collection';
@@ -116,9 +118,11 @@ export default function ProfileBinder({
   onInspect,
   footer,
   open: startOpen = true,
+  bare,
 }: ProfileBinderProps) {
   const [open, setOpen] = useState(startOpen);
-  const [page, setPage] = useState(0);
+  const [ownPage, setPage] = useState(0);
+  const page = bare ? bare.page : ownPage;
   const rootRef = useRef<HTMLDivElement>(null);
   const alignOnOpen = useRef(false);
   const filled = slots.filter(Boolean).length;
@@ -158,7 +162,9 @@ export default function ProfileBinder({
   );
 
   function navigate(direction: -1 | 1) {
-    setPage((current) => Math.max(0, Math.min(pages.length - 1, current + direction)));
+    const next = Math.max(0, Math.min(pages.length - 1, page + direction));
+    if (bare) bare.onPage(next);
+    else setPage(next);
   }
 
   useEffect(() => {
@@ -169,6 +175,22 @@ export default function ProfileBinder({
     });
     return () => cancelAnimationFrame(frame);
   }, [open]);
+
+  if (bare) {
+    return (
+      <Binder
+        colour={colour}
+        emptyLabel={mine ? 'Empty' : 'Empty sleeve'}
+        page={page}
+        startIndex={page * 8}
+        canPrevious={page > 0}
+        canNext={page < pages.length - 1}
+        onNavigate={navigate}
+        pages={pages}
+        slots={pages[page]?.slots ?? []}
+      />
+    );
+  }
 
   if (!open) {
     return (
