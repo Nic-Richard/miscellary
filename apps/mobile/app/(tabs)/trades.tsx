@@ -149,7 +149,7 @@ function Trades() {
 
 export default function TradesScreen() {
   return (
-    <LoginGate>
+    <LoginGate note="Swap your spare cards with other collectors for the ones you are missing.">
       <Trades />
     </LoginGate>
   );

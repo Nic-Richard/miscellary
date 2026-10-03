@@ -1,7 +1,7 @@
 import { Link } from 'expo-router';
 import { useState } from 'react';
 import { Text, View } from 'react-native';
-import { Button, ErrorText, Input, Muted, Screen, Title } from '@/components/ui';
+import { Button, ErrorText, Input, Muted, Screen } from '@/components/ui';
 import { requestPasswordReset } from '@/lib/endpoints';
 import { colors } from '@/lib/theme';
 
@@ -26,7 +26,6 @@ export default function ForgotPasswordScreen() {
 
   return (
     <Screen style={{ gap: 12, paddingTop: 32 }}>
-      <Title>Reset password</Title>
       <ErrorText>{error}</ErrorText>
       {sent ? (
         <Muted>If that address has an account, a reset link is on its way.</Muted>

@@ -251,7 +251,7 @@ function Collection() {
 
 export default function CollectionScreen() {
   return (
-    <LoginGate>
+    <LoginGate note="Every card you pull from a pack or trade for is kept here.">
       <Collection />
     </LoginGate>
   );

@@ -86,8 +86,13 @@ body[data-surface$='editor'] #content {
     align-items: stretch;
     gap: 6px;
     height: 100dvh;
-    padding: max(18px, env(safe-area-inset-top)) 10px max(10px, env(safe-area-inset-bottom));
+    padding: calc(14px + var(--safe-top, env(safe-area-inset-top))) 10px
+      calc(14px + var(--safe-bottom, env(safe-area-inset-bottom)));
     overflow: hidden;
+  }
+  body[data-surface='reveal'] [data-pack-reveal='overlay']::before {
+    inset: calc(6px + var(--safe-top, env(safe-area-inset-top))) 6px
+      calc(6px + var(--safe-bottom, env(safe-area-inset-bottom)));
   }
   body[data-surface='reveal'] [data-pack-reveal='header'] {
     flex: none;
@@ -129,8 +134,11 @@ body[data-surface$='editor'] #content {
     width: min(16vw, 64px);
   }
   body[data-surface='reveal'] [data-pack-reveal='stage'] [data-pack-reveal='deck'] span {
-    bottom: -20px;
-    font-size: 8px;
+    right: calc(100% + 8px);
+    bottom: 20px;
+    left: auto;
+    transform: none;
+    font-size: 11px;
   }
   body[data-surface='reveal'] [data-pack-reveal='strip'] {
     flex: none;
@@ -139,11 +147,10 @@ body[data-surface$='editor'] #content {
     align-items: flex-end;
     gap: 7px;
     width: auto;
-    margin: 0 -10px;
-    padding: 7px calc(50vw - 31px) 10px;
+    margin: 0;
+    padding: 9px 10px 8px;
     overflow-x: auto;
     overflow-y: hidden;
-    border-bottom-width: 6px;
     scroll-snap-type: x mandatory;
     scrollbar-width: none;
   }
@@ -160,7 +167,7 @@ body[data-surface$='editor'] #content {
   }
   body[data-surface='reveal'] [data-pack-reveal='actions'] {
     flex: none;
-    margin-top: 0;
+    margin-top: 6px;
   }
 
   body[data-surface='card-editor'] #content {
@@ -181,7 +188,7 @@ body[data-surface$='editor'] #content {
   body[data-surface='card-editor'] form > :first-child {
     width: 100%;
     box-sizing: border-box;
-    padding: 2px 14px calc(24px + env(safe-area-inset-bottom));
+    padding: 2px 14px calc(24px + var(--safe-bottom, env(safe-area-inset-bottom)));
   }
   body[data-surface='card-editor'] form > :last-child {
     --card-max: min(62vw, 32dvh, 250px);
@@ -220,7 +227,7 @@ body[data-surface$='editor'] #content {
     align-self: stretch;
     width: 100%;
     box-sizing: border-box;
-    padding: 0 14px calc(24px + env(safe-area-inset-bottom));
+    padding: 0 14px calc(24px + var(--safe-bottom, env(safe-area-inset-bottom)));
   }
   body[data-surface='pack-editor'] #content > div > :last-child {
     position: sticky;
@@ -248,8 +255,10 @@ body[data-surface$='editor'] #content {
     box-sizing: border-box;
     gap: 3px;
     height: 100dvh;
-    padding: max(5px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right))
-      max(5px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
+    padding: max(5px, var(--safe-top, env(safe-area-inset-top)))
+      max(18px, var(--safe-right, env(safe-area-inset-right)))
+      max(5px, var(--safe-bottom, env(safe-area-inset-bottom)))
+      max(18px, var(--safe-left, env(safe-area-inset-left)));
     overflow: hidden;
   }
   body[data-surface='reveal'] [data-pack-reveal='header'] {
@@ -284,7 +293,6 @@ body[data-surface$='editor'] #content {
     width: min(92vw, 920px);
     padding: 2px 10px 4px;
     overflow: hidden;
-    border-bottom-width: 4px;
   }
   body[data-surface='reveal'] [data-pack-reveal='strip'] > div {
     flex: 0 1 42px;

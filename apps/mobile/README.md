@@ -82,8 +82,22 @@ pnpm dlx eas-cli build --platform android --profile production
 ```
 
 The first EAS build links the Expo project and creates or selects Android signing credentials. Keep
-the keystore in EAS credential storage and in a separate encrypted backup. Increment `versionCode`
-for every Play upload and `version` for user-visible releases.
+the keystore in EAS credential storage and in a separate encrypted backup. EAS keeps `versionCode`
+and raises it for every production build; change `version` in `app.json` for user-visible releases.
+
+`android/` is generated and not committed. Recreate it with `npx expo prebuild --clean` after
+changing `app.json` or native dependencies instead of editing it. On Windows, local Gradle release
+builds cannot bundle in this monorepo (React Native passes Windows a relative entry path, which
+Metro resolves from the workspace root), so build locally only for development and take release
+APKs from the preview profile.
+
+Windows native builds also exceed 260-character paths. Enable Windows long paths, install CMake
+3.31 (`sdkmanager "cmake;3.31.6"`, whose ninja supports them) and point the build at it in
+`android/local.properties`, which prebuild removes with the rest of `android/`:
+
+```properties
+cmake.dir=C\:/Users/<you>/AppData/Local/Android/Sdk/cmake/3.31.6
+```
 
 Keep Docker serving web/API while Metro runs. Avoid simultaneous host web builds/dev servers
 sharing `apps/web/.next`.

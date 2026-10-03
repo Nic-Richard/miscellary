@@ -1,3 +1,8 @@
 packages:
   - apps/*
   - packages/*
+
+# expo's react-native.config.js requires this package, and autolinking loads that file through the app's
+# symlinked node_modules, where the isolated layout cannot see it.
+publicHoistPattern:
+  - expo-modules-autolinking

@@ -76,7 +76,7 @@ function Studio() {
 
 export default function StudioScreen() {
   return (
-    <LoginGate>
+    <LoginGate note="Photograph the things you collect and turn them into a set of cards.">
       <Studio />
     </LoginGate>
   );

@@ -223,9 +223,10 @@
   align-items: flex-end;
   gap: 8px;
   width: min(1180px, 100%);
-  padding: 22px 20px 16px;
-  border-bottom: 10px solid #5b4b36;
-  box-shadow: 0 14px 0 -4px #3d3224;
+  padding: 16px 20px 14px;
+  border-radius: 14px;
+  background: rgba(246, 240, 228, 0.05);
+  box-shadow: inset 0 1px 0 rgba(246, 240, 228, 0.14);
 }
 .ledgeCard {
   width: 100px;
@@ -252,7 +253,7 @@
   display: flex;
   justify-content: center;
   gap: 12px;
-  margin-top: 4px;
+  margin-top: 14px;
 }
 .quiet {
   border-color: rgba(246, 240, 228, 0.35);

@@ -253,7 +253,7 @@ function Me() {
 
 export default function ProfileScreen() {
   return (
-    <LoginGate>
+    <LoginGate note="Your binder, your sets and the collectors you follow live here.">
       <Me />
     </LoginGate>
   );

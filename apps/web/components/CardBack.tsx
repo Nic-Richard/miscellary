@@ -97,6 +97,18 @@ export default function CardBack({
               </g>
             )}
           </pattern>
+          <mask id={`${id}-field`}>
+            <rect x="9.5" y="9.5" width="81" height="121" rx="2" fill="#fff" />
+            <circle cx="50" cy="63" r="29.5" fill="#000" />
+            <rect
+              x="12"
+              y={printed ? 104 : 116}
+              width="76"
+              height={printed ? 25 : 13}
+              rx="2"
+              fill="#000"
+            />
+          </mask>
           <radialGradient id={`${id}-pool`}>
             <stop offset="0%" stopColor="rgba(226, 196, 116, 0.22)" />
             <stop offset="100%" stopColor="rgba(226, 196, 116, 0)" />
@@ -109,6 +121,7 @@ export default function CardBack({
           width="100"
           height="140"
           fill={`url(#${id}-tile)`}
+          mask={`url(#${id}-field)`}
           opacity={hasMark ? 0.5 : 0.55}
         />
         <rect x="0" y="0" width="100" height="140" fill={`url(#${id}-pool)`} />

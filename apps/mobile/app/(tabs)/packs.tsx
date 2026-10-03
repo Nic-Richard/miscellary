@@ -399,7 +399,7 @@ function Packs() {
 
 export default function PacksScreen() {
   return (
-    <LoginGate>
+    <LoginGate note="Follow sets you like and each one gives you a free pack every day.">
       <Packs />
     </LoginGate>
   );

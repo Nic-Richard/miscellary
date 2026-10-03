@@ -4,7 +4,7 @@ import { Text, View } from 'react-native';
 import { useAuth } from '@/lib/auth';
 import { internalRoute, RETURN_PARAM } from '@/lib/returnTo';
 import { colors } from '@/lib/theme';
-import { Button, ErrorText, Input, Screen, Title, PasswordInput } from '@/components/ui';
+import { Button, ErrorText, Input, Screen, PasswordInput } from '@/components/ui';
 
 export default function LoginScreen() {
   const { login } = useAuth();
@@ -31,7 +31,6 @@ export default function LoginScreen() {
 
   return (
     <Screen style={{ gap: 12, paddingTop: 32 }}>
-      <Title>Log in</Title>
       <ErrorText>{error}</ErrorText>
       <Input
         placeholder="Email"

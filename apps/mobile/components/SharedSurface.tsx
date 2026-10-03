@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import WebView from 'react-native-webview';
 import { router } from 'expo-router';
 import * as FileSystem from 'expo-file-system';
@@ -58,12 +59,22 @@ export default function SharedSurface({
   const surface = mode === 'card' ? bundle.card : mode === 'pack' ? bundle.pack : bundle.full;
   const props = useRef({ mode, data });
   props.current = { mode, data };
+  const { top, right, bottom, left } = useSafeAreaInsets();
+  const insets = useRef({ top, right, bottom, left });
+  insets.current = { top, right, bottom, left };
+  // Android WebViews report env(safe-area-inset-*) as 0, so the surface reads the
+  // system bars from these variables instead.
   function render() {
-    view.current?.injectJavaScript(`window.miscellaryRender(${literal(props.current)});true;`);
+    const sides = Object.entries(insets.current)
+      .map(([side, size]) => `s.setProperty('--safe-${side}','${size}px');`)
+      .join('');
+    view.current?.injectJavaScript(
+      `(function(s){${sides}})(document.documentElement.style);window.miscellaryRender(${literal(props.current)});true;`,
+    );
   }
   useEffect(() => {
     if (ready.current) render();
-  }, [mode, data]);
+  }, [mode, data, top, right, bottom, left]);
 
   async function upload(input: {
     data: string;
