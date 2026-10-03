@@ -20,7 +20,11 @@
       "package": "com.miscellary.app",
       "versionCode": 1,
       "permissions": ["android.permission.CAMERA", "android.permission.READ_MEDIA_IMAGES"],
-      "blockedPermissions": ["android.permission.RECORD_AUDIO"]
+      "blockedPermissions": ["android.permission.RECORD_AUDIO"],
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#278b82"
+      }
     },
     "plugins": [
       "expo-router",
@@ -29,7 +33,24 @@
         "expo-image-picker",
         {
           "cameraPermission": "Miscellary uses the camera to photograph the things you collect.",
-          "microphonePermission": false
+          "microphonePermission": false,
+          "photosPermission": "Miscellary uses your photo library to add photos of the things you collect."
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 160,
+          "resizeMode": "contain",
+          "backgroundColor": "#f4eee1"
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/notification-icon.png",
+          "color": "#278b82"
         }
       ]
     ],
@@ -38,6 +59,11 @@
       "eas": {
         "projectId": "469f68f7-224a-4dec-948d-d0432577c17a"
       }
+    },
+    "icon": "./assets/images/icon.png",
+    "ios": {
+      "bundleIdentifier": "com.miscellary.app",
+      "supportsTablet": true
     }
   }
 }
