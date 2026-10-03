@@ -9,7 +9,6 @@ import PageHeader from '@/components/PageHeader';
 import PersonLink from '@/components/PersonLink';
 import CardBack from '@/components/CardBack';
 import CardPreview from '@/components/CardPreview';
-import DemoBadge from '@/components/DemoBadge';
 import PackReveal from '@/components/PackReveal';
 import MoreMenu from '@/components/MoreMenu';
 import PackStage from '@/components/PackStage';
@@ -106,10 +105,7 @@ function Post({
         <PersonLink person={set.creator} className={styles.bylineLink}>
           <span className={styles.monogram}>{creator[0]?.toUpperCase()}</span>
           <span className={styles.bylineName}>
-            <strong>
-              {creator}
-              {set.creator.is_demo ? <DemoBadge compact /> : null}
-            </strong>
+            <strong>{creator}</strong>
             {set.creator.deleted ? null : <small>@{set.creator.username}</small>}
           </span>
         </PersonLink>

@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import type { Creator } from '@miscellary/shared';
 import { listFollows } from '@/lib/social';
-import DemoBadge from './DemoBadge';
 import Sheet, { Empty } from './Sheet';
 import styles from './PeopleList.module.css';
 
@@ -83,7 +82,6 @@ export default function PeopleList({
                   <strong>{p.display_name || p.username}</strong>
                   <small>@{p.username}</small>
                 </span>
-                {p.is_demo ? <DemoBadge compact /> : null}
               </Link>
             </li>
           ))}

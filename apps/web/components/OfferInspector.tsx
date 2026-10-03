@@ -4,7 +4,6 @@ import { useEffect, useRef } from 'react';
 import { personHandle } from '@miscellary/shared';
 import type { OwnedCard, TradeOffer } from '@miscellary/shared';
 import SwapArrow from './SwapArrow';
-import DemoBadge from './DemoBadge';
 import { OfferActions, OfferSide, STATUS_WORD, readOffer } from './OfferCard';
 import PersonLink from '@/components/PersonLink';
 import { useDialog } from '@/lib/useDialog';
@@ -60,7 +59,6 @@ export default function OfferInspector({
             <PersonLink person={other} className={styles.handle}>
               {personHandle(other)}
             </PersonLink>
-            {other.is_demo ? <DemoBadge compact /> : null}
             {offer.counter_of ? <span className={styles.badge}>counter</span> : null}
           </span>
           <span className={styles.status}>{STATUS_WORD[offer.status] ?? offer.status}</span>

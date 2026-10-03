@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { listFollows } from '@/lib/endpoints';
 import { colors, fonts } from '@/lib/theme';
-import DemoBadge from './DemoBadge';
 import { ErrorText, Muted } from './ui';
 
 export default function PeopleList({
@@ -78,7 +77,6 @@ export default function PeopleList({
           >
             <Text style={styles.name}>{p.display_name || p.username}</Text>
             <Text style={styles.handle}> @{p.username}</Text>
-            {p.is_demo ? <DemoBadge /> : null}
           </Link>
         ))
       )}

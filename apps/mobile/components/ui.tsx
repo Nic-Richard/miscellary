@@ -74,10 +74,16 @@ interface ButtonProps extends PressableProps {
 }
 
 export function Button({ title, kind = 'primary', disabled, style, ...rest }: ButtonProps) {
-  const bg = kind === 'primary' ? colors.accent : 'transparent';
+  const solid = kind === 'primary';
+  const bg = solid ? (disabled ? colors.bdr : colors.accent) : 'transparent';
   const border = kind === 'danger' ? colors.danger : kind === 'secondary' ? colors.bdr2 : bg;
-  const fg =
-    kind === 'primary' ? colors.accentText : kind === 'danger' ? colors.danger : colors.muted;
+  const fg = solid
+    ? disabled
+      ? colors.muted
+      : colors.accentText
+    : kind === 'danger'
+      ? colors.danger
+      : colors.muted;
   return (
     <Pressable
       accessibilityRole="button"
@@ -88,7 +94,7 @@ export function Button({ title, kind = 'primary', disabled, style, ...rest }: Bu
         {
           backgroundColor: bg,
           borderColor: border,
-          opacity: disabled ? 0.5 : state.pressed ? 0.75 : 1,
+          opacity: disabled ? (solid ? 1 : 0.5) : state.pressed ? 0.75 : 1,
         },
         typeof style === 'function' ? style(state) : style,
       ]}

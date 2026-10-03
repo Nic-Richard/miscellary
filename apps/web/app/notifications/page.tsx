@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Notification, NotificationKind } from '@miscellary/shared';
 import PageHeader from '@/components/PageHeader';
-import DemoBadge from '@/components/DemoBadge';
 import { NOTICE_EVENT } from '@/components/Nav';
 import Sheet, { Empty } from '@/components/Sheet';
 import { useAuth } from '@/lib/auth';
@@ -76,7 +75,7 @@ function Row({ notification }: { notification: Notification }) {
       <span className={styles.line}>
         <span className={styles.said}>
           <strong>{actor.display_name || `@${actor.username}`}</strong>
-          {actor.is_demo ? <DemoBadge compact /> : null} {text}
+          {text}
         </span>
         {notification.comment_body ? (
           <q className={styles.quote}>{notification.comment_body}</q>

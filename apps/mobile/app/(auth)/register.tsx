@@ -1,11 +1,14 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Text } from 'react-native';
+import { Linking, Text } from 'react-native';
 import { ApiRequestError } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { internalRoute, RETURN_PARAM } from '@/lib/returnTo';
 import { colors } from '@/lib/theme';
-import { Button, ErrorText, Input, Screen, Title, PasswordInput } from '@/components/ui';
+import { Button, ErrorText, Input, Muted, Screen, Title, PasswordInput } from '@/components/ui';
+
+const SITE = 'https://miscellary.com';
+const link = { color: colors.accent, fontSize: 15 };
 
 export default function RegisterScreen() {
   const { register } = useAuth();
@@ -63,11 +66,32 @@ export default function RegisterScreen() {
       {fieldError('username')}
       <PasswordInput placeholder="Password" value={password} onChangeText={setPassword} />
       {fieldError('password')}
+      <Muted style={{ fontSize: 14 }}>At least 8 characters.</Muted>
+      <Muted style={{ fontSize: 14 }}>
+        By signing up you agree to the{' '}
+        <Text style={link} onPress={() => void Linking.openURL(`${SITE}/terms`)}>
+          terms
+        </Text>{' '}
+        and{' '}
+        <Text style={link} onPress={() => void Linking.openURL(`${SITE}/privacy`)}>
+          privacy policy
+        </Text>
+        .
+      </Muted>
       <Button
         title={busy ? 'Creating…' : 'Sign up'}
         disabled={busy}
         onPress={() => void submit()}
       />
+      <Text
+        accessibilityRole="link"
+        style={[link, { alignSelf: 'center', paddingVertical: 10 }]}
+        onPress={() =>
+          router.replace(next ? `/login?${RETURN_PARAM}=${encodeURIComponent(next)}` : '/login')
+        }
+      >
+        Already have an account? Log in
+      </Text>
     </Screen>
   );
 }

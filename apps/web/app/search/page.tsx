@@ -4,7 +4,6 @@ import SectionHeader from '@/components/SectionHeader';
 import PageHeader from '@/components/PageHeader';
 import SetTile from '@/components/SetTile';
 import CardPreview from '@/components/CardPreview';
-import DemoBadge from '@/components/DemoBadge';
 import Sheet, { Empty } from '@/components/Sheet';
 import TagList from '@/components/TagList';
 import tileStyles from '@/components/SetTile.module.css';
@@ -72,7 +71,6 @@ export default async function SearchPage({
               <li key={u.username}>
                 <Link href={`/users/${u.username}`}>@{u.username}</Link>{' '}
                 <span className={styles.meta}>{u.display_name}</span>
-                {u.is_demo ? <DemoBadge compact /> : null}
               </li>
             ))}
           </ul>

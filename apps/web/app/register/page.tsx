@@ -72,8 +72,13 @@ function RegisterForm() {
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         errors={fields.password}
+        hint="At least 8 characters."
         required
       />
+      <p className={styles.alt}>
+        By signing up you agree to the <Link href="/terms">terms</Link> and{' '}
+        <Link href="/privacy">privacy policy</Link>.
+      </p>
       <button className={styles.submit} type="submit" disabled={busy}>
         {busy ? 'Creating…' : 'Sign up'}
       </button>

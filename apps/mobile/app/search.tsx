@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { cardCode, personHandle } from '@miscellary/shared';
 import CardPreview from '@/components/CardPreview';
-import DemoBadge from '@/components/DemoBadge';
 import { search } from '@/lib/endpoints';
 import { readPublicCache, writePublicCache } from '@/lib/publicCache';
 import { colors } from '@/lib/theme';
@@ -56,7 +55,6 @@ export default function SearchScreen() {
         >
           <Text style={{ color: colors.accent }}>@{u.username}</Text>
           <Text style={{ color: colors.faint }}> {u.display_name}</Text>
-          {u.is_demo ? <DemoBadge /> : null}
         </Link>
       ))}
       {results.sets.length ? <Text style={styles.h2}>Sets</Text> : null}
@@ -71,7 +69,6 @@ export default function SearchScreen() {
             {' '}
             {s.card_count} cards · {personHandle(s.creator)}
           </Text>
-          {s.creator.is_demo ? <DemoBadge /> : null}
         </Link>
       ))}
       {results.cards.length ? <Text style={styles.h2}>Cards</Text> : null}

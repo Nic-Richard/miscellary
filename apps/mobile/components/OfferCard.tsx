@@ -5,7 +5,6 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { colors, fonts } from '@/lib/theme';
 import CardPreview from './CardPreview';
-import DemoBadge from './DemoBadge';
 import { Button, Muted } from './ui';
 
 function Side({
@@ -90,7 +89,6 @@ export default function OfferCard({ offer, me, busy, onAction, onInspect }: Offe
         <Text style={{ color: colors.muted, fontFamily: fonts.body, fontSize: 16, flexShrink: 1 }}>
           {incoming ? 'From' : 'To'}{' '}
           <Text style={{ color: colors.text, fontWeight: '700' }}>{personHandle(other)}</Text>
-          {other.is_demo ? <DemoBadge /> : null}
           {offer.counter_of ? <Text style={{ color: colors.gold }}> · counter</Text> : null}
         </Text>
         <Text

@@ -6,7 +6,6 @@ import type { OwnedCard, TradeOffer } from '@miscellary/shared';
 import PersonLink from './PersonLink';
 import CardPreview from './CardPreview';
 import SwapArrow from './SwapArrow';
-import DemoBadge from './DemoBadge';
 import ui from './ui.module.css';
 import styles from './OfferCard.module.css';
 
@@ -170,7 +169,6 @@ export default function OfferCard({
           <PersonLink person={other} className={styles.handle}>
             {personHandle(other)}
           </PersonLink>
-          {other.is_demo ? <DemoBadge compact /> : null}
           {offer.counter_of ? <span className={styles.badge}>counter</span> : null}
         </span>
         <span className={`${styles.status} ${styles[offer.status] ?? ''}`}>

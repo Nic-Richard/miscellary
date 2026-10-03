@@ -6,7 +6,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import MoreButton from '@/components/MoreButton';
 import CardPreview from '@/components/CardPreview';
-import DemoBadge from '@/components/DemoBadge';
 import FilterField from '@/components/FilterField';
 import LoginGate from '@/components/LoginGate';
 import PackPreview from '@/components/PackPreview';
@@ -101,7 +100,6 @@ function Post({
               <Text style={styles.bylineStrong} numberOfLines={1}>
                 {creator}
               </Text>
-              {set.creator.is_demo ? <DemoBadge /> : null}
             </View>
             {set.creator.deleted ? null : (
               <Text style={styles.bylineHandle}>@{set.creator.username}</Text>
@@ -244,6 +242,7 @@ function Packs() {
   const [now, setNow] = useState(() => Date.now());
   const [filter, setFilter] = useState('');
   const [starters, setStarters] = useState<CardSetSummary[]>([]);
+  const [picked, setPicked] = useState(0);
 
   const load = useCallback(async () => {
     try {
@@ -309,91 +308,102 @@ function Packs() {
           e.card_set.creator.username.toLowerCase().includes(needle),
       )
     : entries;
+  const onboarding = entries.length === 0 && starters.length > 0;
 
   return (
-    <ScrollView
-      style={{ backgroundColor: colors.bg }}
-      contentContainerStyle={styles.content}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={async () => {
-            setRefreshing(true);
-            await load();
-            setRefreshing(false);
-          }}
-          colors={[colors.accent]}
-          tintColor={colors.accent}
-        />
-      }
-    >
-      <Text accessibilityRole="header" style={styles.heading}>
-        {freeCount > 0
-          ? `${freeCount} free ${freeCount === 1 ? 'pack' : 'packs'} waiting`
-          : 'Sets you follow'}
-      </Text>
-      {entries.length ? (
-        <Text style={styles.standing}>
-          {collected} of {total} cards collected across {entries.length}{' '}
-          {entries.length === 1 ? 'set' : 'sets'}
-        </Text>
-      ) : null}
-      <ErrorText>{error}</ErrorText>
-
-      {entries.length > 1 ? (
-        <FilterField
-          style={styles.filter}
-          value={filter}
-          onChange={setFilter}
-          placeholder="Filter by set or creator"
-          label="Filter the sets you follow"
-        />
-      ) : null}
-
-      {entries.length > 0 && shown.length === 0 ? (
-        <View style={styles.empty}>
-          <Feather name="search" size={28} color={colors.cloth} />
-          <Text style={styles.emptyTitle}>Nothing matches</Text>
-          <Muted>None of the sets you follow match “{filter}”.</Muted>
-          <Button title="Show every set" kind="secondary" onPress={() => setFilter('')} />
-        </View>
-      ) : null}
-
-      {entries.length === 0 && starters.length > 0 ? (
-        <StartShelf sets={starters} onDone={() => void load()} />
-      ) : entries.length === 0 ? (
-        <View style={styles.empty}>
-          <Feather name="package" size={30} color={colors.cloth} />
-          <Text style={styles.emptyTitle}>No sets followed yet</Text>
-          <Muted>
-            Follow a set and it waits here: its free pack each day, the points you have saved
-            towards another, and how much of it you have collected.
-          </Muted>
-          <Button title="Browse sets" onPress={() => router.push('/(tabs)')} />
-        </View>
-      ) : (
-        shown.map((entry) => (
-          <Post
-            key={entry.card_set.id}
-            entry={entry}
-            now={now}
-            busy={busy}
-            onOpen={(usePoints) => void open(entry.card_set.slug, usePoints)}
-            onUnfollow={() => void unfollow(entry.card_set.slug)}
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+      <ScrollView
+        style={{ backgroundColor: colors.bg }}
+        contentContainerStyle={[styles.content, onboarding && { paddingBottom: 110 }]}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={async () => {
+              setRefreshing(true);
+              await load();
+              setRefreshing(false);
+            }}
+            colors={[colors.accent]}
+            tintColor={colors.accent}
           />
-        ))
-      )}
+        }
+      >
+        <Text accessibilityRole="header" style={styles.heading}>
+          {freeCount > 0
+            ? `${freeCount} free ${freeCount === 1 ? 'pack' : 'packs'} waiting`
+            : 'Sets you follow'}
+        </Text>
+        {entries.length ? (
+          <Text style={styles.standing}>
+            {collected} of {total} cards collected across {entries.length}{' '}
+            {entries.length === 1 ? 'set' : 'sets'}
+          </Text>
+        ) : null}
+        <ErrorText>{error}</ErrorText>
 
-      {opening ? (
-        <PackReveal
-          opening={opening}
-          onClose={() => {
-            setOpening(null);
-            void load();
-          }}
-        />
+        {entries.length > 1 ? (
+          <FilterField
+            style={styles.filter}
+            value={filter}
+            onChange={setFilter}
+            placeholder="Filter by set or creator"
+            label="Filter the sets you follow"
+          />
+        ) : null}
+
+        {entries.length > 0 && shown.length === 0 ? (
+          <View style={styles.empty}>
+            <Feather name="search" size={28} color={colors.cloth} />
+            <Text style={styles.emptyTitle}>Nothing matches</Text>
+            <Muted>None of the sets you follow match “{filter}”.</Muted>
+            <Button title="Show every set" kind="secondary" onPress={() => setFilter('')} />
+          </View>
+        ) : null}
+
+        {onboarding ? (
+          <StartShelf sets={starters} onFollowedChange={setPicked} />
+        ) : entries.length === 0 ? (
+          <View style={styles.empty}>
+            <Feather name="package" size={30} color={colors.cloth} />
+            <Text style={styles.emptyTitle}>No sets followed yet</Text>
+            <Muted>
+              Follow a set and it waits here: its free pack each day, the points you have saved
+              towards another, and how much of it you have collected.
+            </Muted>
+            <Button title="Browse sets" onPress={() => router.push('/(tabs)')} />
+          </View>
+        ) : (
+          shown.map((entry) => (
+            <Post
+              key={entry.card_set.id}
+              entry={entry}
+              now={now}
+              busy={busy}
+              onOpen={(usePoints) => void open(entry.card_set.slug, usePoints)}
+              onUnfollow={() => void unfollow(entry.card_set.slug)}
+            />
+          ))
+        )}
+
+        {opening ? (
+          <PackReveal
+            opening={opening}
+            onClose={() => {
+              setOpening(null);
+              void load();
+            }}
+          />
+        ) : null}
+      </ScrollView>
+      {onboarding ? (
+        <View style={styles.startBar}>
+          <Muted style={{ flex: 1 }}>
+            {picked ? `${picked} ${picked === 1 ? 'set' : 'sets'} followed` : 'Pick a few sets'}
+          </Muted>
+          <Button title="See my packs" disabled={picked === 0} onPress={() => void load()} />
+        </View>
       ) : null}
-    </ScrollView>
+    </View>
   );
 }
 
@@ -407,6 +417,20 @@ export default function PacksScreen() {
 
 const styles = StyleSheet.create({
   content: { padding: 16, paddingBottom: 40, gap: 14 },
+  startBar: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: colors.sur,
+    borderTopWidth: 1,
+    borderTopColor: colors.bdr,
+  },
   heading: { color: colors.text, fontFamily: fonts.medium, fontSize: 18 },
   filter: { marginTop: 14 },
   standing: { color: colors.muted, fontFamily: fonts.body, fontSize: 14, marginTop: -8 },
@@ -480,7 +504,7 @@ const styles = StyleSheet.create({
   fill: { height: '100%' },
   count: { color: colors.muted, fontFamily: fonts.medium, fontSize: 14 },
 
-  stats: { flexDirection: 'row', flexWrap: 'wrap', gap: 14 },
+  stats: { flexDirection: 'row', flexWrap: 'wrap', columnGap: 12, rowGap: 4 },
   stat: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   statValue: { color: colors.text, fontFamily: fonts.display, fontSize: 15 },
   statLabel: { color: colors.faint, fontFamily: fonts.body, fontSize: 13 },

@@ -6,6 +6,7 @@ import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-nati
 import { useAuth } from '@/lib/auth';
 import { setFollow } from '@/lib/endpoints';
 import BinderViewer from './BinderViewer';
+import VerifyEmailNotice from './VerifyEmailNotice';
 import InspectorModal from './InspectorModal';
 import MoreButton from '@/components/MoreButton';
 import type { MoreItem } from '@/components/MoreButton';
@@ -96,13 +97,21 @@ export default function ProfileView({
         </View>
       </View>
       {profile.bio ? <Muted>{profile.bio}</Muted> : null}
+      {profile.is_demo ? (
+        <Muted style={{ fontSize: 14 }}>
+          This collector is fictional and is here to demonstrate Miscellary. The photographs are
+          real work by the people credited on each card.
+        </Muted>
+      ) : null}
       <View style={styles.counts}>
         <Pressable
           accessibilityRole="button"
           hitSlop={6}
           onPress={() => setPeople(people === 'followers' ? null : 'followers')}
         >
-          <Text style={styles.countLink}>{profile.follower_count} followers</Text>
+          <Text style={styles.countLink}>
+            {profile.follower_count} {profile.follower_count === 1 ? 'follower' : 'followers'}
+          </Text>
         </Pressable>
         <Pressable
           accessibilityRole="button"
@@ -111,8 +120,12 @@ export default function ProfileView({
         >
           <Text style={styles.countLink}>{profile.following_count} following</Text>
         </Pressable>
-        <Muted style={styles.count}>{profile.set_count} sets</Muted>
-        <Muted style={styles.count}>{profile.card_count} cards</Muted>
+        <Muted style={styles.count}>
+          {profile.set_count} {profile.set_count === 1 ? 'set' : 'sets'}
+        </Muted>
+        <Muted style={styles.count}>
+          {profile.card_count} {profile.card_count === 1 ? 'card' : 'cards'}
+        </Muted>
       </View>
       {people ? (
         <PeopleList
@@ -167,6 +180,10 @@ export default function ProfileView({
         target={{ username: profile.username }}
         onClose={() => setReporting(false)}
       />
+
+      {profile.is_me ? (
+        <VerifyEmailNotice>Verify your email address to trade and publish sets.</VerifyEmailNotice>
+      ) : null}
 
       <Text style={styles.h2}>Binder</Text>
       <View style={styles.binder}>

@@ -1,10 +1,9 @@
-import { personName } from '@miscellary/shared';
+import { cardCode, personName } from '@miscellary/shared';
 import type { CardSetDetail } from '@miscellary/shared';
 import { Link } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
 import { colors, fonts } from '@/lib/theme';
-import Description from './Description';
-import DemoBadge from './DemoBadge';
+import CardPreview from './CardPreview';
 
 export default function BinderDetails({
   set,
@@ -30,7 +29,6 @@ export default function BinderDetails({
     <View style={{ gap: 12 }}>
       <View style={panel}>
         <Text style={heading}>About this set</Text>
-        <Description text={set.description} />
         <Text style={{ fontFamily: fonts.body, color: colors.muted }}>
           {set.card_count} cards · {new Set(set.cards.map((c) => c.rarity)).size} rarities
         </Text>
@@ -47,21 +45,41 @@ export default function BinderDetails({
               accessibilityRole="button"
               accessibilityLabel={`Inspect ${card.title}`}
               onPress={() => inspect(card.id)}
-              style={({ pressed }) => ({ paddingVertical: 8, opacity: pressed ? 0.65 : 1, gap: 4 })}
+              style={({ pressed }) => ({
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 14,
+                paddingVertical: 6,
+                opacity: pressed ? 0.65 : 1,
+              })}
             >
-              <Text style={{ fontFamily: fonts.medium, color: colors.text, fontSize: 16 }}>
-                {card.title}
-              </Text>
-              <Text style={{ fontFamily: fonts.body, color: colors.muted }}>
-                {card.like_count} {card.like_count === 1 ? 'like' : 'likes'}
-              </Text>
+              <CardPreview
+                width={56}
+                title={card.title}
+                description={card.description}
+                printedText={card.printed_text}
+                mark={set.mark}
+                rarity={card.rarity}
+                imageUrl={card.image.url}
+                templateKey={card.template_key}
+                templateConfig={card.template_config}
+                code={cardCode(card.printed_set_code, card.position, card.set_total)}
+                render={card.render}
+              />
+              <View style={{ flex: 1, gap: 2 }}>
+                <Text style={{ fontFamily: fonts.medium, color: colors.text, fontSize: 16 }}>
+                  {card.title}
+                </Text>
+                <Text style={{ fontFamily: fonts.body, color: colors.muted }}>
+                  {card.like_count} {card.like_count === 1 ? 'like' : 'likes'}
+                </Text>
+              </View>
             </Pressable>
           ))}
         </View>
       ) : null}
       <View style={panel}>
-        <Text style={heading}>Collector</Text>
-        {set.creator.is_demo ? <DemoBadge /> : null}
+        <Text style={heading}>Made by</Text>
         <Text style={{ fontFamily: fonts.body, color: colors.muted, fontSize: 15 }}>
           {set.creator.deleted
             ? 'The account that made this set has been closed. The set stays so its collectors keep their cards.'

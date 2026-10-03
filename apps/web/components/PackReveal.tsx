@@ -245,7 +245,19 @@ export default function PackReveal({
             Reveal all
           </button>
         ) : null}
-        <button type="button" className={ui.btnPrimary} onClick={onClose}>
+        <button
+          type="button"
+          className={ui.btnPrimary}
+          onClick={() => {
+            if (done) {
+              onClose();
+              return;
+            }
+            // Skipping still shows what was in the pack before leaving.
+            setRevealed(total);
+            setPhase('open');
+          }}
+        >
           {done ? 'Done' : 'Skip'}
         </button>
       </div>

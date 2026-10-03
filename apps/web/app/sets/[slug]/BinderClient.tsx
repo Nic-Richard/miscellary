@@ -17,7 +17,6 @@ import ShareButton from '@/components/ShareButton';
 import CardPreview from '@/components/CardPreview';
 import Comments from '@/components/Comments';
 import Description from '@/components/Description';
-import DemoBadge from '@/components/DemoBadge';
 import LikeButton from '@/components/LikeButton';
 import PackPanel from '@/components/PackPanel';
 import SetActions from '@/components/SetActions';
@@ -365,20 +364,11 @@ export default function BinderClient({
             {set.opening_count === 1 ? 'pack' : 'packs'} opened
           </p>
           {set.description ? <Description text={set.description} className={styles.desc} /> : null}
-          {set.creator.is_demo ? (
-            <p className={styles.demoNote}>
-              This set and its creator are fictional, and are here to demonstrate the product. The
-              photographs are real work by the people credited on each card.
-            </p>
-          ) : null}
           <div className={styles.creator}>
             <PersonLink person={set.creator} className={styles.creatorLink}>
               <span className={styles.monogram}>{creatorName[0]?.toUpperCase()}</span>
               <span className={styles.creatorName}>
-                <strong>
-                  {creatorName}
-                  {set.creator.is_demo ? <DemoBadge compact /> : null}
-                </strong>
+                <strong>{creatorName}</strong>
                 {set.creator.deleted ? null : <small>@{set.creator.username}</small>}
               </span>
             </PersonLink>

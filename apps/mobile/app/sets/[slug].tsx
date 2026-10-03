@@ -19,7 +19,6 @@ import CardInspector from '@/components/CardInspector';
 import Comments from '@/components/Comments';
 import CardPreview from '@/components/CardPreview';
 import Description from '@/components/Description';
-import DemoBadge from '@/components/DemoBadge';
 import PackPreview from '@/components/PackPreview';
 import PackReveal from '@/components/PackReveal';
 import PointGain from '@/components/PointGain';
@@ -394,24 +393,17 @@ export default function BinderScreen() {
       style={{ backgroundColor: colors.bg }}
       contentContainerStyle={{
         padding: 16,
-        paddingTop: 12 + insets.top,
+        paddingTop: 4,
         paddingLeft: 16 + insets.left,
         paddingRight: 16 + insets.right,
         paddingBottom: 40 + insets.bottom,
       }}
     >
-      <View style={styles.topline}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
-          hitSlop={8}
-          onPress={() => router.back()}
-          style={({ pressed }) => [styles.back, pressed && { opacity: 0.55 }]}
-        >
-          <Feather name="arrow-left" size={22} color={colors.text} />
-        </Pressable>
-        {set.status === 'draft' ? <Tag>Draft preview</Tag> : null}
-      </View>
+      {set.status === 'draft' ? (
+        <View style={styles.topline}>
+          <Tag>Draft preview</Tag>
+        </View>
+      ) : null}
       <Title>{set.title}</Title>
       <View style={styles.metaRow}>
         {set.creator.deleted ? (
@@ -423,7 +415,6 @@ export default function BinderScreen() {
             <Text style={styles.creator}>@{set.creator.username}</Text>
           </Link>
         )}
-        {set.creator.is_demo ? <DemoBadge /> : null}
         {creatorFollowing !== null || (!user && !set.creator.deleted) ? (
           <Pressable
             accessibilityRole="button"
@@ -489,7 +480,9 @@ export default function BinderScreen() {
         </>
       ) : null}
       {set.status === 'published' && !set.following ? (
-        <Muted style={styles.followNote}>Keeps its free pack on your Packs tab.</Muted>
+        <Muted style={styles.followNote}>
+          Follow this set to get a free pack from it every day.
+        </Muted>
       ) : null}
 
       {set.status === 'published' ? (
@@ -727,16 +720,6 @@ const styles = StyleSheet.create({
   counts: { marginBottom: 8 },
   followNote: { fontSize: 14, marginTop: 6 },
   topline: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 4 },
-  back: {
-    width: 36,
-    height: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: colors.bdr2,
-    backgroundColor: colors.sur,
-  },
   metaRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',

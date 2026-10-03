@@ -6,7 +6,6 @@ import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useAuth } from '@/lib/auth';
 import { deleteComment, getComments, postComment } from '@/lib/endpoints';
 import { colors, fonts } from '@/lib/theme';
-import DemoBadge from './DemoBadge';
 import { Button, ErrorText, Input, Muted } from './ui';
 
 const MAX = 1000;
@@ -107,7 +106,6 @@ function Entry({
                 <Text style={styles.authorText}>{personName(author)}</Text>
               </Link>
             )}
-            {author.is_demo ? <DemoBadge /> : null}
             {comment.is_creator ? <Text style={styles.creatorMark}>Creator</Text> : null}
             <Text style={styles.when}>{when(comment.created_at)}</Text>
           </View>

@@ -3,7 +3,6 @@ import type { CardSetSummary } from '@miscellary/shared';
 import { Link } from 'expo-router';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { binderColors, colors, fonts } from '@/lib/theme';
-import DemoBadge from './DemoBadge';
 
 export default function SetTile({ set }: { set: CardSetSummary }) {
   const pack = set.render_pack?.image?.url;
@@ -31,7 +30,6 @@ export default function SetTile({ set }: { set: CardSetSummary }) {
           <Text numberOfLines={1} style={styles.meta}>
             {set.card_count} cards · {personHandle(set.creator)}
           </Text>
-          {set.creator.is_demo ? <DemoBadge /> : null}
         </View>
       </Pressable>
     </Link>

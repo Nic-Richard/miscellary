@@ -167,7 +167,7 @@ function Collection() {
             </Link>
             <Muted style={{ fontSize: 14 }}>
               {list.length} cards · {list.reduce((total, card) => total + card.copies, 0)} copies ·{' '}
-              {points.find((p) => p.set_slug === slug)?.points ?? 0} points
+              {points.find((p) => p.set_slug === slug)?.points ?? 0} points toward an extra pack
             </Muted>
           </View>
           <View style={styles.grid}>
@@ -216,9 +216,7 @@ function Collection() {
                             Recycle (×{owned.copies})
                           </Text>
                         </Pressable>
-                      ) : (
-                        <Muted style={{ fontSize: 13 }}>Only copy</Muted>
-                      )}
+                      ) : null}
                     </View>
                     <View style={styles.gainSlot}>
                       {gain?.cardId === owned.card.id ? (

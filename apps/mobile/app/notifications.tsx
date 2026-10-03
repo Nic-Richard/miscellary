@@ -3,7 +3,6 @@ import Feather from '@expo/vector-icons/Feather';
 import { router, Stack, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
-import DemoBadge from '@/components/DemoBadge';
 import LoginGate from '@/components/LoginGate';
 import { Button, ErrorText, Loading, Muted } from '@/components/ui';
 import { getNotifications, markNotificationsRead } from '@/lib/endpoints';
@@ -74,7 +73,6 @@ function Row({ notification }: { notification: Notification }) {
       <View style={styles.line}>
         <View style={styles.said}>
           <Text style={styles.actor}>{actor.display_name || `@${actor.username}`}</Text>
-          {actor.is_demo ? <DemoBadge /> : null}
           <Text style={styles.text}> {text}</Text>
         </View>
         {notification.comment_body ? (

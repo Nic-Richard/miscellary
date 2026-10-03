@@ -70,7 +70,7 @@ export default function RootLayout() {
         <Stack.Screen name="(auth)/login" options={{ title: 'Log in' }} />
         <Stack.Screen name="(auth)/register" options={{ title: 'Sign up' }} />
         <Stack.Screen name="(auth)/forgot-password" options={{ title: 'Reset password' }} />
-        <Stack.Screen name="sets/[slug]" options={{ headerShown: false }} />
+        <Stack.Screen name="sets/[slug]" options={{ title: '' }} />
         <Stack.Screen name="users/[username]" options={{ title: 'Profile' }} />
         <Stack.Screen name="studio/[id]" options={{ title: 'Edit set' }} />
         <Stack.Screen name="studio/card" options={{ title: 'Card', presentation: 'modal' }} />

@@ -11,7 +11,6 @@ import { useAuth } from '@/lib/auth';
 import { loginHref } from '@/lib/returnTo';
 import { timeAgo } from '@/lib/time';
 import ReportButton from './ReportButton';
-import DemoBadge from './DemoBadge';
 import ui from './ui.module.css';
 import styles from './Comments.module.css';
 
@@ -167,7 +166,6 @@ function Note({
           ) : (
             <span className={styles.name}>{name}</span>
           )}
-          {comment.author?.is_demo ? <DemoBadge compact /> : null}
           {comment.is_creator ? <span className={styles.creatorTag}>Creator</span> : null}
           <time className={styles.when} dateTime={comment.created_at}>
             {timeAgo(comment.created_at)}

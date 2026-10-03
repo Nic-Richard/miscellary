@@ -14,7 +14,6 @@ import type { Card, Creator, OwnedCard } from '@miscellary/shared';
 import CardBack from './CardBack';
 import CardPreview from './CardPreview';
 import Description from './Description';
-import DemoBadge from './DemoBadge';
 import { useDialog } from '@/lib/useDialog';
 import styles from './CardInspector.module.css';
 
@@ -291,7 +290,7 @@ export default function CardInspector({
             className={styles.turn}
             onClick={() => turnTo(0, facing === 'back' ? 180 : 0)}
           >
-            Level
+            Reset tilt
           </button>
         </div>
 
@@ -306,12 +305,6 @@ export default function CardInspector({
             <Link href={`/sets/${setSlug}`}>{setTitle}</Link>
             {creator ? <> · {personName(creator)}</> : null}
             {copies ? ` · ${copies} ${copies === 1 ? 'copy' : 'copies'}` : ''}
-            {creator?.is_demo ? (
-              <>
-                {' '}
-                <DemoBadge compact />
-              </>
-            ) : null}
           </p>
           {card.description ? (
             <Description text={card.description} className={styles.body} />

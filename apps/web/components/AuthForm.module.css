@@ -78,6 +78,10 @@
   opacity: 0.6;
   cursor: default;
 }
+.hint {
+  color: var(--muted);
+  font-size: 14px;
+}
 .alt {
   margin: 4px 0 0;
   color: var(--muted);

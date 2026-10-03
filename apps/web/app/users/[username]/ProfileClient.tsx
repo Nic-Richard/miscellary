@@ -19,6 +19,7 @@ import { useAuth } from '@/lib/auth';
 import { loginHref } from '@/lib/returnTo';
 import { useContinuation } from '@/lib/useContinuation';
 import { getProfile, setFollow } from '@/lib/social';
+import VerifyEmailNotice from '@/components/VerifyEmailNotice';
 import ui from '@/components/ui.module.css';
 import styles from './page.module.css';
 
@@ -127,6 +128,17 @@ export default function ProfileClient({
           {profile.is_demo ? <DemoBadge /> : null}
           <p className={ui.subtitle}>@{profile.username}</p>
           {profile.bio ? <p className={ui.lead}>{profile.bio}</p> : null}
+          {profile.is_demo ? (
+            <p className={styles.demoNote}>
+              This collector is fictional and is here to demonstrate Miscellary. The photographs are
+              real work by the people credited on each card.
+            </p>
+          ) : null}
+          {profile.is_me ? (
+            <VerifyEmailNotice>
+              Verify your email address to trade and publish sets.
+            </VerifyEmailNotice>
+          ) : null}
           <div className={styles.actions}>
             {profile.is_me ? (
               <Link href="/account" className={`${ui.btnOutline} ${ui.btnSmall}`}>

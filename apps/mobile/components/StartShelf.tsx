@@ -1,7 +1,8 @@
 import type { CardSetSummary } from '@miscellary/shared';
+import Feather from '@expo/vector-icons/Feather';
 import { router } from 'expo-router';
-import { useState } from 'react';
-import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import PackPreview from '@/components/PackPreview';
 import { Button, ErrorText } from '@/components/ui';
 import { followSet } from '@/lib/endpoints';
@@ -11,16 +12,18 @@ const GAP = 14;
 
 export default function StartShelf({
   sets,
-  onDone,
+  onFollowedChange,
 }: {
   sets: CardSetSummary[];
-  onDone: () => void;
+  onFollowedChange: (count: number) => void;
 }) {
-  const { width } = useWindowDimensions();
+  const [shelfWidth, setShelfWidth] = useState(0);
   const [followed, setFollowed] = useState<Set<string>>(new Set());
   const [pending, setPending] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
-  const packWidth = Math.floor((Math.min(width, 520) - 16 * 2 - 20 * 2 - GAP) / 2);
+  const packWidth = Math.floor((shelfWidth - GAP) / 2);
+
+  useEffect(() => onFollowedChange(followed.size), [followed, onFollowedChange]);
 
   async function toggle(slug: string) {
     if (pending.has(slug)) return;
@@ -56,34 +59,42 @@ export default function StartShelf({
         Every set you follow gives you a free pack each day. Pick a few to start your collection.
       </Text>
 
-      <View style={styles.shelf}>
-        {sets.map((set) => {
-          const on = followed.has(set.slug);
-          return (
-            <Pressable
-              key={set.id}
-              accessibilityRole="button"
-              accessibilityState={{ selected: on }}
-              accessibilityLabel={`${on ? 'Stop following' : 'Follow'} ${set.title}`}
-              onPress={() => void toggle(set.slug)}
-              style={{ width: packWidth }}
-            >
-              <View style={[styles.pack, on && styles.packOn]}>
-                <PackPreview set={set} width={packWidth - (on ? 6 : 0)} />
-              </View>
-              <Text style={styles.name} numberOfLines={1}>
-                {set.title}
-              </Text>
-              <Text style={on ? styles.metaOn : styles.meta}>
-                {on ? 'Following' : `${set.card_count} cards`}
-              </Text>
-            </Pressable>
-          );
-        })}
+      <View
+        style={styles.shelf}
+        onLayout={(event) => setShelfWidth(event.nativeEvent.layout.width)}
+      >
+        {shelfWidth > 0 &&
+          sets.map((set) => {
+            const on = followed.has(set.slug);
+            return (
+              <Pressable
+                key={set.id}
+                accessibilityRole="button"
+                accessibilityState={{ selected: on }}
+                accessibilityLabel={`${on ? 'Stop following' : 'Follow'} ${set.title}`}
+                onPress={() => void toggle(set.slug)}
+                style={{ width: packWidth }}
+              >
+                <View style={[styles.pack, on && styles.packOn]}>
+                  <PackPreview set={set} width={packWidth - (on ? 6 : 0)} />
+                  {on ? (
+                    <View style={styles.check}>
+                      <Feather name="check" size={16} color={colors.accentText} />
+                    </View>
+                  ) : null}
+                </View>
+                <Text style={styles.name} numberOfLines={1}>
+                  {set.title}
+                </Text>
+                <Text style={on ? styles.metaOn : styles.meta}>
+                  {on ? 'Following' : `${set.card_count} cards`}
+                </Text>
+              </Pressable>
+            );
+          })}
       </View>
 
       <ErrorText>{error}</ErrorText>
-      <Button title="See my packs" disabled={followed.size === 0} onPress={onDone} />
       <Button title="Browse every set" kind="secondary" onPress={() => router.push('/(tabs)')} />
     </View>
   );
@@ -109,8 +120,19 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.bdr2,
   },
   pack: { marginBottom: 6, borderRadius: 4, overflow: 'hidden' },
-  packOn: { borderWidth: 3, borderColor: colors.accent, transform: [{ translateY: -6 }] },
+  packOn: { borderWidth: 3, borderColor: colors.accent },
   name: { color: colors.text, fontFamily: fonts.medium, fontSize: 14 },
   meta: { color: colors.faint, fontFamily: fonts.body, fontSize: 14 },
   metaOn: { color: colors.accent, fontFamily: fonts.medium, fontSize: 14 },
+  check: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.accent,
+  },
 });
