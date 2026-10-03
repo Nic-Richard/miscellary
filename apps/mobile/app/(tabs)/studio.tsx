@@ -1,12 +1,27 @@
 import { SET_TITLE_MAX_LENGTH } from '@miscellary/shared';
 import type { CardSetSummary } from '@miscellary/shared';
+import Feather from '@expo/vector-icons/Feather';
 import { Link, router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import LoginGate from '@/components/LoginGate';
 import { createSet, listMySets } from '@/lib/endpoints';
-import { colors } from '@/lib/theme';
+import { colors, fonts } from '@/lib/theme';
 import { Button, ErrorText, Input, Muted } from '@/components/ui';
+
+const STEPS: [React.ComponentProps<typeof Feather>['name'], string, string][] = [
+  [
+    'camera',
+    'Photograph your things',
+    'Each card is one thing you collect: a camera, a rock, a rubber duck.',
+  ],
+  ['edit-3', 'Make the cards', 'Give each one a title, a few lines of text and a rarity.'],
+  [
+    'package',
+    'Design the pack and publish',
+    'Collectors then open a free pack of your set every day.',
+  ],
+];
 
 function Studio() {
   const [sets, setSets] = useState<CardSetSummary[]>([]);
@@ -47,10 +62,28 @@ function Studio() {
       <Button title="Create draft" onPress={() => void create()} disabled={!title.trim()} />
       <ErrorText>{error}</ErrorText>
       {sets.length === 0 ? (
-        <Muted>
-          Name a set above to start a draft. Add cards, design its pack, and publish it when every
-          card is ready. Drafts stay private until then.
-        </Muted>
+        <View style={styles.howTo}>
+          <Text style={styles.howToTitle}>How a set works</Text>
+          {STEPS.map(([icon, title, note], index) => (
+            <View key={title} style={styles.step}>
+              <View style={styles.stepIcon}>
+                <Feather name={icon} size={18} color={colors.accent} />
+              </View>
+              <View style={{ flex: 1, gap: 2 }}>
+                <Text style={styles.stepTitle}>
+                  {index + 1}. {title}
+                </Text>
+                <Muted style={{ fontSize: 14 }}>{note}</Muted>
+              </View>
+            </View>
+          ))}
+          <Link
+            href={{ pathname: '/sets/[slug]', params: { slug: 'film-cameras' } }}
+            style={styles.example}
+          >
+            See an example set →
+          </Link>
+        </View>
       ) : null}
       {sets.map((s) => (
         <Link key={s.id} href={{ pathname: '/studio/[id]', params: { id: s.id } }} asChild>
@@ -83,6 +116,29 @@ export default function StudioScreen() {
 }
 
 const styles = StyleSheet.create({
+  howTo: {
+    gap: 14,
+    marginTop: 8,
+    padding: 16,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.bdr,
+    backgroundColor: colors.sur,
+  },
+  howToTitle: { color: colors.text, fontFamily: fonts.display, fontSize: 24 },
+  step: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
+  stepIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.bg,
+    borderWidth: 1,
+    borderColor: colors.bdr,
+  },
+  stepTitle: { color: colors.text, fontFamily: fonts.medium, fontSize: 16 },
+  example: { color: colors.accent, fontFamily: fonts.medium, fontSize: 15, paddingVertical: 4 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -30,3 +30,10 @@
   border: 1px solid var(--bdr2);
   color: var(--muted);
 }
+
+.steps {
+  margin: 0 0 12px;
+  padding-left: 20px;
+  text-align: left;
+  line-height: 1.5;
+}

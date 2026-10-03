@@ -21,6 +21,7 @@ import CardPreview from '@/components/CardPreview';
 import Description from '@/components/Description';
 import PackPreview from '@/components/PackPreview';
 import PackReveal from '@/components/PackReveal';
+import { askForPackReminder, syncPackReminder } from '@/lib/packReminder';
 import PointGain from '@/components/PointGain';
 import ActionChip from '@/components/ActionChip';
 import InspectorActions from '@/components/InspectorActions';
@@ -31,6 +32,7 @@ import TagChips from '@/components/TagChips';
 import { useAuth } from '@/lib/auth';
 import { CONTINUE_PARAM, loginRoute } from '@/lib/returnTo';
 import {
+  getMyPacks,
   followSet,
   getPackStatus,
   getProfile,
@@ -664,7 +666,18 @@ export default function BinderScreen() {
 
       {set.status === 'published' ? <Comments slug={set.slug} /> : null}
 
-      {opening ? <PackReveal opening={opening} onClose={() => setOpening(null)} /> : null}
+      {opening ? (
+        <PackReveal
+          opening={opening}
+          onClose={() => {
+            setOpening(null);
+            void askForPackReminder()
+              .then(getMyPacks)
+              .then((page) => syncPackReminder(page.results))
+              .catch(() => {});
+          }}
+        />
+      ) : null}
       {selected ? (
         <InspectorModal open onClose={() => setSelected(null)}>
           <CardInspector

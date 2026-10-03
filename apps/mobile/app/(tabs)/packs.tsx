@@ -11,6 +11,7 @@ import LoginGate from '@/components/LoginGate';
 import PackPreview from '@/components/PackPreview';
 import PackReveal from '@/components/PackReveal';
 import StartShelf from '@/components/StartShelf';
+import { askForPackReminder, syncPackReminder } from '@/lib/packReminder';
 import TagChips from '@/components/TagChips';
 import { Button, ErrorText, Loading, Muted } from '@/components/ui';
 import { followSet, getMyPacks, listPublicSets, openPack } from '@/lib/endpoints';
@@ -250,6 +251,7 @@ function Packs() {
       setEntries(page.results);
       setFreeCount(page.free_count);
       setError(null);
+      void syncPackReminder(page.results);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not load your packs.');
     }
@@ -390,7 +392,7 @@ function Packs() {
             opening={opening}
             onClose={() => {
               setOpening(null);
-              void load();
+              void askForPackReminder().then(load);
             }}
           />
         ) : null}

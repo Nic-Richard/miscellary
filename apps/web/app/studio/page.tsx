@@ -73,8 +73,12 @@ export default function StudioPage() {
 
       {sets?.length === 0 ? (
         <Empty icon="binder">
-          Name a set above to start a draft. Add cards, design its pack, and publish it when every
-          card is ready. Drafts stay private until then.
+          <ol className={styles.steps}>
+            <li>Photograph your things. Each card is one thing you collect.</li>
+            <li>Make the cards: a title, a few lines of text and a rarity.</li>
+            <li>Design the pack and publish. Collectors open a free pack of it every day.</li>
+          </ol>
+          <Link href="/sets/film-cameras">See an example set →</Link>
         </Empty>
       ) : null}
       <ul className={tileStyles.grid}>
