@@ -209,6 +209,9 @@ The detailed implementation plan is [MOBILE_BUILDOUT_PLAN.md](MOBILE_BUILDOUT_PL
 - Render cache contract, renderer signatures, deterministic render-only modes, and local generation
   and import commands for new development data.
 - Published set content and appearance locked at the model and API layers.
+- October 2026 phone pass: edge to edge with safe-area variables passed into WebView surfaces,
+  readable at large system text sizes, full-screen landscape binder viewer for set and profile
+  binders, logged-out tabs that explain themselves, pack-ready reminders, app icon and splash.
 
 ### Remaining shared-renderer work
 
@@ -220,6 +223,14 @@ The detailed implementation plan is [MOBILE_BUILDOUT_PLAN.md](MOBILE_BUILDOUT_PL
 - Verify missing render assets, slow networks, image caching, reduced motion, and accessibility.
 - Decide when automated production generation is needed. Publication remains independent from
   browser rendering.
+
+### Store release
+
+- EAS preview build on a physical phone, then the production AAB with EAS-managed signing.
+- Play listing: descriptions, screenshots, feature graphic, data safety answers; closed test with
+  12 testers for 14 days.
+- iOS later: `ios` config, photo permission text and icons are in place; simulator and device
+  passes, universal links and an Apple Developer account are still needed.
 
 ### Product and device testing
 
@@ -233,7 +244,8 @@ The detailed implementation plan is [MOBILE_BUILDOUT_PLAN.md](MOBILE_BUILDOUT_PL
 
 - Eighteen curated demo sets in production, from 15 to 24 cards, with varied pack sizes, rarity
   orders, colour, creators and pack designs.
-- Demo accounts carry a Demo badge with an accessible label on web and mobile.
+- Demo accounts carry a Demo badge with an accessible label, and a fictional-collector note, on their
+  profiles only (web and mobile).
 - Seeded demo activity follows real pull odds, with uneven likes, follows, comments and binders.
 - Production bootstraps from the reviewed photos staged by hash, never from a fresh download.
 - `pnpm reseed --set <slug>` rebuilds one set in development.
@@ -242,7 +254,7 @@ More sets can follow the standards below; the catalogue is no longer a launch bl
 
 ### Demo-account transparency
 
-- Production bootstrap creators may be synthetic, but they must be clearly identified as demo accounts.
+- Production bootstrap creators may be synthetic, but their profiles must identify them as demo accounts.
 - Show a small robot icon or similarly compact **Demo** indicator beside their name wherever account
   identity is presented. Provide an accessible label such as "Demo account" rather than relying on the
   icon alone.
