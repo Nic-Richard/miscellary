@@ -97,7 +97,6 @@ export default function ProfileView({
         >
           <Text style={styles.countLink}>{profile.follower_count} followers</Text>
         </Pressable>
-        <Muted style={styles.count}>·</Muted>
         <Pressable
           accessibilityRole="button"
           hitSlop={6}
@@ -105,9 +104,8 @@ export default function ProfileView({
         >
           <Text style={styles.countLink}>{profile.following_count} following</Text>
         </Pressable>
-        <Muted style={styles.count}>
-          · {profile.set_count} sets · {profile.card_count} cards
-        </Muted>
+        <Muted style={styles.count}>{profile.set_count} sets</Muted>
+        <Muted style={styles.count}>{profile.card_count} cards</Muted>
       </View>
       {people ? (
         <PeopleList
@@ -227,7 +225,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   actions: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
-  counts: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6 },
+  counts: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    columnGap: 14,
+    rowGap: 4,
+  },
   count: { fontSize: 14 },
   countLink: { color: colors.accent, fontSize: 14 },
   h2: { color: colors.text, fontSize: 16, fontWeight: '700', marginTop: 8 },

@@ -1,5 +1,5 @@
 import { router, Tabs } from 'expo-router';
-import { Pressable } from 'react-native';
+import { Pressable, Text } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 import Svg, { Path } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -43,7 +43,16 @@ export default function TabsLayout() {
           paddingBottom: Math.max(insets.bottom, 8),
           elevation: 0,
         },
-        tabBarLabelStyle: { fontFamily: fonts.medium, fontSize: 13, marginTop: 3 },
+        // Six labels share the bar, so they grow with the system text size only a little.
+        tabBarLabel: ({ color, children }) => (
+          <Text
+            maxFontSizeMultiplier={1.2}
+            numberOfLines={1}
+            style={{ color, fontFamily: fonts.medium, fontSize: 13, marginTop: 3 }}
+          >
+            {children}
+          </Text>
+        ),
         tabBarActiveTintColor: colors.accent,
         tabBarInactiveTintColor: colors.muted,
         tabBarHideOnKeyboard: true,
@@ -52,16 +61,42 @@ export default function TabsLayout() {
     >
       <Tabs.Screen
         name="index"
-        options={{ title: 'Browse', headerShown: false, tabBarIcon: icon('book-open') }}
+        options={{
+          title: 'Browse',
+          tabBarAccessibilityLabel: 'Browse',
+          headerShown: false,
+          tabBarIcon: icon('book-open'),
+        }}
       />
-      <Tabs.Screen name="packs" options={{ title: 'Packs', tabBarIcon: icon('package') }} />
-      <Tabs.Screen name="collection" options={{ title: 'My cards', tabBarIcon: cardsIcon }} />
-      <Tabs.Screen name="trades" options={{ title: 'Trades', tabBarIcon: icon('repeat') }} />
-      <Tabs.Screen name="studio" options={{ title: 'Studio', tabBarIcon: icon('edit-3') }} />
+      <Tabs.Screen
+        name="packs"
+        options={{ title: 'Packs', tabBarAccessibilityLabel: 'Packs', tabBarIcon: icon('package') }}
+      />
+      <Tabs.Screen
+        name="collection"
+        options={{ title: 'My cards', tabBarAccessibilityLabel: 'My cards', tabBarIcon: cardsIcon }}
+      />
+      <Tabs.Screen
+        name="trades"
+        options={{
+          title: 'Trades',
+          tabBarAccessibilityLabel: 'Trades',
+          tabBarIcon: icon('repeat'),
+        }}
+      />
+      <Tabs.Screen
+        name="studio"
+        options={{
+          title: 'Studio',
+          tabBarAccessibilityLabel: 'Studio',
+          tabBarIcon: icon('edit-3'),
+        }}
+      />
       <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
+          tabBarAccessibilityLabel: 'Profile',
           tabBarIcon: icon('user'),
           headerRight: () => (
             <Pressable

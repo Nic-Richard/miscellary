@@ -273,7 +273,7 @@ const styles = StyleSheet.create({
   figureLabel: { color: colors.faint, fontFamily: fonts.body, fontSize: 13 },
   tiers: { gap: 7, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.bdr },
   tier: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  tierName: { width: 72, color: colors.muted, fontFamily: fonts.body, fontSize: 13 },
+  tierName: { minWidth: 72, color: colors.muted, fontFamily: fonts.body, fontSize: 13 },
   tierTrack: {
     flex: 1,
     height: 7,
@@ -295,6 +295,8 @@ const styles = StyleSheet.create({
   group: { marginTop: 16 },
   groupHeader: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
+    columnGap: 10,
     justifyContent: 'space-between',
     alignItems: 'baseline',
     borderBottomColor: colors.bdr,
