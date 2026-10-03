@@ -1,4 +1,4 @@
-import { cardCode, personHandle } from '@miscellary/shared';
+import { cardCode, offerSides, personHandle } from '@miscellary/shared';
 import type { OwnedCard, TradeOffer } from '@miscellary/shared';
 import { router } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -74,6 +74,7 @@ const STATUS_WORD: Record<string, string> = {
 
 export default function OfferCard({ offer, me, busy, onAction, onInspect }: OfferCardProps) {
   const incoming = offer.recipient.username === me;
+  const sides = offerSides(offer, incoming);
   const other = incoming ? offer.sender : offer.recipient;
   const statusColor =
     offer.status === 'accepted'
@@ -119,13 +120,9 @@ export default function OfferCard({ offer, me, busy, onAction, onInspect }: Offe
         </Muted>
       ) : null}
       <View style={styles.sides}>
-        <Side
-          label={incoming ? 'They give' : 'You give'}
-          cards={offer.give}
-          onInspect={onInspect}
-        />
+        <Side label="You get" cards={sides.youGet} onInspect={onInspect} />
         <Feather name="repeat" color={colors.accent} size={18} style={{ alignSelf: 'center' }} />
-        <Side label={incoming ? 'They want' : 'You get'} cards={offer.want} onInspect={onInspect} />
+        <Side label="You give" cards={sides.youGive} onInspect={onInspect} />
       </View>
       {offer.status === 'pending' ? (
         <View style={styles.actions}>

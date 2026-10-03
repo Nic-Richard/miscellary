@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { cardCode, personHandle } from '@miscellary/shared';
+import { cardCode, offerSides, personHandle } from '@miscellary/shared';
 import type { OwnedCard, TradeOffer } from '@miscellary/shared';
 import PersonLink from './PersonLink';
 import CardPreview from './CardPreview';
@@ -84,8 +84,7 @@ export function readOffer(offer: TradeOffer, me: string) {
   return {
     incoming,
     other: incoming ? offer.sender : offer.recipient,
-    youGet: incoming ? offer.give : offer.want,
-    youGive: incoming ? offer.want : offer.give,
+    ...offerSides(offer, incoming),
   };
 }
 

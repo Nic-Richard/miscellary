@@ -14,3 +14,4 @@ export * from './setIdentity';
 export * from './people';
 export * from './paths';
 export * from './photo';
+export * from './copy';

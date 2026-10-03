@@ -1,4 +1,4 @@
-import { SET_TITLE_MAX_LENGTH } from '@miscellary/shared';
+import { SET_TITLE_MAX_LENGTH, countOf } from '@miscellary/shared';
 import type { CardSetSummary } from '@miscellary/shared';
 import Feather from '@expo/vector-icons/Feather';
 import { Link, router, useFocusEffect } from 'expo-router';
@@ -90,7 +90,7 @@ function Studio() {
           <Pressable style={styles.row}>
             <View style={{ flex: 1 }}>
               <Text style={{ color: colors.text, fontWeight: '600' }}>{s.title}</Text>
-              <Muted style={{ fontSize: 14 }}>{s.card_count} cards</Muted>
+              <Muted style={{ fontSize: 14 }}>{countOf(s.card_count, 'card')}</Muted>
             </View>
             <Text
               style={[

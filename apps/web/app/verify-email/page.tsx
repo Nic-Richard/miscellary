@@ -51,7 +51,7 @@ function VerifyEmail() {
       ) : null}
       {status === 'error' ? (
         <p className={styles.alt}>
-          Sign in and request a fresh link from your <Link href="/account">account</Link>.
+          Log in and request a fresh link from your <Link href="/account">account</Link>.
         </p>
       ) : null}
     </section>

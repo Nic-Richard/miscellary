@@ -1,4 +1,4 @@
-import { cardCode, RARITIES, RARITY_LABELS } from '@miscellary/shared';
+import { cardCode, RARITIES, RARITY_LABELS, countOf } from '@miscellary/shared';
 import type { OwnedCard, SetPointsBalance } from '@miscellary/shared';
 import { Link, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
@@ -166,8 +166,13 @@ function Collection() {
               <Text style={{ color: colors.text, fontWeight: '600' }}>{list[0]?.set_title}</Text>
             </Link>
             <Muted style={{ fontSize: 14 }}>
-              {list.length} cards · {list.reduce((total, card) => total + card.copies, 0)} copies ·{' '}
-              {points.find((p) => p.set_slug === slug)?.points ?? 0} points toward an extra pack
+              {countOf(list.length, 'card')} ·{' '}
+              {countOf(
+                list.reduce((total, card) => total + card.copies, 0),
+                'copy',
+                'copies',
+              )}{' '}
+              · {points.find((p) => p.set_slug === slug)?.points ?? 0} points toward an extra pack
             </Muted>
           </View>
           <View style={styles.grid}>

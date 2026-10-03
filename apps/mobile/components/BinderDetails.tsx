@@ -1,4 +1,4 @@
-import { cardCode, personName } from '@miscellary/shared';
+import { cardCode, personName, countOf } from '@miscellary/shared';
 import type { CardSetDetail } from '@miscellary/shared';
 import { Link } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
@@ -30,10 +30,11 @@ export default function BinderDetails({
       <View style={panel}>
         <Text style={heading}>About this set</Text>
         <Text style={{ fontFamily: fonts.body, color: colors.muted }}>
-          {set.card_count} cards · {new Set(set.cards.map((c) => c.rarity)).size} rarities
+          {countOf(set.card_count, 'card')} ·{' '}
+          {countOf(new Set(set.cards.map((c) => c.rarity)).size, 'rarity', 'rarities')}
         </Text>
         <Text style={{ fontFamily: fonts.body, color: colors.muted }}>
-          {set.opening_count} packs opened
+          {countOf(set.opening_count, 'pack')} opened
         </Text>
       </View>
       {popular.length ? (

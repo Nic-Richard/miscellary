@@ -139,7 +139,7 @@ function Email({ user }: { user: CurrentUser }) {
   return (
     <Row
       title="Email"
-      note="Used to sign in and to reset your password. It is never shown on your profile."
+      note="Used to log in and to reset your password. It is never shown on your profile."
     >
       <div className={styles.form}>
         <p className={styles.value}>

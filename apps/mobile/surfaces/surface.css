@@ -146,10 +146,12 @@ body[data-surface$='editor'] #content {
     width: min(16vw, 64px);
   }
   body[data-surface='reveal'] [data-pack-reveal='stage'] [data-pack-reveal='deck'] span {
-    right: calc(100% + 8px);
-    bottom: 20px;
-    left: auto;
-    transform: none;
+    z-index: 5;
+    bottom: 6px;
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: rgba(12, 30, 28, 0.72);
+    color: #e9f1ef;
     font-size: 11px;
   }
   body[data-surface='reveal'] [data-pack-reveal='strip'] {

@@ -140,7 +140,7 @@ export default function AccountPage() {
     <section className={`${styles.page} ${section === 'binder' ? styles.pageBinder : ''}`}>
       <PageHeader
         title="Account"
-        description="Your profile, your binder and how you sign in"
+        description="Your profile, your binder and how you log in"
         actions={
           <Link className={ui.link} href={`/users/${user.profile.username}`}>
             View your profile

@@ -1,4 +1,4 @@
-import { cardCode, personHandle, setPath } from '@miscellary/shared';
+import { cardCode, personHandle, setPath, countOf } from '@miscellary/shared';
 import type { Card, CardSetDetail, OwnedCard, PackOpening, PackStatus } from '@miscellary/shared';
 import Feather from '@expo/vector-icons/Feather';
 import { Link, router, useLocalSearchParams } from 'expo-router';
@@ -437,7 +437,7 @@ export default function BinderScreen() {
         ) : null}
       </View>
       <Muted style={styles.counts}>
-        {set.card_count} cards · {set.opening_count} packs opened
+        {countOf(set.card_count, 'card')} · {countOf(set.opening_count, 'pack')} opened
       </Muted>
       {set.description ? <Description text={set.description} /> : null}
       {set.tags.length ? (
@@ -594,7 +594,7 @@ export default function BinderScreen() {
             <Muted style={{ fontSize: 14 }}>
               {owned === null
                 ? 'Loading'
-                : `${collected.length} of ${set.card_count} · ${owned.length} copies`}
+                : `${collected.length} of ${set.card_count} · ${countOf(owned.length, 'copy', 'copies')}`}
             </Muted>
           </View>
           {owned === null ? (

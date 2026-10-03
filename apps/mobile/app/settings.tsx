@@ -196,7 +196,7 @@ function Account() {
 
       <Card
         title="Email"
-        note="Used to sign in and to reset your password. It is never shown on your profile."
+        note="Used to log in and to reset your password. It is never shown on your profile."
       >
         <Text style={styles.value}>{user.email}</Text>
         <Text style={user.email_verified ? styles.verified : styles.unverified}>

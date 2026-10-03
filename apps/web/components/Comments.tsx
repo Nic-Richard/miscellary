@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { personName } from '@miscellary/shared';
+import { COMMENT_COPY, countOf, personName } from '@miscellary/shared';
 import type { Comment } from '@miscellary/shared';
 import PersonLink from '@/components/PersonLink';
 import { deleteComment, getComments, postComment } from '@/lib/social';
@@ -146,7 +146,7 @@ function Note({
   if (comment.removed) {
     return (
       <li className={styles.note} data-depth={depth}>
-        <p className={styles.tomb}>Comment removed</p>
+        <p className={styles.tomb}>{COMMENT_COPY.removed}</p>
         <Replies replies={comment.replies} onReply={onReply} onDelete={onDelete} />
       </li>
     );
@@ -219,7 +219,7 @@ function Note({
         {replying ? (
           <Composer
             autoFocus
-            placeholder={`Reply to ${name}…`}
+            placeholder={COMMENT_COPY.replyTo(name)}
             submitLabel="Reply"
             onCancel={() => setReplying(false)}
             onSubmit={async (body) => {
@@ -272,22 +272,22 @@ export default function Comments({ slug }: { slug: string }) {
         <header className={styles.sectionHead}>
           <h2 className={styles.title}>Comments</h2>
           <span className={styles.meta}>
-            {count === 0 ? 'None yet' : `${count} ${count === 1 ? 'note' : 'notes'}`}
+            {count === 0 ? 'None yet' : countOf(count, 'comment')}
           </span>
         </header>
 
         {user ? (
           <Composer
-            placeholder="Say something about this set…"
+            placeholder={COMMENT_COPY.placeholder}
             submitLabel="Post"
             onSubmit={(body) => post(body)}
           />
         ) : (
           <p className={styles.signedOut}>
             <Link href={loginHref(pathname)} className={styles.link}>
-              Sign in
+              Log in
             </Link>{' '}
-            to leave a note about this set.
+            to comment on this set.
           </p>
         )}
 
@@ -296,9 +296,7 @@ export default function Comments({ slug }: { slug: string }) {
         {thread === null ? (
           <p className={styles.empty}>Loading…</p>
         ) : thread.length === 0 ? (
-          <p className={styles.empty}>
-            Nothing here yet. Ask the collector about a card, or say which one you pulled.
-          </p>
+          <p className={styles.empty}>{COMMENT_COPY.empty}</p>
         ) : (
           <ul className={styles.thread}>
             {thread.map((comment) => (

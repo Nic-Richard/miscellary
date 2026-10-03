@@ -1,4 +1,4 @@
-import { personName } from '@miscellary/shared';
+import { COMMENT_COPY, personName } from '@miscellary/shared';
 import type { Comment } from '@miscellary/shared';
 import { Link, router } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
@@ -83,7 +83,7 @@ function Entry({
   const author = comment.author;
 
   function confirmRemove() {
-    Alert.alert('Remove this comment?', undefined, [
+    Alert.alert(COMMENT_COPY.removePrompt, undefined, [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Remove', style: 'destructive', onPress: () => onRemove(comment.id) },
     ]);
@@ -92,7 +92,7 @@ function Entry({
   return (
     <View style={[styles.entry, depth > 0 && styles.reply]}>
       {comment.removed || !author ? (
-        <Muted style={styles.removed}>This comment was removed.</Muted>
+        <Muted style={styles.removed}>{COMMENT_COPY.removed}</Muted>
       ) : (
         <>
           <View style={styles.head}>
@@ -165,7 +165,7 @@ export default function Comments({ slug }: { slug: string }) {
 
       {user ? (
         <Composer
-          placeholder="Say something about this set"
+          placeholder={COMMENT_COPY.placeholder}
           submitLabel="Post"
           onSubmit={async (body) => {
             await postComment(slug, body);
@@ -174,7 +174,7 @@ export default function Comments({ slug }: { slug: string }) {
         />
       ) : (
         <Button
-          title="Log in to comment"
+          title={COMMENT_COPY.logInToComment}
           kind="secondary"
           onPress={() => router.push('/(auth)/login')}
         />
@@ -183,7 +183,7 @@ export default function Comments({ slug }: { slug: string }) {
       {thread === null ? (
         <Muted>Loading…</Muted>
       ) : thread.length === 0 ? (
-        <Muted>No comments yet. Be the first.</Muted>
+        <Muted>{COMMENT_COPY.empty}</Muted>
       ) : (
         thread.map((c) => (
           <View key={c.id}>
@@ -191,7 +191,7 @@ export default function Comments({ slug }: { slug: string }) {
             {replyTo === c.id ? (
               <View style={styles.replyBox}>
                 <Composer
-                  placeholder="Write a reply"
+                  placeholder={COMMENT_COPY.replyTo(c.author ? personName(c.author) : 'Someone')}
                   submitLabel="Reply"
                   onCancel={() => setReplyTo(null)}
                   onSubmit={async (body) => {
