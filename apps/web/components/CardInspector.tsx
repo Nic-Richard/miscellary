@@ -223,6 +223,7 @@ export default function CardInspector({
 
         <div
           className={styles.stage}
+          data-inspector-stage
           style={
             {
               '--corner': corner / 100,

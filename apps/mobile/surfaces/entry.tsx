@@ -228,5 +228,9 @@ window.miscellaryRender = (props) => {
       }),
     );
   });
+  void window.miscellaryReady.then(() => {
+    const stage = document.querySelector('[data-inspector-stage]')?.getBoundingClientRect();
+    send('drawn', stage && { x: stage.x, y: stage.y, width: stage.width, height: stage.height });
+  });
 };
 send('ready');
