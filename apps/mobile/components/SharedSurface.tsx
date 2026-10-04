@@ -22,12 +22,13 @@ interface Props {
   autoHeight?: boolean;
   passive?: boolean;
   onEvent?: (type: string, data: unknown) => void;
+  onReady?: () => void;
 }
 const literal = (value: unknown) => JSON.stringify(value).replace(/</g, '\\u003c');
 
 // Android gives a WebView loaded from markup an opaque origin, and the render store
 // only answers CORS requests from the site's own origin.
-const SURFACE_ORIGIN = 'https://miscellary.com';
+export const SURFACE_ORIGIN = 'https://miscellary.com';
 
 export default function SharedSurface({
   mode,
@@ -37,6 +38,7 @@ export default function SharedSurface({
   autoHeight,
   passive,
   onEvent,
+  onReady,
 }: Props) {
   const view = useRef<WebView>(null);
   const ready = useRef(false);
@@ -163,6 +165,7 @@ export default function SharedSurface({
             if (message.type === 'ready') {
               ready.current = true;
               render();
+              onReady?.();
               return;
             }
             if (message.type === 'height') {

@@ -27,7 +27,7 @@ const only = new Set(args.set ?? []);
 // Mirrors CARD_RENDERER_VERSION in apps/api/cards/rendering.py. The import
 // refuses a manifest that does not match, so the two move together.
 const RENDERER_VERSION = 1;
-const bundle = JSON.parse(await readFile(resolve(mobile, 'generated/surfaces.json'), 'utf8'));
+const bundle = JSON.parse(await readFile(resolve(mobile, 'generated/surfaces-inline.json'), 'utf8'));
 const server = createServer((request, response) => {
   response.setHeader('Content-Type', 'text/html');
   response.end(bundle.full.html);

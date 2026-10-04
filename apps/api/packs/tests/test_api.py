@@ -1,4 +1,6 @@
 import pytest
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 
 from cards.publishing import publish_set
@@ -76,6 +78,20 @@ def test_collection_keeps_cards_in_set_order(auth_client, user, published):
     assert [row["card"]["id"] for row in response.json()["results"]] == [
         str(card.id) for card in cards
     ]
+
+
+def test_collection_query_count_does_not_grow_with_cards(auth_client, user, published):
+    cards = list(published.cards.all())
+
+    def queries(n):
+        OwnedCard.objects.filter(owner=user).delete()
+        for card in cards[:n]:
+            OwnedCard.objects.create(owner=user, card=card)
+        with CaptureQueriesContext(connection) as captured:
+            assert auth_client.get(reverse("packs:collection")).status_code == 200
+        return len(captured)
+
+    assert queries(2) == queries(len(cards))
 
 
 def test_deleted_set_stops_generating_packs(auth_client, published):

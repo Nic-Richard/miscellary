@@ -30,8 +30,10 @@ def with_copies(queryset):
         .values("n")
     )
     held = TradeOfferItem.objects.filter(owned_card=OuterRef("pk"), offer__status="pending")
-    return queryset.select_related("card__image", "card__card_set").annotate(
-        copies=Subquery(copies), held=Exists(held)
+    return (
+        queryset.select_related("card__image", "card__card_set")
+        .prefetch_related("card__card_tags__tag")
+        .annotate(copies=Subquery(copies), held=Exists(held))
     )
 
 

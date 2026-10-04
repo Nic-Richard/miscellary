@@ -12,7 +12,17 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   transpilePackages: ['@miscellary/shared'],
   async headers() {
-    return [{ source: '/:path*', headers: SECURITY_HEADERS }];
+    return [
+      { source: '/:path*', headers: SECURITY_HEADERS },
+      {
+        source: '/surface-fonts/:path*',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+      },
+      {
+        source: '/materials/:path*',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=2592000' }],
+      },
+    ];
   },
   ...(process.env.NEXT_OUTPUT_STANDALONE === 'true'
     ? {

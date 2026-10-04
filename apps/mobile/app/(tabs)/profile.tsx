@@ -80,16 +80,29 @@ function Me() {
     }
   }
 
+  // The binder changes at once and saves in the background, putting things back if the save fails.
   async function persistSlots(next: (string | null)[]) {
+    if (!profile) return;
+    const before = { slots, showcase: profile.showcase };
+    const known = new Map(
+      [...cards, ...profile.showcase.map((slot) => slot.owned_card)].map((c) => [c.id, c]),
+    );
+    const showcase = next.flatMap((id, index) => {
+      const owned = id ? known.get(id) : undefined;
+      return owned ? [{ position: index + 1, owned_card: owned }] : [];
+    });
     setSlots(next);
     setPicking(null);
+    setProfile({ ...profile, showcase });
     try {
-      await saveShowcase(
+      const saved = await saveShowcase(
         next.flatMap((id, position) => (id ? [{ position, owned_card_id: id }] : [])),
       );
-      await load();
+      setProfile((current) => (current ? { ...current, showcase: saved } : current));
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not save the binder.');
+      setSlots(before.slots);
+      setProfile((current) => (current ? { ...current, showcase: before.showcase } : current));
+      Alert.alert(e instanceof Error ? e.message : 'Could not save the binder.');
     }
   }
 

@@ -3,6 +3,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
 import { ActivityIndicator, View } from 'react-native';
+import SurfaceWarmup from '@/components/SurfaceWarmup';
 import { AuthProvider } from '@/lib/auth';
 import { colors, fonts } from '@/lib/theme';
 import displayFont from '../assets/fonts/BebasNeue-Regular.ttf';
@@ -78,6 +79,7 @@ export default function RootLayout() {
         <Stack.Screen name="search" options={{ title: 'Search' }} />
       </Stack>
       <StatusBarScrim />
+      <SurfaceWarmup />
     </AuthProvider>
   );
 }

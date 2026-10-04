@@ -1,20 +1,37 @@
 import { build } from 'esbuild';
-import { readFile, readdir, mkdir, writeFile } from 'node:fs/promises';
-import { dirname, resolve } from 'node:path';
+import { createHash } from 'node:crypto';
+import { copyFile, readFile, readdir, mkdir, writeFile } from 'node:fs/promises';
+import { basename, dirname, extname, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const mobile = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const web = resolve(mobile, '../web');
 const mime = { png: 'image/png', jpg: 'image/jpeg', svg: 'image/svg+xml', ttf: 'font/ttf' };
+// The released app loads fonts and textures from the site, where the WebView caches them across
+// screens; inlining them meant every surface carried and decoded about 7 MB. Surfaces run with the
+// site as their origin, so these are same-origin requests. Development and the render script keep
+// them inline, so neither needs a deploy or a network.
+const SITE = 'https://miscellary.com';
+const INLINE = process.argv.includes('--inline');
+const materials = resolve(web, 'public/materials');
+const hostedFonts = resolve(web, 'public/surface-fonts');
+async function hostedUrl(path) {
+  const bytes = await readFile(path);
+  const hash = createHash('sha256').update(bytes).digest('hex').slice(0, 10);
+  if (!relative(materials, path).startsWith('..'))
+    return `${SITE}/materials/${relative(materials, path).split('\\').join('/')}?v=${hash}`;
+  // Fonts are copied under a hashed name, so an older app keeps the file it was built with.
+  const name = `${basename(path, extname(path))}-${hash}${extname(path)}`;
+  await mkdir(hostedFonts, { recursive: true });
+  await copyFile(path, resolve(hostedFonts, name));
+  return `${SITE}/surface-fonts/${name}`;
+}
 const bundles = {};
+const inlineBundles = {};
 for (const variant of ['card', 'pack', 'full']) {
   const assets = new Map();
   async function asset(path) {
-    if (!assets.has(path))
-      assets.set(
-        path,
-        `data:${mime[path.split('.').pop()]};base64,${(await readFile(path)).toString('base64')}`,
-      );
+    if (!assets.has(path)) assets.set(path, null);
     return `__ASSET_${[...assets.keys()].indexOf(path)}__`;
   }
   const result = await build({
@@ -139,13 +156,29 @@ export async function pickNativeImage(kind: ImageKind, aspect: number):` +
     fonts += `@font-face{font-family:'${family}';font-weight:${weight};src:url('${await asset(resolve(mobile, `assets/fonts/${file}.ttf`))}')}`;
   const css = result.outputFiles.find((file) => file.path.endsWith('.css')).text;
   const js = result.outputFiles.find((file) => file.path.endsWith('.js')).text;
-  const resources = [...assets.values()];
-  const bootstrap = `const assets=${JSON.stringify(resources)}; const urls=assets.map(uri=>{const [head,data]=uri.split(',');const bytes=Uint8Array.from(atob(data), c=>c.charCodeAt(0));return URL.createObjectURL(new Blob([bytes],{type:head.slice(5).split(';')[0]}));}); const expand=value=>value.replace(/__ASSET_(\\d+)__/g,(_,i)=>urls[Number(i)]);const style=document.createElement('style');style.textContent=expand(${JSON.stringify(fonts + css)});document.head.appendChild(style);const script=document.createElement('script');script.textContent=expand(${JSON.stringify(js)});document.body.appendChild(script);`;
-  const html = `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body><div id="root"></div><script>${bootstrap.replaceAll('</script', '<\\/script')}</script></body></html>`;
-  bundles[variant] = { html };
+  const page = (resources, decode) => {
+    const urls = decode
+      ? `assets.map(uri=>{const [head,data]=uri.split(',');const bytes=Uint8Array.from(atob(data), c=>c.charCodeAt(0));return URL.createObjectURL(new Blob([bytes],{type:head.slice(5).split(';')[0]}));})`
+      : 'assets';
+    const bootstrap = `const assets=${JSON.stringify(resources)}; const urls=${urls}; const expand=value=>value.replace(/__ASSET_(\\d+)__/g,(_,i)=>urls[Number(i)]);const style=document.createElement('style');style.textContent=expand(${JSON.stringify(fonts + css)});document.head.appendChild(style);const script=document.createElement('script');script.textContent=expand(${JSON.stringify(js)});document.body.appendChild(script);`;
+    return `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body><div id="root"></div><script>${bootstrap.replaceAll('</script', '<\\/script')}</script></body></html>`;
+  };
+  const paths = [...assets.keys()];
+  const inline = await Promise.all(
+    paths.map(
+      async (path) =>
+        `data:${mime[path.split('.').pop()]};base64,${(await readFile(path)).toString('base64')}`,
+    ),
+  );
+  const hosted = await Promise.all(paths.map(hostedUrl));
+  inlineBundles[variant] = { html: page(inline, true) };
+  bundles[variant] = { html: INLINE ? inlineBundles[variant].html : page(hosted, false) };
+  // The app fetches these once at launch so the first surface opened finds them cached.
+  if (variant === 'full') bundles.full.preload = INLINE ? [] : hosted;
   console.log(
-    `Bundled ${variant} shared surface with ${assets.size} local assets (${Math.round(html.length / 1024)} KB).`,
+    `Bundled ${variant} shared surface with ${assets.size} ${INLINE ? 'inline' : 'hosted'} assets (${Math.round(bundles[variant].html.length / 1024)} KB).`,
   );
 }
 await mkdir(resolve(mobile, 'generated'), { recursive: true });
 await writeFile(resolve(mobile, 'generated/surfaces.json'), JSON.stringify(bundles));
+await writeFile(resolve(mobile, 'generated/surfaces-inline.json'), JSON.stringify(inlineBundles));

@@ -2,7 +2,7 @@ import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { resolve } from 'node:path';
 
-const bundle = JSON.parse(await readFile('apps/mobile/generated/surfaces.json', 'utf8'));
+const bundle = JSON.parse(await readFile('apps/mobile/generated/surfaces-inline.json', 'utf8'));
 const server = createServer((request, response) => {
   response.setHeader('Content-Type', 'text/html');
   response.end(bundle[request.url === '/card' ? 'card' : 'full'].html);
