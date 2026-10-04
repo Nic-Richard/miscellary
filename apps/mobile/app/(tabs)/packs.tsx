@@ -1,11 +1,13 @@
 import { cardCode, personName } from '@miscellary/shared';
-import type { CardSetSummary, PackEntry, PackOpening } from '@miscellary/shared';
+import type { Card, CardSetSummary, PackEntry, PackOpening } from '@miscellary/shared';
 import Feather from '@expo/vector-icons/Feather';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import MoreButton from '@/components/MoreButton';
 import CardPreview from '@/components/CardPreview';
+import CardInspector from '@/components/CardInspector';
+import InspectorModal from '@/components/InspectorModal';
 import FilterField from '@/components/FilterField';
 import LoginGate from '@/components/LoginGate';
 import PackPreview from '@/components/PackPreview';
@@ -77,6 +79,7 @@ function Post({
   const set = entry.card_set;
   const creator = personName(set.creator);
   const affordable = entry.points >= entry.pack_cost;
+  const [inspecting, setInspecting] = useState<Card | null>(null);
   const open = () => router.push({ pathname: '/sets/[slug]', params: { slug: set.slug } });
 
   return (
@@ -194,7 +197,13 @@ function Post({
         {entry.recent_cards.length ? (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.pullsRow}>
             {entry.recent_cards.map((card) => (
-              <View key={card.id} style={styles.pull}>
+              <Pressable
+                key={card.id}
+                accessibilityRole="button"
+                accessibilityLabel={`Inspect ${card.title}`}
+                onPress={() => setInspecting(card)}
+                style={({ pressed }) => [styles.pull, pressed && { opacity: 0.7 }]}
+              >
                 <CardPreview
                   width={72}
                   title={card.title}
@@ -207,7 +216,7 @@ function Post({
                   mark={set.mark}
                   render={card.render}
                 />
-              </View>
+              </Pressable>
             ))}
           </ScrollView>
         ) : (
@@ -229,6 +238,21 @@ function Post({
           </View>
         )}
       </View>
+      {inspecting ? (
+        <InspectorModal open onClose={() => setInspecting(null)}>
+          <View style={{ flex: 1, backgroundColor: '#241d16' }}>
+            <CardInspector
+              card={inspecting}
+              setTitle={set.title}
+              setSlug={set.slug}
+              mark={set.mark}
+              packColour={set.pack_colour}
+              creator={set.creator}
+              onClose={() => setInspecting(null)}
+            />
+          </View>
+        </InspectorModal>
+      ) : null}
     </View>
   );
 }

@@ -107,3 +107,12 @@
   color: var(--muted);
   font-size: 12px;
 }
+
+.gestures {
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+.gestures:active {
+  cursor: grabbing;
+}

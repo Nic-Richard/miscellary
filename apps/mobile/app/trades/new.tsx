@@ -3,6 +3,7 @@ import type { OwnedCard } from '@miscellary/shared';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import CardPreview from '@/components/CardPreview';
 import { counterOffer, createOffer, getOffer, listMyCards, listUserCards } from '@/lib/endpoints';
 import { colors } from '@/lib/theme';
@@ -75,6 +76,7 @@ export default function NewTradeScreen() {
   const [message, setMessage] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     (async () => {
@@ -115,42 +117,61 @@ export default function NewTradeScreen() {
   }
 
   return (
-    <ScrollView
-      style={{ backgroundColor: colors.bg }}
-      contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 40 }}
-    >
-      <Tag>{params.counter ? 'Counter offer' : 'New offer'}</Tag>
-      <Title>{`Trade with @${partner}`}</Title>
-      <ErrorText>{error}</ErrorText>
-      <VerifyEmailNotice>Verify your email address to send offers.</VerifyEmailNotice>
-      <Picker
-        title={`@${partner}'s cards you want`}
-        cards={theirs}
-        selected={want}
-        onToggle={(id) => toggle(want, setWant, id)}
-      />
-      <Picker
-        title="Your cards to give"
-        cards={mine}
-        selected={give}
-        onToggle={(id) => toggle(give, setGive, id)}
-      />
-      <Input
-        placeholder="Message (optional)"
-        value={message}
-        onChangeText={setMessage}
-        maxLength={200}
-      />
-      <Button
-        title={busy ? 'Sending…' : params.counter ? 'Send counter offer' : 'Send offer'}
-        disabled={busy || !verified || (want.size === 0 && give.size === 0)}
-        onPress={() => void send()}
-      />
-    </ScrollView>
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+      <ScrollView
+        style={{ backgroundColor: colors.bg }}
+        contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 100 + insets.bottom }}
+      >
+        <Tag>{params.counter ? 'Counter offer' : 'New offer'}</Tag>
+        <Title>{`Trade with @${partner}`}</Title>
+        <ErrorText>{error}</ErrorText>
+        <VerifyEmailNotice>Verify your email address to send offers.</VerifyEmailNotice>
+        <Input
+          placeholder="Message (optional)"
+          value={message}
+          onChangeText={setMessage}
+          maxLength={200}
+        />
+        <Picker
+          title={`@${partner}'s cards you want`}
+          cards={theirs}
+          selected={want}
+          onToggle={(id) => toggle(want, setWant, id)}
+        />
+        <Picker
+          title="Your cards to give"
+          cards={mine}
+          selected={give}
+          onToggle={(id) => toggle(give, setGive, id)}
+        />
+      </ScrollView>
+      <View style={[styles.sendBar, { paddingBottom: 12 + insets.bottom }]}>
+        <Muted style={{ flex: 1 }}>{`You get ${want.size} · You give ${give.size}`}</Muted>
+        <Button
+          title={busy ? 'Sending…' : params.counter ? 'Send counter' : 'Send offer'}
+          disabled={busy || !verified || (want.size === 0 && give.size === 0)}
+          onPress={() => void send()}
+        />
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  sendBar: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    backgroundColor: colors.sur,
+    borderTopWidth: 1,
+    borderTopColor: colors.bdr,
+  },
   column: {
     backgroundColor: colors.sur,
     borderColor: colors.bdr2,

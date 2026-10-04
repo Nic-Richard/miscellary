@@ -24,6 +24,9 @@
   background: linear-gradient(90deg, rgba(35, 23, 8, 0.36), transparent 18%, rgba(35, 23, 8, 0.28));
   opacity: var(--page-shadow, 0);
   pointer-events: none;
+  /* Held to the binder's outline so the light does not paint past the cover. */
+  -webkit-mask: url('/materials/binder.png') center / 100% 100% no-repeat;
+  mask: url('/materials/binder.png') center / 100% 100% no-repeat;
 }
 .sheet,
 .cloth {
@@ -51,6 +54,9 @@
     radial-gradient(118% 132% at 80% 108%, rgba(44, 30, 10, 0.52), transparent 62%);
   mix-blend-mode: soft-light;
   pointer-events: none;
+  /* Held to the binder's outline so the light does not paint past the cover. */
+  -webkit-mask: url('/materials/binder.png') center / 100% 100% no-repeat;
+  mask: url('/materials/binder.png') center / 100% 100% no-repeat;
 }
 
 .slot {
@@ -199,6 +205,9 @@
   width: 100%;
   height: 100%;
   pointer-events: none;
+  /* Held to the binder's outline so the light does not paint past the cover. */
+  -webkit-mask: url('/materials/binder.png') center / 100% 100% no-repeat;
+  mask: url('/materials/binder.png') center / 100% 100% no-repeat;
 }
 .leafCloth {
   filter: hue-rotate(var(--binder-hue, 0deg)) saturate(var(--binder-saturation, 1))

@@ -241,6 +241,7 @@
 .ledgeUp {
   opacity: 1;
   transform: none;
+  cursor: pointer;
 }
 .ledgeUp.ledgeRaised {
   transform: translateY(-14px);

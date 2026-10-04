@@ -4,10 +4,11 @@ import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { cardCode, personHandle, personName } from '@miscellary/shared';
-import type { CardSetSummary, PackEntry, PackOpening } from '@miscellary/shared';
+import type { Card, CardSetSummary, PackEntry, PackOpening } from '@miscellary/shared';
 import PageHeader from '@/components/PageHeader';
 import PersonLink from '@/components/PersonLink';
 import CardBack from '@/components/CardBack';
+import CardInspector from '@/components/CardInspector';
 import CardPreview from '@/components/CardPreview';
 import PackReveal from '@/components/PackReveal';
 import MoreMenu from '@/components/MoreMenu';
@@ -98,6 +99,7 @@ function Post({
   const set = entry.card_set;
   const creator = personName(set.creator);
   const affordable = entry.points >= entry.pack_cost;
+  const [inspecting, setInspecting] = useState<Card | null>(null);
 
   return (
     <article id={`post-${set.slug}`} className={styles.post}>
@@ -207,7 +209,12 @@ function Post({
           <ul className={styles.pullsRow}>
             {entry.recent_cards.map((card) => (
               <li key={card.id}>
-                <Link href={`/collection?set=${set.slug}`} title={card.title}>
+                <button
+                  type="button"
+                  className={styles.pullButton}
+                  title={card.title}
+                  onClick={() => setInspecting(card)}
+                >
                   <CardPreview
                     size="small"
                     title={card.title}
@@ -220,7 +227,7 @@ function Post({
                     mark={set.mark}
                     render={card.render}
                   />
-                </Link>
+                </button>
               </li>
             ))}
           </ul>
@@ -246,6 +253,17 @@ function Post({
           </ul>
         </footer>
       )}
+      {inspecting ? (
+        <CardInspector
+          card={inspecting}
+          setTitle={set.title}
+          setSlug={set.slug}
+          mark={set.mark}
+          packColour={set.pack_colour}
+          creator={set.creator}
+          onClose={() => setInspecting(null)}
+        />
+      ) : null}
     </article>
   );
 }

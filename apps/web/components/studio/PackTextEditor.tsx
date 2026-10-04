@@ -114,6 +114,30 @@ export default function PackTextEditor({ layers, onDraft, onSave }: PackTextEdit
                   onChange={(v) => change(i, { font: v }, true)}
                 />
               </Field>
+              <Field label="Style">
+                <div className={styles.flips}>
+                  {(
+                    [
+                      ['bold', 'B', 'Bold', { fontWeight: 700 }],
+                      ['italic', 'I', 'Italic', { fontStyle: 'italic' }],
+                      ['underline', 'U', 'Underline', { textDecoration: 'underline' }],
+                    ] as const
+                  ).map(([key, letter, label, look]) => (
+                    <button
+                      key={key}
+                      type="button"
+                      aria-label={label}
+                      title={label}
+                      aria-pressed={layer[key]}
+                      className={`${styles.flip} ${layer[key] ? styles.flipOn : ''}`}
+                      style={look}
+                      onClick={() => change(i, { [key]: !layer[key] }, true)}
+                    >
+                      {letter}
+                    </button>
+                  ))}
+                </div>
+              </Field>
               <Field label="Colour">
                 <ColourMenu
                   value={layer.colour}

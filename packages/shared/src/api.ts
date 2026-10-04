@@ -172,6 +172,9 @@ export interface PackTextLayer {
   y: number;
   rotate: number;
   tracking: number;
+  bold: boolean;
+  italic: boolean;
+  underline: boolean;
 }
 
 export interface Tag {

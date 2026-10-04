@@ -9,6 +9,7 @@ import PersonLink from '@/components/PersonLink';
 import Binder from '@/components/binder/Binder';
 import type { BinderPage as BinderPageData } from '@/components/binder/Binder';
 import CardGrid, { CardCell } from '@/components/CardGrid';
+import BinderViewer from '@/components/binder/BinderViewer';
 import FolderTabs from '@/components/binder/FolderTabs';
 import CardInspector from '@/components/CardInspector';
 import MoreMenu from '@/components/MoreMenu';
@@ -154,6 +155,7 @@ export default function BinderClient({
   const [spread, setSpread] = useState(0);
   const [owned, setOwned] = useState<OwnedCard[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [viewing, setViewing] = useState(false);
   const [reportingCard, setReportingCard] = useState<Card | null>(null);
   const [inspect, setInspect] = useState<Card | null>(
     () => initialSet?.cards.find((card) => card.position + 1 === initialCard) ?? null,
@@ -475,6 +477,38 @@ export default function BinderClient({
                 pages={binderPages}
                 slots={binderPages[spread]?.slots ?? []}
               />
+              {viewing ? (
+                <BinderViewer
+                  title={set.title}
+                  subtitle={`${set.card_count} ${set.card_count === 1 ? 'card' : 'cards'}`}
+                  spread={spread}
+                  spreads={binderPages.length}
+                  onTurn={navigateSpread}
+                  onClose={() => setViewing(false)}
+                  paused={Boolean(inspect)}
+                >
+                  <Binder
+                    mark={set.mark}
+                    colour={set.binder_colour}
+                    page={spread}
+                    startIndex={spread * 8}
+                    canPrevious={spread > 0}
+                    canNext={spread < binderPages.length - 1}
+                    onNavigate={navigateSpread}
+                    pages={binderPages}
+                    slots={binderPages[spread]?.slots ?? []}
+                  />
+                </BinderViewer>
+              ) : null}
+              <div className={styles.pager}>
+                <button
+                  type="button"
+                  className={`${ui.btnQuiet} ${ui.btnSmall}`}
+                  onClick={() => setViewing(true)}
+                >
+                  Full screen
+                </button>
+              </div>
               {binderPages.length > 1 ? (
                 <div className={styles.pager}>
                   <button

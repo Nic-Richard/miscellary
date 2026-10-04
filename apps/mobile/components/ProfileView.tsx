@@ -1,7 +1,7 @@
 import { profilePath, SHOWCASE_SLOTS } from '@miscellary/shared';
 import type { OwnedCard, ProfilePage } from '@miscellary/shared';
 import { Link, router } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useAuth } from '@/lib/auth';
 import { setFollow } from '@/lib/endpoints';
@@ -22,15 +22,18 @@ import { Button, Muted } from './ui';
 export default function ProfileView({
   profile: initial,
   headerExtra,
+  editBinder,
   ownItems = [],
 }: {
   profile: ProfilePage;
   headerExtra?: React.ReactNode;
+  editBinder?: { pick: (position: number) => void; remove: (position: number) => void };
   /** Menu items for your own profile, where there is nothing to report. */
   ownItems?: MoreItem[];
 }) {
   const { user } = useAuth();
   const [profile, setProfile] = useState(initial);
+  useEffect(() => setProfile(initial), [initial]);
   const [selected, setSelected] = useState<OwnedCard | null>(null);
   const [binderOpen, setBinderOpen] = useState(false);
   const [people, setPeople] = useState<'followers' | 'following' | null>(null);
@@ -211,10 +214,11 @@ export default function ProfileView({
           title={profile.showcase_title?.trim() || 'The pride of the collection'}
           subtitle={`@${profile.username}`}
           spreads={SHOWCASE_SLOTS / 8}
-          surface={(spread) => ({
+          surface={(spread, editing) => ({
             mode: 'profile-binder',
-            data: { ...binderData, fill: true, page: spread },
+            data: { ...binderData, fill: true, page: spread, editing },
           })}
+          onEdit={editBinder}
           spreadOf={(page) => page}
           onClose={() => setBinderOpen(false)}
           onInspect={(id) =>

@@ -427,6 +427,9 @@ function TextLayer({ layer }: { layer: PackTextLayer }) {
         fontSize: `${layer.size}cqw`,
         letterSpacing: `${layer.tracking / 100}em`,
         color: emblemInk(layer.colour || 'cream'),
+        fontWeight: layer.bold ? 700 : undefined,
+        fontStyle: layer.italic ? 'italic' : undefined,
+        textDecoration: layer.underline ? 'underline' : undefined,
       }}
     >
       {layer.text}

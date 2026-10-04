@@ -27,11 +27,12 @@ export default function PackReveal({
   const stripRef = useRef<HTMLDivElement>(null);
   const [phase, setPhase] = useState<'sealed' | 'tearing' | 'open'>('sealed');
   const [revealed, setRevealed] = useState(0);
+  const [picked, setPicked] = useState<number | null>(null);
   const total = opening.cards.length;
   const done = revealed >= total;
   const best = opening.cards.reduce((a, b) => (rank(b.card.rarity) > rank(a.card.rarity) ? b : a));
   const legendaryPulled = best.card.rarity === 'legendary';
-  const current = done ? best : opening.cards[revealed - 1];
+  const current = opening.cards[picked ?? revealed - 1];
   const currentIndex = current ? opening.cards.findIndex((owned) => owned.id === current.id) : -1;
 
   useEffect(() => {
@@ -75,6 +76,7 @@ export default function PackReveal({
   }, [currentIndex, mobileLayout, phase]);
 
   function next() {
+    setPicked(null);
     setRevealed((n) => Math.min(n + 1, total));
   }
 
@@ -166,7 +168,7 @@ export default function PackReveal({
               className={`${styles.current} ${done ? styles.final : ''}`}
               data-pack-reveal="current"
               data-rarity={current.card.rarity}
-              onClick={!done ? next : undefined}
+              onClick={!done && picked === null ? next : undefined}
             >
               <div className={styles.burst} />
               <CardPreview
@@ -197,6 +199,17 @@ export default function PackReveal({
           {opening.cards.map((o, i) => (
             <div
               key={o.id}
+              role={i < revealed ? 'button' : undefined}
+              tabIndex={i < revealed ? 0 : undefined}
+              aria-label={i < revealed ? `Show ${o.card.title}` : undefined}
+              onClick={i < revealed ? () => setPicked(i) : undefined}
+              onKeyDown={
+                i < revealed
+                  ? (event) => {
+                      if (event.key === 'Enter' || event.key === ' ') setPicked(i);
+                    }
+                  : undefined
+              }
               className={`${styles.ledgeCard} ${i < revealed ? styles.ledgeUp : ''} ${
                 o.card.rarity === 'epic' || o.card.rarity === 'legendary' ? styles.ledgeRaised : ''
               }`}
@@ -240,7 +253,10 @@ export default function PackReveal({
           <button
             type="button"
             className={`${ui.btnQuiet} ${styles.quiet}`}
-            onClick={() => setRevealed(total)}
+            onClick={() => {
+              setPicked(null);
+              setRevealed(total);
+            }}
           >
             Reveal all
           </button>
@@ -254,6 +270,7 @@ export default function PackReveal({
               return;
             }
             // Skipping still shows what was in the pack before leaving.
+            setPicked(null);
             setRevealed(total);
             setPhase('open');
           }}

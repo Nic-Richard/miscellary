@@ -142,7 +142,9 @@ function Surface({ mode, data }: Props) {
           slots={data.slots as (ShowcaseSlot | null)[]}
           colour={data.colour as string}
           mine={Boolean(data.mine)}
-          onInspect={(owned) => send('inspect', owned.id)}
+          onInspect={data.editing ? undefined : (owned) => send('inspect', owned.id)}
+          onPick={data.editing ? (position) => send('pick', position) : undefined}
+          onRemove={data.editing ? (position) => send('remove', position) : undefined}
           bare={{ page: Number(data.page ?? 0), onPage: (page) => send('page', page) }}
         />
       </div>

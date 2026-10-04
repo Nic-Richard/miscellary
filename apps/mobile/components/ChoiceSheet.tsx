@@ -1,5 +1,6 @@
 import Feather from '@expo/vector-icons/Feather';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useRef } from 'react';
+import { Animated, Modal, PanResponder, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, fonts } from '@/lib/theme';
 
@@ -24,6 +25,24 @@ export default function ChoiceSheet<T extends string>({
   onClose: () => void;
 }) {
   const insets = useSafeAreaInsets();
+  const drag = useRef(new Animated.Value(0)).current;
+  const close = useRef(onClose);
+  close.current = onClose;
+  useEffect(() => {
+    if (visible) drag.setValue(0);
+  }, [visible, drag]);
+  const pan = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, g) => g.dy > 6 && Math.abs(g.dy) > Math.abs(g.dx),
+      onPanResponderMove: (_, g) => drag.setValue(Math.max(0, g.dy)),
+      onPanResponderRelease: (_, g) => {
+        if (g.dy > 90 || g.vy > 0.9) close.current();
+        else Animated.spring(drag, { toValue: 0, useNativeDriver: true }).start();
+      },
+      onPanResponderTerminate: () =>
+        Animated.spring(drag, { toValue: 0, useNativeDriver: true }).start(),
+    }),
+  ).current;
   return (
     // Drawn under the system bars so the sheet reaches the screen edge on Android;
     // the inset padding keeps its buttons clear of the gesture bar.
@@ -37,7 +56,13 @@ export default function ChoiceSheet<T extends string>({
     >
       <View style={styles.fill}>
         <Pressable style={styles.scrim} onPress={onClose} accessibilityLabel="Close" />
-        <View style={[styles.sheet, { paddingBottom: 24 + insets.bottom }]}>
+        <Animated.View
+          {...pan.panHandlers}
+          style={[
+            styles.sheet,
+            { paddingBottom: 24 + insets.bottom, transform: [{ translateY: drag }] },
+          ]}
+        >
           <View style={styles.grip} />
           <Text accessibilityRole="header" style={styles.title}>
             {title}
@@ -70,7 +95,7 @@ export default function ChoiceSheet<T extends string>({
           >
             <Text style={styles.cancelText}>Cancel</Text>
           </Pressable>
-        </View>
+        </Animated.View>
       </View>
     </Modal>
   );

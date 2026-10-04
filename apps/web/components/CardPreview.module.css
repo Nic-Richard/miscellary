@@ -221,6 +221,7 @@
 
 .art {
   position: relative;
+  z-index: 2;
   flex: 1;
   min-height: 0;
   background: #d9d0be;

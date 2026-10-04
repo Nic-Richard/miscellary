@@ -180,12 +180,13 @@ export default function ProfileBinder({
     return (
       <Binder
         colour={colour}
-        emptyLabel={mine ? 'Empty' : 'Empty sleeve'}
+        emptyLabel={onPick ? 'Pin a card' : mine ? 'Empty' : 'Empty sleeve'}
         page={page}
         startIndex={page * 8}
         canPrevious={page > 0}
         canNext={page < pages.length - 1}
         onNavigate={navigate}
+        onPickEmpty={onPick ? (slotIndex) => onPick(page * 8 + slotIndex) : undefined}
         pages={pages}
         slots={pages[page]?.slots ?? []}
       />

@@ -300,11 +300,16 @@
 .pullsRow li {
   width: 84px;
 }
-.pullsRow a {
+.pullButton {
   display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
   transition: transform var(--dur-fast) var(--ease-out);
 }
-.pullsRow a:hover {
+.pullButton:hover {
   transform: translateY(-3px);
 }
 

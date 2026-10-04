@@ -100,6 +100,9 @@ export interface PackTextLayer {
   y: number;
   rotate: number;
   tracking: number;
+  bold: boolean;
+  italic: boolean;
+  underline: boolean;
 }
 
 export const TEXT_LAYER_DEFAULT: PackTextLayer = {
@@ -112,6 +115,9 @@ export const TEXT_LAYER_DEFAULT: PackTextLayer = {
   y: 0,
   rotate: 0,
   tracking: 12,
+  bold: false,
+  italic: false,
+  underline: false,
 };
 
 export const PACK_SUBTITLE_MAX_LENGTH = 40;

@@ -26,11 +26,18 @@ interface PackLayerEditorProps {
   layers: PackLayer[];
   onDraft: (layers: PackLayer[]) => void;
   onSave: (layers: PackLayer[]) => void;
+  open: number | null;
+  onOpen: (layer: number | null) => void;
 }
 
 // Layer order matches paint order, bottom first.
-export default function PackLayerEditor({ layers, onDraft, onSave }: PackLayerEditorProps) {
-  const [open, setOpen] = useState<number | null>(layers.length ? 0 : null);
+export default function PackLayerEditor({
+  layers,
+  onDraft,
+  onSave,
+  open,
+  onOpen: setOpen,
+}: PackLayerEditorProps) {
   const [adding, setAdding] = useState(false);
 
   function change(i: number, patch: Partial<PackLayer>, save: boolean) {

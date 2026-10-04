@@ -19,18 +19,22 @@ export default function BinderViewer({
   spreadOf,
   onClose,
   onInspect,
+  onEdit,
 }: {
   title: string;
   subtitle: string;
   spreads: number;
-  surface: (spread: number) => { mode: string; data: object };
+  surface: (spread: number, editing: boolean) => { mode: string; data: object };
   spreadOf: (page: number) => number;
   onClose: () => void;
   onInspect: (id: string) => void;
+  /** Sleeve edits for the owner's profile binder; adds an Edit toggle. */
+  onEdit?: { pick: (position: number) => void; remove: (position: number) => void };
 }) {
   const insets = useSafeAreaInsets();
   const [spread, setSpread] = useState(0);
   const [hint, setHint] = useState(false);
+  const [editing, setEditing] = useState(false);
 
   useEffect(() => {
     void ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
@@ -65,9 +69,11 @@ export default function BinderViewer({
     >
       <View style={styles.stage}>
         <SharedSurface
-          {...surface(spread)}
+          {...surface(spread, editing)}
           onEvent={(type, value) => {
             if (type === 'inspect' && typeof value === 'string') onInspect(value);
+            if (type === 'pick' && typeof value === 'number') onEdit?.pick(value);
+            if (type === 'remove' && typeof value === 'number') onEdit?.remove(value);
             if (type === 'page' && typeof value === 'number') turn(spreadOf(value));
           }}
         />
@@ -77,6 +83,20 @@ export default function BinderViewer({
           </Text>
           <Text style={styles.subtitle}>{subtitle}</Text>
         </View>
+        {onEdit ? (
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => setEditing((on) => !on)}
+            style={({ pressed }) => [
+              styles.editToggle,
+              { right: side.right + 56 },
+              editing && styles.editOn,
+              pressed && { opacity: 0.7 },
+            ]}
+          >
+            <Text style={styles.editText}>{editing ? 'Done' : 'Edit'}</Text>
+          </Pressable>
+        ) : null}
         <Round
           label="Close binder"
           icon="x"
@@ -171,6 +191,19 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(246, 240, 228, 0.16)',
   },
   pillText: { color: '#efe6d6', fontFamily: fonts.medium, fontSize: 12 },
+  editToggle: {
+    position: 'absolute',
+    top: 12,
+    height: 44,
+    paddingHorizontal: 18,
+    borderRadius: 22,
+    justifyContent: 'center',
+    backgroundColor: 'rgba(20, 16, 12, 0.62)',
+    borderWidth: 1,
+    borderColor: 'rgba(246, 240, 228, 0.18)',
+  },
+  editOn: { backgroundColor: '#2b8f80', borderColor: 'transparent' },
+  editText: { color: '#f3ecdd', fontFamily: fonts.medium, fontSize: 15 },
   hint: { backgroundColor: '#2b8f80', borderColor: 'transparent' },
   hintText: { color: '#fff', fontFamily: fonts.medium, fontSize: 12 },
 });

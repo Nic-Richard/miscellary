@@ -36,7 +36,12 @@ DEFAULTS: dict[str, Any] = {
     "y": 0,
     "rotate": 0,
     "tracking": 12,
+    "bold": False,
+    "italic": False,
+    "underline": False,
 }
+
+_FLAGS = ("hidden", "bold", "italic", "underline")
 
 # Dropped settings. Still accepted from an older client so a stale tab cannot
 # fail a save, and then discarded.
@@ -72,8 +77,9 @@ def problems(layers: Any) -> list[str]:
             if key not in DEFAULTS and key not in LEGACY:
                 found.append(f"Line {i} has an unknown setting '{key}'.")
 
-        if not isinstance(layer.get("hidden", False), bool):
-            found.append(f"Line {i} needs hidden as true or false.")
+        for key in _FLAGS:
+            if not isinstance(layer.get(key, DEFAULTS[key]), bool):
+                found.append(f"Line {i} needs {key} as true or false.")
 
         text = layer.get("text", "")
         if not isinstance(text, str):

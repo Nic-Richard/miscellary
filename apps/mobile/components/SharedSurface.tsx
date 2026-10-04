@@ -53,8 +53,10 @@ export default function SharedSurface({
   }
   function reply(source: PhotoSource | null) {
     setAsking(false);
-    answer.current?.(source);
+    const resolve = answer.current;
     answer.current = null;
+    // Android can drop the camera or gallery launch while the sheet's window is still closing.
+    setTimeout(() => resolve?.(source), source ? 350 : 0);
   }
   const surface = mode === 'card' ? bundle.card : mode === 'pack' ? bundle.pack : bundle.full;
   const props = useRef({ mode, data });

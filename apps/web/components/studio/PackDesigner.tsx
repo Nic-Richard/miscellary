@@ -1,6 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import type { CardSetDetail } from '@miscellary/shared';
+import PackGestures from './PackGestures';
 import PackLayerEditor from './PackLayerEditor';
 import PackPouch from '../PackPouch';
 import PackTextEditor from './PackTextEditor';
@@ -49,6 +51,7 @@ const FINISH_LABELS: Record<string, string> = {
 };
 
 export default function PackDesigner({ set, onDraft, onSave }: PackDesignerProps) {
+  const [openLayer, setOpenLayer] = useState<number | null>(set.pack_layers.length ? 0 : null);
   const wordmark = (set.emblem_layout || 'seal') === 'wordmark';
   const emblemAt = set.pack_layers.findIndex((layer) => layer.kind === 'emblem');
   const hasEmblem = emblemAt >= 0;
@@ -79,6 +82,8 @@ export default function PackDesigner({ set, onDraft, onSave }: PackDesignerProps
 
         <Section title="Front" note="Painted bottom first.">
           <PackLayerEditor
+            open={openLayer}
+            onOpen={setOpenLayer}
             layers={set.pack_layers}
             onDraft={(pack_layers: PackLayer[]) => onDraft({ pack_layers })}
             onSave={(pack_layers: PackLayer[]) => onSave({ pack_layers })}
@@ -248,7 +253,19 @@ export default function PackDesigner({ set, onDraft, onSave }: PackDesignerProps
       </div>
 
       <div className={styles.preview}>
-        <PackPouch title={set.title} identity={set} />
+        <PackGestures
+          layer={openLayer === null ? null : (set.pack_layers[openLayer] ?? null)}
+          onChange={(patch, save) => {
+            if (openLayer === null) return;
+            const pack_layers = set.pack_layers.map((layer, i) =>
+              i === openLayer ? { ...layer, ...patch } : layer,
+            );
+            if (save) onSave({ pack_layers });
+            else onDraft({ pack_layers });
+          }}
+        >
+          <PackPouch title={set.title} identity={set} />
+        </PackGestures>
         <span className={styles.previewLabel}>Live pack preview</span>
       </div>
     </div>
