@@ -1,4 +1,4 @@
-import { cardCode, personHandle, setPath, countOf } from '@miscellary/shared';
+import { cardCode, personHandle, setPath, countOf, spareCount } from '@miscellary/shared';
 import type { Card, CardSetDetail, OwnedCard, PackOpening, PackStatus } from '@miscellary/shared';
 import Feather from '@expo/vector-icons/Feather';
 import { Link, router, useLocalSearchParams } from 'expo-router';
@@ -42,6 +42,7 @@ import {
   listMyCards,
   openPack,
   recycleCard,
+  recycleDuplicates,
   setFollow,
 } from '@/lib/endpoints';
 import { readPublicCache, writePublicCache } from '@/lib/publicCache';
@@ -61,7 +62,7 @@ function stack(owned: OwnedCard[]): OwnedCard[] {
 }
 
 export default function BinderScreen() {
-  const params = useLocalSearchParams<{ slug: string; do?: string }>();
+  const params = useLocalSearchParams<{ slug: string; do?: string; tab?: string }>();
   const { slug } = params;
   const insets = useSafeAreaInsets();
   const { width: viewportWidth } = useWindowDimensions();
@@ -73,7 +74,9 @@ export default function BinderScreen() {
   const [opening, setOpening] = useState<PackOpening | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [tab, setTab] = useState<'binder' | 'all' | 'collected'>('binder');
+  const [tab, setTab] = useState<'binder' | 'all' | 'collected'>(
+    params.tab === 'collected' ? 'collected' : 'binder',
+  );
   const [owned, setOwned] = useState<OwnedCard[] | null>(null);
   const [selected, setSelected] = useState<{ card: Card; copies?: number } | null>(null);
   const [recycling, setRecycling] = useState<string | null>(null);
@@ -209,6 +212,21 @@ export default function BinderScreen() {
       const nextGain = { cardId: copy.card.id, amount: result.earned, key: Date.now() };
       setGain(nextGain);
       setTimeout(() => setGain((current) => (current?.key === nextGain.key ? null : current)), 750);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not recycle.');
+    } finally {
+      setRecycling(null);
+    }
+  }
+
+  async function recycleAll() {
+    if (!set) return;
+    setRecycling('all');
+    setError(null);
+    try {
+      const result = await recycleDuplicates(set.slug);
+      setStatus((current) => (current ? { ...current, points: result.points } : current));
+      setOwned((await listMyCards(set.slug)).results);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not recycle.');
     } finally {
@@ -597,6 +615,16 @@ export default function BinderScreen() {
                 : `${collected.length} of ${set.card_count} · ${countOf(owned.length, 'copy', 'copies')}`}
             </Muted>
           </View>
+          {owned && spareCount(owned) > 0 ? (
+            <Button
+              title={
+                recycling === 'all' ? 'Recycling…' : `Recycle all spares (${spareCount(owned)})`
+              }
+              kind="secondary"
+              disabled={recycling !== null}
+              onPress={() => void recycleAll()}
+            />
+          ) : null}
           {owned === null ? (
             <Loading />
           ) : collected.length === 0 ? (
@@ -604,7 +632,7 @@ export default function BinderScreen() {
           ) : (
             <View style={styles.grid}>
               {collected.map((copy) => (
-                <View key={copy.card.id} style={styles.collectedCard}>
+                <View key={copy.card.id} style={[styles.collectedCard, { width: cardWidth }]}>
                   <Pressable
                     accessibilityRole="button"
                     accessibilityLabel={`Inspect ${copy.card.title}`}
@@ -631,7 +659,6 @@ export default function BinderScreen() {
                   </Pressable>
                   <View style={styles.recycleRow}>
                     <View style={styles.recycleAnchor}>
-                      <View style={styles.gainSlot} />
                       <View style={styles.recycleControl}>
                         {copy.held ? (
                           <Muted style={{ fontSize: 13 }}>In a pending trade</Muted>
@@ -644,11 +671,9 @@ export default function BinderScreen() {
                               (pressed || recycling === copy.id) && { opacity: 0.55 },
                             ]}
                           >
-                            <Text style={styles.recycleText}>×{copy.copies} · Recycle one</Text>
+                            <Text style={styles.recycleText}>Recycle (×{copy.copies})</Text>
                           </Pressable>
-                        ) : (
-                          <Muted style={{ fontSize: 13 }}>Only copy</Muted>
-                        )}
+                        ) : null}
                       </View>
                       <View style={styles.gainSlot}>
                         {gain?.cardId === copy.card.id ? (
@@ -791,7 +816,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   recycleControl: { alignItems: 'center', justifyContent: 'center' },
-  gainSlot: { width: 38, alignItems: 'flex-start', justifyContent: 'center' },
+  gainSlot: { position: 'absolute', left: '100%', marginLeft: 4, justifyContent: 'center' },
   recycle: {
     borderWidth: 1,
     borderColor: colors.bdr2,

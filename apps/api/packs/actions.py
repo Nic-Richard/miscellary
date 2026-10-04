@@ -150,3 +150,34 @@ def recycle_card(user, owned_card: OwnedCard) -> int:
         points.save(update_fields=["balance"])
         locked.delete()
         return points.balance
+
+
+def recycle_duplicates(user, card_set: CardSet) -> tuple[int, int, int]:
+    """Recycle every spare copy from one set, keeping the oldest free copy of each card and
+    anything in a pending trade. Returns (recycled, earned, new balance)."""
+    from trades.actions import held_card_ids  # here, not at the top: import cycle
+
+    with transaction.atomic():
+        copies = list(
+            OwnedCard.objects.select_for_update()
+            .select_related("card")
+            .filter(owner=user, card__card_set=card_set)
+            .order_by("card_id", "acquired_at", "pk")
+        )
+        held = held_card_ids([c.pk for c in copies])
+        by_card: dict = {}
+        for copy in copies:
+            by_card.setdefault(copy.card_id, []).append(copy)
+        spare = []
+        for group in by_card.values():
+            # The oldest free copy stays even beside a held one, which may leave in its trade.
+            spare.extend([c for c in group if c.pk not in held][1:])
+        points, _ = SetPoints.objects.select_for_update().get_or_create(
+            user=user, card_set=card_set
+        )
+        earned = sum(RECYCLE_VALUE[c.card.rarity] for c in spare)
+        if spare:
+            OwnedCard.objects.filter(pk__in=[c.pk for c in spare]).delete()
+            points.balance += earned
+            points.save(update_fields=["balance"])
+        return len(spare), earned, points.balance

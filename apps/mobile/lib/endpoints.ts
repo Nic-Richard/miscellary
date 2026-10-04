@@ -113,6 +113,11 @@ export const recycleCard = (id: string) =>
       method: 'POST',
     },
   );
+export const recycleDuplicates = (slug: string) =>
+  apiFetch<{ recycled: number; earned: number; points: number; set_slug: string }>(
+    `/api/v1/me/sets/${slug}/recycle-duplicates/`,
+    { method: 'POST' },
+  );
 export const listMyPoints = () => apiFetch<SetPointsBalance[]>('/api/v1/me/points/');
 
 export const listOffers = (box: 'inbox' | 'outbox' | 'history') =>

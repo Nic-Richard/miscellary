@@ -1,4 +1,4 @@
-import { cardCode, RARITIES, RARITY_LABELS, countOf } from '@miscellary/shared';
+import { cardCode, RARITIES, RARITY_LABELS, countOf, spareCount } from '@miscellary/shared';
 import type { OwnedCard, SetPointsBalance } from '@miscellary/shared';
 import { Link, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
@@ -9,7 +9,7 @@ import CardPreview from '@/components/CardPreview';
 import FilterField from '@/components/FilterField';
 import LoginGate from '@/components/LoginGate';
 import PointGain from '@/components/PointGain';
-import { listAllMyCards, listMyPoints, recycleCard } from '@/lib/endpoints';
+import { listAllMyCards, listMyPoints, recycleCard, recycleDuplicates } from '@/lib/endpoints';
 import { colors, fonts, rarityColors } from '@/lib/theme';
 import { ErrorText, Muted } from '@/components/ui';
 
@@ -69,6 +69,23 @@ function Collection() {
       const nextGain = { cardId: owned.card.id, amount: result.earned, key: Date.now() };
       setGain(nextGain);
       setTimeout(() => setGain((current) => (current?.key === nextGain.key ? null : current)), 750);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not recycle.');
+    } finally {
+      setRecycling(null);
+    }
+  }
+
+  async function recycleAll(slug: string, title: string) {
+    setRecycling(`set:${slug}`);
+    setError(null);
+    try {
+      const result = await recycleDuplicates(slug);
+      setPoints((current) => [
+        ...current.filter((balance) => balance.set_slug !== slug),
+        { set_slug: slug, set_title: title, points: result.points },
+      ]);
+      setCards(await listAllMyCards());
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not recycle.');
     } finally {
@@ -174,6 +191,23 @@ function Collection() {
               )}{' '}
               · {points.find((p) => p.set_slug === slug)?.points ?? 0} points toward an extra pack
             </Muted>
+            {spareCount(cards.filter((copy) => copy.set_slug === slug)) > 0 ? (
+              <Pressable
+                accessibilityRole="button"
+                disabled={recycling !== null}
+                onPress={() => void recycleAll(slug, list[0]?.set_title ?? '')}
+                style={({ pressed }) => [
+                  styles.recycle,
+                  (pressed || recycling === `set:${slug}`) && { opacity: 0.55 },
+                ]}
+              >
+                <Text style={{ color: colors.muted, fontSize: 13 }}>
+                  {recycling === `set:${slug}`
+                    ? 'Recycling…'
+                    : `Recycle all spares (${spareCount(cards.filter((copy) => copy.set_slug === slug))})`}
+                </Text>
+              </Pressable>
+            ) : null}
           </View>
           <View style={styles.grid}>
             {list.map((owned) => (

@@ -124,6 +124,15 @@ class RecycleCardView(APIView):
         return Response({"points": balance, "earned": earned, "set_slug": owned.card.card_set.slug})
 
 
+class RecycleDuplicatesView(APIView):
+    def post(self, request: Request, slug: str) -> Response:
+        card_set = get_object_or_404(CardSet, slug=slug)
+        recycled, earned, balance = actions.recycle_duplicates(request.user, card_set)
+        return Response(
+            {"recycled": recycled, "earned": earned, "points": balance, "set_slug": slug}
+        )
+
+
 class MyPointsView(APIView):
     def get(self, request: Request) -> Response:
         rows = SetPoints.objects.filter(user_id=request.user.id, balance__gt=0)  # type: ignore[misc]

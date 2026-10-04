@@ -2,6 +2,7 @@ import type { CreateUploadResponse, ImageKind, ImageRef } from '@miscellary/shar
 import * as FileSystem from 'expo-file-system';
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
+import { Alert, Linking } from 'react-native';
 import { apiFetch } from './api';
 
 const CARD_ASPECT: [number, number] = [4, 5];
@@ -18,18 +19,49 @@ function cropAspect(aspect: number): [number, number] {
 const crops = (aspect: number) => Number.isFinite(aspect) && aspect > 0;
 
 // The system crop UI handles framing; the image is resized before upload.
+// The camera skips the system crop screen, which fails or returns nothing on many phones; the
+// photo is cut to the shape from its centre and framed afterwards on the card itself.
 export async function takePhoto(
   aspect: number = CARD_ASPECT[0] / CARD_ASPECT[1],
 ): Promise<ImagePicker.ImagePickerAsset | null> {
   const permission = await ImagePicker.requestCameraPermissionsAsync();
-  if (!permission.granted) throw new Error('Camera permission is needed to photograph your item.');
-  const result = await ImagePicker.launchCameraAsync({
-    mediaTypes: ['images'],
-    allowsEditing: crops(aspect),
-    ...(crops(aspect) ? { aspect: cropAspect(aspect) } : {}),
-    quality: 1,
-  });
-  return result.canceled ? null : (result.assets[0] ?? null);
+  if (!permission.granted) {
+    if (!permission.canAskAgain) {
+      Alert.alert(
+        'Camera access is off',
+        'Allow Miscellary to use the camera in Settings to photograph your things.',
+        [
+          { text: 'Not now', style: 'cancel' },
+          { text: 'Open Settings', onPress: () => void Linking.openSettings() },
+        ],
+      );
+      return null;
+    }
+    throw new Error('Camera permission is needed to photograph your item.');
+  }
+  const result = await ImagePicker.launchCameraAsync({ mediaTypes: ['images'], quality: 1 });
+  const asset = result.canceled ? null : (result.assets[0] ?? null);
+  return asset && crops(aspect) ? centreCrop(asset, aspect) : asset;
+}
+
+async function centreCrop(
+  asset: ImagePicker.ImagePickerAsset,
+  aspect: number,
+): Promise<ImagePicker.ImagePickerAsset> {
+  const { width, height } = asset;
+  const cropWidth = Math.min(width, Math.round(height * aspect));
+  const cropHeight = Math.min(height, Math.round(width / aspect));
+  const cropped = await ImageManipulator.manipulateAsync(asset.uri, [
+    {
+      crop: {
+        originX: Math.round((width - cropWidth) / 2),
+        originY: Math.round((height - cropHeight) / 2),
+        width: cropWidth,
+        height: cropHeight,
+      },
+    },
+  ]);
+  return { ...asset, uri: cropped.uri, width: cropped.width, height: cropped.height };
 }
 
 export async function pickPhoto(

@@ -179,7 +179,16 @@ function Post({
             </Text>
           ) : null}
           {entry.duplicate_count > 0 ? (
-            <Text style={styles.pointsLink}>
+            <Text
+              accessibilityRole="link"
+              style={[styles.pointsLink, styles.sparesLink]}
+              onPress={() =>
+                router.push({
+                  pathname: '/sets/[slug]',
+                  params: { slug: set.slug, tab: 'collected' },
+                })
+              }
+            >
               {entry.duplicate_count} spare{entry.duplicate_count === 1 ? '' : 's'}
             </Text>
           ) : null}
@@ -541,6 +550,7 @@ const styles = StyleSheet.create({
   waitingLabel: { color: colors.faint, fontFamily: fonts.body, fontSize: 13 },
   points: { flexDirection: 'row', alignItems: 'baseline', gap: 12 },
   pointsText: { color: colors.muted, fontFamily: fonts.medium, fontSize: 14 },
+  sparesLink: { textDecorationLine: 'underline' },
   pointsLink: { color: colors.accent, fontFamily: fonts.body, fontSize: 14 },
 
   pulls: { marginTop: 14, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.bdr },

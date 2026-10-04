@@ -133,6 +133,22 @@ def test_recycle_duplicate_earns_points_and_buys_packs(user, published):
         actions.open_pack_with_points(user, published)
 
 
+def test_recycle_duplicates_keeps_one_of_each_and_held_copies(user, published):
+    rare = published.cards.filter(rarity="rare").first()
+    common = published.cards.filter(rarity="common").first()
+    rares = [OwnedCard.objects.create(owner=user, card=rare) for _ in range(3)]
+    OwnedCard.objects.create(owner=user, card=common)
+    other = make_user()
+    theirs = OwnedCard.objects.create(owner=other, card=common)
+    trades.create_offer(user, other, [rares[1].pk], [theirs.pk])
+
+    recycled, earned, balance = actions.recycle_duplicates(user, published)
+
+    assert (recycled, earned, balance) == (1, 10, 10)
+    assert set(OwnedCard.objects.filter(owner=user, card=rare)) == {rares[0], rares[1]}
+    assert OwnedCard.objects.filter(owner=user, card=common).count() == 1
+
+
 def test_cannot_recycle_someone_elses_card(user, published):
     other = make_user()
     card = published.cards.first()

@@ -194,7 +194,7 @@ function Post({
                 )
               ) : null}
               {entry.duplicate_count > 0 ? (
-                <Link href={`/collection?set=${set.slug}`}>
+                <Link href={`/sets/${set.slug}#collected`} className={styles.spares}>
                   {entry.duplicate_count} spare{entry.duplicate_count === 1 ? '' : 's'} to recycle
                 </Link>
               ) : null}

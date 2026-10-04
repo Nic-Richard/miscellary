@@ -413,3 +413,8 @@
     max-width: 190px;
   }
 }
+
+.spares {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}

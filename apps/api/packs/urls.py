@@ -9,6 +9,11 @@ urlpatterns = [
     path("sets/<slug:slug>/packs/open/", views.OpenPackView.as_view(), name="open"),
     path("me/cards/", views.MyCollectionView.as_view(), name="collection"),
     path("me/cards/<uuid:card_id>/recycle/", views.RecycleCardView.as_view(), name="recycle"),
+    path(
+        "me/sets/<slug:slug>/recycle-duplicates/",
+        views.RecycleDuplicatesView.as_view(),
+        name="recycle-duplicates",
+    ),
     path("me/points/", views.MyPointsView.as_view(), name="points"),
     path("users/<str:username>/cards/", views.UserCollectionView.as_view(), name="user-collection"),
 ]

@@ -3,7 +3,14 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { cardCode, cardPath, personName, RARITY_LABELS, setPath } from '@miscellary/shared';
+import {
+  cardCode,
+  cardPath,
+  personName,
+  RARITY_LABELS,
+  setPath,
+  spareCount,
+} from '@miscellary/shared';
 import type { Card, CardSetDetail, OwnedCard } from '@miscellary/shared';
 import PersonLink from '@/components/PersonLink';
 import Binder from '@/components/binder/Binder';
@@ -27,7 +34,7 @@ import { useAuth } from '@/lib/auth';
 import { loginHref } from '@/lib/returnTo';
 import { useContinuation } from '@/lib/useContinuation';
 import { getPublicSet } from '@/lib/sets';
-import { listMyCards, recycleCard } from '@/lib/packs';
+import { listMyCards, recycleCard, recycleDuplicates } from '@/lib/packs';
 import ui from '@/components/ui.module.css';
 import wide from '@/components/pageWide.module.css';
 import SetCover from '@/components/SetCover';
@@ -151,6 +158,9 @@ export default function BinderClient({
   const [followBusy, setFollowBusy] = useState(false);
   const [followError, setFollowError] = useState<string | null>(null);
   const [tab, setTab] = useState<'binder' | 'all' | 'collected'>('binder');
+  useEffect(() => {
+    if (window.location.hash === '#collected') setTab('collected');
+  }, []);
   const tabsTop = useRef<HTMLDivElement>(null);
   const [spread, setSpread] = useState(0);
   const [owned, setOwned] = useState<OwnedCard[] | null>(null);
@@ -246,6 +256,18 @@ export default function BinderClient({
       }),
     }));
   }, [set, likeSetCard]);
+
+  async function onRecycleAll() {
+    if (!set) return;
+    setRecycling('all');
+    try {
+      const result = await recycleDuplicates(set.slug);
+      setPackPoints(result.points);
+      setOwned((await listMyCards(set.slug)).results);
+    } finally {
+      setRecycling(null);
+    }
+  }
 
   async function onRecycle(copy: OwnedCard) {
     setRecycling(copy.id);
@@ -572,6 +594,18 @@ export default function BinderClient({
                         owned.length === 1 ? 'copy' : 'copies'
                       }`}
                 </span>
+                {owned && spareCount(owned) > 0 ? (
+                  <button
+                    type="button"
+                    className={`${ui.btnQuiet} ${ui.btnSmall}`}
+                    disabled={recycling !== null}
+                    onClick={() => void onRecycleAll()}
+                  >
+                    {recycling === 'all'
+                      ? 'Recycling…'
+                      : `Recycle all spares (${spareCount(owned)})`}
+                  </button>
+                ) : null}
               </div>
               {owned === null ? (
                 <p className={styles.sheetEmpty}>Loading…</p>

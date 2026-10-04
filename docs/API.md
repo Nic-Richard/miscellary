@@ -89,13 +89,14 @@ Published sets also include `render_back`. Drafts return `null`. Missing or stal
 
 ## Packs and collection
 
-| Method | Path                       | Notes                                                                                                                                                                    |
-| ------ | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| GET    | `/sets/{slug}/packs/`      | `{free_available, points, pack_cost, pack_size, recycle_values, resets_at}`                                                                                              |
-| POST   | `/sets/{slug}/packs/open/` | `{use_points?: bool}` → 201 opening with `cards[]` (each has `copies`) and refreshed `status`; 400 with a plain `error` if today's free pack is used or points are short |
-| GET    | `/me/cards/?set=slug`      | owned cards, paginated, with `copies` and set slug, title, mark, and pack colour                                                                                         |
-| POST   | `/me/cards/{id}/recycle/`  | duplicates only → `{points, earned, set_slug}`                                                                                                                           |
-| GET    | `/me/points/`              | non-zero set point balances                                                                                                                                              |
+| Method | Path                                  | Notes                                                                                                                                                                    |
+| ------ | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| GET    | `/sets/{slug}/packs/`                 | `{free_available, points, pack_cost, pack_size, recycle_values, resets_at}`                                                                                              |
+| POST   | `/sets/{slug}/packs/open/`            | `{use_points?: bool}` → 201 opening with `cards[]` (each has `copies`) and refreshed `status`; 400 with a plain `error` if today's free pack is used or points are short |
+| GET    | `/me/cards/?set=slug`                 | owned cards, paginated, with `copies` and set slug, title, mark, and pack colour                                                                                         |
+| POST   | `/me/cards/{id}/recycle/`             | duplicates only → `{points, earned, set_slug}`                                                                                                                           |
+| POST   | `/me/sets/{slug}/recycle-duplicates/` | every spare copy from the set, keeping one free copy of each card → `{recycled, earned, points, set_slug}`                                                               |
+| GET    | `/me/points/`                         | non-zero set point balances                                                                                                                                              |
 
 One free pack per user per set per UTC day is a database constraint, so concurrent requests can't
 double-open. Points balances are locked with `SELECT … FOR UPDATE` while spending or recycling.

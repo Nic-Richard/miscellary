@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
-import { cardCode, RARITIES, RARITY_LABELS, RECYCLE_VALUE } from '@miscellary/shared';
+import { cardCode, RARITIES, RARITY_LABELS, RECYCLE_VALUE, spareCount } from '@miscellary/shared';
 import type { CardSetSummary, OwnedCard, Rarity, SetPointsBalance } from '@miscellary/shared';
 import PageHeader from '@/components/PageHeader';
 import CardGrid, { CardCell } from '@/components/CardGrid';
@@ -14,7 +14,7 @@ import { OwnedCardInspector } from '@/components/CardInspector';
 import CardPreview from '@/components/CardPreview';
 import { useAuth } from '@/lib/auth';
 import { useRequireAccount } from '@/lib/requireAccount';
-import { listAllMyCards, listMyPoints, recycleCard } from '@/lib/packs';
+import { listAllMyCards, listMyPoints, recycleCard, recycleDuplicates } from '@/lib/packs';
 import { listPublicSets } from '@/lib/sets';
 import ui from '@/components/ui.module.css';
 import wide from '@/components/pageWide.module.css';
@@ -88,6 +88,23 @@ function Collection() {
       const nextGain = { cardId: owned.card.id, amount: result.earned, key: Date.now() };
       setGain(nextGain);
       setTimeout(() => setGain((current) => (current?.key === nextGain.key ? null : current)), 800);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not recycle.');
+    } finally {
+      setRecycling(null);
+    }
+  }
+
+  async function onRecycleAll(slug: string, title: string) {
+    setError(null);
+    setRecycling(`set:${slug}`);
+    try {
+      const result = await recycleDuplicates(slug);
+      setPoints((current) => [
+        ...current.filter((balance) => balance.set_slug !== slug),
+        { set_slug: slug, set_title: title, points: result.points },
+      ]);
+      setCards(await listAllMyCards());
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not recycle.');
     } finally {
@@ -217,6 +234,7 @@ function Collection() {
           {[...shown.entries()].map(([slug, list]) => {
             const balance = points.find((p) => p.set_slug === slug)?.points ?? 0;
             const stacked = stack(list);
+            const spares = spareCount((cards ?? []).filter((copy) => copy.set_slug === slug));
             return (
               <div key={slug} id={`set-${slug}`}>
                 <Sheet
@@ -229,6 +247,20 @@ function Collection() {
                   meta={`${stacked.length} ${stacked.length === 1 ? 'card' : 'cards'} · ${
                     list.length
                   } ${list.length === 1 ? 'copy' : 'copies'} · ${balance} set points`}
+                  actions={
+                    spares > 0 ? (
+                      <button
+                        type="button"
+                        className={`${ui.btnQuiet} ${ui.btnSmall}`}
+                        disabled={recycling !== null}
+                        onClick={() => void onRecycleAll(slug, list[0]?.set_title ?? '')}
+                      >
+                        {recycling === `set:${slug}`
+                          ? 'Recycling…'
+                          : `Recycle all spares (${spares})`}
+                      </button>
+                    ) : undefined
+                  }
                 >
                   <CardGrid>
                     {stacked.map((owned) => (
