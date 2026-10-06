@@ -1,5 +1,6 @@
 import {
   cardCode,
+  createCollectionRequests,
   personHandle,
   setPath,
   countOf,
@@ -46,7 +47,8 @@ import {
   getPublicSet,
   likeCard,
   likeSet,
-  listMyCards,
+  listAllMyCards,
+  listMyPoints,
   openPack,
   recycleCard,
   recycleDuplicates,
@@ -79,9 +81,19 @@ export default function BinderScreen() {
   const [selected, setSelected] = useState<{ card: Card; copies?: number } | null>(null);
   const [recycling, setRecycling] = useState<string | null>(null);
   const [gain, setGain] = useState<{ cardId: string; amount: number; key: number } | null>(null);
+  const [requests] = useState(() =>
+    createCollectionRequests({ listAllMyCards, listMyPoints, recycleCard, recycleDuplicates }),
+  );
   const setRequest = useRef(0);
   const statusRequest = useRef(0);
   const socialPending = useRef(new Set<string>());
+
+  useEffect(() => {
+    setOwned(null);
+    setSelected(null);
+    setGain(null);
+    return () => requests.invalidate();
+  }, [slug, user, requests]);
 
   useEffect(() => {
     const request = ++setRequest.current;
@@ -125,13 +137,11 @@ export default function BinderScreen() {
 
   useEffect(() => {
     if (tab !== 'collected' || !user || owned !== null) return;
-    listMyCards(slug)
-      .then((page) => setOwned(page.results))
-      .catch((e: Error) => {
-        setOwned([]);
-        setError(e.message);
-      });
-  }, [owned, slug, tab, user]);
+    void requests.loadCards(slug, setOwned, (e) => {
+      setOwned([]);
+      setError(e instanceof Error ? e.message : 'Could not load your cards.');
+    });
+  }, [owned, slug, tab, user, requests]);
 
   const open = useCallback(
     async (usePoints: boolean) => {
@@ -141,6 +151,7 @@ export default function BinderScreen() {
         const result = await openPack(slug, usePoints);
         setOpening(result);
         setStatus(result.status);
+        requests.invalidate();
         setOwned(null);
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Could not open the pack.');
@@ -148,7 +159,7 @@ export default function BinderScreen() {
         setBusy(false);
       }
     },
-    [slug],
+    [slug, requests],
   );
 
   const openFromPack = useCallback(() => {
@@ -186,50 +197,56 @@ export default function BinderScreen() {
   }, [params, set, user]);
 
   async function recycle(copy: OwnedCard) {
-    setRecycling(copy.id);
-    setError(null);
-    try {
-      const result = await recycleCard(copy.id);
-      setOwned((current) =>
-        current
-          ? current
-              .filter((ownedCard) => ownedCard.id !== copy.id)
-              .map((ownedCard) =>
-                ownedCard.card.id === copy.card.id
-                  ? { ...ownedCard, copies: ownedCard.copies - 1 }
-                  : ownedCard,
-              )
-          : current,
-      );
-      setStatus((current) => (current ? { ...current, points: result.points } : current));
-      setSelected((current) =>
-        current?.card.id === copy.card.id && current.copies
-          ? { ...current, copies: current.copies - 1 }
-          : current,
-      );
-      const nextGain = { cardId: copy.card.id, amount: result.earned, key: Date.now() };
-      setGain(nextGain);
-      setTimeout(() => setGain((current) => (current?.key === nextGain.key ? null : current)), 750);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not recycle.');
-    } finally {
-      setRecycling(null);
-    }
+    await requests.recycle(
+      copy.id,
+      (result) => {
+        setOwned((current) =>
+          current
+            ? current
+                .filter((ownedCard) => ownedCard.id !== copy.id)
+                .map((ownedCard) =>
+                  ownedCard.card.id === copy.card.id
+                    ? { ...ownedCard, copies: ownedCard.copies - 1 }
+                    : ownedCard,
+                )
+            : current,
+        );
+        setStatus((current) => (current ? { ...current, points: result.points } : current));
+        setSelected((current) =>
+          current?.card.id === copy.card.id && current.copies
+            ? { ...current, copies: current.copies - 1 }
+            : current,
+        );
+        const nextGain = { cardId: copy.card.id, amount: result.earned, key: Date.now() };
+        setGain(nextGain);
+        setTimeout(
+          () => setGain((current) => (current?.key === nextGain.key ? null : current)),
+          750,
+        );
+      },
+      (e) => setError(e instanceof Error ? e.message : 'Could not recycle.'),
+      (busy) => {
+        setRecycling(busy ? copy.id : null);
+        if (busy) setError(null);
+      },
+    );
   }
 
   async function recycleAll() {
     if (!set) return;
-    setRecycling('all');
-    setError(null);
-    try {
-      const result = await recycleDuplicates(set.slug);
-      setStatus((current) => (current ? { ...current, points: result.points } : current));
-      setOwned((await listMyCards(set.slug)).results);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not recycle.');
-    } finally {
-      setRecycling(null);
-    }
+    await requests.recycleAll(
+      set.slug,
+      set.slug,
+      (result) => {
+        setStatus((current) => (current ? { ...current, points: result.points } : current));
+        setOwned(result.cards);
+      },
+      (e) => setError(e instanceof Error ? e.message : 'Could not recycle.'),
+      (busy) => {
+        setRecycling(busy ? 'all' : null);
+        if (busy) setError(null);
+      },
+    );
   }
 
   async function toggleSetLike() {
@@ -662,7 +679,7 @@ export default function BinderScreen() {
                           <Muted style={{ fontSize: 13 }}>In a pending trade</Muted>
                         ) : copy.copies > 1 ? (
                           <Pressable
-                            disabled={recycling === copy.id}
+                            disabled={recycling !== null}
                             onPress={() => void recycle(copy)}
                             style={({ pressed }) => [
                               styles.recycle,

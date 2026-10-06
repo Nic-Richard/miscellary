@@ -28,6 +28,21 @@ export function createCollectionRequests(api: CollectionApi) {
   let latestLoad = 0;
   let pendingRecycle: Promise<void> | null = null;
 
+  async function load<T>(read: () => Promise<T>, apply: (result: T) => void, onError: OnError) {
+    const currentContext = context;
+    const request = ++latestLoad;
+    const current = () => context === currentContext && latestLoad === request;
+    // A refocus must read after an in-flight recycle, not halfway through it.
+    await pendingRecycle;
+    if (!current()) return;
+    try {
+      const result = await read();
+      if (current()) apply(result);
+    } catch (error) {
+      if (current()) onError(error);
+    }
+  }
+
   async function recycle<T>(
     write: () => Promise<T>,
     apply: (result: T) => void,
@@ -59,26 +74,25 @@ export function createCollectionRequests(api: CollectionApi) {
       context += 1;
       latestLoad += 1;
     },
-    async load(
+    load(
       setSlug: string | undefined,
       apply: (result: { cards: OwnedCard[]; points: SetPointsBalance[] }) => void,
       onError: OnError,
     ) {
-      const currentContext = context;
-      const request = ++latestLoad;
-      const current = () => context === currentContext && latestLoad === request;
-      // A refocus must read after an in-flight recycle, not halfway through it.
-      await pendingRecycle;
-      if (!current()) return;
-      try {
-        const [cards, points] = await Promise.all([
-          api.listAllMyCards(setSlug),
-          api.listMyPoints(),
-        ]);
-        if (current()) apply({ cards, points });
-      } catch (error) {
-        if (current()) onError(error);
-      }
+      return load(
+        async () => {
+          const [cards, points] = await Promise.all([
+            api.listAllMyCards(setSlug),
+            api.listMyPoints(),
+          ]);
+          return { cards, points };
+        },
+        apply,
+        onError,
+      );
+    },
+    loadCards(setSlug: string, apply: (cards: OwnedCard[]) => void, onError: OnError) {
+      return load(() => api.listAllMyCards(setSlug), apply, onError);
     },
     recycle(id: string, apply: (result: RecycleResult) => void, onError: OnError, onBusy: OnBusy) {
       return recycle(() => api.recycleCard(id), apply, onError, onBusy);

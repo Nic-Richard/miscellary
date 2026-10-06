@@ -1,4 +1,18 @@
-import type { OwnedCard } from './api';
+import type { OwnedCard, Paginated } from './api';
+
+export async function listOwnedCardPages(
+  readPage: (setSlug?: string, page?: number) => Promise<Paginated<OwnedCard>>,
+  setSlug?: string,
+): Promise<OwnedCard[]> {
+  const first = await readPage(setSlug);
+  if (!first.next) return first.results;
+  // A full first page gives the page size, so the rest can be asked for at once.
+  const pages = Math.ceil(first.count / first.results.length);
+  const rest = await Promise.all(
+    Array.from({ length: pages - 1 }, (_, index) => readPage(setSlug, index + 2)),
+  );
+  return [first.results, ...rest.map((page) => page.results)].flat();
+}
 
 export function stackOwnedCards(owned: readonly OwnedCard[]): OwnedCard[] {
   const seen = new Map<string, OwnedCard>();

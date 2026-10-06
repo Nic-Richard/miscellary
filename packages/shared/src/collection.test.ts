@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { OwnedCard } from './api';
-import { groupOwnedCards, stackOwnedCards } from './collection';
+import { groupOwnedCards, listOwnedCardPages, stackOwnedCards } from './collection';
 import { spareCount } from './packs';
 
 function copy(id: string, cardId: string, held = false, setSlug = 'cameras'): OwnedCard {
@@ -31,6 +31,18 @@ function copy(id: string, cardId: string, held = false, setSlug = 'cameras'): Ow
     acquired_at: '2026-10-01T00:00:00Z',
   };
 }
+
+it('loads every copy across 60-row pages in order, keeping the set filter', async () => {
+  const owned = Array.from({ length: 125 }, (_, i) => copy(`copy-${i}`, `card-${i % 70}`));
+  const readPage = vi.fn(async (_slug?: string, page = 1) => ({
+    count: owned.length,
+    next: page < 3 ? `?page=${page + 1}` : null,
+    previous: page > 1 ? `?page=${page - 1}` : null,
+    results: owned.slice((page - 1) * 60, page * 60),
+  }));
+  expect(await listOwnedCardPages(readPage, 'cameras')).toEqual(owned);
+  expect(readPage.mock.calls).toEqual([['cameras'], ['cameras', 2], ['cameras', 3]]);
+});
 
 describe('stackOwnedCards', () => {
   it('handles an empty collection', () => {

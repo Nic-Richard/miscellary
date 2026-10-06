@@ -25,6 +25,7 @@ import type {
   TradeOfferWrite,
 } from '@miscellary/shared';
 import { apiFetch, saveRefreshToken, setAccessToken } from './api';
+import { listOwnedCardPages } from '@miscellary/shared';
 
 export const listPublicSets = (
   sort: 'new' | 'popular' = 'new',
@@ -92,18 +93,7 @@ export const listMyCards = (setSlug?: string, page?: number) => {
   return apiFetch<Paginated<OwnedCard>>(`/api/v1/me/cards/${search ? `?${search}` : ''}`);
 };
 
-/** Every owned copy, not just the first page. The collection counts the whole
- *  holding, so a partial page would report the wrong totals. */
-export const listAllMyCards = async (setSlug?: string): Promise<OwnedCard[]> => {
-  const first = await listMyCards(setSlug);
-  if (!first.next) return first.results;
-  // A full first page gives the page size, so the rest can be asked for at once.
-  const pages = Math.ceil(first.count / first.results.length);
-  const rest = await Promise.all(
-    Array.from({ length: pages - 1 }, (_, index) => listMyCards(setSlug, index + 2)),
-  );
-  return [first.results, ...rest.map((page) => page.results)].flat();
-};
+export const listAllMyCards = (setSlug?: string) => listOwnedCardPages(listMyCards, setSlug);
 export const listUserCards = (username: string) =>
   apiFetch<Paginated<OwnedCard>>(`/api/v1/users/${encodeURIComponent(username)}/cards/`);
 export const recycleCard = (id: string) =>

@@ -47,14 +47,15 @@ it('ignores older replies and errors after a scope change or blur', async () => 
   const oldApply = vi.fn();
   const error = vi.fn();
   api.listAllMyCards.mockImplementationOnce(() => old.promise);
-  const oldLoad = requests.load('cameras', oldApply, error);
+  const oldLoad = requests.loadCards('cameras', oldApply, error);
   await Promise.resolve();
   const newApply = vi.fn();
-  await requests.load('birds', newApply, error);
+  await requests.loadCards('birds', newApply, error);
   old.resolve([]);
   await oldLoad;
   expect(newApply).toHaveBeenCalledOnce();
   expect(oldApply).not.toHaveBeenCalled();
+  expect(api.listMyPoints).not.toHaveBeenCalled();
 
   const failed = deferred<OwnedCard[]>();
   api.listAllMyCards.mockImplementationOnce(() => failed.promise);
