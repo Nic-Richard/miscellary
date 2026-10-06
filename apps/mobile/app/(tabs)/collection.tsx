@@ -1,5 +1,6 @@
 import {
   cardCode,
+  createCollectionRequests,
   groupOwnedCards,
   RARITIES,
   RARITY_LABELS,
@@ -29,67 +30,75 @@ function Collection() {
   const [recycling, setRecycling] = useState<string | null>(null);
   const [gain, setGain] = useState<{ cardId: string; amount: number; key: number } | null>(null);
   const [filter, setFilter] = useState('');
-
-  const load = useCallback(async () => {
-    try {
-      const [owned, pts] = await Promise.all([listAllMyCards(), listMyPoints()]);
-      setCards(owned);
-      setPoints(pts);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not load your cards.');
-    }
-  }, []);
+  const [requests] = useState(() =>
+    createCollectionRequests({ listAllMyCards, listMyPoints, recycleCard, recycleDuplicates }),
+  );
 
   useFocusEffect(
     useCallback(() => {
-      void load();
-    }, [load]),
+      void requests.load(
+        undefined,
+        ({ cards, points }) => {
+          setCards(cards);
+          setPoints(points);
+          setError(null);
+        },
+        (e) => setError(e instanceof Error ? e.message : 'Could not load your cards.'),
+      );
+      return () => requests.invalidate();
+    }, [requests]),
   );
 
   async function recycle(owned: OwnedCard) {
-    setRecycling(owned.id);
-    setError(null);
-    try {
-      const result = await recycleCard(owned.id);
-      setCards((current) =>
-        current
-          .filter((copy) => copy.id !== owned.id)
-          .map((copy) =>
-            copy.card.id === owned.card.id ? { ...copy, copies: copy.copies - 1 } : copy,
-          ),
-      );
-      setPoints((current) => [
-        ...current.filter((balance) => balance.set_slug !== result.set_slug),
-        { set_slug: result.set_slug, set_title: owned.set_title, points: result.points },
-      ]);
-      setSelected((current) =>
-        current?.card.id === owned.card.id ? { ...current, copies: current.copies - 1 } : current,
-      );
-      const nextGain = { cardId: owned.card.id, amount: result.earned, key: Date.now() };
-      setGain(nextGain);
-      setTimeout(() => setGain((current) => (current?.key === nextGain.key ? null : current)), 750);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not recycle.');
-    } finally {
-      setRecycling(null);
-    }
+    await requests.recycle(
+      owned.id,
+      (result) => {
+        setCards((current) =>
+          current
+            .filter((copy) => copy.id !== owned.id)
+            .map((copy) =>
+              copy.card.id === owned.card.id ? { ...copy, copies: copy.copies - 1 } : copy,
+            ),
+        );
+        setPoints((current) => [
+          ...current.filter((balance) => balance.set_slug !== result.set_slug),
+          { set_slug: result.set_slug, set_title: owned.set_title, points: result.points },
+        ]);
+        setSelected((current) =>
+          current?.card.id === owned.card.id ? { ...current, copies: current.copies - 1 } : current,
+        );
+        const nextGain = { cardId: owned.card.id, amount: result.earned, key: Date.now() };
+        setGain(nextGain);
+        setTimeout(
+          () => setGain((current) => (current?.key === nextGain.key ? null : current)),
+          750,
+        );
+      },
+      (e) => setError(e instanceof Error ? e.message : 'Could not recycle.'),
+      (busy) => {
+        setRecycling(busy ? owned.id : null);
+        if (busy) setError(null);
+      },
+    );
   }
 
   async function recycleAll(slug: string, title: string) {
-    setRecycling(`set:${slug}`);
-    setError(null);
-    try {
-      const result = await recycleDuplicates(slug);
-      setPoints((current) => [
-        ...current.filter((balance) => balance.set_slug !== slug),
-        { set_slug: slug, set_title: title, points: result.points },
-      ]);
-      setCards(await listAllMyCards());
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not recycle.');
-    } finally {
-      setRecycling(null);
-    }
+    await requests.recycleAll(
+      slug,
+      undefined,
+      (result) => {
+        setPoints((current) => [
+          ...current.filter((balance) => balance.set_slug !== slug),
+          { set_slug: slug, set_title: title, points: result.points },
+        ]);
+        setCards(result.cards);
+      },
+      (e) => setError(e instanceof Error ? e.message : 'Could not recycle.'),
+      (busy) => {
+        setRecycling(busy ? `set:${slug}` : null);
+        if (busy) setError(null);
+      },
+    );
   }
 
   const stackedCards = stackOwnedCards(cards);
@@ -240,7 +249,7 @@ function Collection() {
                         <Muted style={{ fontSize: 13 }}>In a pending trade</Muted>
                       ) : owned.copies > 1 ? (
                         <Pressable
-                          disabled={recycling === owned.id}
+                          disabled={recycling !== null}
                           onPress={() => void recycle(owned)}
                           style={({ pressed }) => [
                             styles.recycle,

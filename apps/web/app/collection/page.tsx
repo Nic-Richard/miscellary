@@ -2,9 +2,10 @@
 
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import {
   cardCode,
+  createCollectionRequests,
   groupOwnedCards,
   RARITIES,
   RARITY_LABELS,
@@ -40,17 +41,25 @@ function Collection() {
   const [recycling, setRecycling] = useState<string | null>(null);
   const [filter, setFilter] = useState('');
   const [gain, setGain] = useState<{ cardId: string; amount: number; key: number } | null>(null);
-
-  const reload = useCallback(async () => {
-    const [owned, pts] = await Promise.all([listAllMyCards(setSlug), listMyPoints()]);
-    setCards(owned);
-    setPoints(pts);
-  }, [setSlug]);
+  const [requests] = useState(() =>
+    createCollectionRequests({ listAllMyCards, listMyPoints, recycleCard, recycleDuplicates }),
+  );
 
   useEffect(() => {
     if (!user) return;
-    reload().catch((e: Error) => setError(e.message));
-  }, [user, reload]);
+    setCards(null);
+    setInspect(null);
+    setError(null);
+    void requests.load(
+      setSlug,
+      ({ cards, points }) => {
+        setCards(cards);
+        setPoints(points);
+      },
+      (e) => setError(e instanceof Error ? e.message : 'Could not load your cards.'),
+    );
+    return () => requests.invalidate();
+  }, [user, setSlug, requests]);
 
   // Owned cards carry their set's name but not its wrapper, so the artwork for
   // the column beside the grids comes from the public catalogue.
@@ -62,51 +71,57 @@ function Collection() {
   }, [cards]);
 
   async function onRecycle(owned: OwnedCard) {
-    setError(null);
-    setRecycling(owned.id);
-    try {
-      const result = await recycleCard(owned.id);
-      setCards((current) =>
-        current
-          ? current
-              .filter((copy) => copy.id !== owned.id)
-              .map((copy) =>
-                copy.card.id === owned.card.id ? { ...copy, copies: copy.copies - 1 } : copy,
-              )
-          : current,
-      );
-      setPoints((current) => [
-        ...current.filter((balance) => balance.set_slug !== result.set_slug),
-        { set_slug: result.set_slug, set_title: owned.set_title, points: result.points },
-      ]);
-      setInspect((current) =>
-        current?.card.id === owned.card.id ? { ...current, copies: current.copies - 1 } : current,
-      );
-      const nextGain = { cardId: owned.card.id, amount: result.earned, key: Date.now() };
-      setGain(nextGain);
-      setTimeout(() => setGain((current) => (current?.key === nextGain.key ? null : current)), 800);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not recycle.');
-    } finally {
-      setRecycling(null);
-    }
+    await requests.recycle(
+      owned.id,
+      (result) => {
+        setCards((current) =>
+          current
+            ? current
+                .filter((copy) => copy.id !== owned.id)
+                .map((copy) =>
+                  copy.card.id === owned.card.id ? { ...copy, copies: copy.copies - 1 } : copy,
+                )
+            : current,
+        );
+        setPoints((current) => [
+          ...current.filter((balance) => balance.set_slug !== result.set_slug),
+          { set_slug: result.set_slug, set_title: owned.set_title, points: result.points },
+        ]);
+        setInspect((current) =>
+          current?.card.id === owned.card.id ? { ...current, copies: current.copies - 1 } : current,
+        );
+        const nextGain = { cardId: owned.card.id, amount: result.earned, key: Date.now() };
+        setGain(nextGain);
+        setTimeout(
+          () => setGain((current) => (current?.key === nextGain.key ? null : current)),
+          800,
+        );
+      },
+      (e) => setError(e instanceof Error ? e.message : 'Could not recycle.'),
+      (busy) => {
+        setRecycling(busy ? owned.id : null);
+        if (busy) setError(null);
+      },
+    );
   }
 
   async function onRecycleAll(slug: string, title: string) {
-    setError(null);
-    setRecycling(`set:${slug}`);
-    try {
-      const result = await recycleDuplicates(slug);
-      setPoints((current) => [
-        ...current.filter((balance) => balance.set_slug !== slug),
-        { set_slug: slug, set_title: title, points: result.points },
-      ]);
-      setCards(await listAllMyCards());
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not recycle.');
-    } finally {
-      setRecycling(null);
-    }
+    await requests.recycleAll(
+      slug,
+      setSlug,
+      (result) => {
+        setPoints((current) => [
+          ...current.filter((balance) => balance.set_slug !== slug),
+          { set_slug: slug, set_title: title, points: result.points },
+        ]);
+        setCards(result.cards);
+      },
+      (e) => setError(e instanceof Error ? e.message : 'Could not recycle.'),
+      (busy) => {
+        setRecycling(busy ? `set:${slug}` : null);
+        if (busy) setError(null);
+      },
+    );
   }
 
   const bySet = useMemo(() => groupOwnedCards(cards ?? []), [cards]);
@@ -260,7 +275,7 @@ function Collection() {
                                 type="button"
                                 className={styles.recycle}
                                 onClick={() => void onRecycle(owned)}
-                                disabled={owned.held || recycling === owned.id}
+                                disabled={owned.held || recycling !== null}
                                 title={owned.held ? 'In a pending trade' : undefined}
                               >
                                 ×{owned.copies} · Recycle one
