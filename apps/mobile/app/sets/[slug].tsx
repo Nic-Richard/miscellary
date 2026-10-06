@@ -1,4 +1,11 @@
-import { cardCode, personHandle, setPath, countOf, spareCount } from '@miscellary/shared';
+import {
+  cardCode,
+  personHandle,
+  setPath,
+  countOf,
+  spareCount,
+  stackOwnedCards,
+} from '@miscellary/shared';
 import type { Card, CardSetDetail, OwnedCard, PackOpening, PackStatus } from '@miscellary/shared';
 import Feather from '@expo/vector-icons/Feather';
 import { Link, router, useLocalSearchParams } from 'expo-router';
@@ -51,15 +58,6 @@ import { Button, Chip, ErrorText, Loading, Muted, Tag, Title } from '@/component
 
 const PACK_ACTION = 'pack';
 const FOLLOW_SET_ACTION = 'follow-set';
-
-function stack(owned: OwnedCard[]): OwnedCard[] {
-  const seen = new Map<string, OwnedCard>();
-  for (const copy of owned) {
-    const current = seen.get(copy.card.id);
-    if (!current || (current.held && !copy.held)) seen.set(copy.card.id, copy);
-  }
-  return [...seen.values()];
-}
 
 export default function BinderScreen() {
   const params = useLocalSearchParams<{ slug: string; do?: string; tab?: string }>();
@@ -406,7 +404,7 @@ export default function BinderScreen() {
     160,
     Math.max(128, (viewportWidth - insets.left - insets.right - 46) / 2),
   );
-  const collected = stack(owned ?? []);
+  const collected = stackOwnedCards(owned ?? []);
 
   return (
     <ScrollView

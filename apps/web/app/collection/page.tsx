@@ -3,7 +3,15 @@
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
-import { cardCode, RARITIES, RARITY_LABELS, RECYCLE_VALUE, spareCount } from '@miscellary/shared';
+import {
+  cardCode,
+  groupOwnedCards,
+  RARITIES,
+  RARITY_LABELS,
+  RECYCLE_VALUE,
+  spareCount,
+  stackOwnedCards,
+} from '@miscellary/shared';
 import type { CardSetSummary, OwnedCard, Rarity, SetPointsBalance } from '@miscellary/shared';
 import PageHeader from '@/components/PageHeader';
 import CardGrid, { CardCell } from '@/components/CardGrid';
@@ -19,17 +27,6 @@ import { listPublicSets } from '@/lib/sets';
 import ui from '@/components/ui.module.css';
 import wide from '@/components/pageWide.module.css';
 import styles from './page.module.css';
-
-// The API returns one row per owned copy, each annotated with how many copies
-// the owner holds. Collapse them so a duplicate is one tile, not several.
-function stack(owned: OwnedCard[]): OwnedCard[] {
-  const seen = new Map<string, OwnedCard>();
-  for (const copy of owned) {
-    const current = seen.get(copy.card.id);
-    if (!current || (current.held && !copy.held)) seen.set(copy.card.id, copy);
-  }
-  return [...seen.values()];
-}
 
 function Collection() {
   const { user, loading } = useAuth();
@@ -112,22 +109,12 @@ function Collection() {
     }
   }
 
-  const group = (rows: OwnedCard[]) => {
-    const grouped = new Map<string, OwnedCard[]>();
-    for (const c of rows) {
-      const list = grouped.get(c.set_slug) ?? [];
-      list.push(c);
-      grouped.set(c.set_slug, list);
-    }
-    return grouped;
-  };
-
-  const bySet = useMemo(() => group(cards ?? []), [cards]);
+  const bySet = useMemo(() => groupOwnedCards(cards ?? []), [cards]);
 
   const shown = useMemo(() => {
     const needle = filter.trim().toLowerCase();
     if (!needle) return bySet;
-    return group(
+    return groupOwnedCards(
       (cards ?? []).filter(
         (c) =>
           c.card.title.toLowerCase().includes(needle) || c.set_title.toLowerCase().includes(needle),
@@ -233,7 +220,7 @@ function Collection() {
 
           {[...shown.entries()].map(([slug, list]) => {
             const balance = points.find((p) => p.set_slug === slug)?.points ?? 0;
-            const stacked = stack(list);
+            const stacked = stackOwnedCards(list);
             const spares = spareCount((cards ?? []).filter((copy) => copy.set_slug === slug));
             return (
               <div key={slug} id={`set-${slug}`}>

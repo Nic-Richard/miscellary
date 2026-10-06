@@ -10,6 +10,7 @@ import {
   RARITY_LABELS,
   setPath,
   spareCount,
+  stackOwnedCards,
 } from '@miscellary/shared';
 import type { Card, CardSetDetail, OwnedCard } from '@miscellary/shared';
 import PersonLink from '@/components/PersonLink';
@@ -131,15 +132,6 @@ function SetCard({
       ) : null}
     </div>
   );
-}
-
-function stack(owned: OwnedCard[]): OwnedCard[] {
-  const seen = new Map<string, OwnedCard>();
-  for (const copy of owned) {
-    const current = seen.get(copy.card.id);
-    if (!current || (current.held && !copy.held)) seen.set(copy.card.id, copy);
-  }
-  return [...seen.values()];
 }
 
 export default function BinderClient({
@@ -476,7 +468,7 @@ export default function BinderClient({
                       {
                         label: 'Collected',
                         icon: 'overview' as const,
-                        ...(owned ? { count: stack(owned).length } : {}),
+                        ...(owned ? { count: stackOwnedCards(owned).length } : {}),
                         active: tab === 'collected',
                         onSelect: () => setTab('collected'),
                       },
@@ -590,7 +582,7 @@ export default function BinderClient({
                 <span className={styles.sheetMeta}>
                   {owned === null
                     ? 'Loading'
-                    : `${stack(owned).length} of ${set.card_count} · ${owned.length} ${
+                    : `${stackOwnedCards(owned).length} of ${set.card_count} · ${owned.length} ${
                         owned.length === 1 ? 'copy' : 'copies'
                       }`}
                 </span>
@@ -615,7 +607,7 @@ export default function BinderClient({
                 </p>
               ) : (
                 <CardGrid>
-                  {stack(owned).map((copy) => (
+                  {stackOwnedCards(owned).map((copy) => (
                     <CardCell
                       key={copy.card.id}
                       footer={

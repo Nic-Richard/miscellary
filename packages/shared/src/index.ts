@@ -15,3 +15,4 @@ export * from './people';
 export * from './paths';
 export * from './photo';
 export * from './copy';
+export * from './collection';

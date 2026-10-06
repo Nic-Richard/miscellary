@@ -1,4 +1,12 @@
-import { cardCode, RARITIES, RARITY_LABELS, countOf, spareCount } from '@miscellary/shared';
+import {
+  cardCode,
+  groupOwnedCards,
+  RARITIES,
+  RARITY_LABELS,
+  countOf,
+  spareCount,
+  stackOwnedCards,
+} from '@miscellary/shared';
 import type { OwnedCard, SetPointsBalance } from '@miscellary/shared';
 import { Link, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
@@ -12,15 +20,6 @@ import PointGain from '@/components/PointGain';
 import { listAllMyCards, listMyPoints, recycleCard, recycleDuplicates } from '@/lib/endpoints';
 import { colors, fonts, rarityColors } from '@/lib/theme';
 import { ErrorText, Muted } from '@/components/ui';
-
-function stack(owned: OwnedCard[]): OwnedCard[] {
-  const seen = new Map<string, OwnedCard>();
-  for (const copy of owned) {
-    const current = seen.get(copy.card.id);
-    if (!current || (current.held && !copy.held)) seen.set(copy.card.id, copy);
-  }
-  return [...seen.values()];
-}
 
 function Collection() {
   const [cards, setCards] = useState<OwnedCard[]>([]);
@@ -93,21 +92,18 @@ function Collection() {
     }
   }
 
-  const stackedCards = stack(cards);
-  const bySet = new Map<string, OwnedCard[]>();
-  for (const c of stackedCards) bySet.set(c.set_slug, [...(bySet.get(c.set_slug) ?? []), c]);
+  const stackedCards = stackOwnedCards(cards);
+  const bySet = groupOwnedCards(stackedCards);
 
   const needle = filter.trim().toLowerCase();
-  const groups = new Map<string, OwnedCard[]>();
-  for (const c of stackedCards) {
-    if (
-      needle &&
-      !c.card.title.toLowerCase().includes(needle) &&
-      !c.set_title.toLowerCase().includes(needle)
-    )
-      continue;
-    groups.set(c.set_slug, [...(groups.get(c.set_slug) ?? []), c]);
-  }
+  const groups = groupOwnedCards(
+    stackedCards.filter(
+      (c) =>
+        !needle ||
+        c.card.title.toLowerCase().includes(needle) ||
+        c.set_title.toLowerCase().includes(needle),
+    ),
+  );
 
   return (
     <ScrollView
