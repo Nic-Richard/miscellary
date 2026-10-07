@@ -352,7 +352,7 @@ export default function BinderClient({
     LIKE_CARD_CARRIES,
   );
 
-  if (error) return <p className={ui.error}>{error}</p>;
+  if (error && !set) return <p className={ui.error}>{error}</p>;
   if (!set) return <p className={ui.muted}>Loading…</p>;
 
   const rarityCount = new Set(set.cards.map((c) => c.rarity)).size;
@@ -381,6 +381,11 @@ export default function BinderClient({
 
   return (
     <section className={`${wide.full} ${styles.root}`}>
+      {error ? (
+        <p className={ui.error} role="alert">
+          {error}
+        </p>
+      ) : null}
       <div className={styles.header} id="set-overview">
         <SetCover
           url={set.cover?.url ?? null}
