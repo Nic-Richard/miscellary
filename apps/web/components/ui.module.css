@@ -263,7 +263,6 @@
 }
 
 .panel {
-  composes: stitched;
   padding: 20px 22px;
   background: var(--sur);
   border: 1px solid #d3c8b3;
