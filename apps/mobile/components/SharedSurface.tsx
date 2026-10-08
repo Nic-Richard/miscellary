@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import WebView from 'react-native-webview';
 import { router } from 'expo-router';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import type { CreateUploadResponse, ImageKind, ImageRef } from '@miscellary/shared';
 import { apiFetch } from '@/lib/api';
 import { pickAndUpload } from '@/lib/upload';

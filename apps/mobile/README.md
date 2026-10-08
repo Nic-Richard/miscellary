@@ -21,7 +21,7 @@ layouts. Published cards without an available baked image show a lightweight loa
 ## Phone over Wi-Fi
 
 1. Keep Docker running (`docker compose up -d`).
-2. Install [Expo Go for SDK 53](https://expo.dev/go?device=true&platform=android&sdkVersion=53)
+2. Install [Expo Go for SDK 54](https://expo.dev/go?device=true&platform=android&sdkVersion=54)
    on the Android phone. A different SDK version of Expo Go will not load this project.
 3. Connect the PC and phone to the same network. Keep `EXPO_PUBLIC_API_URL` blank in
    `apps/mobile/.env` to use Metro's host automatically.
@@ -48,7 +48,7 @@ public endpoint to be configured for the device before signing URLs.
 ## Android emulator
 
 Install Android Studio's SDK/platform tools and create an Android Virtual Device, then boot it.
-Use the same Metro session and Expo Go SDK 53 build, or run `pnpm --filter mobile android` when
+Use the same Metro session and Expo Go SDK 54 build, or run `pnpm --filter mobile android` when
 Metro is not already running. The LAN host works for both targets. If necessary, set
 `EXPO_PUBLIC_API_URL=http://10.0.2.2:8000` for an emulator-only session and include `10.0.2.2`
 in the API's allowed hosts. Restart Metro after changing environment settings.

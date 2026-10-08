@@ -1,5 +1,5 @@
 import type { CreateUploadResponse, ImageKind, ImageRef } from '@miscellary/shared';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
 import { Alert, Linking } from 'react-native';

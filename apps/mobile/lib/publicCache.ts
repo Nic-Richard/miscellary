@@ -1,4 +1,4 @@
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import { API_URL } from './api';
 
 const CACHE_DIR = FileSystem.cacheDirectory ? `${FileSystem.cacheDirectory}public-data/` : null;

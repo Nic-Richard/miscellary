@@ -26,7 +26,7 @@ try {
     & pnpm.cmd --filter mobile surfaces:build
     if ($LASTEXITCODE -ne 0) { throw 'Desktop surface bundling failed.' }
     Write-Host "Android preview: exp://${Address}:8081"
-    Write-Host 'Use Expo Go for SDK 53. Keep the phone and PC on the same network.'
+    Write-Host 'Use Expo Go for SDK 54. Keep the phone and PC on the same network.'
     & pnpm.cmd --filter mobile exec expo start --lan --go --port 8081
     if ($LASTEXITCODE -ne 0) { throw "Metro exited with code $LASTEXITCODE." }
 } finally {

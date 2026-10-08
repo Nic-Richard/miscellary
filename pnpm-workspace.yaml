@@ -6,3 +6,5 @@ packages:
 # symlinked node_modules, where the isolated layout cannot see it.
 publicHoistPattern:
   - expo-modules-autolinking
+  # Expo CLI resolves this outside the app's node_modules.
+  - metro-runtime
