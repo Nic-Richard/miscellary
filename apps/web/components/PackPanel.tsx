@@ -9,6 +9,7 @@ import { getPackStatus, openPack } from '@/lib/packs';
 import { loginHref } from '@/lib/returnTo';
 import { countdown } from '@/lib/time';
 import { useContinuation } from '@/lib/useContinuation';
+import { preloadPackArtwork, reusePackArtwork } from '@/lib/packArtwork';
 import PackPouch from './PackPouch';
 import PackReveal from './PackReveal';
 import ui from './ui.module.css';
@@ -60,9 +61,13 @@ export default function PackPanel({
     async (usePoints: boolean) => {
       setBusy(true);
       setError(null);
+      const artwork = preloadPackArtwork(identity);
       try {
         const result = await openPack(slug, usePoints);
-        setOpening(result);
+        setOpening({
+          ...result,
+          card_set: reusePackArtwork(result.card_set, identity, await artwork),
+        });
         setStatus(result.status);
         onOpened?.(result);
       } catch (e) {
@@ -71,7 +76,7 @@ export default function PackPanel({
         setBusy(false);
       }
     },
-    [slug, onOpened],
+    [slug, identity, onOpened],
   );
 
   useContinuation(

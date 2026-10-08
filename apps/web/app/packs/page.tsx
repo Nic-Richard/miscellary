@@ -21,6 +21,7 @@ import { useAuth } from '@/lib/auth';
 import { useRequireAccount } from '@/lib/requireAccount';
 import { listPublicSets } from '@/lib/sets';
 import { openPack } from '@/lib/packs';
+import { preloadPackArtwork, reusePackArtwork } from '@/lib/packArtwork';
 import { followSet, getMyPacks } from '@/lib/social';
 import { countdown } from '@/lib/time';
 import ui from '@/components/ui.module.css';
@@ -336,8 +337,15 @@ export default function PacksPage() {
   async function open(slug: string, usePoints: boolean) {
     setBusy(true);
     setError(null);
+    const identity = entries?.find((entry) => entry.card_set.slug === slug)?.card_set;
+    const artwork = identity ? preloadPackArtwork(identity) : null;
     try {
-      setOpening(await openPack(slug, usePoints));
+      const result = await openPack(slug, usePoints);
+      setOpening(
+        identity && artwork
+          ? { ...result, card_set: reusePackArtwork(result.card_set, identity, await artwork) }
+          : result,
+      );
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not open that pack.');
     } finally {

@@ -104,6 +104,7 @@ export default function CardInspector({
   const run = useCallback(() => {
     cancelAnimationFrame(frame.current);
     const step = () => {
+      frame.current = 0;
       const r = rot.current;
       let busy = false;
       if (r.eased) {
@@ -159,6 +160,7 @@ export default function CardInspector({
     rot.current.vx = 0;
     rot.current.vy = 0;
     cancelAnimationFrame(frame.current);
+    frame.current = 0;
   }
 
   function onPointerMove(e: ReactPointerEvent<HTMLDivElement>) {
@@ -173,7 +175,12 @@ export default function CardInspector({
     r.rx = Math.max(-MAX_TILT, Math.min(MAX_TILT, r.rx - dy * SPEED));
     r.vy = dx * SPEED;
     r.vx = -dy * SPEED;
-    paint();
+    if (!frame.current) {
+      frame.current = requestAnimationFrame(() => {
+        frame.current = 0;
+        paint();
+      });
+    }
   }
 
   function onPointerUp(e: ReactPointerEvent<HTMLDivElement>) {

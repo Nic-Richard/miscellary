@@ -3,7 +3,6 @@
   container-type: inline-size;
   width: 100%;
   aspect-ratio: 1028 / 625;
-  filter: drop-shadow(0 16px 20px rgba(52, 38, 18, 0.22));
   /* The corner the binder is cut to in the artwork. Overlays that cover the
      whole binder have to be held to it or they paint onto the page. */
   --binder-corner: 2.3cqw;
@@ -37,6 +36,10 @@
   height: 100%;
   user-select: none;
   pointer-events: none;
+}
+
+.sheet {
+  filter: drop-shadow(0 16px 20px rgba(52, 38, 18, 0.22));
 }
 
 .cloth {
