@@ -20,15 +20,19 @@ import LoginGate from '@/components/LoginGate';
 import PointGain from '@/components/PointGain';
 import { listAllMyCards, listMyPoints, recycleCard, recycleDuplicates } from '@/lib/endpoints';
 import { colors, fonts, rarityColors } from '@/lib/theme';
-import { ErrorText, Muted } from '@/components/ui';
+import { ErrorText, Loading, Muted } from '@/components/ui';
 
 function Collection() {
   const [cards, setCards] = useState<OwnedCard[]>([]);
+  const [loaded, setLoaded] = useState(false);
   const [points, setPoints] = useState<SetPointsBalance[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<OwnedCard | null>(null);
   const [recycling, setRecycling] = useState<string | null>(null);
   const [gain, setGain] = useState<{ cardId: string; amount: number; key: number } | null>(null);
+  const [bulkGain, setBulkGain] = useState<{ slug: string; amount: number; key: number } | null>(
+    null,
+  );
   const [filter, setFilter] = useState('');
   const [requests] = useState(() =>
     createCollectionRequests({ listAllMyCards, listMyPoints, recycleCard, recycleDuplicates }),
@@ -40,6 +44,7 @@ function Collection() {
         undefined,
         ({ cards, points }) => {
           setCards(cards);
+          setLoaded(true);
           setPoints(points);
           setError(null);
         },
@@ -87,16 +92,25 @@ function Collection() {
       slug,
       undefined,
       (result) => {
-        setPoints((current) => [
-          ...current.filter((balance) => balance.set_slug !== slug),
-          { set_slug: slug, set_title: title, points: result.points },
-        ]);
         setCards(result.cards);
       },
       (e) => setError(e instanceof Error ? e.message : 'Could not recycle.'),
       (busy) => {
         setRecycling(busy ? `set:${slug}` : null);
         if (busy) setError(null);
+      },
+      (result) => {
+        setPoints((current) => [
+          ...current.filter((balance) => balance.set_slug !== slug),
+          { set_slug: slug, set_title: title, points: result.points },
+        ]);
+        if (!result.earned) return;
+        const nextGain = { slug, amount: result.earned, key: Date.now() };
+        setBulkGain(nextGain);
+        setTimeout(
+          () => setBulkGain((current) => (current?.key === nextGain.key ? null : current)),
+          750,
+        );
       },
     );
   }
@@ -113,6 +127,8 @@ function Collection() {
         c.set_title.toLowerCase().includes(needle),
     ),
   );
+
+  if (!loaded) return error ? <ErrorText>{error}</ErrorText> : <Loading />;
 
   return (
     <ScrollView
@@ -196,6 +212,9 @@ function Collection() {
               )}{' '}
               · {points.find((p) => p.set_slug === slug)?.points ?? 0} points toward an extra pack
             </Muted>
+            {bulkGain?.slug === slug ? (
+              <PointGain key={bulkGain.key} amount={bulkGain.amount} />
+            ) : null}
             {spareCount(cards.filter((copy) => copy.set_slug === slug)) > 0 ? (
               <Pressable
                 accessibilityRole="button"
@@ -339,6 +358,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     columnGap: 10,
+    rowGap: 6,
     justifyContent: 'space-between',
     alignItems: 'baseline',
     borderBottomColor: colors.bdr,

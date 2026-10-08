@@ -2,7 +2,7 @@ import { cardCode, personName } from '@miscellary/shared';
 import type { Card, CardSetSummary, PackEntry, PackOpening } from '@miscellary/shared';
 import Feather from '@expo/vector-icons/Feather';
 import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import MoreButton from '@/components/MoreButton';
 import CardPreview from '@/components/CardPreview';
@@ -12,11 +12,18 @@ import FilterField from '@/components/FilterField';
 import LoginGate from '@/components/LoginGate';
 import PackPreview from '@/components/PackPreview';
 import PackReveal from '@/components/PackReveal';
+import PointGain from '@/components/PointGain';
 import StartShelf from '@/components/StartShelf';
 import { askForPackReminder, syncPackReminder } from '@/lib/packReminder';
 import TagChips from '@/components/TagChips';
 import { Button, ErrorText, Loading, Muted } from '@/components/ui';
-import { followSet, getMyPacks, listPublicSets, openPack } from '@/lib/endpoints';
+import {
+  followSet,
+  getMyPacks,
+  listPublicSets,
+  openPack,
+  recycleDuplicates,
+} from '@/lib/endpoints';
 import { colors, fonts } from '@/lib/theme';
 
 function countdown(until: string, now: number): string {
@@ -68,12 +75,18 @@ function Post({
   now,
   onUnfollow,
   onOpen,
+  onRecycle,
+  recycling,
+  gain,
   busy,
 }: {
   entry: PackEntry;
   now: number;
   onUnfollow: () => void;
   onOpen: (usePoints: boolean) => void;
+  onRecycle: () => void;
+  recycling: boolean;
+  gain: { amount: number; key: number } | null;
   busy: boolean;
 }) {
   const set = entry.card_set;
@@ -179,19 +192,14 @@ function Post({
             </Text>
           ) : null}
           {entry.duplicate_count > 0 ? (
-            <Text
-              accessibilityRole="link"
-              style={[styles.pointsLink, styles.sparesLink]}
-              onPress={() =>
-                router.push({
-                  pathname: '/sets/[slug]',
-                  params: { slug: set.slug, tab: 'collected' },
-                })
-              }
-            >
-              {entry.duplicate_count} spare{entry.duplicate_count === 1 ? '' : 's'}
-            </Text>
+            <Button
+              title={recycling ? 'Recycling…' : `Recycle spares (${entry.duplicate_count})`}
+              kind="secondary"
+              disabled={busy}
+              onPress={onRecycle}
+            />
           ) : null}
+          {gain ? <PointGain key={gain.key} amount={gain.amount} /> : null}
         </View>
       </View>
 
@@ -273,20 +281,27 @@ function Packs() {
   const [error, setError] = useState<string | null>(null);
   const [opening, setOpening] = useState<PackOpening | null>(null);
   const [busy, setBusy] = useState(false);
+  const [recycling, setRecycling] = useState<string | null>(null);
+  const [gain, setGain] = useState<{ slug: string; amount: number; key: number } | null>(null);
+  const mutation = useRef(false);
+  const latestLoad = useRef(0);
   const [now, setNow] = useState(() => Date.now());
   const [filter, setFilter] = useState('');
   const [starters, setStarters] = useState<CardSetSummary[]>([]);
   const [picked, setPicked] = useState(0);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (refreshError?: string) => {
+    const request = ++latestLoad.current;
     try {
       const page = await getMyPacks();
+      if (request !== latestLoad.current) return;
       setEntries(page.results);
       setFreeCount(page.free_count);
       setError(null);
       void syncPackReminder(page.results);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not load your packs.');
+      if (request === latestLoad.current)
+        setError(refreshError ?? (e instanceof Error ? e.message : 'Could not load your packs.'));
     }
   }, []);
 
@@ -311,6 +326,8 @@ function Packs() {
   }, [entries]);
 
   async function open(slug: string, usePoints: boolean) {
+    if (mutation.current) return;
+    mutation.current = true;
     setBusy(true);
     setError(null);
     try {
@@ -318,7 +335,48 @@ function Packs() {
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not open that pack.');
     } finally {
+      mutation.current = false;
       setBusy(false);
+    }
+  }
+
+  async function recycleAll(slug: string) {
+    if (mutation.current) return;
+    mutation.current = true;
+    latestLoad.current += 1;
+    setBusy(true);
+    setRecycling(slug);
+    setError(null);
+    try {
+      const result = await recycleDuplicates(slug);
+      latestLoad.current += 1;
+      setEntries(
+        (current) =>
+          current?.map((entry) =>
+            entry.card_set.slug === slug
+              ? {
+                  ...entry,
+                  points: result.points,
+                  duplicate_count: Math.max(0, entry.duplicate_count - result.recycled),
+                }
+              : entry,
+          ) ?? null,
+      );
+      if (result.earned) {
+        const nextGain = { slug, amount: result.earned, key: Date.now() };
+        setGain(nextGain);
+        setTimeout(
+          () => setGain((current) => (current?.key === nextGain.key ? null : current)),
+          750,
+        );
+      }
+      await load('Spares were recycled, but your packs could not refresh. Reload to update them.');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not recycle.');
+    } finally {
+      mutation.current = false;
+      setBusy(false);
+      setRecycling(null);
     }
   }
 
@@ -414,6 +472,9 @@ function Packs() {
               entry={entry}
               now={now}
               busy={busy}
+              recycling={recycling === entry.card_set.slug}
+              gain={gain?.slug === entry.card_set.slug ? gain : null}
+              onRecycle={() => void recycleAll(entry.card_set.slug)}
               onOpen={(usePoints) => void open(entry.card_set.slug, usePoints)}
               onUnfollow={() => void unfollow(entry.card_set.slug)}
             />
@@ -425,7 +486,7 @@ function Packs() {
             opening={opening}
             onClose={() => {
               setOpening(null);
-              void askForPackReminder().then(load);
+              void askForPackReminder().then(() => load());
             }}
           />
         ) : null}
@@ -548,10 +609,8 @@ const styles = StyleSheet.create({
   waiting: { flexDirection: 'row', alignItems: 'baseline', gap: 8 },
   clock: { color: colors.muted, fontFamily: fonts.display, fontSize: 22 },
   waitingLabel: { color: colors.faint, fontFamily: fonts.body, fontSize: 13 },
-  points: { flexDirection: 'row', alignItems: 'baseline', gap: 12 },
+  points: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 12 },
   pointsText: { color: colors.muted, fontFamily: fonts.medium, fontSize: 14 },
-  sparesLink: { textDecorationLine: 'underline' },
-  pointsLink: { color: colors.accent, fontFamily: fonts.body, fontSize: 14 },
 
   pulls: { marginTop: 14, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.bdr },
   pullsLabel: { color: colors.muted, fontFamily: fonts.medium, fontSize: 15 },

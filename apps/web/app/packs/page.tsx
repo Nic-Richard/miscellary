@@ -1,11 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { cardCode, personHandle, personName } from '@miscellary/shared';
 import type { Card, CardSetSummary, PackEntry, PackOpening } from '@miscellary/shared';
 import PageHeader from '@/components/PageHeader';
+import PointGain from '@/components/PointGain';
 import PersonLink from '@/components/PersonLink';
 import CardBack from '@/components/CardBack';
 import CardInspector from '@/components/CardInspector';
@@ -20,7 +21,7 @@ import TagList from '@/components/TagList';
 import { useAuth } from '@/lib/auth';
 import { useRequireAccount } from '@/lib/requireAccount';
 import { listPublicSets } from '@/lib/sets';
-import { openPack } from '@/lib/packs';
+import { openPack, recycleDuplicates } from '@/lib/packs';
 import { preloadPackArtwork, reusePackArtwork } from '@/lib/packArtwork';
 import { followSet, getMyPacks } from '@/lib/social';
 import { countdown } from '@/lib/time';
@@ -89,12 +90,18 @@ function Post({
   now,
   onUnfollow,
   onOpen,
+  onRecycle,
+  recycling,
+  gain,
   busy,
 }: {
   entry: PackEntry;
   now: number;
   onUnfollow: () => void;
   onOpen: (usePoints: boolean) => void;
+  onRecycle: () => void;
+  recycling: boolean;
+  gain: { amount: number; key: number } | null;
   busy: boolean;
 }) {
   const set = entry.card_set;
@@ -195,10 +202,16 @@ function Post({
                 )
               ) : null}
               {entry.duplicate_count > 0 ? (
-                <Link href={`/sets/${set.slug}#collected`} className={styles.spares}>
-                  {entry.duplicate_count} spare{entry.duplicate_count === 1 ? '' : 's'} to recycle
-                </Link>
+                <button
+                  type="button"
+                  className={`${ui.btnQuiet} ${ui.btnSmall}`}
+                  disabled={busy}
+                  onClick={onRecycle}
+                >
+                  {recycling ? 'Recycling…' : `Recycle spares (${entry.duplicate_count})`}
+                </button>
               ) : null}
+              {gain ? <PointGain key={gain.key} amount={gain.amount} /> : null}
             </span>
           </div>
         </div>
@@ -279,15 +292,23 @@ export default function PacksPage() {
   const [error, setError] = useState<string | null>(null);
   const [opening, setOpening] = useState<PackOpening | null>(null);
   const [busy, setBusy] = useState(false);
+  const [recycling, setRecycling] = useState<string | null>(null);
+  const [gain, setGain] = useState<{ slug: string; amount: number; key: number } | null>(null);
+  const mutation = useRef(false);
+  const latestLoad = useRef(0);
   const [now, setNow] = useState(() => Date.now());
 
-  const reload = useCallback(() => {
-    getMyPacks()
-      .then((page) => {
-        setEntries(page.results);
-        setFreeCount(page.free_count);
-      })
-      .catch((e: Error) => setError(e.message));
+  const reload = useCallback(async (refreshError?: string) => {
+    const request = ++latestLoad.current;
+    try {
+      const page = await getMyPacks();
+      if (request !== latestLoad.current) return;
+      setEntries(page.results);
+      setFreeCount(page.free_count);
+    } catch (e) {
+      if (request === latestLoad.current)
+        setError(refreshError ?? (e instanceof Error ? e.message : 'Could not load your packs.'));
+    }
   }, []);
 
   useEffect(() => {
@@ -335,6 +356,8 @@ export default function PacksPage() {
   }, [entries]);
 
   async function open(slug: string, usePoints: boolean) {
+    if (mutation.current) return;
+    mutation.current = true;
     setBusy(true);
     setError(null);
     const identity = entries?.find((entry) => entry.card_set.slug === slug)?.card_set;
@@ -349,7 +372,50 @@ export default function PacksPage() {
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not open that pack.');
     } finally {
+      mutation.current = false;
       setBusy(false);
+    }
+  }
+
+  async function recycleAll(slug: string) {
+    if (mutation.current) return;
+    mutation.current = true;
+    latestLoad.current += 1;
+    setBusy(true);
+    setRecycling(slug);
+    setError(null);
+    try {
+      const result = await recycleDuplicates(slug);
+      latestLoad.current += 1;
+      setEntries(
+        (current) =>
+          current?.map((entry) =>
+            entry.card_set.slug === slug
+              ? {
+                  ...entry,
+                  points: result.points,
+                  duplicate_count: Math.max(0, entry.duplicate_count - result.recycled),
+                }
+              : entry,
+          ) ?? null,
+      );
+      if (result.earned) {
+        const nextGain = { slug, amount: result.earned, key: Date.now() };
+        setGain(nextGain);
+        setTimeout(
+          () => setGain((current) => (current?.key === nextGain.key ? null : current)),
+          800,
+        );
+      }
+      await reload(
+        'Spares were recycled, but your packs could not refresh. Reload to update them.',
+      );
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not recycle.');
+    } finally {
+      mutation.current = false;
+      setBusy(false);
+      setRecycling(null);
     }
   }
 
@@ -450,6 +516,9 @@ export default function PacksPage() {
                 entry={entry}
                 now={now}
                 busy={busy}
+                recycling={recycling === entry.card_set.slug}
+                gain={gain?.slug === entry.card_set.slug ? gain : null}
+                onRecycle={() => void recycleAll(entry.card_set.slug)}
                 onOpen={(usePoints) => void open(entry.card_set.slug, usePoints)}
                 onUnfollow={() => void unfollow(entry.card_set.slug)}
               />
@@ -457,7 +526,11 @@ export default function PacksPage() {
           )}
         </main>
 
-        <aside className={wide.rail}>
+        <aside
+          className={`${wide.rail} ${wide.scrollRail}`}
+          tabIndex={0}
+          aria-label="Pack summary and suggestions"
+        >
           <section className={`${ui.panel} ${wide.railPanel}`}>
             <h2 className={ui.panelTitle}>Free packs</h2>
             <p className={styles.tally}>

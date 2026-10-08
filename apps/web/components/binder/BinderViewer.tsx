@@ -32,6 +32,8 @@ export default function BinderViewer({
   latest.current = { onTurn, onClose, paused };
 
   useEffect(() => {
+    const previousFocus =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     root.current?.focus();
@@ -56,6 +58,7 @@ export default function BinderViewer({
       document.removeEventListener('keydown', onKey);
       document.body.style.overflow = prev;
       if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined);
+      previousFocus?.focus();
     };
   }, []);
 

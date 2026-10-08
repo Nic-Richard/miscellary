@@ -25,6 +25,7 @@ import MoreMenu from '@/components/MoreMenu';
 import ReportDialog from '@/components/ReportDialog';
 import ShareButton from '@/components/ShareButton';
 import CardPreview from '@/components/CardPreview';
+import PointGain from '@/components/PointGain';
 import Comments from '@/components/Comments';
 import Description from '@/components/Description';
 import LikeButton from '@/components/LikeButton';
@@ -165,6 +166,7 @@ export default function BinderClient({
   );
   const [recycling, setRecycling] = useState<string | null>(null);
   const [gain, setGain] = useState<{ cardId: string; amount: number; key: number } | null>(null);
+  const [bulkGain, setBulkGain] = useState<{ amount: number; key: number } | null>(null);
   const [packPoints, setPackPoints] = useState<number | undefined>();
   const [requests] = useState(() =>
     createCollectionRequests({ listAllMyCards, listMyPoints, recycleCard, recycleDuplicates }),
@@ -267,13 +269,22 @@ export default function BinderClient({
       set.slug,
       set.slug,
       (result) => {
-        setPackPoints(result.points);
         setOwned(result.cards);
       },
       (e) => setError(e instanceof Error ? e.message : 'Could not recycle.'),
       (busy) => {
         setRecycling(busy ? 'all' : null);
         if (busy) setError(null);
+      },
+      (result) => {
+        setPackPoints(result.points);
+        if (!result.earned) return;
+        const nextGain = { amount: result.earned, key: Date.now() };
+        setBulkGain(nextGain);
+        setTimeout(
+          () => setBulkGain((current) => (current?.key === nextGain.key ? null : current)),
+          800,
+        );
       },
     );
   }
@@ -464,16 +475,29 @@ export default function BinderClient({
 
       <div className={styles.body}>
         <div className={styles.binderColumn}>
-          <button
-            type="button"
-            className={styles.fit}
-            onClick={() => tabsTop.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-          >
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />
-            </svg>
-            Line up binder
-          </button>
+          <div className={styles.binderTools}>
+            <button
+              type="button"
+              className={`${ui.btnQuiet} ${ui.btnSmall} ${styles.fit}`}
+              onClick={() =>
+                tabsTop.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+              }
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />
+              </svg>
+              Line up binder
+            </button>
+            {tab === 'binder' ? (
+              <button
+                type="button"
+                className={`${ui.btnQuiet} ${ui.btnSmall}`}
+                onClick={() => setViewing(true)}
+              >
+                Full screen
+              </button>
+            ) : null}
+          </div>
           <div ref={tabsTop}>
             <FolderTabs
               label="Set sections"
@@ -509,6 +533,7 @@ export default function BinderClient({
           {tab === 'binder' ? (
             <div className={styles.spread} id="cards">
               <Binder
+                animate={!viewing}
                 mark={set.mark}
                 colour={set.binder_colour}
                 page={spread}
@@ -542,15 +567,6 @@ export default function BinderClient({
                   />
                 </BinderViewer>
               ) : null}
-              <div className={styles.pager}>
-                <button
-                  type="button"
-                  className={`${ui.btnQuiet} ${ui.btnSmall}`}
-                  onClick={() => setViewing(true)}
-                >
-                  Full screen
-                </button>
-              </div>
               {binderPages.length > 1 ? (
                 <div className={styles.pager}>
                   <button
@@ -613,6 +629,7 @@ export default function BinderClient({
                     : `${stackOwnedCards(owned).length} of ${set.card_count} · ${owned.length} ${
                         owned.length === 1 ? 'copy' : 'copies'
                       }`}
+                  {bulkGain ? <PointGain key={bulkGain.key} amount={bulkGain.amount} /> : null}
                 </span>
                 {owned && spareCount(owned) > 0 ? (
                   <button

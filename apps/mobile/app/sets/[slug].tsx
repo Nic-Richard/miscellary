@@ -81,6 +81,7 @@ export default function BinderScreen() {
   const [selected, setSelected] = useState<{ card: Card; copies?: number } | null>(null);
   const [recycling, setRecycling] = useState<string | null>(null);
   const [gain, setGain] = useState<{ cardId: string; amount: number; key: number } | null>(null);
+  const [bulkGain, setBulkGain] = useState<{ amount: number; key: number } | null>(null);
   const [requests] = useState(() =>
     createCollectionRequests({ listAllMyCards, listMyPoints, recycleCard, recycleDuplicates }),
   );
@@ -238,13 +239,22 @@ export default function BinderScreen() {
       set.slug,
       set.slug,
       (result) => {
-        setStatus((current) => (current ? { ...current, points: result.points } : current));
         setOwned(result.cards);
       },
       (e) => setError(e instanceof Error ? e.message : 'Could not recycle.'),
       (busy) => {
         setRecycling(busy ? 'all' : null);
         if (busy) setError(null);
+      },
+      (result) => {
+        setStatus((current) => (current ? { ...current, points: result.points } : current));
+        if (!result.earned) return;
+        const nextGain = { amount: result.earned, key: Date.now() };
+        setBulkGain(nextGain);
+        setTimeout(
+          () => setBulkGain((current) => (current?.key === nextGain.key ? null : current)),
+          750,
+        );
       },
     );
   }
@@ -629,6 +639,7 @@ export default function BinderScreen() {
                 ? 'Loading'
                 : `${collected.length} of ${set.card_count} · ${countOf(owned.length, 'copy', 'copies')}`}
             </Muted>
+            {bulkGain ? <PointGain key={bulkGain.key} amount={bulkGain.amount} /> : null}
           </View>
           {owned && spareCount(owned) > 0 ? (
             <Button
@@ -636,6 +647,7 @@ export default function BinderScreen() {
                 recycling === 'all' ? 'Recycling…' : `Recycle all spares (${spareCount(owned)})`
               }
               kind="secondary"
+              style={{ marginBottom: 14 }}
               disabled={recycling !== null}
               onPress={() => void recycleAll()}
             />
@@ -807,6 +819,7 @@ const styles = StyleSheet.create({
   },
   sectionHead: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'baseline',
     justifyContent: 'space-between',
     gap: 8,

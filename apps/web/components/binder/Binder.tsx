@@ -93,6 +93,7 @@ export default function Binder({
   pages,
   canPrevious = false,
   canNext = false,
+  animate = true,
 }: {
   slots: (ReactNode | null)[];
   id?: string | undefined;
@@ -107,6 +108,7 @@ export default function Binder({
   pages?: BinderPage[] | undefined;
   canPrevious?: boolean;
   canNext?: boolean;
+  animate?: boolean;
 }) {
   const motion = useRef<HTMLDivElement>(null);
   const gesture = useRef<{
@@ -145,6 +147,11 @@ export default function Binder({
   }, [pages, shownPage]);
 
   useLayoutEffect(() => {
+    if (!animate) {
+      setShownPage(page);
+      setLeaf(null);
+      return;
+    }
     if (page === shownPage) return;
     if (still || !pages) {
       setShownPage(page);
@@ -157,7 +164,7 @@ export default function Binder({
       fromPage: shownPage,
       toPage: page,
     });
-  }, [page, pages, shownPage, still]);
+  }, [animate, page, pages, shownPage, still]);
 
   useEffect(() => {
     if (!leaf) return;
@@ -365,8 +372,12 @@ export default function Binder({
         <div className={`${styles.resting} ${leaf ? styles.restingHidden : ''}`}>
           {SLOTS.map((slot) => place(slot, contentFor(shown.slots, shown.startIndex, slot, !leaf)))}
         </div>
-        {preparedPage('prev', leaf?.dir === 'prev' ? leaf.toPage : shownPage - 1, previousStage)}
-        {preparedPage('next', leaf?.dir === 'next' ? leaf.toPage : shownPage + 1, nextStage)}
+        {animate
+          ? preparedPage('prev', leaf?.dir === 'prev' ? leaf.toPage : shownPage - 1, previousStage)
+          : null}
+        {animate
+          ? preparedPage('next', leaf?.dir === 'next' ? leaf.toPage : shownPage + 1, nextStage)
+          : null}
         <span className={styles.dragShade} aria-hidden="true" />
       </div>
     </div>

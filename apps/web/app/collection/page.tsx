@@ -15,6 +15,7 @@ import {
 } from '@miscellary/shared';
 import type { CardSetSummary, OwnedCard, Rarity, SetPointsBalance } from '@miscellary/shared';
 import PageHeader from '@/components/PageHeader';
+import PointGain from '@/components/PointGain';
 import CardGrid, { CardCell } from '@/components/CardGrid';
 import PackStage from '@/components/PackStage';
 import SearchField from '@/components/SearchField';
@@ -41,6 +42,9 @@ function Collection() {
   const [recycling, setRecycling] = useState<string | null>(null);
   const [filter, setFilter] = useState('');
   const [gain, setGain] = useState<{ cardId: string; amount: number; key: number } | null>(null);
+  const [bulkGain, setBulkGain] = useState<{ slug: string; amount: number; key: number } | null>(
+    null,
+  );
   const [requests] = useState(() =>
     createCollectionRequests({ listAllMyCards, listMyPoints, recycleCard, recycleDuplicates }),
   );
@@ -110,16 +114,25 @@ function Collection() {
       slug,
       setSlug,
       (result) => {
-        setPoints((current) => [
-          ...current.filter((balance) => balance.set_slug !== slug),
-          { set_slug: slug, set_title: title, points: result.points },
-        ]);
         setCards(result.cards);
       },
       (e) => setError(e instanceof Error ? e.message : 'Could not recycle.'),
       (busy) => {
         setRecycling(busy ? `set:${slug}` : null);
         if (busy) setError(null);
+      },
+      (result) => {
+        setPoints((current) => [
+          ...current.filter((balance) => balance.set_slug !== slug),
+          { set_slug: slug, set_title: title, points: result.points },
+        ]);
+        if (!result.earned) return;
+        const nextGain = { slug, amount: result.earned, key: Date.now() };
+        setBulkGain(nextGain);
+        setTimeout(
+          () => setBulkGain((current) => (current?.key === nextGain.key ? null : current)),
+          800,
+        );
       },
     );
   }
@@ -203,6 +216,11 @@ function Collection() {
         </aside>
 
         <main className={styles.grids}>
+          {cards === null && !error ? (
+            <Sheet>
+              <Empty icon="cards">Loading your cards…</Empty>
+            </Sheet>
+          ) : null}
           {cards?.length && shown.size === 0 ? (
             <Sheet>
               <Empty
@@ -246,9 +264,15 @@ function Collection() {
                       {list[0]?.set_title}
                     </Link>
                   }
-                  meta={`${stacked.length} ${stacked.length === 1 ? 'card' : 'cards'} · ${
-                    list.length
-                  } ${list.length === 1 ? 'copy' : 'copies'} · ${balance} set points`}
+                  meta={
+                    <>
+                      {stacked.length} {stacked.length === 1 ? 'card' : 'cards'} · {list.length}{' '}
+                      {list.length === 1 ? 'copy' : 'copies'} · {balance} set points
+                      {bulkGain?.slug === slug ? (
+                        <PointGain key={bulkGain.key} amount={bulkGain.amount} />
+                      ) : null}
+                    </>
+                  }
                   actions={
                     spares > 0 ? (
                       <button
@@ -323,7 +347,11 @@ function Collection() {
           })}
         </main>
 
-        <aside className={wide.rail}>
+        <aside
+          className={`${wide.rail} ${wide.scrollRail}`}
+          tabIndex={0}
+          aria-label="Collection summary and tools"
+        >
           {cards?.length ? (
             <>
               <section className={`${ui.panel} ${wide.railPanel}`}>

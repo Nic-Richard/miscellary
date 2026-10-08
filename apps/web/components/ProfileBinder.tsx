@@ -6,6 +6,7 @@ import type { ReactNode } from 'react';
 import { cardCode, SHOWCASE_SLOTS } from '@miscellary/shared';
 import type { OwnedCard, ShowcaseSlot } from '@miscellary/shared';
 import Binder from './binder/Binder';
+import BinderViewer from './binder/BinderViewer';
 import CardPreview from './CardPreview';
 import ui from './ui.module.css';
 import { binderClothStyle } from '@/lib/setIdentity';
@@ -22,6 +23,8 @@ interface ProfileBinderProps {
   footer?: ReactNode;
 
   open?: boolean;
+  fullscreen?: boolean;
+  paused?: boolean;
   /** Only the binder, with its page controlled by the caller, for the app's full-screen viewer. */
   bare?: { page: number; onPage: (page: number) => void };
 }
@@ -119,9 +122,12 @@ export default function ProfileBinder({
   footer,
   open: startOpen = true,
   bare,
+  fullscreen = false,
+  paused = false,
 }: ProfileBinderProps) {
   const [open, setOpen] = useState(startOpen);
   const [ownPage, setPage] = useState(0);
+  const [viewing, setViewing] = useState(false);
   const page = bare ? bare.page : ownPage;
   const rootRef = useRef<HTMLDivElement>(null);
   const alignOnOpen = useRef(false);
@@ -176,9 +182,10 @@ export default function ProfileBinder({
     return () => cancelAnimationFrame(frame);
   }, [open]);
 
-  if (bare) {
+  function renderBinder(animate = true) {
     return (
       <Binder
+        animate={animate}
         colour={colour}
         emptyLabel={onPick ? 'Pin a card' : mine ? 'Empty' : 'Empty sleeve'}
         page={page}
@@ -192,6 +199,8 @@ export default function ProfileBinder({
       />
     );
   }
+
+  if (bare) return renderBinder();
 
   if (!open) {
     return (
@@ -236,18 +245,31 @@ export default function ProfileBinder({
               )}
             </span>
           </div>
-          <Binder
-            colour={colour}
-            emptyLabel={onPick ? 'Pin a card' : mine ? 'Empty' : 'Empty sleeve'}
-            page={page}
-            startIndex={page * 8}
-            canPrevious={page > 0}
-            canNext={page < pages.length - 1}
-            onNavigate={navigate}
-            onPickEmpty={onPick ? (slotIndex) => onPick(page * 8 + slotIndex) : undefined}
-            pages={pages}
-            slots={pages[page]?.slots ?? []}
-          />
+          {renderBinder(!viewing)}
+          {viewing ? (
+            <BinderViewer
+              title={caption}
+              subtitle={`${filled} of ${SHOWCASE_SLOTS} sleeves filled`}
+              spread={page}
+              spreads={pages.length}
+              onTurn={navigate}
+              onClose={() => setViewing(false)}
+              paused={paused}
+            >
+              {renderBinder()}
+            </BinderViewer>
+          ) : null}
+          {fullscreen ? (
+            <div className={styles.pager}>
+              <button
+                type="button"
+                className={`${ui.btnQuiet} ${ui.btnSmall}`}
+                onClick={() => setViewing(true)}
+              >
+                Full screen
+              </button>
+            </div>
+          ) : null}
           <div className={styles.pager}>
             <button
               type="button"

@@ -40,6 +40,62 @@ it('keeps the active set filter when refreshing after bulk recycling', async () 
   expect(error).not.toHaveBeenCalled();
 });
 
+it('reports confirmed bulk points before refreshing cards and distinguishes refresh failures', async () => {
+  const api = collectionApi();
+  const cards = deferred<OwnedCard[]>();
+  api.listAllMyCards.mockImplementationOnce(() => cards.promise);
+  const apply = vi.fn();
+  const confirmed = vi.fn();
+  const busy = vi.fn();
+  const error = vi.fn();
+  const recycling = createCollectionRequests(api).recycleAll(
+    'cameras',
+    'cameras',
+    apply,
+    error,
+    busy,
+    confirmed,
+  );
+  await vi.waitFor(() => expect(api.listAllMyCards).toHaveBeenCalledOnce());
+  expect(confirmed).toHaveBeenCalledExactlyOnceWith({
+    set_slug: 'cameras',
+    points: 10,
+    earned: 10,
+    recycled: 1,
+  });
+  expect(apply).not.toHaveBeenCalled();
+  expect(busy.mock.calls).toEqual([[true]]);
+  cards.reject(new Error('Offline'));
+  await recycling;
+  expect(error.mock.calls[0]?.[0].message).toBe(
+    'Spares were recycled, but your cards could not refresh. Reload to update them.',
+  );
+  expect(confirmed).toHaveBeenCalledOnce();
+  expect(busy.mock.calls).toEqual([[true], [false]]);
+});
+
+it('does not report bulk success after failure or a scope change', async () => {
+  const api = collectionApi();
+  const requests = createCollectionRequests(api);
+  const confirmed = vi.fn();
+  const error = vi.fn();
+  api.recycleDuplicates.mockRejectedValueOnce(new Error('Recycle failed'));
+  await requests.recycleAll('cameras', undefined, vi.fn(), error, vi.fn(), confirmed);
+  expect(confirmed).not.toHaveBeenCalled();
+  expect(api.listAllMyCards).not.toHaveBeenCalled();
+  expect(error).toHaveBeenCalledOnce();
+
+  const write = deferred<{ set_slug: string; points: number; earned: number; recycled: number }>();
+  api.recycleDuplicates.mockImplementationOnce(() => write.promise);
+  const apply = vi.fn();
+  const recycling = requests.recycleAll('cameras', undefined, apply, error, vi.fn(), confirmed);
+  requests.invalidate();
+  write.resolve({ set_slug: 'cameras', points: 10, earned: 10, recycled: 1 });
+  await recycling;
+  expect(confirmed).not.toHaveBeenCalled();
+  expect(apply).not.toHaveBeenCalled();
+});
+
 it('ignores older replies and errors after a scope change or blur', async () => {
   const api = collectionApi();
   const requests = createCollectionRequests(api);

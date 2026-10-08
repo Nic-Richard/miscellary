@@ -271,13 +271,6 @@
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
-.points a {
-  color: var(--accent);
-  text-decoration: none;
-}
-.points a:hover {
-  text-decoration: underline;
-}
 
 .pulls {
   margin-top: 16px;
@@ -412,9 +405,4 @@
   .pack {
     max-width: 190px;
   }
-}
-
-.spares {
-  text-decoration: underline;
-  text-underline-offset: 2px;
 }

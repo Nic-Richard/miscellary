@@ -15,6 +15,8 @@ export default function PointGain({ amount }: { amount: number }) {
 
   return (
     <Animated.Text
+      accessibilityLiveRegion="polite"
+      accessibilityLabel={`Earned ${amount} points`}
       style={[
         styles.gain,
         {

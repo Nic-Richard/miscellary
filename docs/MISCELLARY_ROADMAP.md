@@ -340,6 +340,14 @@ The deployed site should be tested from a clean browser session rather than assu
 
 After the main product/UI work settles, do a focused performance and interaction pass.
 
+Oct 8 follow-up, implemented locally and awaiting commit approval: hidden binders
+stop animating behind fullscreen views, website profile binders gain fullscreen,
+and desktop Packs, My cards and Trades side panels scroll independently. Bulk
+recycling now reports confirmed points before the collection refresh finishes;
+Packs offers direct recycling on web and Android. My cards has initial loading
+states on both platforms. Local checks passed; real Chrome fullscreen turns and
+Android spacing/feedback still need device QA. Existing signed builds are unchanged.
+
 ### Areas to inspect
 
 - Route transitions.

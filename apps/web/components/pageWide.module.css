@@ -68,6 +68,15 @@
   display: grid;
   gap: 14px;
 }
+
+@media (min-width: 901px) {
+  .scrollRail {
+    max-height: calc(100dvh - 52px);
+    grid-auto-rows: max-content;
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+  }
+}
 .railPanel {
   padding: 18px 20px 20px;
 }

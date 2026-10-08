@@ -103,11 +103,21 @@ export function createCollectionRequests(api: CollectionApi) {
       apply: (result: RecycleAllResult & { cards: OwnedCard[] }) => void,
       onError: OnError,
       onBusy: OnBusy,
+      onRecycled?: (result: RecycleAllResult) => void,
     ) {
+      const currentContext = context;
       return recycle(
         async () => {
           const result = await api.recycleDuplicates(slug);
-          const cards = await api.listAllMyCards(setSlug);
+          if (context === currentContext) onRecycled?.(result);
+          let cards: OwnedCard[];
+          try {
+            cards = await api.listAllMyCards(setSlug);
+          } catch {
+            throw new Error(
+              'Spares were recycled, but your cards could not refresh. Reload to update them.',
+            );
+          }
           return { ...result, cards };
         },
         apply,

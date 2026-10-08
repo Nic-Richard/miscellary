@@ -258,6 +258,8 @@ export default function ProfileClient({
           colour={profile.binder_colour}
           mine={profile.is_me}
           onInspect={setInspect}
+          fullscreen
+          paused={Boolean(inspect)}
           open={false}
         />
       </div>

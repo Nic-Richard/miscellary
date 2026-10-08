@@ -178,20 +178,12 @@
   white-space: nowrap;
 }
 
-.fit {
-  display: inline-flex;
+.binderTools {
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
   margin: 0 0 8px 40px;
-  padding: 5px 12px;
-  background: none;
-  border: 1px solid var(--bdr2);
-  border-radius: var(--radius-pill);
-  color: var(--muted);
-  font-family: var(--body);
-  font-size: 15px;
-  font-weight: 700;
-  cursor: pointer;
 }
 .fit svg {
   width: 13px;
@@ -201,10 +193,6 @@
   stroke-width: 1.8;
   stroke-linecap: round;
   stroke-linejoin: round;
-}
-.fit:hover {
-  border-color: var(--accent);
-  color: var(--accent);
 }
 .sheet {
   position: relative;

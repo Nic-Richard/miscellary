@@ -197,7 +197,11 @@ export default function TradesPage() {
           </Sheet>
         </main>
 
-        <aside className={wide.rail}>
+        <aside
+          className={`${wide.rail} ${wide.scrollRail}`}
+          tabIndex={0}
+          aria-label="Trade summary and help"
+        >
           <section className={`${ui.panel} ${wide.railPanel}`}>
             <h2 className={ui.panelTitle}>Start a trade</h2>
             <form className={styles.start} onSubmit={start}>
