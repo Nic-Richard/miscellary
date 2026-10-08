@@ -22,6 +22,7 @@ import './globals.css';
 import { AuthProvider } from '@/lib/auth';
 import { SITE_URL } from '@/lib/seo';
 import Nav from '@/components/Nav';
+import SidePanelScroll from '@/components/SidePanelScroll';
 import styles from './layout.module.css';
 
 const display = Bebas_Neue({
@@ -84,6 +85,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en" className={fonts}>
       <body>
         <AuthProvider>
+          <SidePanelScroll />
           <div className={styles.shell}>
             <Nav />
             <div className={styles.content}>
