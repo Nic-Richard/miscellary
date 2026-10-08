@@ -121,6 +121,7 @@ class PackEntrySerializer(serializers.Serializer):
     owned_count = serializers.IntegerField()
     card_count = serializers.IntegerField()
     duplicate_count = serializers.IntegerField()
+    recyclable_count = serializers.IntegerField()
     recent_cards = CardSerializer(many=True)
     followed_at = serializers.DateTimeField()
 

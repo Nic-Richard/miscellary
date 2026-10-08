@@ -101,6 +101,10 @@ Published sets also include `render_back`. Drafts return `null`. Missing or stal
 One free pack per user per set per UTC day is a database constraint, so concurrent requests can't
 double-open. Points balances are locked with `SELECT … FOR UPDATE` while spending or recycling.
 
+`GET /me/packs/` includes `duplicate_count` for all extra copies and `recyclable_count` for copies
+eligible for bulk recycling. The latter excludes cards held in pending trades and keeps one free
+copy of each card, matching the Collected view and bulk-recycle endpoint.
+
 ## Trading
 
 | Method | Path                                     | Notes                                                                             |

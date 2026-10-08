@@ -9,6 +9,7 @@ from cards.tests.helpers import fill_publishable, make_set
 from conftest import make_user
 from packs.models import OwnedCard, PackOpening, SetPoints
 from social.models import SetFollow
+from trades import actions as trades
 
 pytestmark = pytest.mark.django_db
 
@@ -71,6 +72,9 @@ def test_entries_carry_free_pack_state_points_and_progress(auth_client, user, se
     assert rows[first.slug]["points"] == 120
     assert rows[first.slug]["owned_count"] == 1
     assert rows[first.slug]["card_count"] == first.cards.count()
+    assert rows[first.slug]["duplicate_count"] == 1
+    assert rows[first.slug]["recyclable_count"] == 1
+    assert rows[second.slug]["recyclable_count"] == 0
     assert rows[second.slug]["free_available"] is True
     assert body["free_count"] == 1
 
@@ -121,3 +125,38 @@ def test_recent_cards_are_distinct_cards_not_copies(auth_client, user, sets):
         OwnedCard.objects.create(owner=user, card=card)
     rows = auth_client.get(reverse("social:my-packs")).json()["results"]
     assert [c["id"] for c in rows[0]["recent_cards"]] == [str(card.id)]
+
+
+def test_recycle_count_keeps_a_free_copy_beside_held_copies(auth_client, user, sets):
+    first, second = sets
+    for card_set in sets:
+        SetFollow.objects.create(user=user, card_set=card_set)
+    card = first.cards.first()
+    free = OwnedCard.objects.create(owner=user, card=card)
+    held = OwnedCard.objects.create(owner=user, card=card)
+    other = make_user()
+    theirs = OwnedCard.objects.create(owner=other, card=card)
+    offer = trades.create_offer(user, other, [held.pk], [theirs.pk])
+    url = reverse("social:my-packs")
+
+    def entry():
+        rows = auth_client.get(url).json()["results"]
+        return next(row for row in rows if row["card_set"]["slug"] == first.slug)
+
+    assert entry()["duplicate_count"] == 1
+    assert entry()["recyclable_count"] == 0
+    spare = OwnedCard.objects.create(owner=user, card=card)
+    OwnedCard.objects.create(owner=other, card=card)
+    OwnedCard.objects.create(owner=user, card=second.cards.first())
+    assert entry()["duplicate_count"] == 2
+    assert entry()["recyclable_count"] == 1
+
+    result = auth_client.post(f"/api/v1/me/sets/{first.slug}/recycle-duplicates/").json()
+    assert result["recycled"] == 1
+    assert not OwnedCard.objects.filter(pk=spare.pk).exists()
+    assert OwnedCard.objects.filter(pk__in=[free.pk, held.pk], owner=user).count() == 2
+    assert entry()["recyclable_count"] == 0
+
+    offer.status = offer.Status.CANCELLED
+    offer.save(update_fields=["status"])
+    assert entry()["recyclable_count"] == 1

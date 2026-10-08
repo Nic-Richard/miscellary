@@ -204,7 +204,11 @@ function Collection() {
       {error ? <p className={ui.error}>{error}</p> : null}
 
       <div className={wide.layout}>
-        <aside className={wide.jump} aria-label="Jump to a set">
+        <aside
+          className={`${wide.jump} ${wide.scrollRail}`}
+          tabIndex={0}
+          aria-label="Jump to a set"
+        >
           {[...shown.keys()].map((slug) => {
             const summary = packs.get(slug);
             return summary ? (

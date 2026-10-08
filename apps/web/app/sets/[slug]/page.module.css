@@ -195,6 +195,8 @@
   stroke-linejoin: round;
 }
 .sheet {
+  composes: stitched from '../../../components/ui.module.css';
+  --stitch-radius: 7px;
   position: relative;
   z-index: 2;
   padding: 22px 26px 28px;

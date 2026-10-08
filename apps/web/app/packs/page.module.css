@@ -9,6 +9,8 @@
 }
 
 .post {
+  composes: stitched from '../../components/ui.module.css';
+  --stitch-radius: 7px;
   position: relative;
   padding: 18px 22px 20px;
   background:

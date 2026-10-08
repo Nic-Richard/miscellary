@@ -201,14 +201,14 @@ function Post({
                   </b>
                 )
               ) : null}
-              {entry.duplicate_count > 0 ? (
+              {(entry.recyclable_count ?? 0) > 0 ? (
                 <button
                   type="button"
                   className={`${ui.btnQuiet} ${ui.btnSmall}`}
                   disabled={busy}
                   onClick={onRecycle}
                 >
-                  {recycling ? 'Recycling…' : `Recycle spares (${entry.duplicate_count})`}
+                  {recycling ? 'Recycling…' : `Recycle spares (${entry.recyclable_count})`}
                 </button>
               ) : null}
               {gain ? <PointGain key={gain.key} amount={gain.amount} /> : null}
@@ -395,6 +395,7 @@ export default function PacksPage() {
                   ...entry,
                   points: result.points,
                   duplicate_count: Math.max(0, entry.duplicate_count - result.recycled),
+                  recyclable_count: Math.max(0, (entry.recyclable_count ?? 0) - result.recycled),
                 }
               : entry,
           ) ?? null,
@@ -460,7 +461,11 @@ export default function PacksPage() {
       {error ? <p className={ui.error}>{error}</p> : null}
 
       <div className={wide.layout}>
-        <aside className={wide.jump} aria-label="Jump to a pack">
+        <aside
+          className={`${wide.jump} ${wide.scrollRail}`}
+          tabIndex={0}
+          aria-label="Jump to a pack"
+        >
           {(shown ?? []).map((entry) => (
             <a
               key={entry.card_set.id}

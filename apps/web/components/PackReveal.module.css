@@ -256,10 +256,6 @@
   gap: 12px;
   margin-top: 14px;
 }
-.quiet {
-  border-color: rgba(246, 240, 228, 0.35);
-  color: #dfe8e5;
-}
 
 @media (max-width: 800px) {
   .stage {

@@ -366,8 +366,10 @@ export interface PackEntry {
   /** Distinct cards held from this set, against its total. */
   owned_count: number;
   card_count: number;
-  /** Spare copies: what can be recycled or traded away. */
+  /** Extra copies, including any held in a trade. */
   duplicate_count: number;
+  /** Excludes held copies and keeps one free copy; absent on older API deployments. */
+  recyclable_count?: number;
   /** The newest distinct pulls from this set, newest first. */
   recent_cards: Card[];
   followed_at: string;

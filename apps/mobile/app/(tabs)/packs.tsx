@@ -191,9 +191,9 @@ function Post({
               {affordable ? `${entry.points} pts saved` : `${entry.points}/${entry.pack_cost} pts`}
             </Text>
           ) : null}
-          {entry.duplicate_count > 0 ? (
+          {(entry.recyclable_count ?? 0) > 0 ? (
             <Button
-              title={recycling ? 'Recycling…' : `Recycle spares (${entry.duplicate_count})`}
+              title={recycling ? 'Recycling…' : `Recycle spares (${entry.recyclable_count})`}
               kind="secondary"
               disabled={busy}
               onPress={onRecycle}
@@ -358,6 +358,7 @@ function Packs() {
                   ...entry,
                   points: result.points,
                   duplicate_count: Math.max(0, entry.duplicate_count - result.recycled),
+                  recyclable_count: Math.max(0, (entry.recyclable_count ?? 0) - result.recycled),
                 }
               : entry,
           ) ?? null,

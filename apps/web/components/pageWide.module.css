@@ -74,7 +74,10 @@
     max-height: calc(100dvh - 52px);
     grid-auto-rows: max-content;
     overflow-y: auto;
-    scrollbar-gutter: stable;
+    scrollbar-width: none;
+  }
+  .scrollRail::-webkit-scrollbar {
+    display: none;
   }
 }
 .railPanel {

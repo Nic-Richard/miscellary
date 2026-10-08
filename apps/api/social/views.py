@@ -492,6 +492,15 @@ class MyPacksView(APIView):
             .values("card__card_set_id")
             .annotate(distinct_cards=Count("card_id", distinct=True), copies=Count("id"))
         }
+        recyclable: dict = {}
+        for row in (
+            with_copies(OwnedCard.objects.filter(owner=user, card__card_set_id__in=followed))
+            .filter(held=False)
+            .values("card__card_set_id", "card_id")
+            .annotate(free_copies=Count("id"))
+        ):
+            set_id = row["card__card_set_id"]
+            recyclable[set_id] = recyclable.get(set_id, 0) + max(row["free_copies"] - 1, 0)
         # Choose recent cards per set so activity in one set cannot starve another.
         newest: dict = {}
         for row in (
@@ -532,6 +541,7 @@ class MyPacksView(APIView):
                     "owned_count": distinct,
                     "card_count": card_set.card_count,
                     "duplicate_count": max(copies - distinct, 0),
+                    "recyclable_count": recyclable.get(card_set.id, 0),
                     "recent_cards": latest.get(card_set.id, []),
                     "followed_at": followed[card_set.id],
                 }

@@ -250,7 +250,20 @@
   line-height: 1.5;
 }
 
+.stitched {
+  position: relative;
+}
+.stitched::before {
+  content: '';
+  position: absolute;
+  inset: 7px;
+  border: 1px dashed #bfb097;
+  border-radius: var(--stitch-radius, 3px);
+  pointer-events: none;
+}
+
 .panel {
+  composes: stitched;
   padding: 20px 22px;
   background: var(--sur);
   border: 1px solid #d3c8b3;
@@ -412,6 +425,7 @@ textarea.input {
 }
 
 .ticket {
+  composes: stitched;
   position: relative;
   padding: 22px 24px;
   background:
@@ -423,12 +437,4 @@ textarea.input {
   box-shadow:
     0 6px 14px rgba(62, 46, 24, 0.12),
     inset 0 0 0 1px rgba(255, 255, 255, 0.5);
-}
-.ticket::before {
-  content: '';
-  position: absolute;
-  inset: 7px;
-  border: 1px dashed #bfb097;
-  border-radius: 3px;
-  pointer-events: none;
 }

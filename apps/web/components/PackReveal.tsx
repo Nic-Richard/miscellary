@@ -248,36 +248,13 @@ export default function PackReveal({
         </div>
       ) : null}
 
-      <div className={styles.actions} data-pack-reveal="actions">
-        {phase === 'open' && !done ? (
-          <button
-            type="button"
-            className={`${ui.btnQuiet} ${styles.quiet}`}
-            onClick={() => {
-              setPicked(null);
-              setRevealed(total);
-            }}
-          >
-            Reveal all
+      {done ? (
+        <div className={styles.actions} data-pack-reveal="actions">
+          <button type="button" className={ui.btnPrimary} onClick={onClose}>
+            Done
           </button>
-        ) : null}
-        <button
-          type="button"
-          className={ui.btnPrimary}
-          onClick={() => {
-            if (done) {
-              onClose();
-              return;
-            }
-            // Skipping still shows what was in the pack before leaving.
-            setPicked(null);
-            setRevealed(total);
-            setPhase('open');
-          }}
-        >
-          {done ? 'Done' : 'Skip'}
-        </button>
-      </div>
+        </div>
+      ) : null}
     </div>
   );
 }
