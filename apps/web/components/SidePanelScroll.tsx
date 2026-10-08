@@ -1,12 +1,15 @@
 'use client';
 
 import { useEffect } from 'react';
+import { scrollColumns } from '@/lib/scrollColumns';
 import wide from './pageWide.module.css';
 
 export default function SidePanelScroll() {
   useEffect(() => {
     const railClass = wide.scrollRail ?? '';
-    if (!railClass) return;
+    const layoutClass = wide.layout ?? '';
+    if (!railClass || !layoutClass) return;
+    const desktop = window.matchMedia('(min-width: 901px)');
     function onWheel(event: WheelEvent) {
       if (
         event.defaultPrevented ||
@@ -14,26 +17,22 @@ export default function SidePanelScroll() {
         event.ctrlKey ||
         event.shiftKey ||
         Math.abs(event.deltaX) > Math.abs(event.deltaY) ||
-        !window.matchMedia('(min-width: 901px)').matches ||
+        !desktop.matches ||
         document.body.style.overflow === 'hidden' ||
         !(event.target instanceof Element)
       )
         return;
 
-      const main = event.target.closest('main');
+      const target = document.elementFromPoint(event.clientX, event.clientY) ?? event.target;
+      const layout = target.closest(`.${layoutClass}`);
       const page = document.scrollingElement;
-      if (!main || !page || event.target.closest('[role="dialog"]')) return;
+      if (!layout || !page || target.closest('[role="dialog"]')) return;
       const delta =
         event.deltaY * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? innerHeight : 1);
-      const pageRoom = Math.max(0, page.scrollHeight - page.clientHeight - page.scrollTop);
-      if (!delta || (delta > 0 ? delta <= pageRoom : pageRoom > 1)) return;
+      if (!delta) return;
 
-      for (
-        let node: Element | null = event.target;
-        node && node !== main;
-        node = node.parentElement
-      ) {
-        if (node.classList.contains(railClass)) return;
+      for (let node: Element | null = target; node && node !== layout; node = node.parentElement) {
+        if (node.classList.contains(railClass)) break;
         if (
           node.scrollHeight > node.clientHeight &&
           /auto|scroll/.test(getComputedStyle(node).overflowY)
@@ -41,23 +40,15 @@ export default function SidePanelScroll() {
           return;
       }
 
-      const rails = Array.from(main.querySelectorAll<HTMLElement>(`.${railClass}`)).filter(
+      const rails = Array.from(layout.querySelectorAll<HTMLElement>(`.${railClass}`)).filter(
         (rail) => rail.getClientRects().length && rail.scrollHeight > rail.clientHeight,
       );
-      const remaining = delta > 0 ? delta - pageRoom : delta;
-      const railRoom = Math.max(
-        0,
-        ...rails.map((rail) =>
-          remaining > 0 ? rail.scrollHeight - rail.clientHeight - rail.scrollTop : rail.scrollTop,
-        ),
-      );
-      if (!railRoom) return;
+      if (!rails.length) return;
+      const hovered = target.closest<HTMLElement>(`.${railClass}`);
 
-      // Native chaining runs child-to-parent, so the reverse handoff needs the unused wheel delta.
+      // Keep each wheel event under the pointer; native scroll latching delays edge handoffs and reversals.
       event.preventDefault();
-      const consumed = Math.sign(remaining) * Math.min(Math.abs(remaining), railRoom);
-      for (const rail of rails) rail.scrollTop += consumed;
-      page.scrollTop += delta > 0 ? pageRoom : delta - consumed;
+      scrollColumns(delta, page, rails, hovered);
     }
 
     document.addEventListener('wheel', onWheel, { passive: false });
