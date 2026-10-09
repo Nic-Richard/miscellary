@@ -12,7 +12,16 @@ Status:
 
 Items are ordered roughly by current priority. The order can change as dependencies or product decisions become clearer.
 
-## Current follow-up: Google sign-in (Oct 8, in progress)
+## Current follow-up: theme polish and Google QA (Oct 9, in progress)
+
+Google sign-in and all 13 themes were committed, pushed and deployed as 98b4759
+and d3a6c53. Live headless checks passed password login, theme saving/reload and
+Google button loading. Real Google authorization/linking and native QA remain.
+Nic requested capitalized colour names, white Cream / Teal button labels and
+updated favicon/app icons. These local follow-ups keep the card/star mark and use
+the Stone / Navy default colours. Run `pnpm --filter mobile icons:build` after
+changing the favicon source to refresh launcher/adaptive/splash images. No new
+Android build until the remaining work is finished.
 
 Nic confirmed the latest desktop scrolling and Android APK feel good. Do not build
 another Android release until the remaining work is finished; keep the existing APK.

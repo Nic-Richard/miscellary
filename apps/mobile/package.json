@@ -12,6 +12,7 @@
     }
   },
   "scripts": {
+    "icons:build": "node scripts/build-icons.mjs",
     "eas-build-post-install": "pnpm surfaces:build",
     "surfaces:build": "node scripts/build-surfaces.mjs",
     "renders:generate": "pnpm surfaces:build && node scripts/render-card-assets.mjs",

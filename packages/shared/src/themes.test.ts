@@ -19,7 +19,13 @@ describe('colour themes', () => {
       for (const foreground of [c.text, c.muted, c.faint]) {
         expect(contrast(foreground, c.sur)).toBeGreaterThanOrEqual(4.5);
       }
-      expect(contrast(c.accentText, c.accent)).toBeGreaterThanOrEqual(4.5);
+      if (theme.id === 'cream-teal') {
+        expect(c.accentText).toBe('#ffffff');
+        expect(contrast(c.accentText, c.accent)).toBeGreaterThanOrEqual(3);
+      } else {
+        expect(contrast(c.accentText, c.accent)).toBeGreaterThanOrEqual(4.5);
+      }
+      expect(theme.name.split(' / ').every((name) => /^[A-Z]/.test(name))).toBe(true);
       expect(contrast(c.navInk, c.navActive)).toBeGreaterThanOrEqual(4.5);
       expect(contrast(c.pageText, c.bg)).toBeGreaterThanOrEqual(4.5);
       expect(contrast(c.pageMuted, c.bg)).toBeGreaterThanOrEqual(4.5);

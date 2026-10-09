@@ -5,7 +5,7 @@ export const THEME_GROUPS = ['Light', 'Muted', 'Darker', 'Dark'] as const;
 const palettes = [
   {
     id: 'white-charcoal',
-    name: 'White / charcoal',
+    name: 'White / Charcoal',
     number: 4,
     group: 'Light',
     bg: '#ededeb',
@@ -16,7 +16,7 @@ const palettes = [
   },
   {
     id: 'grey-forest',
-    name: 'Grey / forest',
+    name: 'Grey / Forest',
     number: 7,
     group: 'Light',
     bg: '#e9ebe7',
@@ -27,7 +27,7 @@ const palettes = [
   },
   {
     id: 'grey-plum',
-    name: 'Grey / plum',
+    name: 'Grey / Plum',
     number: 9,
     group: 'Light',
     bg: '#ebeae8',
@@ -38,7 +38,7 @@ const palettes = [
   },
   {
     id: 'cream-teal',
-    name: 'Cream / teal',
+    name: 'Cream / Teal',
     number: 50,
     group: 'Light',
     bg: '#f4eee1',
@@ -49,7 +49,7 @@ const palettes = [
   },
   {
     id: 'fog-forest',
-    name: 'Fog / forest',
+    name: 'Fog / Forest',
     number: 28,
     group: 'Muted',
     bg: '#cbd0ca',
@@ -60,7 +60,7 @@ const palettes = [
   },
   {
     id: 'mushroom-ink',
-    name: 'Mushroom / ink',
+    name: 'Mushroom / Ink',
     number: 29,
     group: 'Muted',
     bg: '#c9c4bd',
@@ -71,7 +71,7 @@ const palettes = [
   },
   {
     id: 'pewter-ochre',
-    name: 'Pewter / ochre',
+    name: 'Pewter / Ochre',
     number: 31,
     group: 'Muted',
     bg: '#bfc5c6',
@@ -82,7 +82,7 @@ const palettes = [
   },
   {
     id: 'dove-aubergine',
-    name: 'Dove / aubergine',
+    name: 'Dove / Aubergine',
     number: 45,
     group: 'Muted',
     bg: '#c9c5c7',
@@ -93,7 +93,7 @@ const palettes = [
   },
   {
     id: DEFAULT_THEME,
-    name: 'Stone / navy',
+    name: 'Stone / Navy',
     number: 46,
     group: 'Muted',
     bg: '#c3c3bb',
@@ -104,7 +104,7 @@ const palettes = [
   },
   {
     id: 'ash-olive',
-    name: 'Ash / olive',
+    name: 'Ash / Olive',
     number: 48,
     group: 'Muted',
     bg: '#b8bdb5',
@@ -115,7 +115,7 @@ const palettes = [
   },
   {
     id: 'graphite-teal',
-    name: 'Graphite / teal',
+    name: 'Graphite / Teal',
     number: 24,
     group: 'Darker',
     bg: '#6b7275',
@@ -126,7 +126,7 @@ const palettes = [
   },
   {
     id: 'blue-graphite-gold',
-    name: 'Blue graphite / gold',
+    name: 'Blue Graphite / Gold',
     number: 39,
     group: 'Darker',
     bg: '#69717c',
@@ -137,7 +137,7 @@ const palettes = [
   },
   {
     id: 'ink-copper',
-    name: 'Ink / copper',
+    name: 'Ink / Copper',
     number: 2,
     group: 'Dark',
     bg: '#22272e',
@@ -199,7 +199,7 @@ function readable(background: string, color: string): string {
 
 export const THEMES = palettes.map((palette) => {
   const { bg, sur, nav, accent, text } = palette;
-  const accentText = ink(accent, '#f3f5f2');
+  const accentText = palette.id === 'cream-teal' ? '#ffffff' : ink(accent, '#f3f5f2');
   const navInk = ink(nav, text);
   const muted = readable(sur, mix(text, sur, 0.16));
   const pageText = ink(bg, text);
