@@ -8,6 +8,7 @@
       "distribution": "internal",
       "env": {
         "EXPO_PUBLIC_API_URL": "https://api.miscellary.com",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "687357876580-er6qrs11jo7f4728cmbmjnhf0e1tj0cl.apps.googleusercontent.com",
         "npm_config_node_linker": "hoisted"
       },
       "android": {
@@ -17,6 +18,7 @@
     "production": {
       "env": {
         "EXPO_PUBLIC_API_URL": "https://api.miscellary.com",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "687357876580-er6qrs11jo7f4728cmbmjnhf0e1tj0cl.apps.googleusercontent.com",
         "npm_config_node_linker": "hoisted"
       },
       "android": {

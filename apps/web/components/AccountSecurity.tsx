@@ -1,10 +1,9 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
 import type { CurrentUser } from '@miscellary/shared';
-import { ApiRequestError } from '@/lib/api';
+import { ApiRequestError, apiFetch } from '@/lib/api';
 import {
   changePassword,
   changeUsername,
@@ -13,6 +12,7 @@ import {
 } from '@/lib/account';
 import { useAuth } from '@/lib/auth';
 import PasswordInput from './PasswordInput';
+import useGoogleConfirmation from './useGoogleConfirmation';
 import ui from './ui.module.css';
 import styles from './AccountSecurity.module.css';
 
@@ -34,6 +34,7 @@ function Row({ title, note, children }: { title: string; note: string; children:
 }
 
 function Username({ user, onChanged }: { user: CurrentUser; onChanged: () => Promise<void> }) {
+  const { confirm, confirmation } = useGoogleConfirmation();
   const [username, setUsername] = useState(user.profile.username);
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -49,7 +50,11 @@ function Username({ user, onChanged }: { user: CurrentUser; onChanged: () => Pro
     setError(null);
     setDone(false);
     try {
-      await changeUsername(username.trim().toLowerCase(), password);
+      await changeUsername(
+        username.trim().toLowerCase(),
+        password,
+        user.has_password === false ? await confirm('username') : undefined,
+      );
       await onChanged();
       setPassword('');
       setDone(true);
@@ -85,7 +90,7 @@ function Username({ user, onChanged }: { user: CurrentUser; onChanged: () => Pro
               />
             </span>
           </label>
-          {locked ? null : (
+          {locked || user.has_password === false ? null : (
             <label className={styles.field}>
               <span className={ui.label}>Current password</span>
               <PasswordInput
@@ -106,7 +111,7 @@ function Username({ user, onChanged }: { user: CurrentUser; onChanged: () => Pro
             disabled={
               Boolean(locked) ||
               busy ||
-              !password ||
+              (user.has_password !== false && !password) ||
               username.trim().toLowerCase() === user.profile.username
             }
           >
@@ -114,6 +119,7 @@ function Username({ user, onChanged }: { user: CurrentUser; onChanged: () => Pro
           </button>
         </div>
       </form>
+      {confirmation}
     </Row>
   );
 }
@@ -171,7 +177,8 @@ function Email({ user }: { user: CurrentUser }) {
   );
 }
 
-function Password() {
+function Password({ user, onChanged }: { user: CurrentUser; onChanged: () => Promise<void> }) {
+  const { confirm, confirmation } = useGoogleConfirmation();
   const [current, setCurrent] = useState('');
   const [next, setNext] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -184,7 +191,12 @@ function Password() {
     setError(null);
     setDone(false);
     try {
-      await changePassword(current, next);
+      await changePassword(
+        current,
+        next,
+        user.has_password === false ? await confirm('password') : undefined,
+      );
+      await onChanged();
       setCurrent('');
       setNext('');
       setDone(true);
@@ -202,15 +214,17 @@ function Password() {
     >
       <form className={styles.form} onSubmit={(e) => void submit(e)}>
         <div className={styles.pair}>
-          <label className={styles.field}>
-            <span className={ui.label}>Current password</span>
-            <PasswordInput
-              className={ui.input}
-              value={current}
-              autoComplete="current-password"
-              onChange={(e) => setCurrent(e.target.value)}
-            />
-          </label>
+          {user.has_password !== false && (
+            <label className={styles.field}>
+              <span className={ui.label}>Current password</span>
+              <PasswordInput
+                className={ui.input}
+                value={current}
+                autoComplete="current-password"
+                onChange={(e) => setCurrent(e.target.value)}
+              />
+            </label>
+          )}
           <label className={styles.field}>
             <span className={ui.label}>New password</span>
             <PasswordInput
@@ -224,18 +238,23 @@ function Password() {
         {error ? <p className={ui.error}>{error}</p> : null}
         {done ? <p className={styles.done}>Password changed.</p> : null}
         <div>
-          <button type="submit" className={ui.action} disabled={busy || !current || !next}>
-            Change password
+          <button
+            type="submit"
+            className={ui.action}
+            disabled={busy || (user.has_password !== false && !current) || !next}
+          >
+            {user.has_password === false ? 'Set password' : 'Change password'}
           </button>
         </div>
       </form>
+      {confirmation}
     </Row>
   );
 }
 
 function CloseAccount() {
-  const { logout } = useAuth();
-  const router = useRouter();
+  const { user, logout } = useAuth();
+  const { confirm, confirmation } = useGoogleConfirmation();
   const [open, setOpen] = useState(false);
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -246,9 +265,13 @@ function CloseAccount() {
     setBusy(true);
     setError(null);
     try {
-      await deleteAccount(password);
+      await deleteAccount(
+        password,
+        user?.has_password === false ? await confirm('delete') : undefined,
+      );
       await logout();
-      router.replace('/');
+      // A full navigation prevents the account guard from racing this redirect.
+      window.location.replace('/');
     } catch (err) {
       setError(fieldError(err, 'current_password'));
       setBusy(false);
@@ -262,20 +285,26 @@ function CloseAccount() {
     >
       {open ? (
         <form className={styles.form} onSubmit={(e) => void submit(e)}>
-          <label className={styles.field}>
-            <span className={ui.label}>Current password</span>
-            <PasswordInput
-              className={ui.input}
-              value={password}
-              autoComplete="current-password"
-              autoFocus
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </label>
+          {user?.has_password !== false && (
+            <label className={styles.field}>
+              <span className={ui.label}>Current password</span>
+              <PasswordInput
+                className={ui.input}
+                value={password}
+                autoComplete="current-password"
+                autoFocus
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </label>
+          )}
           {error ? <p className={ui.error}>{error}</p> : null}
           <p className={styles.warning}>This cannot be undone.</p>
           <div className={styles.buttons}>
-            <button type="submit" className={ui.btnDanger} disabled={busy || !password}>
+            <button
+              type="submit"
+              className={ui.btnDanger}
+              disabled={busy || (user?.has_password !== false && !password)}
+            >
               {busy ? 'Closing…' : 'Close my account'}
             </button>
             <button
@@ -299,6 +328,136 @@ function CloseAccount() {
           </button>
         </div>
       )}
+      {confirmation}
+    </Row>
+  );
+}
+
+function GoogleConnection({
+  user,
+  onChanged,
+}: {
+  user: CurrentUser;
+  onChanged: () => Promise<void>;
+}) {
+  const { confirm, confirmation } = useGoogleConfirmation();
+  const [open, setOpen] = useState(false);
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  if (!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID) return null;
+
+  async function disconnect() {
+    setBusy(true);
+    setError(null);
+    try {
+      await apiFetch('/api/v1/auth/google/disconnect/', {
+        method: 'POST',
+        body: { current_password: password },
+      });
+      await onChanged();
+      setOpen(false);
+      setPassword('');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not disconnect Google.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function connect() {
+    setBusy(true);
+    setError(null);
+    try {
+      const proof = await confirm('link');
+      await apiFetch('/api/v1/auth/google/link/', {
+        method: 'POST',
+        body: {
+          credential: proof.google_credential,
+          nonce: proof.google_nonce,
+          current_password: password,
+        },
+      });
+      await onChanged();
+      setOpen(false);
+      setPassword('');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not connect Google.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Row
+      title="Google"
+      note={
+        user.google_connected
+          ? 'Google is connected. Set a password before disconnecting it.'
+          : 'Connect Google to this account without changing your email or collection.'
+      }
+    >
+      {!user.email_verified ? (
+        <p>Verify your email before connecting Google.</p>
+      ) : open ? (
+        <div className={styles.form}>
+          <label className={styles.field}>
+            <span className={ui.label}>Current password</span>
+            <PasswordInput
+              className={ui.input}
+              value={password}
+              autoComplete="current-password"
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </label>
+          {error && (
+            <p className={ui.error} role="alert">
+              {error}
+            </p>
+          )}
+          {user.google_connected ? (
+            <button
+              type="button"
+              className={ui.action}
+              disabled={busy || !password}
+              onClick={() => void disconnect()}
+            >
+              Disconnect Google
+            </button>
+          ) : (
+            <button
+              type="button"
+              className={ui.action}
+              disabled={busy || !password}
+              onClick={() => void connect()}
+            >
+              Connect Google
+            </button>
+          )}
+          <button
+            type="button"
+            className={ui.btnQuiet}
+            disabled={busy}
+            onClick={() => {
+              setOpen(false);
+              setPassword('');
+              setError(null);
+            }}
+          >
+            Cancel
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          className={ui.action}
+          disabled={user.has_password === false}
+          onClick={() => setOpen(true)}
+        >
+          {user.google_connected ? 'Disconnect Google' : 'Connect Google'}
+        </button>
+      )}
+      {confirmation}
     </Row>
   );
 }
@@ -315,7 +474,8 @@ export default function AccountSecurity({
       <div className={ui.rows}>
         <Username user={user} onChanged={onChanged} />
         <Email user={user} />
-        <Password />
+        <Password user={user} onChanged={onChanged} />
+        <GoogleConnection user={user} onChanged={onChanged} />
         <CloseAccount />
       </div>
     </div>

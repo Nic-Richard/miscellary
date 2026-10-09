@@ -7,7 +7,7 @@ export default function PrivacyPage() {
   return (
     <article className={styles.page}>
       <h1>Privacy</h1>
-      <p className={styles.updated}>Effective September 28, 2026</p>
+      <p className={styles.updated}>Effective October 8, 2026</p>
       <p>Miscellary is operated by Nic Richard in New Brunswick, Canada.</p>
 
       <section>
@@ -20,6 +20,24 @@ export default function PrivacyPage() {
           </li>
           <li>Records needed for email verification, password resets, security, and moderation.</li>
         </ul>
+      </section>
+
+      <section>
+        <h2>Google sign-in</h2>
+        <p>
+          Google sign-in is optional. If you use it, Google sends us a signed identity credential,
+          including your account identifier, email address and verification status. We keep the
+          identifier to connect Google to your Miscellary account. We do not request access to your
+          Gmail, contacts, Drive files or other Google content, and we do not copy your Google name
+          or photo into your profile.
+        </p>
+        <p>
+          The website loads Google’s sign-in service on login and sign-up screens and when you
+          choose to connect or confirm Google in account settings. Google processes those
+          interactions under its <a href="https://policies.google.com/privacy">privacy policy</a>. A
+          short-lived website cookie helps secure the sign-in attempt. You can disconnect Google in
+          account settings after setting a password; closing your account removes the connection.
+        </p>
       </section>
 
       <section>

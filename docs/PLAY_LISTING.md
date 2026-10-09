@@ -42,13 +42,15 @@ Miscellary has no ads and no purchases.
 
 ## Data safety
 
-Nothing is shared with third parties, and nothing is sold. All data is encrypted in transit. Users can
-delete their account in the app (Profile, Account settings, Close account) or on the website.
+Nothing is sold. All data is encrypted in transit. Users can delete their account in the app
+(Profile, Account settings, Close account) or on the website. Optional Google sign-in adds a
+Google identity provider; recheck its SDK disclosures and the form's sharing definitions against
+the final Android build before submitting. Do not reuse the old blanket "nothing is shared" answer.
 
 | Data type                                                   | Collected | Purpose                                          | Optional |
 | ----------------------------------------------------------- | --------- | ------------------------------------------------ | -------- |
 | Email address                                               | Yes       | Account management, service email                | Required |
-| User IDs (username)                                         | Yes       | Account management, app functionality            | Required |
+| User IDs (username; Google account ID if connected)         | Yes       | Account management, app functionality            | Mixed    |
 | Photos                                                      | Yes       | App functionality (card images the user uploads) | Optional |
 | Other user-generated content (sets, comments, profile text) | Yes       | App functionality                                | Optional |
 | App interactions (follows, likes, trades, packs opened)     | Yes       | App functionality                                | Required |
@@ -61,6 +63,12 @@ Notes for the form:
 - Server request logs (including IP addresses) are kept for security and troubleshooting, as the
   privacy policy says; they are not used for location.
 - The app does not include analytics. TraceTray runs on the website only.
+- Google sign-in is optional. The API retains the Google account identifier and
+  account email, not the credential token, Google name or Google photo. Closing the
+  account removes its Google connection; disconnecting requires a password first.
+- Review the final Google SDK against [Google's data-disclosure guidance](https://developers.google.com/android/guides/play-data-disclosure)
+  before completing the form. Google sign-in is not authorization for Gmail, contacts
+  or Drive access. Username is required; Google account ID is optional.
 
 ## Content rating and audience
 

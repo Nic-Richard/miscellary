@@ -12,6 +12,98 @@ Status:
 
 Items are ordered roughly by current priority. The order can change as dependencies or product decisions become clearer.
 
+## Current follow-up: Google sign-in (Oct 8, in progress)
+
+Nic confirmed the latest desktop scrolling and Android APK feel good. Do not build
+another Android release until the remaining work is finished; keep the existing APK.
+Nic chose palette 46 (Stone/navy); apply it after sign-in. Keep all 50 share-sheet
+options and recorded colours for future reference or a possible small theme selector.
+No selector is being added now. Discuss monetization after sign-in.
+
+Google sign-in is implemented locally, with real-provider/device QA still pending:
+
+- Keep Django accounts, collections and existing JWT sessions. Google is another
+  login method, not a replacement account system; email/password login stays.
+- Verify Google credentials on the API, including signature, issuer, allowed client
+  ID, expiry and a single-use login challenge. Identify linked accounts by Google's
+  stable subject ID, not email. Never log credentials or place session tokens in URLs.
+- Require existing-account authentication before linking Google. Matching email
+  alone must not link accounts, merge collections or create a duplicate account.
+- New collectors choose an available username and accept the current terms before
+  account creation. Keep existing username rules and reserved names.
+- Provide fresh Google confirmation for Google-only users changing usernames,
+  setting a password or closing their account. Keep password confirmation for
+  existing password users, session revocation and closed-account protections.
+- Use Google's web sign-in button and native Android sign-in, requesting only
+  basic identity information. No Firebase or hosted-auth migration is needed.
+- Add focused coverage for invalid/replayed credentials, wrong client IDs, email
+  collisions, linking conflicts, closed accounts and both session transports.
+  Real Google login and Android confirmation still require configured clients and QA.
+
+Before rollout, confirm Google Auth consent/branding and authorized origins. Android
+registration must use com.miscellary.app and the existing release signing
+certificate, with the Play app-signing certificate added when available.
+The backend is implemented locally, including auth routes and login/signup/settings
+screens on web and Android. It includes Google identity storage, expiring single-use
+confirmations, signed-token checks, existing-account linking/login and
+action-specific confirmation. Account closure removes Google identity data and
+pending confirmations. PyJWT's crypto extra is now a production dependency;
+existing package versions are unchanged. Nic created the Google clients:
+
+- Web: `687357876580-er6qrs11jo7f4728cmbmjnhf0e1tj0cl.apps.googleusercontent.com`
+- Android: `687357876580-kdp70hobb68gm8vktfb1j1lmvjvkl4oo.apps.googleusercontent.com`
+
+Local API/web/mobile environments use the Web client ID as the token audience.
+The Android client registers package/signing identity; do not add its client ID to
+the API's accepted audiences. Production environment changes still need deployment
+approval. The latest signed APK's SHA-1 is
+`2D:DE:8E:87:86:67:61:3B:DA:68:73:CF:D8:24:E2:79:C9:B9:DE:5B`.
+
+Browser requests are checked against allowed origins and bound to an HttpOnly
+challenge cookie. Native responses retain SecureStore-compatible refresh tokens;
+web responses retain the existing HttpOnly refresh cookie. New accounts choose a
+username and accept terms; existing email matches require explicit account linking.
+Google-only accounts can confirm username changes, setting a password and closure
+with a fresh action-specific Google credential. Password users still confirm with
+their password. Google cannot guarantee current ownership of third-party email
+addresses: those collectors use existing email/password signup and email
+verification before linking Google. Direct Google-only signup currently accepts
+Google-managed mailboxes only. Connecting Google requires a verified Miscellary
+email, preventing an unverified signup from retaining access after mailbox recovery.
+
+The website uses Google's rendered button, with a separate username/terms step for
+new accounts. Settings open a confirmation dialog only when needed. Android uses
+the free MIT-licensed react-native-nitro-google-signin 2.3.0 with Nitro Modules
+0.37.1 and Credential Manager, not the deprecated legacy Google login API. The
+library's declared compatibility includes React Native 0.81, but native compilation
+and real-device login remain untested until the final build. Explicit nonces pass
+unchanged to Google's SDK. Android needs no Firebase files or Google Services plugin.
+Google sign-in is hidden on iOS until an iOS client is configured; password login stays.
+
+Rollout, only after commit/deployment approval:
+
+1. Set Terraform `google_web_client_id` to the Web ID above; keep the existing API
+   audience limited to that ID. Review the plan before applying infrastructure.
+   The API deploy script copies the existing ECS environment, so it must contain
+   `GOOGLE_CLIENT_IDS` before the new API is deployed. Run the normal migration/deploy
+   workflow after CI; migration 0007 creates identity and challenge tables.
+2. Set Vercel `NEXT_PUBLIC_GOOGLE_CLIENT_ID` to the same Web ID before rebuilding.
+   Keep preview origins out of the production allowed-origin list unless explicitly needed.
+3. Test real web login, new-user username/terms, explicit existing-account linking,
+   Google-only settings, disconnect and ordinary password login. Non-Google-managed
+   email addresses use email signup/verification before connecting Google.
+4. Apply the chosen palette and finish remaining work before another Android build.
+   EAS preview/production profiles already contain the public Web ID. Test on a real
+   signed Android build, then add the Play app-signing SHA-1 before Play testing.
+
+Local API tests use real RSA signatures with a mocked key lookup. Headless browser
+checks use mocked Google credentials/API responses, not a real Google account.
+No real Google login, deployment or new Android build has been completed.
+Privacy wording and the draft Play disclosure notes now cover optional Google sign-in.
+
+References: [Google token verification](https://developers.google.com/identity/gsi/web/guides/verify-google-id-token)
+and [Expo Google authentication](https://docs.expo.dev/guides/google-authentication/).
+
 ## 1. Card editor overhaul: In progress
 
 The main editor overhaul is implemented and the current renderer, material system, and mobile-adapted

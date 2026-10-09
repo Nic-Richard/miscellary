@@ -1,6 +1,12 @@
 'use client';
 
-import type { CurrentUser, LoginRequest, RegisterRequest } from '@miscellary/shared';
+import type {
+  CurrentUser,
+  GoogleProof,
+  GoogleSignup,
+  LoginRequest,
+  RegisterRequest,
+} from '@miscellary/shared';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { apiFetch, refreshAccessToken, setAccessToken } from './api';
@@ -15,6 +21,8 @@ interface AuthContextValue {
   loading: boolean;
   login: (data: LoginRequest) => Promise<void>;
   register: (data: RegisterRequest) => Promise<void>;
+  googleLogin: (data: GoogleProof) => Promise<void>;
+  googleRegister: (data: GoogleSignup) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -80,6 +88,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [applySession],
   );
 
+  const googleLogin = useCallback(
+    async (body: GoogleProof) => {
+      applySession(
+        await apiFetch<AuthSession>('/api/v1/auth/google/login/', {
+          method: 'POST',
+          body,
+          auth: false,
+        }),
+      );
+    },
+    [applySession],
+  );
+  const googleRegister = useCallback(
+    async (body: GoogleSignup) => {
+      applySession(
+        await apiFetch<AuthSession>('/api/v1/auth/google/register/', {
+          method: 'POST',
+          body,
+          auth: false,
+        }),
+      );
+    },
+    [applySession],
+  );
+
   const logout = useCallback(async () => {
     try {
       await apiFetch<void>('/api/v1/auth/logout/', { method: 'POST' });
@@ -90,8 +123,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ user, loading, login, register, logout, refreshUser }),
-    [user, loading, login, register, logout, refreshUser],
+    () => ({ user, loading, login, register, googleLogin, googleRegister, logout, refreshUser }),
+    [user, loading, login, register, googleLogin, googleRegister, logout, refreshUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

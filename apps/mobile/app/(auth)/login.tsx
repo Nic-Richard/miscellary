@@ -2,6 +2,7 @@ import { Link, router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Text, View } from 'react-native';
 import { useAuth } from '@/lib/auth';
+import GoogleAuth from '@/components/GoogleAuth';
 import { internalRoute, RETURN_PARAM } from '@/lib/returnTo';
 import { colors } from '@/lib/theme';
 import { Button, ErrorText, Input, Screen, PasswordInput } from '@/components/ui';
@@ -32,6 +33,13 @@ export default function LoginScreen() {
 
   return (
     <Screen style={{ gap: 12, paddingTop: 32 }}>
+      <GoogleAuth
+        onDone={() => {
+          if (next) router.replace(next);
+          else if (router.canGoBack()) router.back();
+          else router.replace('/(tabs)');
+        }}
+      />
       <ErrorText>{error}</ErrorText>
       <Input
         placeholder="Email"

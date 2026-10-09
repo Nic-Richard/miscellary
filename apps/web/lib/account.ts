@@ -1,4 +1,4 @@
-import type { CurrentUser } from '@miscellary/shared';
+import type { CurrentUser, GoogleConfirmation } from '@miscellary/shared';
 import { apiFetch, setAccessToken } from './api';
 
 export interface ProfileWrite {
@@ -11,25 +11,33 @@ export interface ProfileWrite {
 export const updateProfile = (body: Partial<ProfileWrite>) =>
   apiFetch<CurrentUser>('/api/v1/auth/me/', { method: 'PATCH', body });
 
-export const changeUsername = (username: string, currentPassword: string) =>
+export const changeUsername = (
+  username: string,
+  currentPassword: string,
+  confirmation?: GoogleConfirmation,
+) =>
   apiFetch<CurrentUser>('/api/v1/auth/username/', {
     method: 'POST',
-    body: { username, current_password: currentPassword },
+    body: { username, current_password: currentPassword, ...confirmation },
   });
 
 // Changing the password signs out every other session and hands this one a fresh token.
-export async function changePassword(currentPassword: string, newPassword: string) {
+export async function changePassword(
+  currentPassword: string,
+  newPassword: string,
+  confirmation?: GoogleConfirmation,
+) {
   const session = await apiFetch<{ access: string }>('/api/v1/auth/password/change/', {
     method: 'POST',
-    body: { current_password: currentPassword, new_password: newPassword },
+    body: { current_password: currentPassword, new_password: newPassword, ...confirmation },
   });
   setAccessToken(session.access);
 }
 
-export const deleteAccount = (currentPassword: string) =>
+export const deleteAccount = (currentPassword: string, confirmation?: GoogleConfirmation) =>
   apiFetch<void>('/api/v1/auth/delete/', {
     method: 'POST',
-    body: { current_password: currentPassword },
+    body: { current_password: currentPassword, ...confirmation },
   });
 
 export const resendVerificationEmail = () =>

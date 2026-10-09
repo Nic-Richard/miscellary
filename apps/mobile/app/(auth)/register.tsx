@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Linking, Text } from 'react-native';
 import { ApiRequestError } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
+import GoogleAuth from '@/components/GoogleAuth';
 import { internalRoute, RETURN_PARAM } from '@/lib/returnTo';
 import { colors } from '@/lib/theme';
 import { Button, ErrorText, Input, Muted, Screen, Title, PasswordInput } from '@/components/ui';
@@ -48,6 +49,7 @@ export default function RegisterScreen() {
   return (
     <Screen style={{ gap: 12, paddingTop: 32 }}>
       <Title>Create your account</Title>
+      <GoogleAuth onDone={() => router.replace(next ?? '/(tabs)/packs')} />
       <ErrorText>{error}</ErrorText>
       <Input
         placeholder="Email"

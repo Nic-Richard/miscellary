@@ -13,3 +13,6 @@ alert_email           = "you@example.com"
 
 # Add this only after the image is in ECR and the ACM validation record is in DNS.
 # api_image_tag = "0123456789abcdef0123456789abcdef01234567"
+
+# Google sign-in uses the Web client ID, not the Android client ID or a client secret.
+# google_web_client_id = "your-web-client-id.apps.googleusercontent.com"

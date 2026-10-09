@@ -16,7 +16,7 @@ USERNAME_COOLDOWN_DAYS = 30
 
 
 class UserManager(BaseUserManager["User"]):
-    def create_user(self, email: str, username: str, password: str, **extra) -> "User":
+    def create_user(self, email: str, username: str, password: str | None, **extra) -> "User":
         if not email:
             raise ValueError("Email is required.")
         user = self.model(
@@ -73,6 +73,32 @@ class Profile(models.Model):
     @property
     def avatar_url(self) -> str | None:
         return None
+
+
+class GoogleIdentity(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="google_identity")
+    subject = models.CharField(max_length=255, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self) -> str:
+        return f"GoogleIdentity<{self.user_id}>"
+
+
+class GoogleChallenge(models.Model):
+    class Purpose(models.TextChoices):
+        LOGIN = "login"
+        LINK = "link"
+        USERNAME = "username"
+        PASSWORD = "password"
+        DELETE = "delete"
+
+    digest = models.CharField(max_length=64, primary_key=True)
+    purpose = models.CharField(max_length=10, choices=Purpose.choices)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    expires_at = models.DateTimeField(db_index=True)
+
+    def __str__(self) -> str:
+        return f"GoogleChallenge<{self.purpose}>"
 
 
 class ReservedUsername(models.Model):

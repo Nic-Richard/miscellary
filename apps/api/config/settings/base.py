@@ -160,6 +160,7 @@ WEB_URL = env.str("WEB_URL", default="http://localhost:3000")
 DEFAULT_FROM_EMAIL = env.str("EMAIL_FROM", default="Miscellary <no-reply@localhost>")
 EMAIL_VERIFICATION_MAX_AGE = timedelta(days=2)
 PASSWORD_RESET_TIMEOUT = int(timedelta(hours=2).total_seconds())
+GOOGLE_CLIENT_IDS: list[str] = env.list("GOOGLE_CLIENT_IDS", default=[])
 
 LOGGING = {
     "version": 1,

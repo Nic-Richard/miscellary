@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
 import type { FormEvent } from 'react';
 import Field from '@/components/Field';
+import GoogleAuth from '@/components/GoogleAuth';
 import { ApiRequestError } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { returnPath, swapAuthHref } from '@/lib/returnTo';
@@ -42,50 +43,53 @@ function RegisterForm() {
   }
 
   return (
-    <form className={styles.wrap} onSubmit={onSubmit}>
+    <div className={styles.wrap}>
       <h1 className={styles.title}>Create your account</h1>
-      {error && <div className={styles.error}>{error}</div>}
-      <Field
-        id="email"
-        label="Email"
-        type="email"
-        autoComplete="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        errors={fields.email}
-        required
-      />
-      <Field
-        id="username"
-        label="Username"
-        autoComplete="username"
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
-        errors={fields.username}
-        required
-      />
-      <Field
-        id="password"
-        label="Password"
-        type="password"
-        autoComplete="new-password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        errors={fields.password}
-        hint="At least 8 characters."
-        required
-      />
-      <p className={styles.alt}>
-        By signing up you agree to the <Link href="/terms">terms</Link> and{' '}
-        <Link href="/privacy">privacy policy</Link>.
-      </p>
-      <button className={styles.submit} type="submit" disabled={busy}>
-        {busy ? 'Creating…' : 'Sign up'}
-      </button>
+      <GoogleAuth onDone={() => router.replace(returnPath(search, '/packs'))} />
+      <form className={styles.fields} onSubmit={onSubmit}>
+        {error && <div className={styles.error}>{error}</div>}
+        <Field
+          id="email"
+          label="Email"
+          type="email"
+          autoComplete="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          errors={fields.email}
+          required
+        />
+        <Field
+          id="username"
+          label="Username"
+          autoComplete="username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          errors={fields.username}
+          required
+        />
+        <Field
+          id="password"
+          label="Password"
+          type="password"
+          autoComplete="new-password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          errors={fields.password}
+          hint="At least 8 characters."
+          required
+        />
+        <p className={styles.alt}>
+          By signing up you agree to the <Link href="/terms">terms</Link> and{' '}
+          <Link href="/privacy">privacy policy</Link>.
+        </p>
+        <button className={styles.submit} type="submit" disabled={busy}>
+          {busy ? 'Creating…' : 'Sign up'}
+        </button>
+      </form>
       <p className={styles.alt}>
         Already have an account? <Link href={swapAuthHref('/login', search)}>Log in</Link>
       </p>
-    </form>
+    </div>
   );
 }
 

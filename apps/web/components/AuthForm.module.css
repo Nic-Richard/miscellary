@@ -28,6 +28,11 @@
   text-transform: uppercase;
   color: #3a2f26;
 }
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
 .field {
   display: flex;
   flex-direction: column;

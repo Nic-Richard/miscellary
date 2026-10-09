@@ -8,6 +8,7 @@ import type {
   CommentThread,
   Creator,
   CurrentUser,
+  GoogleConfirmation,
   NotificationList,
   OwnedCard,
   PackOpening,
@@ -183,24 +184,35 @@ export const sendReport = (body: {
 }) => apiFetch<{ id: string }>('/api/v1/reports/', { method: 'POST', body });
 export const updateProfile = (body: { display_name: string; bio: string }) =>
   apiFetch<CurrentUser>('/api/v1/auth/me/', { method: 'PATCH', body });
-export const changeUsername = (username: string, currentPassword: string) =>
+export const changeUsername = (
+  username: string,
+  currentPassword: string,
+  confirmation?: GoogleConfirmation,
+) =>
   apiFetch<CurrentUser>('/api/v1/auth/username/', {
     method: 'POST',
-    body: { username, current_password: currentPassword },
+    body: { username, current_password: currentPassword, ...confirmation },
   });
 // Changing the password revokes every refresh token, this device's included, so keep the new one.
-export async function changePassword(currentPassword: string, newPassword: string) {
+export async function changePassword(
+  currentPassword: string,
+  newPassword: string,
+  confirmation?: GoogleConfirmation,
+) {
   const session = await apiFetch<{ access: string; refresh: string }>(
     '/api/v1/auth/password/change/',
-    { method: 'POST', body: { current_password: currentPassword, new_password: newPassword } },
+    {
+      method: 'POST',
+      body: { current_password: currentPassword, new_password: newPassword, ...confirmation },
+    },
   );
   setAccessToken(session.access);
   await saveRefreshToken(session.refresh);
 }
-export const deleteAccount = (currentPassword: string) =>
+export const deleteAccount = (currentPassword: string, confirmation?: GoogleConfirmation) =>
   apiFetch<void>('/api/v1/auth/delete/', {
     method: 'POST',
-    body: { current_password: currentPassword },
+    body: { current_password: currentPassword, ...confirmation },
   });
 export const resendVerificationEmail = () =>
   apiFetch<void>('/api/v1/auth/verify-email/request/', { method: 'POST' });

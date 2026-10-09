@@ -8,7 +8,7 @@ from packs.models import OwnedCard, SetPoints
 from social.models import Follow, Notification, Reaction, SetFollow, ShowcaseSlot
 from trades.models import TradeOffer
 
-from .models import ReservedUsername, User
+from .models import GoogleChallenge, GoogleIdentity, ReservedUsername, User
 
 
 def revoke_sessions(user: User) -> None:
@@ -39,6 +39,8 @@ def delete_account(user: User) -> None:
     Reaction.objects.filter(user=user).delete()
     Notification.objects.filter(Q(recipient=user) | Q(actor=user)).delete()
     ReservedUsername.objects.filter(user=user).delete()
+    GoogleChallenge.objects.filter(user=user).delete()
+    GoogleIdentity.objects.filter(user=user).delete()
     revoke_sessions(user)
 
     user.username = f"deleted_{user.pk.hex[:12]}"

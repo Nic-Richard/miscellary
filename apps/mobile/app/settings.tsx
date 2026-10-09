@@ -2,8 +2,10 @@ import { Stack, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import LoginGate from '@/components/LoginGate';
+import GoogleButton from '@/components/GoogleButton';
 import { Button, ErrorText, Input, Muted, PasswordInput } from '@/components/ui';
-import { ApiRequestError } from '@/lib/api';
+import { ApiRequestError, apiFetch } from '@/lib/api';
+import { confirmGoogle, googleAvailable, googleProof } from '@/lib/google';
 import { useAuth } from '@/lib/auth';
 import {
   changePassword,
@@ -37,7 +39,7 @@ function Card({
 }
 
 function CloseAccount() {
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [password, setPassword] = useState('');
@@ -48,7 +50,10 @@ function CloseAccount() {
     setBusy(true);
     setError(null);
     try {
-      await deleteAccount(password);
+      await deleteAccount(
+        password,
+        user?.has_password === false ? await confirmGoogle('delete') : undefined,
+      );
       await logout();
       router.replace('/');
     } catch (e) {
@@ -64,18 +69,20 @@ function CloseAccount() {
     >
       {open ? (
         <>
-          <PasswordInput
-            accessibilityLabel="Current password"
-            placeholder="Current password"
-            value={password}
-            onChangeText={setPassword}
-          />
+          {user?.has_password !== false && (
+            <PasswordInput
+              accessibilityLabel="Current password"
+              placeholder="Current password"
+              value={password}
+              onChangeText={setPassword}
+            />
+          )}
           <ErrorText>{error}</ErrorText>
           <Text style={styles.warning}>This cannot be undone.</Text>
           <Button
             title={busy ? 'Closing…' : 'Close my account'}
             kind="danger"
-            disabled={busy || !password}
+            disabled={busy || (user?.has_password !== false && !password)}
             onPress={() => void close()}
           />
           <Button
@@ -125,7 +132,11 @@ function Account() {
     setUsernameError(null);
     setUsernameDone(false);
     try {
-      await changeUsername(username.trim().toLowerCase(), usernamePassword);
+      await changeUsername(
+        username.trim().toLowerCase(),
+        usernamePassword,
+        user?.has_password === false ? await confirmGoogle('username') : undefined,
+      );
       await refreshUser();
       setUsernamePassword('');
       setUsernameDone(true);
@@ -141,7 +152,12 @@ function Account() {
     setPasswordError(null);
     setPasswordDone(false);
     try {
-      await changePassword(current, next);
+      await changePassword(
+        current,
+        next,
+        user?.has_password === false ? await confirmGoogle('password') : undefined,
+      );
+      await refreshUser();
       setCurrent('');
       setNext('');
       setPasswordDone(true);
@@ -171,7 +187,7 @@ function Account() {
           autoCapitalize="none"
           autoCorrect={false}
         />
-        {locked ? null : (
+        {locked || user.has_password === false ? null : (
           <PasswordInput
             accessibilityLabel="Current password"
             placeholder="Current password"
@@ -187,7 +203,7 @@ function Account() {
           disabled={
             Boolean(locked) ||
             busy ||
-            !usernamePassword ||
+            (user.has_password !== false && !usernamePassword) ||
             username.trim().toLowerCase() === user.profile.username
           }
           onPress={() => void saveUsername()}
@@ -216,12 +232,14 @@ function Account() {
       </Card>
 
       <Card title="Password" note="Changing it signs you out on every other device and browser.">
-        <PasswordInput
-          accessibilityLabel="Current password"
-          placeholder="Current password"
-          value={current}
-          onChangeText={setCurrent}
-        />
+        {user.has_password !== false && (
+          <PasswordInput
+            accessibilityLabel="Current password"
+            placeholder="Current password"
+            value={current}
+            onChangeText={setCurrent}
+          />
+        )}
         <PasswordInput
           accessibilityLabel="New password"
           placeholder="New password"
@@ -231,15 +249,103 @@ function Account() {
         <ErrorText>{passwordError}</ErrorText>
         {passwordDone ? <Text style={styles.done}>Your password has been changed.</Text> : null}
         <Button
-          title="Change password"
+          title={user.has_password === false ? 'Set password' : 'Change password'}
           kind="secondary"
-          disabled={busy || !current || !next}
+          disabled={busy || (user.has_password !== false && !current) || !next}
           onPress={() => void savePassword()}
         />
       </Card>
 
+      <GoogleConnection />
       <CloseAccount />
     </ScrollView>
+  );
+}
+
+function GoogleConnection() {
+  const { user, refreshUser } = useAuth();
+  const [open, setOpen] = useState(false);
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  if (!googleAvailable || !user) return null;
+
+  async function save() {
+    setBusy(true);
+    setError(null);
+    try {
+      if (user?.google_connected) {
+        await apiFetch('/api/v1/auth/google/disconnect/', {
+          method: 'POST',
+          body: { current_password: password },
+        });
+      } else {
+        const proof = await googleProof('link');
+        await apiFetch('/api/v1/auth/google/link/', {
+          method: 'POST',
+          body: { ...proof, current_password: password },
+        });
+      }
+      await refreshUser();
+      setOpen(false);
+      setPassword('');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not update Google sign-in.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Card
+      title="Google"
+      note={
+        user.google_connected
+          ? 'Google is connected. Set a password before disconnecting it.'
+          : 'Connect Google without changing your email or collection.'
+      }
+    >
+      {!user.email_verified ? (
+        <Muted>Verify your email before connecting Google.</Muted>
+      ) : open ? (
+        <>
+          <PasswordInput
+            accessibilityLabel="Current password"
+            placeholder="Current password"
+            value={password}
+            onChangeText={setPassword}
+          />
+          <ErrorText>{error}</ErrorText>
+          {user.google_connected ? (
+            <Button
+              title="Disconnect Google"
+              kind="secondary"
+              disabled={busy || !password}
+              onPress={() => void save()}
+            />
+          ) : (
+            <GoogleButton busy={busy} disabled={!password} onPress={save} />
+          )}
+          <Button
+            title="Cancel"
+            kind="secondary"
+            disabled={busy}
+            onPress={() => {
+              setOpen(false);
+              setPassword('');
+              setError(null);
+            }}
+          />
+        </>
+      ) : (
+        <Button
+          title={user.google_connected ? 'Disconnect Google' : 'Connect Google'}
+          kind="secondary"
+          disabled={user.has_password === false}
+          onPress={() => setOpen(true)}
+        />
+      )}
+    </Card>
   );
 }
 

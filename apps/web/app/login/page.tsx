@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
 import type { FormEvent } from 'react';
 import Field from '@/components/Field';
+import GoogleAuth from '@/components/GoogleAuth';
 import { ApiRequestError } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { returnPath, swapAuthHref } from '@/lib/returnTo';
@@ -34,37 +35,40 @@ function LoginForm() {
   }
 
   return (
-    <form className={styles.wrap} onSubmit={onSubmit}>
+    <div className={styles.wrap}>
       <h1 className={styles.title}>Log in</h1>
-      {error && <div className={styles.error}>{error}</div>}
-      <Field
-        id="email"
-        label="Email"
-        type="email"
-        autoComplete="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        required
-      />
-      <Field
-        id="password"
-        label="Password"
-        type="password"
-        autoComplete="current-password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        required
-      />
-      <button className={styles.submit} type="submit" disabled={busy}>
-        {busy ? 'Logging in…' : 'Log in'}
-      </button>
+      <GoogleAuth onDone={() => router.replace(returnPath(search))} />
+      <form className={styles.fields} onSubmit={onSubmit}>
+        {error && <div className={styles.error}>{error}</div>}
+        <Field
+          id="email"
+          label="Email"
+          type="email"
+          autoComplete="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+        <Field
+          id="password"
+          label="Password"
+          type="password"
+          autoComplete="current-password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+        <button className={styles.submit} type="submit" disabled={busy}>
+          {busy ? 'Logging in…' : 'Log in'}
+        </button>
+      </form>
       <p className={styles.alt}>
         <Link href="/forgot-password">Forgot your password?</Link>
       </p>
       <p className={styles.alt}>
         No account? <Link href={swapAuthHref('/register', search)}>Sign up</Link>
       </p>
-    </form>
+    </div>
   );
 }
 

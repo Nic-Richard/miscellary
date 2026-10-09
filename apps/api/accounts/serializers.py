@@ -6,7 +6,16 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from django.utils import timezone
 from rest_framework import serializers
 
-from .models import USERNAME_COOLDOWN_DAYS, USERNAME_VALIDATOR, Profile, User, username_taken
+from . import google
+from .models import (
+    USERNAME_COOLDOWN_DAYS,
+    USERNAME_VALIDATOR,
+    GoogleChallenge,
+    GoogleIdentity,
+    Profile,
+    User,
+    username_taken,
+)
 
 
 class ProfileSerializer(serializers.ModelSerializer[Profile]):
@@ -32,14 +41,30 @@ class ProfileSerializer(serializers.ModelSerializer[Profile]):
 class CurrentUserSerializer(serializers.ModelSerializer[User]):
     profile = ProfileSerializer(read_only=True)
     username_change_available_at = serializers.SerializerMethodField()
+    has_password = serializers.SerializerMethodField()
+    google_connected = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ["id", "email", "email_verified", "username_change_available_at", "profile"]
+        fields = [
+            "id",
+            "email",
+            "email_verified",
+            "username_change_available_at",
+            "profile",
+            "has_password",
+            "google_connected",
+        ]
         read_only_fields = fields
 
     def get_username_change_available_at(self, obj: User) -> str | None:
         return username_change_available_at(obj)
+
+    def get_has_password(self, obj: User) -> bool:
+        return obj.has_usable_password()
+
+    def get_google_connected(self, obj: User) -> bool:
+        return GoogleIdentity.objects.filter(user=obj).exists()
 
 
 class RegisterSerializer(serializers.Serializer[User]):
@@ -103,16 +128,33 @@ class PasswordResetConfirmSerializer(serializers.Serializer[None]):
 
 
 class ConfirmPasswordSerializer(serializers.Serializer[None]):
-    current_password = serializers.CharField(write_only=True, trim_whitespace=False)
+    current_password = serializers.CharField(
+        write_only=True, trim_whitespace=False, required=False, default="", allow_blank=True
+    )
+    google_credential = serializers.CharField(write_only=True, required=False, max_length=8192)
+    google_nonce = serializers.CharField(write_only=True, required=False, max_length=43)
+    confirmation_purpose = GoogleChallenge.Purpose.DELETE
 
-    def validate_current_password(self, value: str) -> str:
-        if not self.context["request"].user.check_password(value):
-            raise serializers.ValidationError("Current password is incorrect.")
-        return value
+    def validate(self, attrs: dict) -> dict:
+        request = self.context["request"]
+        user = request.user
+        if user.has_usable_password():
+            if not user.check_password(attrs["current_password"]):
+                raise serializers.ValidationError(
+                    {"current_password": ["Current password is incorrect."]}
+                )
+        else:
+            nonce = attrs.get("google_nonce", "")
+            google.check_request(request, nonce)
+            google.confirm(
+                attrs.get("google_credential", ""), nonce, self.confirmation_purpose, user
+            )
+        return attrs
 
 
 class ChangePasswordSerializer(ConfirmPasswordSerializer):
     new_password = serializers.CharField(write_only=True, trim_whitespace=False)
+    confirmation_purpose = GoogleChallenge.Purpose.PASSWORD
 
     def validate_new_password(self, value: str) -> str:
         try:
@@ -153,14 +195,9 @@ def cooldown_error(user: User) -> None:
         )
 
 
-class UsernameChangeSerializer(serializers.Serializer[None]):
+class UsernameChangeSerializer(ConfirmPasswordSerializer):
     username = serializers.CharField()
-    current_password = serializers.CharField(write_only=True, trim_whitespace=False)
-
-    def validate_current_password(self, value: str) -> str:
-        if not self.context["request"].user.check_password(value):
-            raise serializers.ValidationError("Current password is incorrect.")
-        return value
+    confirmation_purpose = GoogleChallenge.Purpose.USERNAME
 
     def validate_username(self, value: str) -> str:
         user = self.context["request"].user
@@ -175,4 +212,24 @@ class UsernameChangeSerializer(serializers.Serializer[None]):
 
     def validate(self, attrs: dict) -> dict:
         cooldown_error(self.context["request"].user)
-        return attrs
+        return super().validate(attrs)
+
+
+class GoogleProofSerializer(serializers.Serializer[None]):
+    credential = serializers.CharField(max_length=8192, trim_whitespace=False, write_only=True)
+    nonce = serializers.CharField(
+        min_length=43, max_length=43, trim_whitespace=False, write_only=True
+    )
+
+
+class GoogleRegisterSerializer(GoogleProofSerializer):
+    username = serializers.CharField(max_length=20)
+    terms_accepted = serializers.BooleanField()
+
+
+class GoogleLinkSerializer(GoogleProofSerializer):
+    current_password = serializers.CharField(write_only=True, trim_whitespace=False)
+
+
+class GoogleChallengeSerializer(serializers.Serializer[None]):
+    purpose = serializers.ChoiceField(choices=GoogleChallenge.Purpose.choices)

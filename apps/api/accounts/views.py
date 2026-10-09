@@ -1,27 +1,32 @@
 import contextlib
 import logging
 
+from django.conf import settings
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import IntegrityError, transaction
 from django.utils import timezone
 from django.utils.http import urlsafe_base64_decode
 from rest_framework import permissions, status
-from rest_framework.exceptions import AuthenticationFailed, ValidationError
+from rest_framework.exceptions import AuthenticationFailed, NotAuthenticated, ValidationError
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from . import cookies, emails
+from . import cookies, emails, google
 from .lifecycle import delete_account, revoke_sessions
-from .models import ReservedUsername, User
+from .models import GoogleChallenge, ReservedUsername, User
 from .serializers import (
     ChangePasswordSerializer,
     ConfirmPasswordSerializer,
     CurrentUserSerializer,
     EmailSerializer,
+    GoogleChallengeSerializer,
+    GoogleLinkSerializer,
+    GoogleProofSerializer,
+    GoogleRegisterSerializer,
     LoginSerializer,
     PasswordResetConfirmSerializer,
     ProfileUpdateSerializer,
@@ -135,6 +140,7 @@ class ChangeUsernameView(APIView):
 
     throttle_scope = "auth.username"
 
+    @transaction.atomic
     def post(self, request: Request) -> Response:
         serializer = UsernameChangeSerializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
@@ -162,6 +168,7 @@ class ChangeUsernameView(APIView):
 
 
 class ChangePasswordView(APIView):
+    @transaction.atomic
     def post(self, request: Request) -> Response:
         serializer = ChangePasswordSerializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
@@ -175,6 +182,7 @@ class ChangePasswordView(APIView):
 class DeleteAccountView(APIView):
     throttle_scope = "auth.login"
 
+    @transaction.atomic
     def post(self, request: Request) -> Response:
         serializer = ConfirmPasswordSerializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
@@ -182,6 +190,89 @@ class DeleteAccountView(APIView):
         response = Response(status=status.HTTP_204_NO_CONTENT)
         cookies.clear_refresh_cookie(response)
         return response
+
+
+class GoogleChallengeView(APIView):
+    permission_classes = [permissions.AllowAny]
+    throttle_scope = "auth.login"
+
+    def post(self, request: Request) -> Response:
+        google.check_request(request)
+        serializer = GoogleChallengeSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        purpose = serializer.validated_data["purpose"]
+        if purpose != GoogleChallenge.Purpose.LOGIN and not isinstance(request.user, User):
+            raise NotAuthenticated("Log in before connecting or confirming Google.")
+        user = None if purpose == GoogleChallenge.Purpose.LOGIN else _current_user(request)
+        nonce = google.issue_challenge(purpose, user)
+        response = Response({"nonce": nonce})
+        if cookies.client_platform(request) == cookies.WEB:
+            response.set_cookie(
+                google.CHALLENGE_COOKIE,
+                nonce,
+                max_age=int(google.CHALLENGE_LIFETIME.total_seconds()),
+                path=settings.REFRESH_COOKIE_PATH,
+                secure=settings.REFRESH_COOKIE_SECURE,
+                httponly=True,
+                samesite=settings.REFRESH_COOKIE_SAMESITE,  # type: ignore[arg-type]
+            )
+        return response
+
+
+class GoogleLoginView(APIView):
+    permission_classes = [permissions.AllowAny]
+    throttle_scope = "auth.login"
+
+    def post(self, request: Request) -> Response:
+        serializer = GoogleProofSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        google.check_request(request, data["nonce"])
+        return _session_response(request, google.login(**data))
+
+
+class GoogleRegisterView(APIView):
+    permission_classes = [permissions.AllowAny]
+    throttle_scope = "auth.register"
+
+    def post(self, request: Request) -> Response:
+        serializer = GoogleRegisterSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        google.check_request(request, data["nonce"])
+        user = google.register(**data)
+        if not user.email_verified:
+            try:
+                emails.send_verification_email(user)
+            except Exception:
+                logger.exception("Verification email failed for %s", user.pk)
+        return _session_response(request, user, status.HTTP_201_CREATED)
+
+
+class GoogleLinkView(APIView):
+    throttle_scope = "auth.login"
+
+    def post(self, request: Request) -> Response:
+        serializer = GoogleLinkSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        google.check_request(request, data["nonce"])
+        google.link(user=_current_user(request), **data)
+        return Response(CurrentUserSerializer(_current_user(request)).data)
+
+
+class GoogleDisconnectView(APIView):
+    throttle_scope = "auth.login"
+
+    def post(self, request: Request) -> Response:
+        serializer = ConfirmPasswordSerializer(data=request.data, context={"request": request})
+        if not _current_user(request).has_usable_password():
+            raise ValidationError(
+                "Set a password before disconnecting Google so you can still log in."
+            )
+        serializer.is_valid(raise_exception=True)
+        google.disconnect(_current_user(request), serializer.validated_data["current_password"])
+        return Response(CurrentUserSerializer(_current_user(request)).data)
 
 
 class EmailVerificationRequestView(APIView):

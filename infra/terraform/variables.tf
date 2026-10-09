@@ -62,6 +62,12 @@ variable "api_image_tag" {
   default     = ""
 }
 
+variable "google_web_client_id" {
+  type        = string
+  description = "Public Google Web OAuth client ID used as the sign-in token audience. Empty disables Google sign-in."
+  default     = ""
+}
+
 variable "db_instance_class" {
   type    = string
   default = "db.t4g.micro"

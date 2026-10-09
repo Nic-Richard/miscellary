@@ -595,6 +595,7 @@ resource "aws_ecs_task_definition" "api" {
       { name = "CORS_ALLOWED_ORIGINS", value = local.web_origin },
       { name = "CSRF_TRUSTED_ORIGINS", value = "${local.web_origin},https://${var.api_domain}" },
       { name = "WEB_URL", value = local.web_origin },
+      { name = "GOOGLE_CLIENT_IDS", value = var.google_web_client_id },
       { name = "EMAIL_FROM", value = "Miscellary <no-reply@${var.domain_name}>" },
       { name = "EMAIL_HOST", value = "email-smtp.${var.aws_region}.amazonaws.com" },
       { name = "EMAIL_PORT", value = "587" },

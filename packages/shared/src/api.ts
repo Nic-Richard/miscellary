@@ -23,6 +23,8 @@ export interface CurrentUser {
   id: string;
   email: string;
   email_verified: boolean;
+  has_password?: boolean;
+  google_connected?: boolean;
   /** When the next username change is allowed. Null means now. */
   username_change_available_at: string | null;
   profile: PublicProfile;
@@ -42,6 +44,23 @@ export interface RegisterRequest {
 export interface LoginRequest {
   email: string;
   password: string;
+}
+
+export type GooglePurpose = 'login' | 'link' | 'username' | 'password' | 'delete';
+
+export interface GoogleProof {
+  credential: string;
+  nonce: string;
+}
+
+export interface GoogleSignup extends GoogleProof {
+  username: string;
+  terms_accepted: boolean;
+}
+
+export interface GoogleConfirmation {
+  google_credential: string;
+  google_nonce: string;
 }
 
 export type ImageKind = 'card' | 'cover' | 'avatar' | 'pack';
