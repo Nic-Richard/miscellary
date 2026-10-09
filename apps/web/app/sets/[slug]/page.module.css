@@ -17,7 +17,7 @@
 .desc {
   max-width: 560px;
   margin: 14px 0 0;
-  color: #4b4238;
+  color: var(--text);
   font-size: 16px;
   line-height: 1.5;
 }
@@ -33,14 +33,14 @@
   margin-top: 22px;
   padding-top: 18px;
   border-top: 1px solid var(--bdr);
-  color: #5e5346;
+  color: var(--muted);
   font-size: 15px;
 }
 .creatorLink {
   display: inline-flex;
   align-items: center;
   gap: 11px;
-  color: #3a2f26;
+  color: var(--text);
   text-decoration: none;
 }
 .creatorName {
@@ -58,6 +58,7 @@
   color: var(--accent-deep);
 }
 .creatorFollow {
+  composes: surfaceTone from '../../../components/ui.module.css';
   display: grid;
   flex: none;
   place-items: center;
@@ -66,8 +67,8 @@
   padding: 0;
   border: 1px solid var(--bdr2);
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.45);
-  color: #5e5346;
+  background: var(--sur2);
+  color: var(--muted);
   cursor: pointer;
   transition:
     color var(--dur-fast),
@@ -89,7 +90,7 @@
 }
 .creatorFollowing {
   border-color: var(--accent);
-  background: rgba(39, 139, 130, 0.1);
+  background: rgba(var(--accent-rgb), 0.1);
   color: var(--accent-deep);
 }
 .followCross {
@@ -125,7 +126,7 @@
     linear-gradient(rgba(150, 187, 181, 0.9), rgba(120, 165, 158, 0.9)),
     var(--cloth-tex) center / 128px;
   border: 2px solid #f6f0e4;
-  box-shadow: 0 0 0 1px #c9bda5;
+  box-shadow: 0 0 0 1px var(--bdr);
   color: #f6f0e4;
   font: 400 22px / 1 var(--display);
 }
@@ -172,7 +173,7 @@
 }
 .pageNo {
   min-width: 190px;
-  color: #9a8e7c;
+  color: var(--faint);
   font-size: 15px;
   text-align: center;
   white-space: nowrap;
@@ -195,14 +196,14 @@
   stroke-linejoin: round;
 }
 .sheet {
-  composes: stitched from '../../../components/ui.module.css';
+  composes: surfaceTone stitched from '../../../components/ui.module.css';
   --stitch-radius: 7px;
   position: relative;
   z-index: 2;
   padding: 22px 26px 28px;
   background:
     var(--paper) center / 320px,
-    linear-gradient(178deg, #fbf7ee, #f4eee0);
+    linear-gradient(178deg, var(--sur), var(--sur));
   border: 1px solid var(--bdr);
   border-radius: 14px;
   box-shadow:
@@ -252,7 +253,7 @@
   gap: 4px;
   padding: 2px 6px;
   background: rgba(249, 244, 234, 0.96);
-  border: 1px solid #d3c8b3;
+  border: 1px solid var(--bdr);
   border-radius: 5px;
   box-shadow: 0 2px 6px rgba(58, 42, 20, 0.16);
   opacity: 0;
@@ -309,7 +310,7 @@
   font: 400 16px / 1.1 var(--display);
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #3a2f26;
+  color: var(--text);
 }
 .pulls small {
   font-size: 15px;
@@ -329,19 +330,19 @@
   color: var(--rarity-legendary);
 }
 .pulls b {
-  color: #6f6355;
+  color: var(--muted);
   font-size: 15px;
   font-weight: 400;
   white-space: nowrap;
 }
 .railText {
   margin: 0 0 12px;
-  color: #6f6355;
+  color: var(--muted);
   font-size: 16px;
   line-height: 1.55;
 }
 .railLink {
-  color: var(--accent);
+  color: var(--accent-ink);
   font-size: 15px;
   text-decoration: none;
 }
@@ -401,7 +402,7 @@
 }
 .recycle:hover:not(:disabled) {
   border-color: var(--accent);
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 .recycle:disabled {
   opacity: 0.5;
@@ -418,7 +419,7 @@
   position: absolute;
   top: 50%;
   left: calc(100% + 8px);
-  color: var(--accent);
+  color: var(--accent-ink);
   font-size: 16px;
   font-weight: 700;
   animation: pointGain 800ms var(--ease-out) both;

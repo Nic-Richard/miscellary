@@ -1,7 +1,7 @@
 import { parseDescription } from '@miscellary/shared';
 import type { DescriptionNode } from '@miscellary/shared';
 import { StyleSheet, Text, View } from 'react-native';
-import { colors } from '@/lib/theme';
+import { useColors } from '@/lib/theme';
 
 function Inline({
   nodes,
@@ -47,7 +47,7 @@ function Inline({
 
 export default function Description({
   text,
-  color = colors.muted,
+  color: providedColor,
   fontSize = 13,
   fixedScale = false,
 }: {
@@ -56,6 +56,8 @@ export default function Description({
   fontSize?: number;
   fixedScale?: boolean;
 }) {
+  const colors = useColors();
+  const color = providedColor ?? colors.muted;
   return (
     <View style={styles.root}>
       {parseDescription(text).map((block, i) =>

@@ -1,10 +1,12 @@
 .section {
+  color: var(--text);
+  composes: surfaceTone from './ui.module.css';
   position: relative;
   z-index: 2;
   max-width: 856px;
   margin: 0 auto;
   padding: 22px 26px 30px;
-  background: linear-gradient(178deg, #f3eddf, #ebe3d1);
+  background: linear-gradient(178deg, var(--sur), var(--sur2));
   border: 1px solid var(--bdr2);
   border-radius: var(--radius-lg);
   box-shadow:
@@ -74,16 +76,17 @@
 }
 
 .signedOut {
+  composes: surfaceTone from './ui.module.css';
   margin: 0;
   padding: 18px 20px;
   color: var(--muted);
-  background: rgba(255, 255, 255, 0.5);
+  background: var(--sur2);
   border: 1px dashed var(--bdr2);
   border-radius: var(--radius-md);
   text-align: center;
 }
 .link {
-  color: var(--accent);
+  color: var(--accent-ink);
   font-weight: 700;
 }
 .link:hover {
@@ -104,6 +107,7 @@
 }
 
 .card {
+  composes: surfaceTone from './ui.module.css';
   padding: 13px 18px 11px;
   background: var(--sur);
   border: 1px solid var(--bdr);
@@ -120,6 +124,7 @@
   margin-bottom: 8px;
 }
 .monogram {
+  composes: surfaceTone from './ui.module.css';
   display: grid;
   place-items: center;
   width: 27px;
@@ -140,7 +145,7 @@
   text-decoration: none;
 }
 .name:hover {
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 .creatorTag {
   padding: 2px 7px 1px;
@@ -183,7 +188,7 @@
   cursor: pointer;
 }
 .tool:hover {
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 .danger,
 .danger:hover {

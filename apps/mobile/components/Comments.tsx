@@ -2,10 +2,10 @@ import { COMMENT_COPY, personName } from '@miscellary/shared';
 import type { Comment } from '@miscellary/shared';
 import { Link, router } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, Text, View } from 'react-native';
 import { useAuth } from '@/lib/auth';
 import { deleteComment, getComments, postComment } from '@/lib/endpoints';
-import { colors, fonts } from '@/lib/theme';
+import { fonts, useColors, createThemedStyles } from '@/lib/theme';
 import { Button, ErrorText, Input, Muted } from './ui';
 
 const MAX = 1000;
@@ -30,6 +30,7 @@ function Composer({
   onSubmit: (body: string) => Promise<void>;
   onCancel?: () => void;
 }) {
+  const styles = useStyles();
   const [body, setBody] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -79,6 +80,8 @@ function Entry({
   onReply: (id: string) => void;
   onRemove: (id: string) => void;
 }) {
+  const colors = useColors();
+  const styles = useStyles();
   const { user } = useAuth();
   const author = comment.author;
 
@@ -132,6 +135,7 @@ function Entry({
 }
 
 export default function Comments({ slug }: { slug: string }) {
+  const styles = useStyles();
   const { user } = useAuth();
   const [thread, setThread] = useState<Comment[] | null>(null);
   const [count, setCount] = useState(0);
@@ -209,7 +213,7 @@ export default function Comments({ slug }: { slug: string }) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((colors) => ({
   root: { gap: 10, marginTop: 20 },
   title: { color: colors.text, fontFamily: fonts.display, fontSize: 26 },
   composer: { gap: 8 },
@@ -238,4 +242,4 @@ const styles = StyleSheet.create({
     fontFamily: fonts.medium,
     fontSize: 14,
   },
-});
+}));

@@ -24,6 +24,7 @@ interface AuthContextValue {
   googleRegister: (data: GoogleSignup) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  updateTheme: (theme: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -93,6 +94,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [applySession],
   );
 
+  const updateTheme = useCallback(async (theme: string) => {
+    const updated = await apiFetch<CurrentUser & { theme: string }>('/api/v1/auth/preferences/', {
+      method: 'PATCH',
+      body: { theme },
+    });
+    setUser((current) =>
+      current?.id === updated.id ? { ...current, theme: updated.theme } : current,
+    );
+  }, []);
+
   const logout = useCallback(async () => {
     try {
       await apiFetch<void>('/api/v1/auth/logout/', { method: 'POST' });
@@ -108,8 +119,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const value = useMemo(
-    () => ({ user, loading, login, register, googleLogin, googleRegister, logout, refreshUser }),
-    [user, loading, login, register, googleLogin, googleRegister, logout, refreshUser],
+    () => ({
+      user,
+      loading,
+      login,
+      register,
+      googleLogin,
+      googleRegister,
+      logout,
+      refreshUser,
+      updateTheme,
+    }),
+    [user, loading, login, register, googleLogin, googleRegister, logout, refreshUser, updateTheme],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

@@ -1,7 +1,7 @@
 import { SITE_URL } from '@miscellary/shared';
 import Feather from '@expo/vector-icons/Feather';
-import { Pressable, Share, StyleSheet, Text } from 'react-native';
-import { colors, fonts } from '@/lib/theme';
+import { Pressable, Share, Text } from 'react-native';
+import { fonts, useColors, createThemedStyles } from '@/lib/theme';
 
 const SITE = process.env.EXPO_PUBLIC_SITE_URL ?? SITE_URL;
 
@@ -14,6 +14,8 @@ export default function ShareButton({
   title: string;
   dark?: boolean;
 }) {
+  const colors = useColors();
+  const styles = useStyles();
   const url = `${SITE}${path}`;
   const tint = dark ? '#f7f1e3' : colors.muted;
   return (
@@ -29,7 +31,7 @@ export default function ShareButton({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((colors) => ({
   button: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -41,4 +43,4 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   dark: { borderColor: 'rgba(247, 241, 227, 0.32)', backgroundColor: 'rgba(247, 241, 227, 0.08)' },
-});
+}));

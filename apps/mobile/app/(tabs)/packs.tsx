@@ -3,7 +3,7 @@ import type { Card, CardSetSummary, PackEntry, PackOpening } from '@miscellary/s
 import Feather from '@expo/vector-icons/Feather';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import MoreButton from '@/components/MoreButton';
 import CardPreview from '@/components/CardPreview';
 import CardInspector from '@/components/CardInspector';
@@ -24,7 +24,7 @@ import {
   openPack,
   recycleDuplicates,
 } from '@/lib/endpoints';
-import { colors, fonts } from '@/lib/theme';
+import { fonts, useColors, createThemedStyles } from '@/lib/theme';
 
 function countdown(until: string, now: number): string {
   const ms = Math.max(0, new Date(until).getTime() - now);
@@ -35,6 +35,8 @@ function countdown(until: string, now: number): string {
 }
 
 function Progress({ owned, total }: { owned: number; total: number }) {
+  const colors = useColors();
+  const styles = useStyles();
   const done = total > 0 && owned >= total;
   const percent = total ? Math.min(100, (owned / total) * 100) : 0;
   return (
@@ -61,6 +63,8 @@ function Stat({
   value: number;
   label: string;
 }) {
+  const colors = useColors();
+  const styles = useStyles();
   return (
     <View style={styles.stat}>
       <Feather name={icon} size={13} color={colors.faint} />
@@ -89,6 +93,7 @@ function Post({
   gain: { amount: number; key: number } | null;
   busy: boolean;
 }) {
+  const styles = useStyles();
   const set = entry.card_set;
   const creator = personName(set.creator);
   const affordable = entry.points >= entry.pack_cost;
@@ -275,6 +280,8 @@ function Post({
 }
 
 function Packs() {
+  const colors = useColors();
+  const styles = useStyles();
   const [entries, setEntries] = useState<PackEntry[] | null>(null);
   const [freeCount, setFreeCount] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
@@ -512,7 +519,7 @@ export default function PacksScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((colors) => ({
   content: { padding: 16, paddingBottom: 40, gap: 14 },
   startBar: {
     position: 'absolute',
@@ -638,4 +645,4 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   emptyTitle: { color: colors.text, fontFamily: fonts.display, fontSize: 26 },
-});
+}));

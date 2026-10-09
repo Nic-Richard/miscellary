@@ -1,8 +1,9 @@
 import { Stack, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import LoginGate from '@/components/LoginGate';
 import GoogleButton from '@/components/GoogleButton';
+import ThemeSelector from '@/components/ThemeSelector';
 import { Button, ErrorText, Input, Muted, PasswordInput } from '@/components/ui';
 import { ApiRequestError, apiFetch } from '@/lib/api';
 import { confirmGoogle, googleAvailable, googleProof } from '@/lib/google';
@@ -13,7 +14,7 @@ import {
   deleteAccount,
   resendVerificationEmail,
 } from '@/lib/endpoints';
-import { colors, fonts } from '@/lib/theme';
+import { fonts, useColors, createThemedStyles } from '@/lib/theme';
 
 function fieldError(error: unknown, name: string): string {
   if (error instanceof ApiRequestError) return error.fields[name]?.[0] ?? error.message;
@@ -29,6 +30,7 @@ function Card({
   note?: string;
   children: React.ReactNode;
 }) {
+  const styles = useStyles();
   return (
     <View style={styles.card}>
       <Text style={styles.cardTitle}>{title}</Text>
@@ -39,6 +41,7 @@ function Card({
 }
 
 function CloseAccount() {
+  const styles = useStyles();
   const { user, logout } = useAuth();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -104,6 +107,8 @@ function CloseAccount() {
 }
 
 function Account() {
+  const colors = useColors();
+  const styles = useStyles();
   const { user, refreshUser } = useAuth();
   const [username, setUsername] = useState(user?.profile.username ?? '');
   const [usernamePassword, setUsernamePassword] = useState('');
@@ -170,6 +175,12 @@ function Account() {
 
   return (
     <ScrollView style={{ backgroundColor: colors.bg }} contentContainerStyle={styles.content}>
+      <Card
+        title="Appearance"
+        note="Your colour theme is saved to your account, on web and mobile."
+      >
+        <ThemeSelector />
+      </Card>
       <Card
         title="Username"
         note={
@@ -360,7 +371,7 @@ export default function SettingsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((colors) => ({
   content: { padding: 16, paddingBottom: 40, gap: 14 },
   card: {
     gap: 10,
@@ -377,4 +388,4 @@ const styles = StyleSheet.create({
   unverified: { color: colors.gold, fontFamily: fonts.medium, fontSize: 15 },
   done: { color: colors.accent, fontFamily: fonts.body, fontSize: 14 },
   warning: { color: colors.danger, fontFamily: fonts.body, fontSize: 14 },
-});
+}));

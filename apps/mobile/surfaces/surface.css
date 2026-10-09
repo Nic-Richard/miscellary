@@ -89,7 +89,7 @@ body[data-surface$='editor'],
 body[data-surface$='editor'] #root,
 body[data-surface$='editor'] #content {
   min-height: 100dvh;
-  background: #f4eee1;
+  background: var(--bg);
 }
 
 @media (orientation: portrait) and (max-width: 900px) {

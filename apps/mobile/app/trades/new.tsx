@@ -2,11 +2,11 @@ import { cardCode } from '@miscellary/shared';
 import type { OwnedCard } from '@miscellary/shared';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import CardPreview from '@/components/CardPreview';
 import { counterOffer, createOffer, getOffer, listMyCards, listUserCards } from '@/lib/endpoints';
-import { colors } from '@/lib/theme';
+import { useColors, createThemedStyles } from '@/lib/theme';
 import { Button, ErrorText, Input, Muted, Tag, Title } from '@/components/ui';
 import VerifyEmailNotice, { useEmailVerified } from '@/components/VerifyEmailNotice';
 
@@ -21,6 +21,8 @@ function Picker({
   selected: Set<string>;
   onToggle: (id: string) => void;
 }) {
+  const colors = useColors();
+  const styles = useStyles();
   return (
     <View style={styles.column}>
       <View style={styles.columnHeader}>
@@ -66,6 +68,8 @@ function Picker({
 }
 
 export default function NewTradeScreen() {
+  const colors = useColors();
+  const styles = useStyles();
   const params = useLocalSearchParams<{ with?: string; counter?: string }>();
   const verified = useEmailVerified();
   const [partner, setPartner] = useState(params.with ?? '');
@@ -157,7 +161,7 @@ export default function NewTradeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((colors) => ({
   sendBar: {
     position: 'absolute',
     left: 0,
@@ -193,4 +197,4 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
     borderRadius: 3,
   },
-});
+}));

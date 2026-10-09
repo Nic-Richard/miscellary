@@ -1,0 +1,123 @@
+.wrap {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.label {
+  font-size: 14px;
+}
+.trigger {
+  composes: surfaceTone from './ui.module.css';
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 40px;
+  padding: 7px 10px;
+  border: 1px solid var(--bdr2);
+  border-radius: 6px;
+  background: var(--sur);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+.trigger[aria-disabled='true'] {
+  cursor: wait;
+}
+.trigger > span:last-child {
+  margin-left: auto;
+}
+.name {
+  min-width: 0;
+  flex: 1;
+}
+.trigger .name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wrap p {
+  margin: 0;
+  color: var(--danger);
+  font-size: 14px;
+}
+.rail {
+  color: var(--nav-muted);
+}
+.rail .trigger {
+  background: var(--nav-hover);
+  color: var(--nav-ink);
+  border-color: var(--rail-edge);
+  font-size: 14px;
+}
+.rail p {
+  color: var(--nav-ink);
+}
+.swatches {
+  display: inline-flex;
+  flex: none;
+  overflow: hidden;
+  border: 1px solid var(--bdr2);
+  border-radius: 3px;
+}
+.swatches i {
+  width: 10px;
+  height: 18px;
+}
+.menu {
+  composes: surfaceTone from './ui.module.css';
+  position: fixed;
+  z-index: 100;
+  width: min(320px, calc(100vw - 24px));
+  max-height: min(700px, calc(100dvh - 24px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 8px;
+  border: 1px solid var(--bdr2);
+  border-radius: 10px;
+  background: var(--sur);
+  color: var(--text);
+  box-shadow: var(--shadow-lg);
+}
+.menu h3 {
+  margin: 10px 10px 5px;
+  color: var(--muted);
+  font: 600 13px / 1.4 var(--body);
+}
+.menu button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 40px;
+  padding: 7px 10px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: none;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+.menu button:hover,
+.menu button:focus-visible {
+  background: var(--sur2);
+}
+.menu button[aria-checked='true'] {
+  border-color: var(--bdr2);
+}
+.menu small {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+}
+.check {
+  flex: none;
+  width: 18px;
+  color: var(--accent-ink);
+  text-align: center;
+}
+@media (max-width: 860px) {
+  .rail {
+    display: none;
+  }
+}

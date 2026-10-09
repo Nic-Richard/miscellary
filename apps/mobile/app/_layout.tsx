@@ -3,9 +3,10 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
 import { ActivityIndicator, View } from 'react-native';
+import { contrast } from '@miscellary/shared';
 import SurfaceWarmup from '@/components/SurfaceWarmup';
 import { AuthProvider } from '@/lib/auth';
-import { colors, fonts } from '@/lib/theme';
+import { colors, fonts, useColors } from '@/lib/theme';
 import displayFont from '../assets/fonts/BebasNeue-Regular.ttf';
 import bodyFont from '../assets/fonts/RobotoCondensed-Regular.ttf';
 import mediumFont from '../assets/fonts/RobotoCondensed-SemiBold.ttf';
@@ -19,6 +20,7 @@ import alfa from '../assets/fonts/AlfaSlabOne_400Regular.ttf';
 // Android draws the app edge to edge, so headerless screens would scroll under the
 // status bar. A strip in the page colour keeps the clock and icons readable.
 function StatusBarScrim() {
+  const colors = useColors();
   const insets = useSafeAreaInsets();
   return (
     <View
@@ -57,11 +59,20 @@ export default function RootLayout() {
   }
   return (
     <AuthProvider>
-      <StatusBar style="dark" />
+      <Navigation />
+    </AuthProvider>
+  );
+}
+
+function Navigation() {
+  const colors = useColors();
+  return (
+    <>
+      <StatusBar style={contrast('#ffffff', colors.bg) >= 4.5 ? 'light' : 'dark'} />
       <Stack
         screenOptions={{
           headerStyle: { backgroundColor: colors.bg },
-          headerTintColor: colors.text,
+          headerTintColor: colors.pageText,
           headerTitleStyle: { fontFamily: fonts.display, fontSize: 24 },
           headerShadowVisible: false,
           contentStyle: { backgroundColor: colors.bg },
@@ -80,6 +91,6 @@ export default function RootLayout() {
       </Stack>
       <StatusBarScrim />
       <SurfaceWarmup />
-    </AuthProvider>
+    </>
   );
 }

@@ -16,9 +16,23 @@ Items are ordered roughly by current priority. The order can change as dependenc
 
 Nic confirmed the latest desktop scrolling and Android APK feel good. Do not build
 another Android release until the remaining work is finished; keep the existing APK.
-Nic chose palette 46 (Stone/navy); apply it after sign-in. Keep all 50 share-sheet
-options and recorded colours for future reference or a possible small theme selector.
-No selector is being added now. Discuss monetization after sign-in.
+Nic chose palette 46 (Stone/navy) as the default and approved an account-saved theme
+selector. Desktop: above Search in the left rail. Android and narrow web: Appearance
+in Account settings. Nic chose 2, 4, 7, 9, 24, 28, 29, 31, 39, 45, 46, 48 and 50.
+Keep all 50 share-sheet options and recorded colours. Finish local checks before proposing the
+reskin commit; push it together with Google sign-in after approval. Discuss monetization
+after sign-in; no additional Android build until the remaining work is finished.
+
+Palette 46 and all 13 private account preferences are implemented locally. The compact
+swatch button opens Light, Muted, Darker and Dark groups, with the current choice
+checked and Stone/navy marked Default. Android uses a scrollable bottom sheet.
+Selection saves immediately; failed saves retain the current theme. Browser storage
+avoids flashing the default on reload and clears after logout. Full API/frontend
+suites, lint/types/formatting, production build and migration consistency passed.
+Mocked headless desktop/phone checks passed; account settings stack on narrow screens
+and saving a theme preserves unsaved profile/editor selections. All 13 themes passed
+save/failure/reload, keyboard and menu-bound checks. Native device QA remains. No reskin
+commit, push or deployment yet.
 
 Google sign-in is implemented locally, with real-provider/device QA still pending:
 

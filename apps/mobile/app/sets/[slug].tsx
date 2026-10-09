@@ -12,15 +12,7 @@ import Feather from '@expo/vector-icons/Feather';
 import { Link, router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import {
-  Alert,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  useWindowDimensions,
-  View,
-} from 'react-native';
+import { Alert, Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native';
 import InspectorModal from '@/components/InspectorModal';
 import BinderPages from '@/components/BinderPages';
 import CardInspector from '@/components/CardInspector';
@@ -55,13 +47,15 @@ import {
   setFollow,
 } from '@/lib/endpoints';
 import { readPublicCache, writePublicCache } from '@/lib/publicCache';
-import { colors, fonts } from '@/lib/theme';
+import { fonts, useColors, createThemedStyles } from '@/lib/theme';
 import { Button, Chip, ErrorText, Loading, Muted, Tag, Title } from '@/components/ui';
 
 const PACK_ACTION = 'pack';
 const FOLLOW_SET_ACTION = 'follow-set';
 
 export default function BinderScreen() {
+  const colors = useColors();
+  const styles = useStyles();
   const params = useLocalSearchParams<{ slug: string; do?: string; tab?: string }>();
   const { slug } = params;
   const insets = useSafeAreaInsets();
@@ -769,7 +763,7 @@ export default function BinderScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((colors) => ({
   tags: { marginTop: 10 },
   creator: { color: colors.accent, fontFamily: fonts.medium, fontSize: 16 },
   creatorFollow: {
@@ -853,4 +847,4 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   recycleText: { color: colors.muted, fontSize: 13 },
-});
+}));

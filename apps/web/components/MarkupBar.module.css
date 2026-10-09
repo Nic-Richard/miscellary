@@ -6,6 +6,7 @@
 }
 
 .btn {
+  composes: surfaceTone from './ui.module.css';
   min-width: 30px;
   padding: 3px 8px;
   border: 1px solid var(--line, rgba(0, 0, 0, 0.18));

@@ -1,26 +1,31 @@
 import Feather from '@expo/vector-icons/Feather';
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-native';
 import type { PressableProps, TextInputProps, ViewProps } from 'react-native';
-import { colors, fonts } from '@/lib/theme';
+import { fonts, useColors, createThemedStyles } from '@/lib/theme';
 
 export function Screen({ style, ...rest }: ViewProps) {
+  const styles = useStyles();
   return <View style={[styles.screen, style]} {...rest} />;
 }
 
 export function Tag({ children }: { children: string }) {
+  const styles = useStyles();
   return <Text style={styles.tag}>{children}</Text>;
 }
 
 export function Title({ children }: { children: string }) {
+  const styles = useStyles();
   return <Text style={styles.title}>{children}</Text>;
 }
 
 export function Muted({ children, style }: { children: React.ReactNode; style?: object }) {
+  const styles = useStyles();
   return <Text style={[styles.muted, style]}>{children}</Text>;
 }
 
 export function ErrorText({ children }: { children: string | null }) {
+  const styles = useStyles();
   return children ? (
     <Text accessibilityRole="alert" style={styles.error}>
       {children}
@@ -29,10 +34,13 @@ export function ErrorText({ children }: { children: string | null }) {
 }
 
 export function Loading() {
+  const colors = useColors();
   return <ActivityIndicator color={colors.accent} style={{ marginTop: 40 }} />;
 }
 
 export function Input(props: TextInputProps) {
+  const colors = useColors();
+  const styles = useStyles();
   return (
     <TextInput
       placeholderTextColor={colors.faint}
@@ -44,6 +52,8 @@ export function Input(props: TextInputProps) {
 }
 
 export function PasswordInput(props: Omit<TextInputProps, 'secureTextEntry'>) {
+  const colors = useColors();
+  const styles = useStyles();
   const [shown, setShown] = useState(false);
   return (
     <View style={styles.passwordWrap}>
@@ -74,6 +84,8 @@ interface ButtonProps extends PressableProps {
 }
 
 export function Button({ title, kind = 'primary', disabled, style, ...rest }: ButtonProps) {
+  const colors = useColors();
+  const styles = useStyles();
   const solid = kind === 'primary';
   const bg = solid ? (disabled ? colors.bdr : colors.accent) : 'transparent';
   const border = kind === 'danger' ? colors.danger : kind === 'secondary' ? colors.bdr2 : bg;
@@ -114,6 +126,8 @@ export function Chip({
   active: boolean;
   onPress: () => void;
 }) {
+  const colors = useColors();
+  const styles = useStyles();
   return (
     <Pressable
       accessibilityRole="button"
@@ -138,7 +152,7 @@ export function Chip({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((colors) => ({
   screen: { flex: 1, backgroundColor: colors.bg, padding: 16 },
   tag: {
     color: colors.accent,
@@ -146,7 +160,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     marginBottom: 2,
   },
-  title: { color: colors.text, fontFamily: fonts.display, fontSize: 34, marginBottom: 12 },
+  title: { color: colors.pageText, fontFamily: fonts.display, fontSize: 34, marginBottom: 12 },
   muted: { color: colors.muted, fontFamily: fonts.body, fontSize: 16, lineHeight: 22 },
   error: { color: colors.danger, fontFamily: fonts.body, fontSize: 15, marginVertical: 6 },
   input: {
@@ -190,4 +204,4 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-});
+}));

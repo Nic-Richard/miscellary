@@ -1,7 +1,7 @@
 import type { Card, CardSetDetail } from '@miscellary/shared';
 import { useState } from 'react';
-import { Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
-import { colors } from '@/lib/theme';
+import { Pressable, View, useWindowDimensions } from 'react-native';
+import { createThemedStyles } from '@/lib/theme';
 import InspectorModal from './InspectorModal';
 import SharedSurface from './SharedSurface';
 import BinderDetails from './BinderDetails';
@@ -21,6 +21,7 @@ export default function BinderPages({
   onLike?: (id: string) => void;
   set: CardSetDetail;
 }) {
+  const styles = useStyles();
   const { width, height } = useWindowDimensions();
   const rail = width > height && width >= 800;
   const [open, setOpen] = useState(false);
@@ -102,7 +103,7 @@ export default function BinderPages({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((colors) => ({
   cover: {
     gap: 10,
     padding: 14,
@@ -112,4 +113,4 @@ const styles = StyleSheet.create({
     backgroundColor: colors.sur,
   },
   preview: { borderRadius: 10, overflow: 'hidden' },
-});
+}));

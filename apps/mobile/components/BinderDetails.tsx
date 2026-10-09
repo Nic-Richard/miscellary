@@ -2,7 +2,7 @@ import { cardCode, personName, countOf } from '@miscellary/shared';
 import type { CardSetDetail } from '@miscellary/shared';
 import { Link } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
-import { colors, fonts } from '@/lib/theme';
+import { fonts, useColors } from '@/lib/theme';
 import CardPreview from './CardPreview';
 
 export default function BinderDetails({
@@ -12,6 +12,7 @@ export default function BinderDetails({
   set: CardSetDetail;
   inspect: (id: string) => void;
 }) {
+  const colors = useColors();
   const popular = [...set.cards]
     .filter((card) => card.like_count > 0)
     .sort((a, b) => b.like_count - a.like_count)

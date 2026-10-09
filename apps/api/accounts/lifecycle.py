@@ -9,6 +9,7 @@ from social.models import Follow, Notification, Reaction, SetFollow, ShowcaseSlo
 from trades.models import TradeOffer
 
 from .models import GoogleChallenge, GoogleIdentity, ReservedUsername, User
+from .themes import DEFAULT_THEME
 
 
 def revoke_sessions(user: User) -> None:
@@ -47,6 +48,7 @@ def delete_account(user: User) -> None:
     user.email = f"{user.pk.hex}@deleted.invalid"
     user.set_unusable_password()
     user.email_verified = False
+    user.theme = DEFAULT_THEME
     user.is_active = False
     user.deleted_at = now
     user.save()

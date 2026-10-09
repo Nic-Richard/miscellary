@@ -4,10 +4,11 @@ import { Text, View } from 'react-native';
 import { useAuth } from '@/lib/auth';
 import GoogleAuth from '@/components/GoogleAuth';
 import { internalRoute, RETURN_PARAM } from '@/lib/returnTo';
-import { colors } from '@/lib/theme';
+import { useColors } from '@/lib/theme';
 import { Button, ErrorText, Input, Screen, PasswordInput } from '@/components/ui';
 
 export default function LoginScreen() {
+  const colors = useColors();
   const { login } = useAuth();
   const params = useLocalSearchParams();
   const next = internalRoute(params[RETURN_PARAM]);

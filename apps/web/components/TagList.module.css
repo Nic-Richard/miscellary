@@ -8,13 +8,14 @@
 }
 
 .tag {
+  composes: surfaceTone from './ui.module.css';
   display: inline-flex;
   align-items: center;
   padding: 3px 10px 4px;
-  background: rgba(255, 255, 255, 0.5);
+  background: var(--sur2);
   border: 1px solid var(--bdr2);
   border-radius: 3px 9px 9px 3px;
-  color: #5e5346;
+  color: var(--muted);
   font-size: 15px;
   letter-spacing: 0.04em;
   text-decoration: none;
@@ -32,7 +33,7 @@
   background: var(--cloth-deep);
 }
 .tag:hover {
-  background: rgba(39, 139, 130, 0.08);
+  background: rgba(var(--accent-rgb), 0.08);
   border-color: var(--accent);
   color: var(--accent-deep);
 }

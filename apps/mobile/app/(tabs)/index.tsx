@@ -10,7 +10,6 @@ import {
   Pressable,
   RefreshControl,
   ScrollView,
-  StyleSheet,
   Text,
   useWindowDimensions,
   View,
@@ -24,11 +23,13 @@ import { getNotifications, getPublicSet } from '@/lib/endpoints';
 import { useDiscovery } from '@/lib/discovery';
 import { readPublicCache, writePublicCache } from '@/lib/publicCache';
 import type { DiscoverySort } from '@/lib/discovery';
-import { colors, fonts } from '@/lib/theme';
+import { fonts, useColors, createThemedStyles } from '@/lib/theme';
 
 const FEATURED_SET = 'film-cameras';
 
 export default function BrowseScreen() {
+  const colors = useColors();
+  const styles = useStyles();
   const { user } = useAuth();
   const [unread, setUnread] = useState(0);
   const [sort, setSort] = useState<DiscoverySort>('new');
@@ -323,7 +324,7 @@ export default function BrowseScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((colors) => ({
   screen: { flex: 1, backgroundColor: colors.bg },
   list: { alignSelf: 'center' },
   content: { paddingHorizontal: 20, paddingBottom: 24 },
@@ -350,25 +351,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   badgeText: { color: colors.accentText, fontFamily: fonts.medium, fontSize: 13 },
-  wordmark: { fontFamily: fonts.display, fontSize: 28, letterSpacing: 1.7, color: colors.text },
+  wordmark: { fontFamily: fonts.display, fontSize: 28, letterSpacing: 1.7, color: colors.pageText },
   edition: {
     fontFamily: fonts.body,
     fontSize: 15,
     textAlign: 'right',
-    color: colors.muted,
+    color: colors.pageMuted,
   },
   heading: {
     fontFamily: fonts.display,
     fontSize: 44,
     lineHeight: 46,
-    color: colors.text,
+    color: colors.pageText,
     marginTop: 23,
   },
   intro: {
     fontFamily: fonts.body,
     fontSize: 16,
     lineHeight: 22,
-    color: colors.muted,
+    color: colors.pageMuted,
     marginTop: 8,
     maxWidth: 320,
   },
@@ -397,17 +398,17 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: 12,
   },
-  bandTitle: { fontFamily: fonts.display, fontSize: 26, color: colors.text },
-  bandNote: { fontFamily: fonts.body, fontSize: 14, color: colors.muted, marginTop: 2 },
+  bandTitle: { fontFamily: fonts.display, fontSize: 26, color: colors.pageText },
+  bandNote: { fontFamily: fonts.body, fontSize: 14, color: colors.pageMuted, marginTop: 2 },
   bandLink: {
     fontFamily: fonts.medium,
     fontSize: 14,
-    color: colors.accent,
+    color: colors.pageAccent,
   },
   bandRow: { gap: 10, paddingVertical: 12, paddingRight: 4 },
   sectionHead: { marginTop: 26 },
-  sectionTitle: { fontFamily: fonts.display, fontSize: 29, color: colors.text },
-  total: { fontFamily: fonts.body, fontSize: 14, color: colors.muted, marginTop: 2 },
+  sectionTitle: { fontFamily: fonts.display, fontSize: 29, color: colors.pageText },
+  total: { fontFamily: fonts.body, fontSize: 14, color: colors.pageMuted, marginTop: 2 },
   filters: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 14 },
   filterGap: { height: 14 },
   row: { gap: 20 },
@@ -438,5 +439,5 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   footer: { alignItems: 'center', gap: 12, paddingBottom: 16 },
-  progress: { fontFamily: fonts.body, fontSize: 14, color: colors.muted },
-});
+  progress: { fontFamily: fonts.body, fontSize: 14, color: colors.pageMuted },
+}));

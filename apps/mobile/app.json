@@ -8,11 +8,11 @@
     "userInterfaceStyle": "light",
     "androidStatusBar": {
       "barStyle": "dark-content",
-      "backgroundColor": "#f4eee1"
+      "backgroundColor": "#c3c3bb"
     },
     "androidNavigationBar": {
       "barStyle": "dark-content",
-      "backgroundColor": "#f9f4ea"
+      "backgroundColor": "#dfded4"
     },
     "newArchEnabled": true,
     "android": {
@@ -22,7 +22,7 @@
       "blockedPermissions": ["android.permission.RECORD_AUDIO"],
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#278b82"
+        "backgroundColor": "#3e5976"
       }
     },
     "plugins": [
@@ -42,14 +42,14 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 160,
           "resizeMode": "contain",
-          "backgroundColor": "#f4eee1"
+          "backgroundColor": "#c3c3bb"
         }
       ],
       [
         "expo-notifications",
         {
           "icon": "./assets/images/notification-icon.png",
-          "color": "#278b82"
+          "color": "#3e5976"
         }
       ],
       "expo-font"

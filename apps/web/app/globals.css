@@ -1,26 +1,41 @@
 :root {
-  --bg: #f4eee1;
-  --sur: #f9f4ea;
-  --sur2: #ebe3d1;
-  --bdr: #ddd3bf;
-  --bdr2: #c7bba3;
+  --panel-text: #333b42;
+  --panel-muted: #4f5559;
+  --panel-faint: #5b6064;
+  --panel-accent: #3e5976;
+  --panel-accent-deep: #364d66;
+  --page-text: #333b42;
+  --page-muted: #555c62;
+  --page-accent: #3e5976;
+  --accent-ink: #3e5976;
+  --accent-rgb: 62, 89, 118;
+  --reveal-bg: #1e2c37;
+  --nav-ink: #f3f5f2;
+  --nav-muted: #d7dadb;
+  --nav-hover: #535f71;
+  --nav-active: #5d697a;
+  --bg: #c3c3bb;
+  --sur: #dfded4;
+  --sur2: #d2d2c9;
+  --bdr: #b6b7b1;
+  --bdr2: #9fa29e;
 
-  --text: #372e25;
-  --muted: #6f6355;
-  --faint: #9a8e7c;
+  --text: #333b42;
+  --muted: #4f5559;
+  --faint: #5b6064;
 
-  --cloth: #93b8b2;
-  --cloth-deep: #6c948e;
-  --cloth-ink: #f6f0e4;
+  --cloth: #667a8e;
+  --cloth-deep: #3e5976;
+  --cloth-ink: #f3f5f2;
   --spine: #9c9184;
   --sleeve: rgba(255, 255, 255, 0.55);
 
-  --accent: #278b82;
-  --accent-deep: #1e6e67;
-  --accent-text: #f6f0e4;
+  --accent: #3e5976;
+  --accent-deep: #364d66;
+  --accent-text: #f3f5f2;
   --foil: #7ccdbf;
-  --gold: #b8903a;
-  --danger: #ae4a3a;
+  --gold: #795a22;
+  --danger: #923d32;
 
   --rarity-common: #7a8085;
   --rarity-uncommon: #3f6ea8;
@@ -55,8 +70,8 @@
   --paper: url('/materials/tex-paper.png');
   --cloth-tex: url('/materials/cloth.jpg');
 
-  --rail: linear-gradient(90deg, #efe8da, #e9e1d1);
-  --rail-edge: #d5cab5;
+  --rail: #414e63;
+  --rail-edge: #6c7685;
 }
 
 * {
@@ -68,19 +83,16 @@ body {
   padding: 0;
 }
 body {
-  background:
-    radial-gradient(128% 96% at 26% 2%, rgba(255, 252, 242, 0.82), rgba(255, 252, 242, 0) 58%),
-    radial-gradient(58% 46% at 79% 26%, rgba(122, 104, 76, 0.04), transparent 70%),
-    radial-gradient(66% 52% at 11% 78%, rgba(122, 104, 76, 0.045), transparent 72%), var(--bg);
+  background: var(--bg);
   background-attachment: fixed;
-  color: var(--text);
+  color: var(--page-text);
   font-family: var(--body);
   font-size: 16px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
 a {
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 button,
 input,
@@ -94,5 +106,5 @@ h3 {
   font-weight: 400;
 }
 ::selection {
-  background: rgba(39, 139, 130, 0.25);
+  background: rgba(var(--accent-rgb), 0.25);
 }

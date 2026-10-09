@@ -13,6 +13,7 @@
 }
 
 .sheet {
+  composes: surfaceTone from './ui.module.css';
   position: relative;
   display: flex;
   flex-direction: column;
@@ -72,7 +73,7 @@
   text-decoration: none;
 }
 .handle:hover {
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 .badge,
 .status {

@@ -1,4 +1,5 @@
 .badge {
+  composes: surfaceTone from './ui.module.css';
   display: inline-flex;
   align-items: center;
   gap: 4px;

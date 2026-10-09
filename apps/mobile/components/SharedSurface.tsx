@@ -4,7 +4,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import WebView from 'react-native-webview';
 import { router } from 'expo-router';
 import * as FileSystem from 'expo-file-system/legacy';
+import { getTheme } from '@miscellary/shared';
 import type { CreateUploadResponse, ImageKind, ImageRef } from '@miscellary/shared';
+import { useAuth } from '@/lib/auth';
 import { apiFetch } from '@/lib/api';
 import { pickAndUpload } from '@/lib/upload';
 import type { PhotoSource } from '@/lib/upload';
@@ -38,6 +40,10 @@ export default function SharedSurface({
   passive,
   onEvent,
 }: Props) {
+  const { user } = useAuth();
+  const theme = getTheme(user?.theme);
+  const themeRef = useRef(theme);
+  themeRef.current = theme;
   const view = useRef<WebView>(null);
   const ready = useRef(false);
   const [measuredHeight, setMeasuredHeight] = useState(500);
@@ -67,16 +73,19 @@ export default function SharedSurface({
   // Android WebViews report env(safe-area-inset-*) as 0, so the surface reads the
   // system bars from these variables instead.
   function render() {
+    const tint = Object.entries(themeRef.current.css)
+      .map(([name, value]) => `s.setProperty(${literal(name)},${literal(value)});`)
+      .join('');
     const sides = Object.entries(insets.current)
       .map(([side, size]) => `s.setProperty('--safe-${side}','${size}px');`)
       .join('');
     view.current?.injectJavaScript(
-      `(function(s){${sides}})(document.documentElement.style);window.miscellaryRender(${literal(props.current)});true;`,
+      `(function(s){${sides}${tint}})(document.documentElement.style);window.miscellaryRender(${literal(props.current)});true;`,
     );
   }
   useEffect(() => {
     if (ready.current) render();
-  }, [mode, data, top, right, bottom, left]);
+  }, [mode, data, top, right, bottom, left, theme]);
 
   async function upload(input: {
     data: string;

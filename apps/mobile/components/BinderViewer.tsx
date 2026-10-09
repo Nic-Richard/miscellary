@@ -2,9 +2,9 @@ import Feather from '@expo/vector-icons/Feather';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import * as SecureStore from 'expo-secure-store';
 import { useEffect, useState } from 'react';
-import { Modal, Pressable, StatusBar, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, StatusBar, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { fonts } from '@/lib/theme';
+import { fonts, createThemedStyles } from '@/lib/theme';
 import SharedSurface from './SharedSurface';
 
 const HINT_KEY = 'binder-swipe-hint-seen';
@@ -32,6 +32,7 @@ export default function BinderViewer({
   onEdit?: { pick: (position: number) => void; remove: (position: number) => void };
 }) {
   const insets = useSafeAreaInsets();
+  const styles = useStyles();
   const [spread, setSpread] = useState(0);
   const [hint, setHint] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -145,6 +146,7 @@ function Round({
   onPress: () => void;
   style: object;
 }) {
+  const styles = useStyles();
   return (
     <Pressable
       accessibilityRole="button"
@@ -164,7 +166,7 @@ function Round({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((colors) => ({
   stage: { flex: 1, backgroundColor: '#1d1712' },
   title: { position: 'absolute', top: 12, maxWidth: '30%' },
   titleText: { color: '#f3ecdd', fontFamily: fonts.display, fontSize: 24, letterSpacing: 0.4 },
@@ -202,8 +204,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(246, 240, 228, 0.18)',
   },
-  editOn: { backgroundColor: '#2b8f80', borderColor: 'transparent' },
+  editOn: { backgroundColor: colors.accent, borderColor: 'transparent' },
   editText: { color: '#f3ecdd', fontFamily: fonts.medium, fontSize: 15 },
-  hint: { backgroundColor: '#2b8f80', borderColor: 'transparent' },
+  hint: { backgroundColor: colors.accent, borderColor: 'transparent' },
   hintText: { color: '#fff', fontFamily: fonts.medium, fontSize: 12 },
-});
+}));

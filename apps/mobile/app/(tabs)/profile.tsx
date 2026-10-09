@@ -9,7 +9,6 @@ import {
   Modal,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   useWindowDimensions,
   View,
@@ -21,10 +20,12 @@ import LoginGate from '@/components/LoginGate';
 import ProfileView from '@/components/ProfileView';
 import { useAuth } from '@/lib/auth';
 import { getProfile, getShowcase, listMyCards, saveShowcase, updateProfile } from '@/lib/endpoints';
-import { colors, fonts } from '@/lib/theme';
+import { fonts, useColors, createThemedStyles } from '@/lib/theme';
 import { Button, ErrorText, Input, Loading, Muted } from '@/components/ui';
 
 function Me() {
+  const colors = useColors();
+  const styles = useStyles();
   const { user, logout, refreshUser } = useAuth();
   const [profile, setProfile] = useState<ProfilePage | null>(null);
   const [editing, setEditing] = useState(false);
@@ -304,11 +305,11 @@ export default function ProfileScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  h2: { color: colors.text, fontSize: 16, fontWeight: '700', marginTop: 8 },
+const useStyles = createThemedStyles((colors) => ({
+  h2: { color: colors.pageText, fontSize: 16, fontWeight: '700', marginTop: 8 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   pickerHead: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   pickerTitle: { flex: 1, color: colors.text, fontFamily: fonts.display, fontSize: 28 },
   pickerCancel: { color: colors.accent, fontFamily: fonts.medium, fontSize: 16 },
   row: { flexDirection: 'row', gap: 8 },
-});
+}));

@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Modal, StatusBar } from 'react-native';
+import { contrast } from '@miscellary/shared';
+import { useColors } from '@/lib/theme';
 
 // An Android modal is its own window and copies the status bar style when it opens,
 // so the light style is set first and the modal opens a frame later.
@@ -14,6 +16,8 @@ export default function InspectorModal({
   children: ReactNode;
 }) {
   const [shown, setShown] = useState(false);
+  const colors = useColors();
+  const barStyle = contrast('#ffffff', colors.bg) >= 4.5 ? 'light-content' : 'dark-content';
 
   useEffect(() => {
     if (!open) {
@@ -24,9 +28,9 @@ export default function InspectorModal({
     const frame = requestAnimationFrame(() => setShown(true));
     return () => {
       cancelAnimationFrame(frame);
-      StatusBar.setBarStyle('dark-content', false);
+      StatusBar.setBarStyle(barStyle, false);
     };
-  }, [open]);
+  }, [open, barStyle]);
 
   return (
     <Modal

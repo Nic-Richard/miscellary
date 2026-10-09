@@ -22,10 +22,12 @@ import styles from './page.module.css';
 
 type Section = 'profile' | 'binder' | 'account';
 
-const SECTION_LABELS = { profile: 'Profile', binder: 'Binder', account: 'Sign-in' } as const;
+const SECTION_LABELS = { profile: 'Profile', binder: 'Binder', account: 'Account' } as const;
 
 export default function AccountPage() {
   const { user, loading, refreshUser } = useAuth();
+  const userId = user?.id;
+  const profile = user?.profile;
   useRequireAccount();
   const [section, setSection] = useState<Section>('profile');
   const [displayName, setDisplayName] = useState('');
@@ -45,15 +47,15 @@ export default function AccountPage() {
   const pickerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!user) return;
-    setDisplayName(user.profile.display_name);
-    setBio(user.profile.bio);
-    setShowcaseTitle(user.profile.showcase_title);
-    setBinderColour(user.profile.binder_colour || 'teal');
-  }, [user]);
+    if (!profile) return;
+    setDisplayName(profile.display_name);
+    setBio(profile.bio);
+    setShowcaseTitle(profile.showcase_title);
+    setBinderColour(profile.binder_colour || 'teal');
+  }, [profile]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!userId) return;
     Promise.all([listAllMyCards(), getShowcase()])
       .then(([owned, showcase]) => {
         setCards(owned);
@@ -67,7 +69,7 @@ export default function AccountPage() {
         setSlots(next);
       })
       .catch((e: Error) => setError(e.message));
-  }, [user]);
+  }, [userId]);
 
   useEffect(() => {
     if (picking === null) return;

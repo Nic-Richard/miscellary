@@ -190,6 +190,7 @@ function NewTrade() {
   const params = useSearchParams();
   const router = useRouter();
   const { user, loading } = useAuth();
+  const userId = user?.id;
   const counterId = params.get('counter');
   const [partner, setPartner] = useState(params.get('with') ?? '');
   const [theirs, setTheirs] = useState<OwnedCard[]>([]);
@@ -202,7 +203,7 @@ function NewTrade() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    if (!user) return;
+    if (!userId) return;
     (async () => {
       try {
         let who = params.get('with') ?? '';
@@ -223,7 +224,7 @@ function NewTrade() {
         setReady(true);
       }
     })();
-  }, [user, counterId, params]);
+  }, [userId, counterId, params]);
 
   function pick(selected: Set<string>, setter: (s: Set<string>) => void, stack: Stack) {
     const next = new Set(selected);

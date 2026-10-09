@@ -32,6 +32,7 @@ import styles from './page.module.css';
 
 function Collection() {
   const { user, loading } = useAuth();
+  const userId = user?.id;
   useRequireAccount();
   const setSlug = useSearchParams().get('set') ?? undefined;
   const [cards, setCards] = useState<OwnedCard[] | null>(null);
@@ -50,7 +51,7 @@ function Collection() {
   );
 
   useEffect(() => {
-    if (!user) return;
+    if (!userId) return;
     setCards(null);
     setInspect(null);
     setError(null);
@@ -63,7 +64,7 @@ function Collection() {
       (e) => setError(e instanceof Error ? e.message : 'Could not load your cards.'),
     );
     return () => requests.invalidate();
-  }, [user, setSlug, requests]);
+  }, [userId, setSlug, requests]);
 
   // Owned cards carry their set's name but not its wrapper, so the artwork for
   // the column beside the grids comes from the public catalogue.

@@ -17,3 +17,4 @@ export * from './photo';
 export * from './copy';
 export * from './collection';
 export * from './collectionRequests';
+export * from './themes';

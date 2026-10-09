@@ -11,7 +11,7 @@ import {
 import type { OwnedCard, SetPointsBalance } from '@miscellary/shared';
 import { Link, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import InspectorModal from '@/components/InspectorModal';
 import CardInspector from '@/components/CardInspector';
 import CardPreview from '@/components/CardPreview';
@@ -19,10 +19,12 @@ import FilterField from '@/components/FilterField';
 import LoginGate from '@/components/LoginGate';
 import PointGain from '@/components/PointGain';
 import { listAllMyCards, listMyPoints, recycleCard, recycleDuplicates } from '@/lib/endpoints';
-import { colors, fonts, rarityColors } from '@/lib/theme';
+import { fonts, rarityColors, useColors, createThemedStyles } from '@/lib/theme';
 import { ErrorText, Loading, Muted } from '@/components/ui';
 
 function Collection() {
+  const colors = useColors();
+  const styles = useStyles();
   const [cards, setCards] = useState<OwnedCard[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [points, setPoints] = useState<SetPointsBalance[]>([]);
@@ -201,7 +203,9 @@ function Collection() {
         <View key={slug} style={styles.group}>
           <View style={styles.groupHeader}>
             <Link href={{ pathname: '/sets/[slug]', params: { slug } }}>
-              <Text style={{ color: colors.text, fontWeight: '600' }}>{list[0]?.set_title}</Text>
+              <Text style={{ color: colors.pageText, fontWeight: '600' }}>
+                {list[0]?.set_title}
+              </Text>
             </Link>
             <Muted style={{ fontSize: 14 }}>
               {countOf(list.length, 'card')} ·{' '}
@@ -318,7 +322,7 @@ export default function CollectionScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((colors) => ({
   summary: {
     gap: 14,
     padding: 14,
@@ -382,4 +386,4 @@ const styles = StyleSheet.create({
   },
   recycleControl: { alignItems: 'center', justifyContent: 'center' },
   gainSlot: { width: 38, alignItems: 'flex-start', justifyContent: 'center' },
-});
+}));

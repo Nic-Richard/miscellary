@@ -8,6 +8,7 @@ import { useAuth } from '@/lib/auth';
 import { loginHref, registerHref, swapAuthHref } from '@/lib/returnTo';
 import { getNotifications } from '@/lib/social';
 import BrandMark from './BrandMark';
+import ThemeSelector from './ThemeSelector';
 import styles from './Nav.module.css';
 
 type IconName =
@@ -150,6 +151,7 @@ export default function Nav() {
       </nav>
 
       <div className={styles.foot}>
+        <ThemeSelector rail />
         <form className={styles.search} onSubmit={onSearch} role="search">
           <NavIcon name="search" />
           <input

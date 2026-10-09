@@ -13,7 +13,7 @@
   width: 90%;
   height: 640px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(39, 139, 130, 0.13), transparent 62%);
+  background: radial-gradient(circle, rgba(var(--accent-rgb), 0.13), transparent 62%);
   pointer-events: none;
 }
 
@@ -57,8 +57,8 @@
 .jumpReady {
   opacity: 1;
   box-shadow:
-    inset 0 0 0 1px rgba(30, 110, 103, 0.5),
-    0 0 0 2px rgba(39, 139, 130, 0.28),
+    inset 0 0 0 1px rgba(var(--accent-rgb), 0.5),
+    0 0 0 2px rgba(var(--accent-rgb), 0.28),
     0 3px 8px rgba(52, 38, 18, 0.24);
 }
 
@@ -116,7 +116,7 @@
 }
 .summary b {
   min-width: 2ch;
-  color: #3a2f26;
+  color: var(--text);
   font: 400 26px / 1 var(--display);
   font-variant-numeric: tabular-nums;
 }
@@ -146,7 +146,7 @@
 }
 .pointsList a {
   overflow: hidden;
-  color: #4b4238;
+  color: var(--text);
   font-size: 15px;
   text-decoration: none;
   text-overflow: ellipsis;

@@ -14,6 +14,7 @@ export default function PrivacyPage() {
         <h2>Information we collect</h2>
         <ul>
           <li>Account information, including your email address, username, and password hash.</li>
+          <li>Account preferences, including your selected colour theme.</li>
           <li>Profile details, card sets, images, comments, collections, trades, and reports.</li>
           <li>
             Technical information such as request logs, IP addresses, device details, and errors.
@@ -54,7 +55,7 @@ export default function PrivacyPage() {
         <p>
           Usernames, display names, biographies, avatars, published sets and cards, public binders,
           follows, likes, and comments may be visible to anyone. Email addresses, password details,
-          draft sets, and report details are not public through the product.
+          account preferences, draft sets, and report details are not public through the product.
         </p>
       </section>
 
@@ -62,7 +63,9 @@ export default function PrivacyPage() {
         <h2>Cookies and analytics</h2>
         <p>
           The website uses a secure cookie to keep you signed in, and the Android app stores your
-          sign-in in the device’s secure storage. These are needed for your account to work.
+          sign-in in the device’s secure storage. These are needed for your account to work. The
+          website also remembers your colour theme in browser storage to apply it when loading; the
+          preference is saved to your account and cleared from the browser when you log out.
         </p>
         <p>
           We use TraceTray to understand how people use the website. It records things like cursor

@@ -1,6 +1,6 @@
 import Feather from '@expo/vector-icons/Feather';
-import { Pressable, StyleSheet, Text } from 'react-native';
-import { colors, fonts } from '@/lib/theme';
+import { Pressable, Text } from 'react-native';
+import { fonts, useColors, createThemedStyles } from '@/lib/theme';
 
 export default function ActionChip({
   icon,
@@ -21,6 +21,8 @@ export default function ActionChip({
   disabled?: boolean;
   onPress: () => void;
 }) {
+  const colors = useColors();
+  const styles = useStyles();
   const tint =
     tone === 'liked'
       ? dark
@@ -53,7 +55,7 @@ export default function ActionChip({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((colors) => ({
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -70,4 +72,4 @@ const styles = StyleSheet.create({
   likedDark: { borderColor: 'rgba(240, 165, 151, 0.6)' },
   text: { fontFamily: fonts.medium, fontSize: 15 },
   count: { fontFamily: fonts.medium, fontSize: 15 },
-});
+}));

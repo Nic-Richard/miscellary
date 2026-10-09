@@ -4,11 +4,12 @@ import { Linking, Switch, Text, View } from 'react-native';
 import { ApiRequestError } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { googleAvailable, googleProof } from '@/lib/google';
-import { colors } from '@/lib/theme';
+import { useColors } from '@/lib/theme';
 import { Button, ErrorText, Input, Muted } from './ui';
 import GoogleButton from './GoogleButton';
 
 export default function GoogleAuth({ onDone }: { onDone: () => void }) {
+  const colors = useColors();
   const { googleLogin, googleRegister } = useAuth();
   const [proof, setProof] = useState<GoogleProof | null>(null);
   const [username, setUsername] = useState('');

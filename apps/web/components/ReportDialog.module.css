@@ -1,4 +1,5 @@
 .dialog {
+  composes: surfaceTone from './ui.module.css';
   width: min(460px, calc(100vw - 32px));
   padding: 0;
   background: var(--sur);
@@ -47,7 +48,7 @@
   cursor: pointer;
 }
 .reason:hover {
-  background: rgba(39, 139, 130, 0.07);
+  background: rgba(var(--accent-rgb), 0.07);
 }
 .reason input {
   accent-color: var(--accent);

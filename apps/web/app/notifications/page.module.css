@@ -35,7 +35,7 @@
   border-radius: 5px;
 }
 a.link:hover {
-  background: rgba(39, 139, 130, 0.06);
+  background: rgba(var(--accent-rgb), 0.06);
 }
 
 .who {
@@ -52,11 +52,12 @@ a.link:hover {
   border: 2px solid #f6f0e4;
   border-radius: 50%;
   background: linear-gradient(rgba(150, 187, 181, 0.92), rgba(120, 165, 158, 0.92));
-  box-shadow: 0 0 0 1px #c9bda5;
+  box-shadow: 0 0 0 1px var(--bdr);
   color: #f6f0e4;
   font: 400 19px / 1 var(--display);
 }
 .mark {
+  composes: surfaceTone from '../../components/ui.module.css';
   position: absolute;
   right: -4px;
   bottom: -3px;
@@ -67,7 +68,7 @@ a.link:hover {
   border: 1.5px solid var(--sur);
   border-radius: 50%;
   background: var(--sur2);
-  color: #6f6355;
+  color: var(--muted);
 }
 .mark svg {
   width: 11px;
@@ -142,7 +143,7 @@ a.link:hover {
   box-shadow: inset 2px 0 0 var(--accent);
 }
 .unread .when {
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 
 @media (max-width: 620px) {
@@ -163,13 +164,13 @@ a.link:hover {
   background: none;
   border: 1px solid var(--bdr2);
   border-radius: 6px;
-  color: var(--accent);
+  color: var(--accent-ink);
   font: inherit;
   font-size: 15px;
   cursor: pointer;
 }
 .more:hover:not(:disabled) {
-  background: rgba(39, 139, 130, 0.06);
+  background: rgba(var(--accent-rgb), 0.06);
 }
 .more:disabled {
   opacity: 0.5;

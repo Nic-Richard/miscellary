@@ -41,6 +41,7 @@
   gap: 5px;
 }
 .mark {
+  composes: surfaceTone from '../ui.module.css';
   display: grid;
   place-items: center;
   width: 32px;
@@ -63,12 +64,12 @@
 }
 .mark:hover {
   border-color: var(--accent);
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 .markOn {
   border-color: var(--accent);
-  color: var(--accent);
-  box-shadow: 0 0 0 2px rgba(39, 139, 130, 0.16);
+  color: var(--accent-ink);
+  box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.16);
 }
 .markNone {
   font-family: var(--body);

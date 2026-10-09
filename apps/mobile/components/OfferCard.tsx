@@ -1,9 +1,9 @@
 import { cardCode, offerSides, personHandle } from '@miscellary/shared';
 import type { OwnedCard, TradeOffer } from '@miscellary/shared';
 import { router } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { colors, fonts } from '@/lib/theme';
+import { fonts, useColors, createThemedStyles } from '@/lib/theme';
 import CardPreview from './CardPreview';
 import { Button, Muted } from './ui';
 
@@ -16,6 +16,7 @@ function Side({
   cards: OwnedCard[];
   onInspect?: (owned: OwnedCard) => void;
 }) {
+  const styles = useStyles();
   return (
     <View style={{ flex: 1, gap: 6 }}>
       <Muted style={styles.sideLabel}>
@@ -73,6 +74,8 @@ const STATUS_WORD: Record<string, string> = {
 };
 
 export default function OfferCard({ offer, me, busy, onAction, onInspect }: OfferCardProps) {
+  const colors = useColors();
+  const styles = useStyles();
   const incoming = offer.recipient.username === me;
   const sides = offerSides(offer, incoming);
   const other = incoming ? offer.sender : offer.recipient;
@@ -158,7 +161,7 @@ export default function OfferCard({ offer, me, busy, onAction, onInspect }: Offe
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((colors) => ({
   root: {
     backgroundColor: colors.sur,
     borderColor: colors.bdr2,
@@ -177,4 +180,4 @@ const styles = StyleSheet.create({
   sides: { flexDirection: 'row', gap: 8 },
   cards: { gap: 8, paddingBottom: 8 },
   actions: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
-});
+}));

@@ -54,6 +54,7 @@ class CurrentUserSerializer(serializers.ModelSerializer[User]):
             "profile",
             "has_password",
             "google_connected",
+            "theme",
         ]
         read_only_fields = fields
 
@@ -168,6 +169,12 @@ class ProfileUpdateSerializer(serializers.ModelSerializer[Profile]):
     class Meta:
         model = Profile
         fields = ["display_name", "bio", "showcase_title", "binder_colour"]
+
+
+class PreferencesSerializer(serializers.ModelSerializer[User]):
+    class Meta:
+        model = User
+        fields = ["theme"]
 
 
 def username_change_available_at(user: User) -> str | None:

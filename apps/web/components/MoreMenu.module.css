@@ -11,6 +11,7 @@
   stroke: none;
 }
 .menu {
+  composes: surfaceTone from './ui.module.css';
   position: absolute;
   top: calc(100% + 6px);
   right: 0;
@@ -42,7 +43,7 @@
 }
 .menu a:hover,
 .menu button:hover {
-  background: rgba(39, 139, 130, 0.08);
+  background: rgba(var(--accent-rgb), 0.08);
 }
 .rule {
   margin: 4px 6px;

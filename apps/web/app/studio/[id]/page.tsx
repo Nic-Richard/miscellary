@@ -43,6 +43,7 @@ const STATUS_LABELS: Record<CardSetDetail['status'], string> = {
 export default function SetEditorPage() {
   const { id } = useParams<{ id: string }>();
   const { user, loading } = useAuth();
+  const userId = user?.id;
   const router = useRouter();
   const [set, setSet] = useState<CardSetDetail | null>(null);
   const [templates, setTemplates] = useState<CardTemplate[]>([]);
@@ -71,11 +72,11 @@ export default function SetEditorPage() {
   }, [id]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!userId) return;
     Promise.all([reload(), listTemplates().then(setTemplates)]).catch((e: Error) =>
       setError(e.message),
     );
-  }, [user, reload]);
+  }, [userId, reload]);
 
   async function saveDetails() {
     if (!set) return;

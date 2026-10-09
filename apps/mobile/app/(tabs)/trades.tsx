@@ -1,14 +1,14 @@
 import type { OwnedCard, TradeOffer } from '@miscellary/shared';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import InspectorModal from '@/components/InspectorModal';
 import CardInspector from '@/components/CardInspector';
 import LoginGate from '@/components/LoginGate';
 import OfferCard from '@/components/OfferCard';
 import { useAuth } from '@/lib/auth';
 import { actOnOffer, listOffers } from '@/lib/endpoints';
-import { colors, fonts } from '@/lib/theme';
+import { fonts, useColors, createThemedStyles } from '@/lib/theme';
 import { Button, Chip, ErrorText, Input, Muted } from '@/components/ui';
 import VerifyEmailNotice from '@/components/VerifyEmailNotice';
 
@@ -27,6 +27,7 @@ const NOTHING: Record<Box, string> = {
 };
 
 function DealMat({ box }: { box: Box }) {
+  const styles = useStyles();
   return (
     <View style={styles.mat}>
       <View style={styles.matSides}>
@@ -53,6 +54,8 @@ function DealMat({ box }: { box: Box }) {
 }
 
 function Trades() {
+  const colors = useColors();
+  const styles = useStyles();
   const { user } = useAuth();
   const [box, setBox] = useState<Box>('inbox');
   const [offers, setOffers] = useState<TradeOffer[]>([]);
@@ -155,7 +158,7 @@ export default function TradesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((colors) => ({
   mat: {
     gap: 16,
     paddingVertical: 26,
@@ -179,4 +182,4 @@ const styles = StyleSheet.create({
   },
   matNote: { fontSize: 14, lineHeight: 20, textAlign: 'center' },
   row: { flexDirection: 'row', gap: 8, alignItems: 'center' },
-});
+}));

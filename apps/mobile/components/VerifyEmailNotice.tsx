@@ -1,15 +1,16 @@
 import { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { Button } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
 import { resendVerificationEmail } from '@/lib/endpoints';
-import { colors, fonts } from '@/lib/theme';
+import { fonts, createThemedStyles } from '@/lib/theme';
 
 export function useEmailVerified() {
   return Boolean(useAuth().user?.email_verified);
 }
 
 export default function VerifyEmailNotice({ children }: { children: string }) {
+  const styles = useStyles();
   const { user } = useAuth();
   const [state, setState] = useState<'idle' | 'sending' | 'sent' | 'failed'>('idle');
 
@@ -45,7 +46,7 @@ export default function VerifyEmailNotice({ children }: { children: string }) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((colors) => ({
   notice: {
     gap: 10,
     padding: 12,
@@ -55,4 +56,4 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(184, 144, 58, 0.08)',
   },
   text: { color: colors.text, fontFamily: fonts.body, fontSize: 14, lineHeight: 20 },
-});
+}));

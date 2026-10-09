@@ -5,6 +5,7 @@
 }
 
 .drop {
+  composes: surfaceTone from './ui.module.css';
   display: block;
   padding: 6px;
   background: var(--sur);
@@ -58,7 +59,7 @@
   padding: 0;
   background: none;
   border: 0;
-  color: var(--accent);
+  color: var(--accent-ink);
   font-family: var(--body);
   font-size: 12px;
   text-decoration: underline;

@@ -5,9 +5,10 @@ import { View } from 'react-native';
 import SharedSurface from '@/components/SharedSurface';
 import { ErrorText, Loading } from '@/components/ui';
 import { getMySet, listTemplates } from '@/lib/endpoints';
-import { colors } from '@/lib/theme';
+import { useColors } from '@/lib/theme';
 
 export default function CardScreen() {
+  const colors = useColors();
   const { setId, cardId, designId } = useLocalSearchParams<{
     setId: string;
     cardId?: string;

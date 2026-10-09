@@ -1,9 +1,9 @@
 import type { Creator } from '@miscellary/shared';
 import { Link } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { listFollows } from '@/lib/endpoints';
-import { colors, fonts } from '@/lib/theme';
+import { fonts, createThemedStyles } from '@/lib/theme';
 import { ErrorText, Muted } from './ui';
 
 export default function PeopleList({
@@ -15,6 +15,7 @@ export default function PeopleList({
   direction: 'followers' | 'following';
   onClose: () => void;
 }) {
+  const styles = useStyles();
   const [people, setPeople] = useState<Creator[] | null>(null);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -96,7 +97,7 @@ export default function PeopleList({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((colors) => ({
   more: {
     alignItems: 'center',
     marginTop: 4,
@@ -128,4 +129,4 @@ const styles = StyleSheet.create({
   },
   name: { color: colors.text, fontFamily: fonts.medium, fontSize: 15 },
   handle: { color: colors.faint, fontFamily: fonts.body, fontSize: 14 },
-});
+}));

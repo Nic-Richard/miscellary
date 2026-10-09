@@ -2,9 +2,9 @@ import { TAG_LABEL_MAX } from '@miscellary/shared';
 import type { Tag, TagSummary } from '@miscellary/shared';
 import Feather from '@expo/vector-icons/Feather';
 import { useEffect, useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { listTags } from '@/lib/endpoints';
-import { colors, fonts } from '@/lib/theme';
+import { fonts, useColors, createThemedStyles } from '@/lib/theme';
 import { ErrorText, Input, Muted } from './ui';
 
 export default function TagField({
@@ -18,6 +18,8 @@ export default function TagField({
   note?: string;
   onSave: (labels: string[]) => Promise<Tag[]>;
 }) {
+  const colors = useColors();
+  const styles = useStyles();
   const [current, setCurrent] = useState<Tag[]>(tags);
   const [draft, setDraft] = useState('');
   const [suggestions, setSuggestions] = useState<TagSummary[]>([]);
@@ -141,7 +143,7 @@ export default function TagField({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((colors) => ({
   root: { gap: 8 },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   chip: {
@@ -170,4 +172,4 @@ const styles = StyleSheet.create({
   },
   suggestionText: { color: colors.muted, fontFamily: fonts.body, fontSize: 14 },
   note: { fontSize: 14 },
-});
+}));

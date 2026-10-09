@@ -2,9 +2,11 @@ import { personHandle, personName } from '@miscellary/shared';
 import type { CardSetSummary } from '@miscellary/shared';
 import { Link } from 'expo-router';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
-import { binderColors, colors, fonts } from '@/lib/theme';
+import { binderColors, fonts, useColors, createThemedStyles } from '@/lib/theme';
 
 export default function SetTile({ set }: { set: CardSetSummary }) {
+  const colors = useColors();
+  const styles = useStyles();
   const pack = set.render_pack?.image?.url;
   return (
     <Link href={{ pathname: '/sets/[slug]', params: { slug: set.slug } }} asChild>
@@ -36,7 +38,7 @@ export default function SetTile({ set }: { set: CardSetSummary }) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((colors) => ({
   root: { flex: 1, minWidth: 0, gap: 8 },
   stage: {
     aspectRatio: 0.8,
@@ -52,7 +54,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.display,
     fontSize: 19,
     lineHeight: 21,
-    color: colors.text,
+    color: colors.pageText,
     textAlign: 'center',
   },
   metaRow: {
@@ -62,5 +64,5 @@ const styles = StyleSheet.create({
     gap: 6,
     flexWrap: 'wrap',
   },
-  meta: { fontFamily: fonts.body, fontSize: 14, color: colors.muted },
-});
+  meta: { fontFamily: fonts.body, fontSize: 14, color: colors.pageMuted },
+}));

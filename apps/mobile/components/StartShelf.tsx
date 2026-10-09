@@ -2,11 +2,11 @@ import type { CardSetSummary } from '@miscellary/shared';
 import Feather from '@expo/vector-icons/Feather';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import PackPreview from '@/components/PackPreview';
 import { Button, ErrorText } from '@/components/ui';
 import { followSet } from '@/lib/endpoints';
-import { colors, fonts } from '@/lib/theme';
+import { fonts, useColors, createThemedStyles } from '@/lib/theme';
 
 const GAP = 14;
 
@@ -17,6 +17,8 @@ export default function StartShelf({
   sets: CardSetSummary[];
   onFollowedChange: (count: number) => void;
 }) {
+  const colors = useColors();
+  const styles = useStyles();
   const [shelfWidth, setShelfWidth] = useState(0);
   const [followed, setFollowed] = useState<Set<string>>(new Set());
   const [pending, setPending] = useState<Set<string>>(new Set());
@@ -100,7 +102,7 @@ export default function StartShelf({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((colors) => ({
   root: {
     gap: 14,
     padding: 20,
@@ -135,4 +137,4 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: colors.accent,
   },
-});
+}));

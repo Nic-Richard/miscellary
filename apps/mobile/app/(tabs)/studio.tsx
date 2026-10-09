@@ -3,10 +3,10 @@ import type { CardSetSummary } from '@miscellary/shared';
 import Feather from '@expo/vector-icons/Feather';
 import { Link, router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import LoginGate from '@/components/LoginGate';
 import { createSet, listMySets } from '@/lib/endpoints';
-import { colors, fonts } from '@/lib/theme';
+import { fonts, useColors, createThemedStyles } from '@/lib/theme';
 import { Button, ErrorText, Input, Muted } from '@/components/ui';
 
 const STEPS: [React.ComponentProps<typeof Feather>['name'], string, string][] = [
@@ -24,6 +24,8 @@ const STEPS: [React.ComponentProps<typeof Feather>['name'], string, string][] = 
 ];
 
 function Studio() {
+  const colors = useColors();
+  const styles = useStyles();
   const [sets, setSets] = useState<CardSetSummary[]>([]);
   const [title, setTitle] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -115,7 +117,7 @@ export default function StudioScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((colors) => ({
   howTo: {
     gap: 14,
     marginTop: 8,
@@ -159,4 +161,4 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 2,
   },
-});
+}));

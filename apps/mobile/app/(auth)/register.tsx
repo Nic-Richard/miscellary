@@ -5,13 +5,14 @@ import { ApiRequestError } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import GoogleAuth from '@/components/GoogleAuth';
 import { internalRoute, RETURN_PARAM } from '@/lib/returnTo';
-import { colors } from '@/lib/theme';
+import { useColors } from '@/lib/theme';
 import { Button, ErrorText, Input, Muted, Screen, Title, PasswordInput } from '@/components/ui';
 
 const SITE = 'https://miscellary.com';
-const link = { color: colors.accent, fontSize: 15 };
 
 export default function RegisterScreen() {
+  const colors = useColors();
+  const link = { color: colors.accent, fontSize: 15 };
   const { register } = useAuth();
   const params = useLocalSearchParams();
   const next = internalRoute(params[RETURN_PARAM]);

@@ -2,7 +2,7 @@ import { profilePath, SHOWCASE_SLOTS } from '@miscellary/shared';
 import type { OwnedCard, ProfilePage } from '@miscellary/shared';
 import { Link, router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { useAuth } from '@/lib/auth';
 import { setFollow } from '@/lib/endpoints';
 import BinderViewer from './BinderViewer';
@@ -13,7 +13,7 @@ import type { MoreItem } from '@/components/MoreButton';
 import ReportSheet from '@/components/ReportSheet';
 import ShareButton from '@/components/ShareButton';
 import PeopleList from './PeopleList';
-import { colors } from '@/lib/theme';
+import { useColors, createThemedStyles } from '@/lib/theme';
 import CardInspector from './CardInspector';
 import DemoBadge from './DemoBadge';
 import SharedSurface from './SharedSurface';
@@ -31,6 +31,8 @@ export default function ProfileView({
   /** Menu items for your own profile, where there is nothing to report. */
   ownItems?: MoreItem[];
 }) {
+  const colors = useColors();
+  const styles = useStyles();
   const { user } = useAuth();
   const [profile, setProfile] = useState(initial);
   useEffect(() => setProfile(initial), [initial]);
@@ -92,14 +94,14 @@ export default function ProfileView({
           </Text>
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={{ color: colors.text, fontSize: 22, fontWeight: '700' }}>
+          <Text style={{ color: colors.pageText, fontSize: 22, fontWeight: '700' }}>
             {profile.display_name || profile.username}
           </Text>
           {profile.is_demo ? <DemoBadge /> : null}
-          <Muted>@{profile.username}</Muted>
+          <Muted style={{ color: colors.pageMuted }}>@{profile.username}</Muted>
         </View>
       </View>
-      {profile.bio ? <Muted>{profile.bio}</Muted> : null}
+      {profile.bio ? <Muted style={{ color: colors.pageMuted }}>{profile.bio}</Muted> : null}
       {profile.is_demo ? (
         <Muted style={{ fontSize: 14 }}>
           This collector is fictional and is here to demonstrate Miscellary. The photographs are
@@ -261,7 +263,7 @@ export default function ProfileView({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((colors) => ({
   header: { flexDirection: 'row', gap: 14, alignItems: 'center' },
   avatar: {
     width: 56,
@@ -291,8 +293,8 @@ const styles = StyleSheet.create({
     rowGap: 4,
   },
   count: { fontSize: 14 },
-  countLink: { color: colors.accent, fontSize: 14 },
-  h2: { color: colors.text, fontSize: 16, fontWeight: '700', marginTop: 8 },
+  countLink: { color: colors.pageAccent, fontSize: 14 },
+  h2: { color: colors.pageText, fontSize: 16, fontWeight: '700', marginTop: 8 },
   inspector: { flex: 1, backgroundColor: '#241d16' },
   setRow: {
     backgroundColor: colors.sur,
@@ -301,4 +303,4 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     padding: 10,
   },
-});
+}));

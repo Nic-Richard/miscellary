@@ -25,6 +25,7 @@ export interface CurrentUser {
   email_verified: boolean;
   has_password?: boolean;
   google_connected?: boolean;
+  theme?: string;
   /** When the next username change is allowed. Null means now. */
   username_change_available_at: string | null;
   profile: PublicProfile;

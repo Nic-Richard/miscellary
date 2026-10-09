@@ -1,8 +1,9 @@
 import { useEffect, useRef } from 'react';
-import { Animated, StyleSheet } from 'react-native';
-import { colors } from '@/lib/theme';
+import { Animated } from 'react-native';
+import { createThemedStyles } from '@/lib/theme';
 
 export default function PointGain({ amount }: { amount: number }) {
+  const styles = useStyles();
   const motion = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -32,7 +33,7 @@ export default function PointGain({ amount }: { amount: number }) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((colors) => ({
   gain: {
     marginLeft: 5,
     color: colors.accent,
@@ -40,4 +41,4 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     fontWeight: '700',
   },
-});
+}));

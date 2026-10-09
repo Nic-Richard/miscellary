@@ -1,12 +1,13 @@
 .sheet {
-  composes: stitched from './ui.module.css';
+  color: var(--text);
+  composes: surfaceTone stitched from './ui.module.css';
   --stitch-radius: 7px;
   position: relative;
   z-index: 2;
   padding: 22px 26px 28px;
   background:
     var(--paper) center / 220px,
-    linear-gradient(178deg, #fbf7ee, #f4eee0);
+    linear-gradient(178deg, var(--sur), var(--sur));
   background-blend-mode: multiply;
   border: 1px solid var(--bdr);
   border-radius: 14px;
@@ -56,13 +57,14 @@
   text-align: center;
 }
 .emptyMark {
+  composes: surfaceTone from './ui.module.css';
   display: grid;
   place-items: center;
   width: 46px;
   height: 46px;
   border: 1px solid var(--bdr2);
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.5);
+  background: var(--sur2);
   color: var(--faint);
 }
 .emptyMark svg {

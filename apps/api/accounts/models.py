@@ -7,6 +7,8 @@ from django.db import models
 
 from cards.identity import BINDER_COLOUR_CHOICES
 
+from .themes import DEFAULT_THEME, THEME_CHOICES
+
 USERNAME_VALIDATOR = RegexValidator(
     r"^[a-z0-9_]{3,20}$",
     "Usernames are 3-20 characters of lowercase letters, numbers, and underscores.",
@@ -39,6 +41,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
     username = models.CharField(max_length=20, unique=True, validators=[USERNAME_VALIDATOR])
     email_verified = models.BooleanField(default=False)
+    theme = models.CharField(max_length=30, choices=THEME_CHOICES, default=DEFAULT_THEME)
     is_demo = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)

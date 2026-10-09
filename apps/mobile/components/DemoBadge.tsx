@@ -1,7 +1,8 @@
-import { StyleSheet, Text } from 'react-native';
-import { colors, fonts } from '@/lib/theme';
+import { Text } from 'react-native';
+import { fonts, createThemedStyles } from '@/lib/theme';
 
 export default function DemoBadge() {
+  const styles = useStyles();
   return (
     <Text style={styles.badge} accessible accessibilityLabel="Demo account">
       {'\u{1F916} '}
@@ -10,7 +11,7 @@ export default function DemoBadge() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((colors) => ({
   badge: {
     alignSelf: 'flex-start',
     paddingHorizontal: 5,
@@ -25,4 +26,4 @@ const styles = StyleSheet.create({
     fontFamily: fonts.medium,
     fontSize: 13,
   },
-});
+}));

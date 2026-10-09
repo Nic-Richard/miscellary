@@ -9,6 +9,11 @@
   flex-direction: column;
 }
 .main {
+  --text: var(--page-text);
+  --muted: var(--page-muted);
+  --faint: var(--page-muted);
+  --accent-ink: var(--page-accent);
+  --accent-deep: var(--page-accent);
   flex: 1;
   width: 100%;
   min-width: 0;
@@ -22,7 +27,7 @@
   justify-content: center;
   gap: 10px 18px;
   padding: 20px 24px 28px;
-  color: var(--muted);
+  color: var(--page-muted);
   font-size: 0.85rem;
 }
 .footer a {

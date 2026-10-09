@@ -3,16 +3,7 @@ import type { Card, CardSetDetail } from '@miscellary/shared';
 import Feather from '@expo/vector-icons/Feather';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
-import {
-  Alert,
-  Modal,
-  PanResponder,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Alert, Modal, PanResponder, Pressable, ScrollView, Text, View } from 'react-native';
 import type { LayoutRectangle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ActionChip from '@/components/ActionChip';
@@ -33,7 +24,7 @@ import {
   saveSetTags,
   updateSet,
 } from '@/lib/endpoints';
-import { colors, fonts } from '@/lib/theme';
+import { fonts, useColors, createThemedStyles } from '@/lib/theme';
 import { Button, ErrorText, Input, Loading, Muted, Tag, Title } from '@/components/ui';
 import VerifyEmailNotice, { useEmailVerified } from '@/components/VerifyEmailNotice';
 
@@ -45,6 +36,8 @@ const STATUS_LABELS: Record<CardSetDetail['status'], string> = {
 };
 
 export default function SetEditorScreen() {
+  const colors = useColors();
+  const styles = useStyles();
   const { id } = useLocalSearchParams<{ id: string }>();
   const verified = useEmailVerified();
   const [set, setSet] = useState<CardSetDetail | null>(null);
@@ -476,7 +469,7 @@ export default function SetEditorScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((colors) => ({
   row: { flexDirection: 'row', gap: 12, alignItems: 'center' },
   publish: {
     backgroundColor: colors.sur,
@@ -530,4 +523,4 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
     textTransform: 'uppercase',
   },
-});
+}));

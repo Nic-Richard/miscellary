@@ -2,11 +2,11 @@ import type { Notification } from '@miscellary/shared';
 import Feather from '@expo/vector-icons/Feather';
 import { router, Stack, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import LoginGate from '@/components/LoginGate';
 import { Button, ErrorText, Loading, Muted } from '@/components/ui';
 import { getNotifications, markNotificationsRead } from '@/lib/endpoints';
-import { colors, fonts } from '@/lib/theme';
+import { fonts, useColors, createThemedStyles } from '@/lib/theme';
 
 const ICONS: Record<Notification['kind'], React.ComponentProps<typeof Feather>['name']> = {
   set_like: 'heart',
@@ -48,6 +48,8 @@ function describe(n: Notification): { text: string; go: (() => void) | null } {
 }
 
 function Row({ notification }: { notification: Notification }) {
+  const colors = useColors();
+  const styles = useStyles();
   const { text, go } = describe(notification);
   const actor = notification.actor;
   const object = notification.card_image ?? notification.set_pack_image;
@@ -104,6 +106,8 @@ const FILTERS: { value: 'all' | Notification['kind']; label: string }[] = [
 ];
 
 function Notifications() {
+  const colors = useColors();
+  const styles = useStyles();
   const [rows, setRows] = useState<Notification[] | null>(null);
   const [filter, setFilter] = useState<'all' | Notification['kind']>('all');
   const [unread, setUnread] = useState(0);
@@ -254,7 +258,7 @@ export default function NotificationsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((colors) => ({
   content: { padding: 16, paddingBottom: 40, gap: 8 },
   head: {
     flexDirection: 'row',
@@ -264,7 +268,7 @@ const styles = StyleSheet.create({
     gap: 10,
     marginBottom: 6,
   },
-  heading: { color: colors.text, fontFamily: fonts.display, fontSize: 30 },
+  heading: { color: colors.pageText, fontFamily: fonts.display, fontSize: 30 },
   row: {
     flexDirection: 'row',
     gap: 12,
@@ -329,4 +333,4 @@ const styles = StyleSheet.create({
   filterOn: { borderColor: colors.accent, backgroundColor: 'rgba(30,110,103,0.1)' },
   filterText: { color: colors.muted, fontFamily: fonts.body, fontSize: 14 },
   filterTextOn: { color: colors.accent, fontFamily: fonts.medium },
-});
+}));

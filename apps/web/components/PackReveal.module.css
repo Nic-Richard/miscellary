@@ -10,8 +10,11 @@
   overflow: auto;
   color: #f3ecdd;
   background:
-    radial-gradient(ellipse 70% 55% at 50% 42%, rgba(120, 190, 178, 0.28), transparent 70%),
-    linear-gradient(rgba(16, 52, 47, 0.9), rgba(12, 38, 35, 0.94)),
+    radial-gradient(ellipse 70% 55% at 50% 42%, rgba(var(--accent-rgb), 0.28), transparent 70%),
+    linear-gradient(
+      color-mix(in srgb, var(--reveal-bg) 90%, transparent),
+      color-mix(in srgb, var(--reveal-bg) 94%, transparent)
+    ),
     var(--cloth-tex) center / 256px;
   isolation: isolate;
 }

@@ -1,9 +1,10 @@
 import type { Tag } from '@miscellary/shared';
 import { router } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { colors, fonts } from '@/lib/theme';
+import { Pressable, Text, View } from 'react-native';
+import { fonts, createThemedStyles } from '@/lib/theme';
 
 export default function TagChips({ tags, label }: { tags: Tag[]; label?: string }) {
+  const styles = useStyles();
   if (!tags.length) return null;
   return (
     <View accessibilityLabel={label} style={styles.row}>
@@ -22,7 +23,7 @@ export default function TagChips({ tags, label }: { tags: Tag[]; label?: string 
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((colors) => ({
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   chip: {
     borderWidth: 1,
@@ -36,4 +37,4 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
   },
   text: { color: colors.muted, fontFamily: fonts.body, fontSize: 14 },
-});
+}));

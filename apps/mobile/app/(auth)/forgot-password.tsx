@@ -3,9 +3,10 @@ import { useState } from 'react';
 import { Text, View } from 'react-native';
 import { Button, ErrorText, Input, Muted, Screen } from '@/components/ui';
 import { requestPasswordReset } from '@/lib/endpoints';
-import { colors } from '@/lib/theme';
+import { useColors } from '@/lib/theme';
 
 export default function ForgotPasswordScreen() {
+  const colors = useColors();
   const [email, setEmail] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);

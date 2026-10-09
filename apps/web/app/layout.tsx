@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import Script from 'next/script';
 import type { ReactNode } from 'react';
+import { THEMES, THEME_STORAGE_KEY } from '@miscellary/shared';
 import {
   Alfa_Slab_One,
   Archivo_Black,
@@ -22,6 +23,7 @@ import './globals.css';
 import { AuthProvider } from '@/lib/auth';
 import { SITE_URL } from '@/lib/seo';
 import Nav from '@/components/Nav';
+import Theme from '@/components/Theme';
 import SidePanelScroll from '@/components/SidePanelScroll';
 import styles from './layout.module.css';
 
@@ -71,6 +73,8 @@ const fonts = [
 const DESCRIPTION =
   'Turn collections into trading cards. Make your own set, open free packs every day, and trade for the ones you’re missing.';
 
+const themeStyles = Object.fromEntries(THEMES.map((theme) => [theme.id, theme.css]));
+
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: { default: 'Miscellary', template: '%s | Miscellary' },
@@ -84,7 +88,18 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={fonts}>
       <body>
+        <Script id="colour-theme" strategy="beforeInteractive">{`
+          try {
+            const id = localStorage.getItem(${JSON.stringify(THEME_STORAGE_KEY)});
+            const themes = ${JSON.stringify(themeStyles)};
+            if (Object.hasOwn(themes, id)) {
+              for (const [name, value] of Object.entries(themes[id])) document.documentElement.style.setProperty(name, value);
+              document.documentElement.dataset.theme = id;
+            }
+          } catch {}
+        `}</Script>
         <AuthProvider>
+          <Theme />
           <SidePanelScroll />
           <div className={styles.shell}>
             <Nav />

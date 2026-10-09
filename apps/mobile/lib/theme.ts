@@ -1,19 +1,29 @@
-export const colors = {
-  bg: '#f4eee1',
-  sur: '#f9f4ea',
-  sur2: '#ebe3d1',
-  bdr: '#ddd3bf',
-  bdr2: '#c7bba3',
-  text: '#372e25',
-  muted: '#6f6355',
-  faint: '#807362',
-  accent: '#1e6e67',
-  accentText: '#fffdf6',
-  danger: '#ae4a3a',
-  gold: '#97722b',
-  green: '#4c7a5a',
-  cloth: '#6c948e',
-};
+import { getTheme } from '@miscellary/shared';
+import type { ThemeColors } from '@miscellary/shared';
+import { StyleSheet } from 'react-native';
+import { useAuth } from './auth';
+
+export const colors = getTheme().colors;
+
+export function useColors(): ThemeColors {
+  const { user } = useAuth();
+  return getTheme(user?.theme).colors;
+}
+
+export function createThemedStyles<T extends StyleSheet.NamedStyles<T>>(
+  factory: (palette: ThemeColors) => T,
+): () => T {
+  const cache = new WeakMap<ThemeColors, T>();
+  return function useStyles() {
+    const palette = useColors();
+    let styles = cache.get(palette);
+    if (!styles) {
+      styles = StyleSheet.create(factory(palette));
+      cache.set(palette, styles);
+    }
+    return styles;
+  };
+}
 
 export const fonts = {
   display: 'BebasNeue',

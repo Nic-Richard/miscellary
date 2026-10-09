@@ -178,7 +178,7 @@ export default function BinderClient({
     setPackPoints(undefined);
     setGain(null);
     return () => requests.invalidate();
-  }, [slug, user, requests]);
+  }, [slug, user?.id, requests]);
 
   useEffect(() => {
     if (loading) return;

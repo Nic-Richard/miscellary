@@ -34,7 +34,7 @@
   text-decoration: none;
 }
 .handle:hover {
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 
 .badge,
@@ -53,9 +53,9 @@
   border-color: var(--gold);
 }
 .accepted {
-  color: var(--accent);
+  color: var(--accent-ink);
   border-color: var(--accent);
-  background: rgba(39, 139, 130, 0.1);
+  background: rgba(var(--accent-rgb), 0.1);
 }
 .rejected,
 .cancelled {
@@ -97,7 +97,7 @@
   font-weight: 700;
 }
 .sideLabel b {
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 .cards {
   display: flex;
@@ -192,7 +192,7 @@
   padding: 0;
   border: 0;
   background: none;
-  color: var(--accent);
+  color: var(--accent-ink);
   font-family: var(--body);
   font-size: 15px;
   font-weight: 700;

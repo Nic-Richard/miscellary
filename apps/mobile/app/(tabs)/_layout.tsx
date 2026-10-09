@@ -3,7 +3,7 @@ import { Pressable, Text } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 import Svg, { Path } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, fonts } from '@/lib/theme';
+import { fonts, useColors } from '@/lib/theme';
 
 function icon(name: React.ComponentProps<typeof Feather>['name']) {
   return ({ color, size }: { color: string; size: number }) => (
@@ -27,12 +27,13 @@ function cardsIcon({ color, size }: { color: string; size: number }) {
 }
 
 export default function TabsLayout() {
+  const colors = useColors();
   const insets = useSafeAreaInsets();
   return (
     <Tabs
       screenOptions={{
         headerStyle: { backgroundColor: colors.bg },
-        headerTintColor: colors.text,
+        headerTintColor: colors.pageText,
         headerTitleStyle: { fontFamily: fonts.display, fontSize: 26 },
         headerShadowVisible: false,
         tabBarStyle: {
@@ -53,7 +54,7 @@ export default function TabsLayout() {
             {children}
           </Text>
         ),
-        tabBarActiveTintColor: colors.accent,
+        tabBarActiveTintColor: colors.accentInk,
         tabBarInactiveTintColor: colors.muted,
         tabBarHideOnKeyboard: true,
         sceneStyle: { backgroundColor: colors.bg },

@@ -67,7 +67,7 @@
 }
 .drop:hover {
   border-color: var(--accent);
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 .thumb {
   max-height: 220px;
@@ -76,7 +76,7 @@
   border-radius: 4px;
 }
 .change {
-  color: var(--accent);
+  color: var(--accent-ink);
   font-size: 12px;
   letter-spacing: 0.1em;
   text-transform: uppercase;

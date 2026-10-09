@@ -1,15 +1,17 @@
 import type { SearchResults } from '@miscellary/shared';
 import { Link, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import { cardCode, personHandle } from '@miscellary/shared';
 import CardPreview from '@/components/CardPreview';
 import { search } from '@/lib/endpoints';
 import { readPublicCache, writePublicCache } from '@/lib/publicCache';
-import { colors } from '@/lib/theme';
+import { useColors, createThemedStyles } from '@/lib/theme';
 import { Loading, Muted, Title } from '@/components/ui';
 
 export default function SearchScreen() {
+  const colors = useColors();
+  const styles = useStyles();
   const { q } = useLocalSearchParams<{ q: string }>();
   const [results, setResults] = useState<SearchResults | null>(null);
 
@@ -94,8 +96,8 @@ export default function SearchScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((colors) => ({
   h2: { color: colors.muted, fontSize: 14, fontWeight: '700', marginTop: 12 },
   row: { paddingVertical: 6 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-});
+}));

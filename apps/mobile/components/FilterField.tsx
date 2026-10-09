@@ -1,6 +1,6 @@
 import Feather from '@expo/vector-icons/Feather';
-import { Pressable, StyleSheet, TextInput, View } from 'react-native';
-import { colors, fonts } from '@/lib/theme';
+import { Pressable, TextInput, View } from 'react-native';
+import { fonts, useColors, createThemedStyles } from '@/lib/theme';
 
 export default function FilterField({
   value,
@@ -15,6 +15,8 @@ export default function FilterField({
   label: string;
   style?: object;
 }) {
+  const colors = useColors();
+  const styles = useStyles();
   return (
     <View style={[styles.box, style]}>
       <Feather name="search" size={17} color={colors.muted} />
@@ -45,7 +47,7 @@ export default function FilterField({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((colors) => ({
   box: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -66,4 +68,4 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   clear: { padding: 8 },
-});
+}));

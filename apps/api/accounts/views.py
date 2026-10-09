@@ -29,6 +29,7 @@ from .serializers import (
     GoogleRegisterSerializer,
     LoginSerializer,
     PasswordResetConfirmSerializer,
+    PreferencesSerializer,
     ProfileUpdateSerializer,
     RegisterSerializer,
     TokenSerializer,
@@ -127,6 +128,17 @@ class MeView(APIView):
         serializer = ProfileUpdateSerializer(user.profile, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
+        return Response(CurrentUserSerializer(user).data)
+
+
+class PreferencesView(APIView):
+    def patch(self, request: Request) -> Response:
+        user = _current_user(request)
+        serializer = PreferencesSerializer(user, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        if "theme" in serializer.validated_data:
+            user.theme = serializer.validated_data["theme"]
+            user.save(update_fields=["theme"])
         return Response(CurrentUserSerializer(user).data)
 
 
