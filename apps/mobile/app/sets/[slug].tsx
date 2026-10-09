@@ -7,7 +7,15 @@ import {
   spareCount,
   stackOwnedCards,
 } from '@miscellary/shared';
-import type { Card, CardSetDetail, OwnedCard, PackOpening, PackStatus } from '@miscellary/shared';
+import type {
+  Card,
+  CardSetDetail,
+  OwnedCard,
+  PackOpening,
+  PackStatus,
+  PackPayment,
+} from '@miscellary/shared';
+import ExtraPackAction from '@/components/ExtraPackAction';
 import Feather from '@expo/vector-icons/Feather';
 import { Link, router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -56,7 +64,7 @@ const FOLLOW_SET_ACTION = 'follow-set';
 export default function BinderScreen() {
   const colors = useColors();
   const styles = useStyles();
-  const params = useLocalSearchParams<{ slug: string; do?: string; tab?: string }>();
+  const params = useLocalSearchParams<{ slug: string; do?: string; tab?: string; card?: string }>();
   const { slug } = params;
   const insets = useSafeAreaInsets();
   const { width: viewportWidth } = useWindowDimensions();
@@ -68,6 +76,7 @@ export default function BinderScreen() {
   const [opening, setOpening] = useState<PackOpening | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const openingPending = useRef(false);
   const [tab, setTab] = useState<'binder' | 'all' | 'collected'>(
     params.tab === 'collected' ? 'collected' : 'binder',
   );
@@ -82,6 +91,7 @@ export default function BinderScreen() {
   const setRequest = useRef(0);
   const statusRequest = useRef(0);
   const socialPending = useRef(new Set<string>());
+  const inspectedLink = useRef<string | null>(null);
 
   useEffect(() => {
     setOwned(null);
@@ -89,6 +99,17 @@ export default function BinderScreen() {
     setGain(null);
     return () => requests.invalidate();
   }, [slug, user, requests]);
+
+  useEffect(() => {
+    const key = `${slug}:${params.card ?? ''}`;
+    if (!params.card) inspectedLink.current = null;
+    if (!params.card || set?.slug !== slug || inspectedLink.current === key) return;
+    const card = set.cards.find((item) => item.id === params.card);
+    if (card) {
+      inspectedLink.current = key;
+      setSelected({ card });
+    }
+  }, [slug, params.card, set]);
 
   useEffect(() => {
     const request = ++setRequest.current;
@@ -139,7 +160,9 @@ export default function BinderScreen() {
   }, [owned, slug, tab, user, requests]);
 
   const open = useCallback(
-    async (usePoints: boolean) => {
+    async (usePoints: PackPayment) => {
+      if (openingPending.current) return false;
+      openingPending.current = true;
       setBusy(true);
       setError(null);
       try {
@@ -148,9 +171,12 @@ export default function BinderScreen() {
         setStatus(result.status);
         requests.invalidate();
         setOwned(null);
+        return true;
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Could not open the pack.');
+        return false;
       } finally {
+        openingPending.current = false;
         setBusy(false);
       }
     },
@@ -556,6 +582,9 @@ export default function BinderScreen() {
                 disabled={busy || status.points < status.pack_cost}
                 onPress={() => void open(true)}
               />
+              {status.monetization_enabled ? (
+                <ExtraPackAction slug={slug} busy={busy} onOpen={open} />
+              ) : null}
             </>
           ) : null}
           <ErrorText>{error}</ErrorText>

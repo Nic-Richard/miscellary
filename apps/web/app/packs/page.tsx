@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { cardCode, personHandle, personName } from '@miscellary/shared';
-import type { Card, CardSetSummary, PackEntry, PackOpening } from '@miscellary/shared';
+import type { Card, CardSetSummary, PackEntry, PackOpening, PackPayment } from '@miscellary/shared';
+import ExtraPackAction from '@/components/ExtraPackAction';
 import PageHeader from '@/components/PageHeader';
 import PointGain from '@/components/PointGain';
 import PersonLink from '@/components/PersonLink';
@@ -98,7 +99,7 @@ function Post({
   entry: PackEntry;
   now: number;
   onUnfollow: () => void;
-  onOpen: (usePoints: boolean) => void;
+  onOpen: (usePoints: PackPayment) => Promise<boolean>;
   onRecycle: () => void;
   recycling: boolean;
   gain: { amount: number; key: number } | null;
@@ -167,6 +168,9 @@ function Post({
           </div>
 
           <div className={styles.act}>
+            {entry.monetization_enabled ? (
+              <ExtraPackAction slug={set.slug} busy={busy} onOpen={onOpen} />
+            ) : null}
             {entry.free_available ? (
               <button
                 type="button"
@@ -355,8 +359,8 @@ export default function PacksPage() {
     };
   }, [entries]);
 
-  async function open(slug: string, usePoints: boolean) {
-    if (mutation.current) return;
+  async function open(slug: string, usePoints: PackPayment) {
+    if (mutation.current) return false;
     mutation.current = true;
     setBusy(true);
     setError(null);
@@ -369,8 +373,10 @@ export default function PacksPage() {
           ? { ...result, card_set: reusePackArtwork(result.card_set, identity, await artwork) }
           : result,
       );
+      return true;
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not open that pack.');
+      return false;
     } finally {
       mutation.current = false;
       setBusy(false);
@@ -524,7 +530,7 @@ export default function PacksPage() {
                 recycling={recycling === entry.card_set.slug}
                 gain={gain?.slug === entry.card_set.slug ? gain : null}
                 onRecycle={() => void recycleAll(entry.card_set.slug)}
-                onOpen={(usePoints) => void open(entry.card_set.slug, usePoints)}
+                onOpen={(usePoints) => open(entry.card_set.slug, usePoints)}
                 onUnfollow={() => void unfollow(entry.card_set.slug)}
               />
             ))

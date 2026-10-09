@@ -151,6 +151,13 @@ export default function BrowseScreen() {
               Make your own set, open a free pack from every set each day, and trade for the ones
               you are missing.
             </Text>
+            {process.env.EXPO_PUBLIC_LOUNGE_ENABLED === 'true' && (
+              <Button
+                kind="secondary"
+                title="Visit the Lounge"
+                onPress={() => router.push('/lounge')}
+              />
+            )}
             <View style={styles.search}>
               <Feather name="search" size={18} color={colors.muted} />
               <Input

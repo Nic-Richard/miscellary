@@ -10,6 +10,8 @@ class PackOpening(models.Model):
     class Kind(models.TextChoices):
         FREE = "free", "Daily free pack"
         POINTS = "points", "Bought with set points"
+        STARS = "stars", "Bought with Stars and set points"
+        BONUS = "bonus", "Monthly bonus pack"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(
@@ -20,15 +22,26 @@ class PackOpening(models.Model):
     # UTC date, so the database itself enforces one free pack per set per day.
     opened_on = models.DateField()
     opened_at = models.DateTimeField(auto_now_add=True)
+    request_key = models.UUIDField(null=True, blank=True)
+    points_spent = models.PositiveIntegerField(default=0)
+    stars_spent_units = models.PositiveBigIntegerField(default=0)
+    subscription_period = models.ForeignKey(
+        "billing.SubscriptionPeriod", null=True, blank=True, on_delete=models.SET_NULL
+    )
 
     class Meta:
         ordering = ["-opened_at"]
         constraints = [
             models.UniqueConstraint(
+                fields=["user", "request_key"],
+                condition=models.Q(request_key__isnull=False),
+                name="one_pack_per_payment_request",
+            ),
+            models.UniqueConstraint(
                 fields=["user", "card_set", "opened_on"],
                 condition=models.Q(kind="free"),
                 name="one_free_pack_per_set_per_day",
-            )
+            ),
         ]
 
     def __str__(self) -> str:

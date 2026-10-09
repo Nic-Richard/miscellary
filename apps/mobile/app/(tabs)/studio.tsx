@@ -5,6 +5,7 @@ import { Link, router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import LoginGate from '@/components/LoginGate';
+import CreatorStatsPanel from '@/components/CreatorStatsPanel';
 import { createSet, listMySets } from '@/lib/endpoints';
 import { fonts, useColors, createThemedStyles } from '@/lib/theme';
 import { Button, ErrorText, Input, Muted } from '@/components/ui';
@@ -55,6 +56,7 @@ function Studio() {
       contentContainerStyle={{ padding: 16, gap: 10 }}
     >
       <Muted>Your sets. Drafts stay private until you publish.</Muted>
+      <CreatorStatsPanel />
       <Input
         placeholder="New set title (e.g. Rocks from the backyard)"
         value={title}

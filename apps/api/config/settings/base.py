@@ -38,7 +38,21 @@ INSTALLED_APPS = [
     "packs",
     "trades",
     "social",
+    "billing",
+    "lounge",
 ]
+
+MONETIZATION_ENABLED = env.bool("MONETIZATION_ENABLED", default=False)
+MONETIZATION_PREVIEW = env.bool("MONETIZATION_PREVIEW", default=False)
+LOUNGE_ENABLED = env.bool("LOUNGE_ENABLED", default=False)
+STRIPE_CHECKOUT_ENABLED = env.bool("STRIPE_CHECKOUT_ENABLED", default=False)
+STRIPE_LIVE_APPROVED = env.bool("STRIPE_LIVE_APPROVED", default=False)
+STRIPE_SECRET_KEY = env.str("STRIPE_SECRET_KEY", default="")
+STRIPE_WEBHOOK_SECRET = env.str("STRIPE_WEBHOOK_SECRET", default="")
+STRIPE_PRICE_IDS = env.json("STRIPE_PRICE_IDS", default={})
+STRIPE_PORTAL_CONFIGURATION = env.str("STRIPE_PORTAL_CONFIGURATION", default="")
+STRIPE_RETURN_URL = env.str("STRIPE_RETURN_URL", default="https://miscellary.com/account")
+STRIPE_MANAGED_PAYMENTS = env.bool("STRIPE_MANAGED_PAYMENTS", default=True)
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -118,6 +132,11 @@ REST_FRAMEWORK = {
         "packs": "30/min",
         "reports": "10/hour",
         "comments": "20/hour",
+        "billing": "10/min",
+        "lounge.post": "10/hour",
+        "lounge.reply": "30/hour",
+        "lounge.vote": "60/min",
+        "lounge.block": "20/hour",
     },
 }
 

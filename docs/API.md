@@ -42,7 +42,7 @@ Send `X-Client-Platform: mobile` to receive refresh tokens in the body instead o
 | GET              | `/me/sets/`                           | bearer   | my sets                                                                               |
 | POST             | `/me/sets/`                           | bearer   | `{title, description?}` → 201 draft                                                   |
 | GET/PATCH/DELETE | `/me/sets/{id}/`                      | bearer   | PATCH drafts only; DELETE hard-deletes drafts and soft-deletes published sets         |
-| GET              | `/me/sets/{id}/publish/`              | bearer   | `{problems: []}`, showing what blocks publishing                                      |
+| GET              | `/me/sets/{id}/publish/`              | bearer   | `{problems: [], publishing}`, including the same monthly allowance as membership      |
 | POST             | `/me/sets/{id}/publish/`              | bearer   | publish; 400 `{error, problems}` if blocked                                           |
 | POST             | `/me/sets/{id}/cards/`                | bearer   | `{image_id, title, rarity, description, printed_text, template_key, template_config}` |
 | PATCH/DELETE     | `/me/sets/{id}/cards/{card_id}/`      | bearer   | draft only                                                                            |
@@ -140,3 +140,60 @@ moved in the meantime the offer is cancelled instead.
 
 Platform removal of a set (admin action) wipes every distributed copy and cancels pending trades
 that included them. A creator's own delete keeps collectors' copies.
+
+## Stars and membership
+
+Disabled by default. See [billing setup and release gates](BILLING.md).
+
+| Method    | Path                       | Auth             | Notes                                                                                                                                                                                 |
+| --------- | -------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GET/PATCH | `/me/membership/`          | bearer           | Balance, product catalogue, paid-period/publishing usage, available website purchase controls and pending checkout keys. PATCH only accepts `{show_badge}`.                           |
+| GET       | `/me/creator-stats/`       | bearer           | Own aggregate counts; paid subscribers also receive per-set counts, opening types, daily activity and Stars rewards. No collector identities or another creator's private statistics. |
+| POST      | `/me/billing/checkout/`    | bearer, web      | `{product, request_key}`; fixed server price, verified email and account-bound hosted checkout. No client amount or return URL.                                                       |
+| POST      | `/me/billing/portal/`      | bearer, web      | Own website purchase management URL.                                                                                                                                                  |
+| POST      | `/billing/stripe/webhook/` | Stripe signature | Raw-body signature/timestamp verification, event deduplication and provider-verified fulfillment. No client balance grant.                                                            |
+
+Pack status adds `monetization_enabled` and `paid_quote` (null while disabled).
+Quotes include points/Stars split, balance, monthly bonus packs and effective rarity/
+per-card odds. Open accepts `{payment: "stars", request_key, max_stars_units}` or
+`{payment: "bonus", request_key}` in addition to the existing free/points request.
+An explicit request key makes retries reuse the opening. Stars requests require the
+confirmed maximum; the server never exceeds it. Creator rewards apply only to the
+Stars portion, not free, recycled-point or subscription bonus packs.
+
+Profiles add `subscriber_badge`, true only during a paid period with visibility enabled.
+
+Creator stats include monthly publication usage. Subscriber details add current collection
+holders, complete binders and average completion per set (unique cards, not duplicate copies),
+plus the five most-liked cards from currently published sets. Daily activity covers 30 UTC
+calendar days including today. Opening/collector totals remain historical; completion changes
+with trades and recycling. Only aggregates are returned, never collector identities.
+
+`GET /me/cards/?q=` searches the signed-in collector's card/set titles and composes with the
+existing `set` and `page` filters. It does not change collection ordering or ownership scope.
+
+## Lounge
+
+Disabled by default with `LOUNGE_ENABLED`; posting, replies and likes require verified email.
+All reads return at most 20 records per page.
+
+Creating a reply returns its full rendered record with status 201, so clients can add it in
+place without rereading or remounting the thread. Removed replies remain as tombstones.
+
+| Method      | Path                                                     | Notes                                                                                                                                                                        |
+| ----------- | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GET/POST    | `/lounge/`                                               | New/Top/Active feed; `sort`, `window=today/week/month/all`, `page`. POST `{title, body, rules_accepted, card_ids?, style?}`; cards must be owned copies from published sets. |
+| GET/DELETE  | `/lounge/posts/<id>/`                                    | Public discussion or retained tombstone; deletion restricted to author/staff.                                                                                                |
+| GET/POST    | `/lounge/posts/<id>/replies/`                            | Page roots or `parent_id` children. POST `{body, parent_id?}`; one thread level, same-post parent required.                                                                  |
+| DELETE      | `/lounge/replies/<id>/`                                  | Author/staff removal, keeping child replies.                                                                                                                                 |
+| POST/DELETE | `/lounge/posts/<id>/vote/`, `/lounge/replies/<id>/vote/` | Idempotent like/unlike; no paid ranking advantage.                                                                                                                           |
+| GET         | `/me/lounge-blocks/`                                     | Own Lounge block list.                                                                                                                                                       |
+| POST/DELETE | `/me/lounge-blocks/<username>/`                          | Mutual Lounge-only blocking/unblocking. Other app features unchanged.                                                                                                        |
+
+`/reports/` also accepts exactly one `lounge_post_id` or `lounge_reply_id` target.
+Retained cards from creator-deleted sets can still be showcased, like profile binders.
+Free posts allow one card/plain layout; subscribers allow up to six in plain or binder
+layouts. Legacy display posts render as plain cards without losing attachments.
+Subscription expiry preserves posts/cards but shows the plain layout. Traded,
+recycled or removed cards become placeholders. Membership's optional `preview` field
+is true only for the explicitly enabled local development preview.

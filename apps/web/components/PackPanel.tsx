@@ -2,8 +2,9 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
-import type { CardSetSummary, PackOpening, PackStatus } from '@miscellary/shared';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type { CardSetSummary, PackOpening, PackPayment, PackStatus } from '@miscellary/shared';
+import ExtraPackAction from './ExtraPackAction';
 import { useAuth } from '@/lib/auth';
 import { getPackStatus, openPack } from '@/lib/packs';
 import { loginHref } from '@/lib/returnTo';
@@ -41,6 +42,7 @@ export default function PackPanel({
   const [status, setStatus] = useState<PackStatus | null>(null);
   const [opening, setOpening] = useState<PackOpening | null>(null);
   const [busy, setBusy] = useState(false);
+  const mutation = useRef(false);
   const [error, setError] = useState<string | null>(null);
   const [now, setNow] = useState(() => Date.now());
 
@@ -58,7 +60,9 @@ export default function PackPanel({
   }, [status]);
 
   const open = useCallback(
-    async (usePoints: boolean) => {
+    async (usePoints: PackPayment) => {
+      if (mutation.current) return false;
+      mutation.current = true;
       setBusy(true);
       setError(null);
       const artwork = preloadPackArtwork(identity);
@@ -70,9 +74,12 @@ export default function PackPanel({
         });
         setStatus(result.status);
         onOpened?.(result);
+        return true;
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Could not open the pack.');
+        return false;
       } finally {
+        mutation.current = false;
         setBusy(false);
       }
     },
@@ -165,6 +172,9 @@ export default function PackPanel({
             </span>
           )}
           {error ? <p className={ui.error}>{error}</p> : null}
+          {status.monetization_enabled ? (
+            <ExtraPackAction slug={slug} busy={busy} onOpen={open} />
+          ) : null}
         </div>
         {pouch}
       </div>

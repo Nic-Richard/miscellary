@@ -1,4 +1,5 @@
 import type { Rarity } from './rarity';
+import type { PaidPackQuote } from './membership';
 
 export interface ApiError {
   error: string;
@@ -302,6 +303,8 @@ export interface Paginated<T> {
 }
 
 export interface PackStatus {
+  monetization_enabled?: boolean;
+  paid_quote?: PaidPackQuote | null;
   free_available: boolean;
   points: number;
   pack_cost: number;
@@ -324,7 +327,7 @@ export interface OwnedCard {
 
 export interface PackOpening {
   id: string;
-  kind: 'free' | 'points';
+  kind: 'free' | 'points' | 'stars' | 'bonus';
   card_set: CardSetSummary;
   cards: OwnedCard[];
   opened_at: string;
@@ -366,6 +369,7 @@ export interface ShowcaseSlot {
 }
 
 export interface ProfilePage extends PublicProfile {
+  subscriber_badge?: boolean;
   follower_count: number;
   following_count: number;
   set_count: number;
@@ -378,6 +382,7 @@ export interface ProfilePage extends PublicProfile {
 }
 
 export interface PackEntry {
+  monetization_enabled?: boolean;
   card_set: CardSetSummary;
   free_available: boolean;
   resets_at: string;

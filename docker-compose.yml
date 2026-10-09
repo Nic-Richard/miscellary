@@ -64,6 +64,10 @@ services:
       # machine on the LAN, the same host Metro reports.
       # MEDIA_HOST=http://10.0.0.84:9000 docker compose up
       AWS_S3_PUBLIC_ENDPOINT_URL: ${MEDIA_HOST:-http://localhost:9000}
+      MONETIZATION_ENABLED: ${MONETIZATION_ENABLED:-false}
+      MONETIZATION_PREVIEW: ${MONETIZATION_PREVIEW:-false}
+      LOUNGE_ENABLED: ${LOUNGE_ENABLED:-false}
+      STRIPE_CHECKOUT_ENABLED: 'false'
     volumes:
       - .:/repo
       - api-venv:/repo/apps/api/.venv
@@ -86,6 +90,8 @@ services:
     env_file: apps/web/.env
     environment:
       API_INTERNAL_URL: http://api:8000
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+      NEXT_PUBLIC_LOUNGE_ENABLED: ${LOUNGE_ENABLED:-false}
     volumes:
       - .:/repo
       - node-modules:/repo/node_modules

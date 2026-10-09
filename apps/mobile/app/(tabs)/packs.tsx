@@ -1,5 +1,6 @@
 import { cardCode, personName } from '@miscellary/shared';
-import type { Card, CardSetSummary, PackEntry, PackOpening } from '@miscellary/shared';
+import type { Card, CardSetSummary, PackEntry, PackOpening, PackPayment } from '@miscellary/shared';
+import ExtraPackAction from '@/components/ExtraPackAction';
 import Feather from '@expo/vector-icons/Feather';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -87,7 +88,7 @@ function Post({
   entry: PackEntry;
   now: number;
   onUnfollow: () => void;
-  onOpen: (usePoints: boolean) => void;
+  onOpen: (usePoints: PackPayment) => Promise<boolean>;
   onRecycle: () => void;
   recycling: boolean;
   gain: { amount: number; key: number } | null;
@@ -175,6 +176,9 @@ function Post({
       </View>
 
       <View style={styles.actions}>
+        {entry.monetization_enabled ? (
+          <ExtraPackAction slug={set.slug} busy={busy} onOpen={onOpen} />
+        ) : null}
         {entry.free_available ? (
           <Button title="Open today's pack" disabled={busy} onPress={() => onOpen(false)} />
         ) : affordable ? (
@@ -332,15 +336,17 @@ function Packs() {
     return () => clearInterval(timer);
   }, [entries]);
 
-  async function open(slug: string, usePoints: boolean) {
-    if (mutation.current) return;
+  async function open(slug: string, usePoints: PackPayment) {
+    if (mutation.current) return false;
     mutation.current = true;
     setBusy(true);
     setError(null);
     try {
       setOpening(await openPack(slug, usePoints));
+      return true;
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not open that pack.');
+      return false;
     } finally {
       mutation.current = false;
       setBusy(false);
@@ -483,7 +489,7 @@ function Packs() {
               recycling={recycling === entry.card_set.slug}
               gain={gain?.slug === entry.card_set.slug ? gain : null}
               onRecycle={() => void recycleAll(entry.card_set.slug)}
-              onOpen={(usePoints) => void open(entry.card_set.slug, usePoints)}
+              onOpen={(usePoints) => open(entry.card_set.slug, usePoints)}
               onUnfollow={() => void unfollow(entry.card_set.slug)}
             />
           ))

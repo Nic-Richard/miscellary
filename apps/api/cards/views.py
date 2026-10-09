@@ -10,6 +10,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from accounts.permissions import EmailVerified
+from billing.actions import publishing_summary
 
 from . import tags as tagging
 from . import templates
@@ -194,7 +195,13 @@ class PublishSetView(APIView):
 
     def get(self, request: Request, set_id) -> Response:
         """Preview: what would stop this set from publishing right now."""
-        return Response({"problems": publish_problems(my_set(request, set_id))})
+        card_set = my_set(request, set_id)
+        return Response(
+            {
+                "problems": publish_problems(card_set),
+                "publishing": publishing_summary(card_set.creator),
+            }
+        )
 
     def post(self, request: Request, set_id) -> Response:
         card_set = my_set(request, set_id)

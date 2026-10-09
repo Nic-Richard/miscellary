@@ -70,6 +70,8 @@ export const sendReport = (body: {
   set_slug?: string;
   card_id?: string;
   comment_id?: string;
+  lounge_post_id?: string;
+  lounge_reply_id?: string;
   username?: string;
   reason: ReportReason;
   details: string;

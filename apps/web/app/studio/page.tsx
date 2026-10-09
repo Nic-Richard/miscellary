@@ -7,6 +7,7 @@ import type { FormEvent } from 'react';
 import { SET_TITLE_MAX_LENGTH } from '@miscellary/shared';
 import type { CardSetSummary } from '@miscellary/shared';
 import PageHeader from '@/components/PageHeader';
+import CreatorStatsPanel from '@/components/CreatorStatsPanel';
 import { Empty } from '@/components/Sheet';
 import SetTile from '@/components/SetTile';
 import tileStyles from '@/components/SetTile.module.css';
@@ -49,6 +50,7 @@ export default function StudioPage() {
   return (
     <section className={wide.page}>
       <PageHeader title="Studio" description="Your sets. Drafts stay private until you publish." />
+      <CreatorStatsPanel />
 
       <form className={`${ui.ticket} ${styles.create}`} onSubmit={onCreate}>
         <label className={ui.label} htmlFor="new-set-title">

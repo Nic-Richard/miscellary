@@ -1,5 +1,5 @@
 import { CARD_TAG_MAX, cardCode, SET_TAG_MAX, SET_TITLE_MAX_LENGTH } from '@miscellary/shared';
-import type { Card, CardSetDetail } from '@miscellary/shared';
+import type { Card, CardSetDetail, PublishingAllowance } from '@miscellary/shared';
 import Feather from '@expo/vector-icons/Feather';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
@@ -27,6 +27,7 @@ import {
 import { fonts, useColors, createThemedStyles } from '@/lib/theme';
 import { Button, ErrorText, Input, Loading, Muted, Tag, Title } from '@/components/ui';
 import VerifyEmailNotice, { useEmailVerified } from '@/components/VerifyEmailNotice';
+import PublishingNotice from '@/components/PublishingNotice';
 
 const STATUS_LABELS: Record<CardSetDetail['status'], string> = {
   draft: 'Draft set',
@@ -42,6 +43,7 @@ export default function SetEditorScreen() {
   const verified = useEmailVerified();
   const [set, setSet] = useState<CardSetDetail | null>(null);
   const [problems, setProblems] = useState<string[]>([]);
+  const [allowance, setAllowance] = useState<PublishingAllowance | null>(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -141,6 +143,7 @@ export default function SetEditorScreen() {
       setTitle(s.title);
       setDescription(s.description);
       setProblems(p.problems);
+      setAllowance(p.publishing);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not load the set.');
     }
@@ -314,6 +317,7 @@ export default function SetEditorScreen() {
         <View style={styles.publish}>
           <Text style={{ color: colors.text, fontWeight: '700' }}>Publish</Text>
           <VerifyEmailNotice>Verify your email address to publish.</VerifyEmailNotice>
+          {allowance && <PublishingNotice allowance={allowance} />}
           {problems.length ? (
             problems.map((p) => <Muted key={p}>• {p}</Muted>)
           ) : (

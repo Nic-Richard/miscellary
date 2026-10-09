@@ -13,6 +13,7 @@ import {
 import { useAuth } from '@/lib/auth';
 import PasswordInput from './PasswordInput';
 import ThemeSelector from './ThemeSelector';
+import MembershipPanel from './MembershipPanel';
 import useGoogleConfirmation from './useGoogleConfirmation';
 import ui from './ui.module.css';
 import styles from './AccountSecurity.module.css';
@@ -471,20 +472,23 @@ export default function AccountSecurity({
   onChanged: () => Promise<void>;
 }) {
   return (
-    <div className={`${ui.panel} ${styles.sheet}`}>
-      <div className={ui.rows}>
-        <Row
-          title="Appearance"
-          note="Your colour theme is saved to your account, on web and mobile."
-        >
-          <ThemeSelector />
-        </Row>
-        <Username user={user} onChanged={onChanged} />
-        <Email user={user} />
-        <Password user={user} onChanged={onChanged} />
-        <GoogleConnection user={user} onChanged={onChanged} />
-        <CloseAccount />
+    <>
+      <MembershipPanel />
+      <div className={`${ui.panel} ${styles.sheet}`}>
+        <div className={ui.rows}>
+          <Row
+            title="Appearance"
+            note="Your colour theme is saved to your account, on web and mobile."
+          >
+            <ThemeSelector />
+          </Row>
+          <Username user={user} onChanged={onChanged} />
+          <Email user={user} />
+          <Password user={user} onChanged={onChanged} />
+          <GoogleConnection user={user} onChanged={onChanged} />
+          <CloseAccount />
+        </div>
       </div>
-    </div>
+    </>
   );
 }

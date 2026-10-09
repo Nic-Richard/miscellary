@@ -12,6 +12,8 @@ class ReportAdmin(admin.ModelAdmin):
         "card",
         "comment",
         "reported_user",
+        "lounge_post",
+        "lounge_reply",
         "status",
         "created_at",
     ]

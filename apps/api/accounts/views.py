@@ -1,6 +1,7 @@
 import contextlib
 import logging
 
+import stripe
 from django.conf import settings
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
@@ -14,6 +15,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
+
+from billing.actions import BillingError
 
 from . import cookies, emails, google
 from .lifecycle import delete_account, revoke_sessions
@@ -198,7 +201,12 @@ class DeleteAccountView(APIView):
     def post(self, request: Request) -> Response:
         serializer = ConfirmPasswordSerializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
-        delete_account(_current_user(request))
+        try:
+            delete_account(_current_user(request))
+        except (BillingError, stripe.StripeError):
+            raise ValidationError(
+                "Could not close your payment account. Please try again."
+            ) from None
         response = Response(status=status.HTTP_204_NO_CONTENT)
         cookies.clear_refresh_cookie(response)
         return response

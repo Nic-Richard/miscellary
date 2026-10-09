@@ -1,0 +1,142 @@
+.panel {
+  margin-top: 20px;
+  display: grid;
+  gap: 12px;
+}
+.panel h2,
+.panel p {
+  margin: 0;
+}
+.panel h2 {
+  font: 400 26px / 1.1 var(--display);
+}
+.balance {
+  font-size: 24px;
+  font-weight: 600;
+}
+.note {
+  color: var(--muted);
+  font-size: 14px;
+}
+.bundles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+}
+.bundle {
+  display: grid;
+  gap: 4px;
+  text-align: left;
+}
+.membership {
+  margin-top: 20px;
+}
+.membership p {
+  margin: 0;
+}
+.section {
+  display: grid;
+  gap: 12px;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--bdr);
+}
+.section:first-of-type {
+  padding-top: 0;
+}
+.section h3 {
+  margin: 0 0 6px;
+  font: 400 24px / 1.1 var(--display);
+}
+.heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+.status {
+  padding: 6px 12px;
+  color: var(--accent);
+  background: var(--sur2);
+  border: 1px solid var(--bdr2);
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.price {
+  font-size: 26px;
+  font-weight: 600;
+}
+.price span,
+.balance span {
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--muted);
+}
+.perks {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px 24px;
+}
+.perks li {
+  display: grid;
+  align-content: start;
+  gap: 5px;
+}
+.perks b {
+  font-size: 16px;
+}
+.perks span {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.notice {
+  padding: 10px 12px;
+  margin-bottom: 20px !important;
+  color: var(--muted);
+  background: var(--sur2);
+  border-radius: 6px;
+  font-size: 14px;
+}
+.membership .bundle {
+  padding: 14px;
+  color: var(--text);
+  background: var(--sur2);
+  border: 1px solid var(--bdr2);
+  border-radius: 8px;
+  font: inherit;
+}
+.membership .bundle > span:first-child {
+  font-weight: 600;
+  font-size: 18px;
+}
+.membership .bundle:disabled {
+  cursor: not-allowed;
+}
+.membership .bundle:not(:disabled):hover {
+  border-color: var(--accent);
+}
+.membership > button:last-child {
+  margin-top: 18px;
+}
+@media (max-width: 640px) {
+  .perks {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px 14px;
+  }
+  .perks b {
+    font-size: 15px;
+  }
+  .perks span {
+    font-size: 13px;
+  }
+}
+.badgeToggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}

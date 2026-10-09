@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import { CARD_TAG_MAX, cardCode, SET_TAG_MAX, SET_TITLE_MAX_LENGTH } from '@miscellary/shared';
-import type { Card, CardSetDetail, CardTemplate } from '@miscellary/shared';
+import type { Card, CardSetDetail, CardTemplate, PublishingAllowance } from '@miscellary/shared';
 import CardGrid, { CardCell } from '@/components/CardGrid';
 import PackDesigner from '@/components/studio/PackDesigner';
 import SetCover from '@/components/SetCover';
@@ -14,6 +14,7 @@ import CardForm from '@/components/CardForm';
 import MoreMenu from '@/components/MoreMenu';
 import TagEditor from '@/components/TagEditor';
 import VerifyEmailNotice from '@/components/VerifyEmailNotice';
+import PublishingNotice from '@/components/PublishingNotice';
 import { ApiRequestError } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import {
@@ -50,6 +51,7 @@ export default function SetEditorPage() {
   const [editing, setEditing] = useState<Card | 'new' | null>(null);
   const [design, setDesign] = useState<Card | null>(null);
   const [problems, setProblems] = useState<string[] | null>(null);
+  const [allowance, setAllowance] = useState<PublishingAllowance | null>(null);
   const [packOpen, setPackOpen] = useState(false);
   const [cardTagsOpen, setCardTagsOpen] = useState(false);
   /* Which card is being dragged. Held in a ref as well as in state, because a
@@ -69,6 +71,7 @@ export default function SetEditorPage() {
     setTitle(s.title);
     setDescription(s.description);
     setProblems(p.problems);
+    setAllowance(p.publishing);
   }, [id]);
 
   useEffect(() => {
@@ -291,6 +294,7 @@ export default function SetEditorPage() {
           <aside className={`${ui.ticket} ${styles.publish}`}>
             <h2 className={styles.publishTitle}>Publish</h2>
             <VerifyEmailNotice>Verify your email address to publish.</VerifyEmailNotice>
+            {allowance && <PublishingNotice allowance={allowance} />}
             {problems && problems.length > 0 ? (
               <ul className={styles.problems}>
                 {problems.map((p) => (

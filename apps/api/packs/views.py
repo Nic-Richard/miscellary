@@ -1,6 +1,7 @@
 from datetime import timedelta
 
-from django.db.models import Count, Exists, OuterRef, Subquery
+from django.conf import settings
+from django.db.models import Count, Exists, OuterRef, Q, Subquery
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import permissions, status
@@ -16,7 +17,7 @@ from cards.views import with_counts
 
 from . import actions
 from .models import OwnedCard, PackOpening, SetPoints
-from .serializers import OwnedCardSerializer, PackOpeningSerializer
+from .serializers import OpenPackRequestSerializer, OwnedCardSerializer, PackOpeningSerializer
 
 
 def with_copies(queryset):
@@ -38,9 +39,14 @@ def with_copies(queryset):
 
 
 def pack_status(user, card_set: CardSet) -> dict:
+    points = actions.points_balance(user, card_set)
     return {
         "free_available": actions.free_pack_available(user, card_set),
-        "points": actions.points_balance(user, card_set),
+        "points": points,
+        "monetization_enabled": settings.MONETIZATION_ENABLED,
+        "paid_quote": actions.paid_pack_quote(user, card_set, points)
+        if settings.MONETIZATION_ENABLED
+        else None,
         "pack_cost": actions.EXTRA_PACK_POINT_COST,
         "pack_size": actions.pack_size_for(card_set),
         "recycle_values": RECYCLE_VALUE,
@@ -61,9 +67,22 @@ class OpenPackView(APIView):
         card_set = get_object_or_404(
             with_counts(CardSet.objects.all()), slug=slug, status=CardSet.Status.PUBLISHED
         )
-        use_points = bool(request.data.get("use_points"))  # type: ignore[union-attr]
+        serializer = OpenPackRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        payment = serializer.validated_data["payment"]
         try:
-            if use_points:
+            if payment == "stars":
+                opening = actions.open_pack_with_stars(
+                    request.user,
+                    card_set,
+                    serializer.validated_data["request_key"],
+                    serializer.validated_data["max_stars_units"],
+                )
+            elif payment == "bonus":
+                opening = actions.open_bonus_pack(
+                    request.user, card_set, serializer.validated_data["request_key"]
+                )
+            elif payment == "points":
                 opening = actions.open_pack_with_points(request.user, card_set)
             else:
                 opening = actions.open_free_pack(request.user, card_set)
@@ -95,6 +114,11 @@ def collection_response(request: Request, owner_id) -> Response:
     set_slug = request.query_params.get("set")
     if set_slug:
         queryset = queryset.filter(card__card_set__slug=set_slug)
+    query = request.query_params.get("q", "").strip()[:100]
+    if query:
+        queryset = queryset.filter(
+            Q(card__title__icontains=query) | Q(card__card_set__title__icontains=query)
+        )
     paginator = CollectionPagination()
     page: list[OwnedCard] = paginator.paginate_queryset(queryset, request) or []
     return paginator.get_paginated_response(OwnedCardSerializer(page, many=True).data)

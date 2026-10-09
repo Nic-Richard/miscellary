@@ -4,6 +4,7 @@ import { ScrollView, Text, View } from 'react-native';
 import LoginGate from '@/components/LoginGate';
 import GoogleButton from '@/components/GoogleButton';
 import ThemeSelector from '@/components/ThemeSelector';
+import MembershipPanel from '@/components/MembershipPanel';
 import { Button, ErrorText, Input, Muted, PasswordInput } from '@/components/ui';
 import { ApiRequestError, apiFetch } from '@/lib/api';
 import { confirmGoogle, googleAvailable, googleProof } from '@/lib/google';
@@ -175,6 +176,7 @@ function Account() {
 
   return (
     <ScrollView style={{ backgroundColor: colors.bg }} contentContainerStyle={styles.content}>
+      <MembershipPanel />
       <Card
         title="Appearance"
         note="Your colour theme is saved to your account, on web and mobile."

@@ -5,6 +5,7 @@ from django.urls import reverse
 
 from cards.publishing import publish_set
 from cards.tests.helpers import fill_publishable, make_set
+from conftest import make_user
 from packs.models import OwnedCard
 
 pytestmark = pytest.mark.django_db
@@ -52,6 +53,21 @@ def test_collection_and_recycle(auth_client, user, published):
     assert response.json()["results"][0]["copies"] == 2
     assert response.json()["results"][0]["set_slug"] == published.slug
     assert response.json()["results"][0]["set_pack_colour"] == published.pack_colour
+
+    route = reverse("packs:collection")
+    assert (
+        auth_client.get(route, {"q": f"  {card.title.upper()}  ", "set": published.slug}).json()[
+            "count"
+        ]
+        == 2
+    )
+    assert auth_client.get(route, {"q": published.title}).json()["count"] == 2
+    assert auth_client.get(route, {"q": card.title, "set": "not-this-set"}).json()["count"] == 0
+    other = make_user()
+    other_set = make_set(other, title="Private collection source")
+    fill_publishable(other_set)
+    OwnedCard.objects.create(owner=other, card=other_set.cards.first())
+    assert auth_client.get(route, {"q": "Private collection source"}).json()["count"] == 0
 
     response = auth_client.post(reverse("packs:recycle", args=[a.id]))
     assert response.status_code == 200

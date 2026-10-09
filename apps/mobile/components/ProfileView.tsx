@@ -16,6 +16,7 @@ import PeopleList from './PeopleList';
 import { useColors, createThemedStyles } from '@/lib/theme';
 import CardInspector from './CardInspector';
 import DemoBadge from './DemoBadge';
+import SupporterBadge from './SupporterBadge';
 import SharedSurface from './SharedSurface';
 import { Button, Muted } from './ui';
 
@@ -94,9 +95,14 @@ export default function ProfileView({
           </Text>
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={{ color: colors.pageText, fontSize: 22, fontWeight: '700' }}>
-            {profile.display_name || profile.username}
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Text
+              style={{ color: colors.pageText, fontSize: 22, fontWeight: '700', flexShrink: 1 }}
+            >
+              {profile.display_name || profile.username}
+            </Text>
+            {profile.subscriber_badge && <SupporterBadge />}
+          </View>
           {profile.is_demo ? <DemoBadge /> : null}
           <Muted style={{ color: colors.pageMuted }}>@{profile.username}</Muted>
         </View>

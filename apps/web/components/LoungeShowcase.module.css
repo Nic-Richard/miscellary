@@ -1,0 +1,47 @@
+.cards {
+  --count: var(--columns);
+  --gap: 18px;
+  width: 100%;
+  max-width: calc(var(--count) * 200px + (var(--count) - 1) * var(--gap));
+  margin: 6px auto 10px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--gap);
+}
+.cards > div {
+  width: calc((100% - (var(--count) - 1) * var(--gap)) / var(--count));
+  min-width: 0;
+}
+.binder {
+  width: 100%;
+  max-width: 740px;
+  margin: 6px auto 10px;
+}
+.missing {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 5 / 7;
+  padding: 8px;
+  margin: 0;
+  color: var(--muted);
+  background: var(--sur2);
+  font-size: 12px;
+  text-align: center;
+}
+.cardButton {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: zoom-in;
+}
+.cardButton:hover {
+  transform: translateY(-2px);
+}
+@media (max-width: 560px) {
+  .cards {
+    --count: var(--narrow-columns);
+    --gap: 16px;
+  }
+}

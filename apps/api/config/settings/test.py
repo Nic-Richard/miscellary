@@ -10,6 +10,16 @@ DATABASES = {
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 REFRESH_COOKIE_SECURE = False
+# Tests opt into features explicitly and must never inherit provider credentials.
+MONETIZATION_ENABLED = False
+MONETIZATION_PREVIEW = False
+LOUNGE_ENABLED = False
+STRIPE_CHECKOUT_ENABLED = False
+STRIPE_LIVE_APPROVED = False
+STRIPE_SECRET_KEY = ""
+STRIPE_WEBHOOK_SECRET = ""
+STRIPE_PRICE_IDS = {}
+STRIPE_PORTAL_CONFIGURATION = ""
 REST_FRAMEWORK = {**REST_FRAMEWORK, "DEFAULT_THROTTLE_CLASSES": []}  # noqa: F405
 
 AWS_S3_ENDPOINT_URL = ""

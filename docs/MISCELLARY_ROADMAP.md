@@ -14,6 +14,38 @@ Items are ordered roughly by current priority. The order can change as dependenc
 
 ## Current follow-up: theme polish and Google QA (Oct 9, in progress)
 
+Monetization is now the next implementation batch, before the final Android build.
+Nic's detailed decisions are recorded in local-only `MONETIZATION_PLAN.md`: no ads,
+$4.99/month with 10 bonus packs and 100 Stars, 3/10 monthly publications,
+creator stats, subtle badge/showcases and a Lounge open to everyone. Credit bundles
+are $5/125, $10/275, $20/600 and $50/1,500; all credit spending earns the creator 20%,
+including own-set and reward-credit spending. Cancellation retains benefits through
+the paid period. The customer-facing currency is Stars for now; internal product
+identifiers remain separate so renaming does not change balances.
+Local backend groundwork includes balances, transaction history, retry-safe grants,
+mixed points/Stars spending, creator rewards, monthly bonus packs and publishing usage.
+Paid pack modes and publication limits are disabled by default; production is unchanged.
+Local web/Android account and pack screens now show Stars/benefits, mixed-payment
+confirmation, monthly bonus options and effective set/per-card odds, with stable retry keys.
+Website checkout/management and the server-side Stripe adapter are implemented locally,
+including signed callbacks, retry-safe fulfillment and cancellation on account closure.
+Studio now has basic counts and expandable subscriber activity, pack types, collection
+completion and card likes. Publish panels show the server allowance and creator rewards;
+profiles have an
+optional supporter badge on web/Android. Lounge feed, threaded replies, owned-card
+showcases, likes, sorting, Lounge-only blocking and report/admin removal are now local
+on web/native. Feed previews open dedicated discussion pages rather than expanding
+comments inside feed cards. Posts keep full text; reply composers precede the threads.
+A guarded Docker preview provides free/active/cancelled test accounts
+without payments. Google Play billing and moderation operations/scope review remain.
+The follow-up self-audit keeps post/reply mutations in place, adds searchable thumbnail
+selection and reuses the same binder renderer on native. Headless preview checks do not
+replace native-device QA or clear the billing release gates.
+Nic selected Stripe first, Xsolla as backup; Managed Payments eligibility still needs
+written approval. Nothing committed yet. See docs/BILLING.md for setup and release gates.
+No live sales or new Android build. Provider setup/costs, refund adjustments, spent-Star
+refund policy, real billing QA and legal/store disclosures remain release gates.
+
 Google sign-in and all 13 themes were committed, pushed and deployed as 98b4759
 and d3a6c53. Live headless checks passed password login, theme saving/reload and
 Google button loading. Real Google authorization/linking and native QA remain.

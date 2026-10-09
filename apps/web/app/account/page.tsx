@@ -30,6 +30,10 @@ export default function AccountPage() {
   const profile = user?.profile;
   useRequireAccount();
   const [section, setSection] = useState<Section>('profile');
+  useEffect(() => {
+    const query = new URLSearchParams(window.location.search);
+    if (query.has('checkout') || query.get('section') === 'account') setSection('account');
+  }, []);
   const [displayName, setDisplayName] = useState('');
   const [bio, setBio] = useState('');
   const [showcaseTitle, setShowcaseTitle] = useState('');

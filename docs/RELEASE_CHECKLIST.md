@@ -25,6 +25,10 @@
 
 ## Every release
 
+- [ ] Before enabling monetization: complete `docs/BILLING.md` release gates, including
+      provider approval, spent-Star refund policy/adjustments, real billing QA,
+      Android purchase restoration, Lounge moderation and updated legal/store disclosures.
+
 - [ ] CI green on `main`.
 - [ ] `docs/API.md` updated if endpoints changed.
 - [ ] New migrations reviewed for locks on large tables (the deploy runs them as a one-off ECS task).

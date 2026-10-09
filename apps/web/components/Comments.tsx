@@ -16,22 +16,24 @@ import styles from './Comments.module.css';
 
 const MAX = 1000;
 
-function Monogram({ name }: { name: string }) {
+export function Monogram({ name }: { name: string }) {
   return <span className={styles.monogram}>{name.charAt(0).toUpperCase() || '?'}</span>;
 }
 
-function Composer({
+export function Composer({
   placeholder,
   submitLabel,
   autoFocus,
   onSubmit,
   onCancel,
+  disabled = false,
 }: {
   placeholder: string;
   submitLabel: string;
   autoFocus?: boolean;
   onSubmit: (body: string) => Promise<void>;
   onCancel?: () => void;
+  disabled?: boolean;
 }) {
   const [body, setBody] = useState('');
   const [busy, setBusy] = useState(false);
@@ -51,7 +53,7 @@ function Composer({
 
   async function send() {
     const text = body.trim();
-    if (!text || busy) return;
+    if (!text || busy || disabled) return;
     setBusy(true);
     setError(null);
     try {
@@ -100,7 +102,7 @@ function Composer({
           type="button"
           className={`${ui.btnPrimary} ${ui.btnSmall}`}
           onClick={() => void send()}
-          disabled={busy || body.trim().length === 0}
+          disabled={busy || disabled || body.trim().length === 0}
         >
           {busy ? 'Posting…' : submitLabel}
         </button>

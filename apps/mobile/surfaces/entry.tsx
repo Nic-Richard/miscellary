@@ -8,6 +8,8 @@ import type {
   Creator,
   PackOpening,
   ShowcaseSlot,
+  LoungeCard,
+  LoungeStyle,
 } from '@miscellary/shared';
 import CardPreview from '../../web/components/CardPreview';
 import type { CardPreviewProps } from '../../web/components/CardPreview';
@@ -18,6 +20,7 @@ import PackPouch from '../../web/components/PackPouch';
 import RenderPackStage from '../../web/components/RenderPackStage';
 import PackReveal from '../../web/components/PackReveal';
 import ProfileBinder from '../../web/components/ProfileBinder';
+import LoungeShowcase from '../../web/components/LoungeShowcase';
 import PackDesigner from '../../web/components/studio/PackDesigner';
 import CardForm from '../../web/components/CardForm';
 import { apiFetch } from './api';
@@ -163,7 +166,15 @@ function Surface({ mode, data }: Props) {
         onInspect={editing ? undefined : (owned) => send('inspect', owned.id)}
       />
     );
-  } else if (mode === 'card-editor')
+  } else if (mode === 'lounge-showcase')
+    content = (
+      <LoungeShowcase
+        cards={data.cards as (LoungeCard | null)[]}
+        style={data.style as LoungeStyle}
+        onInspect={(card) => send('inspect', card.id)}
+      />
+    );
+  else if (mode === 'card-editor')
     content = (
       <CardForm
         setId={String(data.setId)}

@@ -21,6 +21,7 @@ type IconName =
   | 'profile'
   | 'search'
   | 'plus'
+  | 'lounge'
   | 'bell';
 
 export const NOTICE_EVENT = 'miscellary:notifications';
@@ -36,6 +37,7 @@ const ICONS: Record<IconName, string> = {
   profile: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 9c0-4 3-6.5 7-6.5s7 2.5 7 6.5',
   search: 'M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14Zm5-2 4 4',
   plus: 'M12 5v14M5 12h14',
+  lounge: 'M4 4h16v12H9l-5 4ZM8 8h8M8 12h5',
   bell: 'M12 4a5 5 0 0 1 5 5v4l2 3H5l2-3V9a5 5 0 0 1 5-5Zm-2 15a2 2 0 0 0 4 0',
 };
 
@@ -107,11 +109,17 @@ export default function Nav() {
   const links: { href: string; label: string; icon: IconName; match: string }[] = [
     { href: '/', label: 'Home', icon: 'home', match: '/' },
     { href: '/sets', label: 'Sets', icon: 'binders', match: '/sets' },
+    ...(!user && !loading && process.env.NEXT_PUBLIC_LOUNGE_ENABLED === 'true'
+      ? ([{ href: '/lounge', label: 'Lounge', icon: 'lounge', match: '/lounge' }] as const)
+      : []),
     ...(user || loading
       ? ([
           { href: '/packs', label: 'Packs', icon: 'packs', match: '/packs' },
           { href: '/collection', label: 'My cards', icon: 'cards', match: '/collection' },
           { href: '/trades', label: 'Trades', icon: 'trades', match: '/trades' },
+          ...(process.env.NEXT_PUBLIC_LOUNGE_ENABLED === 'true'
+            ? ([{ href: '/lounge', label: 'Lounge', icon: 'lounge', match: '/lounge' }] as const)
+            : []),
           { href: '/studio', label: 'Studio', icon: 'studio', match: '/studio' },
           { href: profileHref, label: 'Profile', icon: 'profile', match: '/users' },
         ] as const)

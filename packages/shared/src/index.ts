@@ -18,3 +18,5 @@ export * from './copy';
 export * from './collection';
 export * from './collectionRequests';
 export * from './themes';
+export * from './membership';
+export * from './lounge';

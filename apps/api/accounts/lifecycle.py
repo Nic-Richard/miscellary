@@ -27,6 +27,20 @@ def delete_account(user: User) -> None:
     and comments keep their place in threads. Both are shown under a deleted
     user instead of the collector's name. Everything private to the account goes.
     """
+    user = User.objects.select_for_update().get(pk=user.pk)
+    if user.deleted_at is not None:
+        return
+    from billing.actions import record_entry
+    from billing.models import StarBalance, StarEntry, Subscription
+    from billing.stripe import cancel_for_closure
+    from lounge.models import Block, Vote
+
+    cancel_for_closure(user)
+    balance = StarBalance.objects.filter(user=user).first()
+    if balance and (balance.units or balance.reward_remainder):
+        balance.reward_remainder = 0
+        record_entry(balance, StarEntry.Kind.CLOSURE, -balance.units)
+    Subscription.objects.filter(user=user).update(auto_renews=False)
     now = timezone.now()
     TradeOffer.objects.filter(
         Q(sender=user) | Q(recipient=user), status=TradeOffer.Status.PENDING
@@ -38,6 +52,8 @@ def delete_account(user: User) -> None:
     Follow.objects.filter(Q(follower=user) | Q(following=user)).delete()
     SetFollow.objects.filter(user=user).delete()
     Reaction.objects.filter(user=user).delete()
+    Vote.objects.filter(user=user).delete()
+    Block.objects.filter(Q(user=user) | Q(blocked=user)).delete()
     Notification.objects.filter(Q(recipient=user) | Q(actor=user)).delete()
     ReservedUsername.objects.filter(user=user).delete()
     GoogleChallenge.objects.filter(user=user).delete()

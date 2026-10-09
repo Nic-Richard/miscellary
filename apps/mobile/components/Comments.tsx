@@ -19,16 +19,18 @@ function when(iso: string): string {
   return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
 
-function Composer({
+export function Composer({
   placeholder,
   submitLabel,
   onSubmit,
   onCancel,
+  disabled = false,
 }: {
   placeholder: string;
   submitLabel: string;
   onSubmit: (body: string) => Promise<void>;
   onCancel?: () => void;
+  disabled?: boolean;
 }) {
   const styles = useStyles();
   const [body, setBody] = useState('');
@@ -37,7 +39,7 @@ function Composer({
 
   async function send() {
     const text = body.trim();
-    if (!text || busy) return;
+    if (!text || busy || disabled) return;
     setBusy(true);
     setError(null);
     try {
@@ -62,7 +64,11 @@ function Composer({
       />
       <ErrorText>{error}</ErrorText>
       <View style={styles.row}>
-        <Button title={submitLabel} disabled={busy || !body.trim()} onPress={() => void send()} />
+        <Button
+          title={submitLabel}
+          disabled={busy || disabled || !body.trim()}
+          onPress={() => void send()}
+        />
         {onCancel ? <Button title="Cancel" kind="secondary" onPress={onCancel} /> : null}
       </View>
     </View>

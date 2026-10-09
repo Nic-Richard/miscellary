@@ -5,6 +5,7 @@ import type {
   CardTemplate,
   CardWrite,
   Paginated,
+  PublishCheck,
   Tag,
   TagSummary,
 } from '@miscellary/shared';
@@ -52,7 +53,7 @@ export const deleteSet = (id: string) =>
   apiFetch<void>(`/api/v1/me/sets/${id}/`, { method: 'DELETE' });
 
 export const publishProblems = (id: string) =>
-  apiFetch<{ problems: string[] }>(`/api/v1/me/sets/${id}/publish/`);
+  apiFetch<PublishCheck>(`/api/v1/me/sets/${id}/publish/`);
 export const publishSet = (id: string) =>
   apiFetch<CardSetDetail>(`/api/v1/me/sets/${id}/publish/`, { method: 'POST' });
 

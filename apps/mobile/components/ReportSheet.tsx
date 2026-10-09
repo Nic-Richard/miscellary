@@ -14,7 +14,12 @@ const ICONS: Record<ReportReason, keyof typeof Feather.glyphMap> = {
   other: 'more-horizontal',
 };
 
-export type ReportTarget = { set_slug: string } | { card_id: string } | { username: string };
+export type ReportTarget =
+  | { set_slug: string }
+  | { card_id: string }
+  | { username: string }
+  | { lounge_post_id: string }
+  | { lounge_reply_id: string };
 
 export default function ReportSheet({
   visible,

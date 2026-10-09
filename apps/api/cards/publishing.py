@@ -1,5 +1,9 @@
+from django.conf import settings
 from django.db import IntegrityError, transaction
 from django.utils import timezone
+
+from accounts.models import User
+from billing.actions import monthly_publications
 
 from .identity import next_set_suffix, suggest_set_code
 from .models import CardDefinition, CardSet
@@ -20,12 +24,18 @@ def publish_problems(card_set: CardSet) -> list[str]:
     if any(not c.image.ready for c in cards):
         problems.append("Every card needs a finished image upload.")
     problems += rarity_problems([c.rarity for c in cards])
+    if settings.MONETIZATION_ENABLED:
+        used, limit, _ = monthly_publications(card_set.creator)
+        if used >= limit:
+            problems.append(f"You've used this month's {limit} set publications.")
     return problems
 
 
 def publish_set(card_set: CardSet) -> list[str]:
     """Publish if possible. Returns the list of problems (empty on success)."""
     with transaction.atomic():
+        # Serialize different draft publications against the same monthly allowance.
+        User.objects.select_for_update().get(pk=card_set.creator_id)
         card_set = CardSet.objects.select_for_update().get(pk=card_set.pk)
         problems = publish_problems(card_set)
         if problems:

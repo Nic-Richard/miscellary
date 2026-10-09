@@ -15,6 +15,7 @@ import MoreMenu from '@/components/MoreMenu';
 import ReportDialog from '@/components/ReportDialog';
 import ShareButton from '@/components/ShareButton';
 import DemoBadge from '@/components/DemoBadge';
+import SupporterBadge from '@/components/SupporterBadge';
 import { useAuth } from '@/lib/auth';
 import { loginHref } from '@/lib/returnTo';
 import { useContinuation } from '@/lib/useContinuation';
@@ -126,6 +127,7 @@ export default function ProfileClient({
         <div className={styles.identity}>
           <h1 className={ui.title}>{name}</h1>
           {profile.is_demo ? <DemoBadge /> : null}
+          {profile.subscriber_badge ? <SupporterBadge /> : null}
           <p className={ui.subtitle}>@{profile.username}</p>
           {profile.bio ? <p className={ui.lead}>{profile.bio}</p> : null}
           {profile.is_demo ? (

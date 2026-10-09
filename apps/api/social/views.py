@@ -2,6 +2,7 @@ import contextlib
 from datetime import timedelta
 from typing import Any
 
+from django.conf import settings
 from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
 from django.db import IntegrityError, transaction
 from django.db.models import Count, Max, Q
@@ -15,6 +16,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from accounts.models import User
+from billing.actions import visible_badge
 from cards import tags as tagging
 from cards.models import CardDefinition, CardSet, Tag
 from cards.serializers import CardSerializer, CardSetSerializer, CreatorSerializer
@@ -88,6 +90,7 @@ class ProfileView(APIView):
             "binder_colour": user.profile.binder_colour,
             "avatar_url": user.profile.avatar_url,
             "is_demo": user.is_demo,
+            "subscriber_badge": visible_badge(user),
             "created_at": user.created_at,
             "follower_count": user.followers.count(),
             "following_count": user.following.count(),
@@ -377,6 +380,19 @@ class ReportView(APIView):
             report.card = get_object_or_404(CardDefinition, id=data["card_id"])
         elif data.get("comment_id"):
             report.comment = get_object_or_404(Comment, id=data["comment_id"])
+        elif data.get("lounge_post_id") or data.get("lounge_reply_id"):
+            from lounge.models import Reply
+            from lounge.views import require_enabled, visible_posts
+
+            require_enabled()
+            if data.get("lounge_post_id"):
+                report.lounge_post = get_object_or_404(
+                    visible_posts(request.user), pk=data["lounge_post_id"]
+                )
+            else:
+                report.lounge_reply = get_object_or_404(
+                    Reply, pk=data["lounge_reply_id"], post__in=visible_posts(request.user)
+                )
         else:
             report.reported_user = public_user(data["username"])
         report.save()
@@ -538,6 +554,7 @@ class MyPacksView(APIView):
                     "resets_at": resets_at,
                     "points": points.get(card_set.id, 0),
                     "pack_cost": actions.EXTRA_PACK_POINT_COST,
+                    "monetization_enabled": settings.MONETIZATION_ENABLED,
                     "owned_count": distinct,
                     "card_count": card_set.card_count,
                     "duplicate_count": max(copies - distinct, 0),

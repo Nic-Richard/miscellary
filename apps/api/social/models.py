@@ -161,6 +161,12 @@ class Report(models.Model):
         related_name="reports_received",
     )
     reason = models.CharField(max_length=20, choices=Reason.choices)
+    lounge_post = models.ForeignKey(
+        "lounge.Post", null=True, blank=True, on_delete=models.SET_NULL, related_name="reports"
+    )
+    lounge_reply = models.ForeignKey(
+        "lounge.Reply", null=True, blank=True, on_delete=models.SET_NULL, related_name="reports"
+    )
     details = models.TextField(max_length=1000, blank=True)
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.OPEN)
     created_at = models.DateTimeField(auto_now_add=True)

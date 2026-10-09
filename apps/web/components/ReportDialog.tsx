@@ -8,7 +8,12 @@ import ui from './ui.module.css';
 import styles from './ReportDialog.module.css';
 
 export type ReportTarget =
-  { set_slug: string } | { card_id: string } | { comment_id: string } | { username: string };
+  | { set_slug: string }
+  | { card_id: string }
+  | { comment_id: string }
+  | { username: string }
+  | { lounge_post_id: string }
+  | { lounge_reply_id: string };
 
 export default function ReportDialog({
   target,

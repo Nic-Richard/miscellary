@@ -27,6 +27,7 @@ class ProfilePageSerializer(serializers.Serializer):
     binder_colour = serializers.CharField(allow_blank=True)
     avatar_url = serializers.CharField(allow_null=True)
     is_demo = serializers.BooleanField()
+    subscriber_badge = serializers.BooleanField()
     created_at = serializers.DateTimeField()
     follower_count = serializers.IntegerField()
     following_count = serializers.IntegerField()
@@ -99,16 +100,27 @@ class ReportWriteSerializer(serializers.Serializer):
     set_slug = serializers.CharField(required=False)
     card_id = serializers.UUIDField(required=False)
     comment_id = serializers.UUIDField(required=False)
+    lounge_post_id = serializers.UUIDField(required=False)
+    lounge_reply_id = serializers.UUIDField(required=False)
     username = serializers.CharField(required=False)
     reason = serializers.ChoiceField(choices=Report.Reason.choices)
     details = serializers.CharField(required=False, allow_blank=True, default="", max_length=1000)
 
     def validate(self, attrs):
-        targets = [k for k in ("set_slug", "card_id", "comment_id", "username") if attrs.get(k)]
-        if len(targets) != 1:
-            raise serializers.ValidationError(
-                "Report exactly one thing: a set, a card, a comment, or a user."
+        targets = [
+            k
+            for k in (
+                "set_slug",
+                "card_id",
+                "comment_id",
+                "username",
+                "lounge_post_id",
+                "lounge_reply_id",
             )
+            if attrs.get(k)
+        ]
+        if len(targets) != 1:
+            raise serializers.ValidationError("Choose exactly one item to report.")
         return attrs
 
 
@@ -118,6 +130,7 @@ class PackEntrySerializer(serializers.Serializer):
     resets_at = serializers.DateTimeField()
     points = serializers.IntegerField()
     pack_cost = serializers.IntegerField()
+    monetization_enabled = serializers.BooleanField()
     owned_count = serializers.IntegerField()
     card_count = serializers.IntegerField()
     duplicate_count = serializers.IntegerField()
