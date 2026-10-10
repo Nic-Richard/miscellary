@@ -262,7 +262,7 @@ def test_membership_is_private_read_only_and_disabled_by_default(user, auth_clie
     assert auth_client.post(url, {"star_units": 999999}, format="json").status_code == 405
     subscribe(user)
     body = auth_client.get(url).json()
-    assert body["currency_name"] == "Stars"
+    assert body["currency_name"] == "Tickets"
     assert body["star_units"] == 100000
     assert body["subscription"]["active"]
     assert body["publishing"]["limit"] == 10

@@ -30,12 +30,14 @@ def delete_account(user: User) -> None:
     user = User.objects.select_for_update().get(pk=user.pk)
     if user.deleted_at is not None:
         return
+    from billing import play
     from billing.actions import record_entry
     from billing.models import StarBalance, StarEntry, Subscription
     from billing.stripe import cancel_for_closure
     from lounge.models import Block, Vote
 
     cancel_for_closure(user)
+    play.cancel_for_closure(user)
     balance = StarBalance.objects.filter(user=user).first()
     if balance and (balance.units or balance.reward_remainder):
         balance.reward_remainder = 0

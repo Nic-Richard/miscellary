@@ -16,8 +16,8 @@ class ReadOnlyAdmin(admin.ModelAdmin):
 
 @admin.register(BillingReview)
 class BillingReviewAdmin(ReadOnlyAdmin):
-    list_display = ["event", "payment_reference", "reason", "resolved_at"]
-    list_filter = ["reason", "resolved_at"]
+    list_display = ["provider", "event", "payment_reference", "reason", "resolved_at"]
+    list_filter = ["provider", "reason", "resolved_at"]
     search_fields = ["payment_reference", "event__reference"]
 
 

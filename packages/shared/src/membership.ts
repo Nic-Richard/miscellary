@@ -25,6 +25,7 @@ export interface Membership {
     checkout_available?: boolean;
     management_available?: boolean;
     active: boolean;
+    provider?: 'web' | 'play' | null;
     paid_through: string | null;
     auto_renews: boolean;
     bonus_packs_remaining: number;
@@ -34,6 +35,7 @@ export interface Membership {
     monthly_stars: number;
   };
   publishing: PublishingAllowance;
+  play?: { available: boolean; subscription_id: string; account_id: string | null };
   bundles: {
     id: string;
     price_cents: number;
@@ -96,7 +98,7 @@ export interface CreatorStats {
 export const OPENING_LABELS: Record<string, string> = {
   free: 'Daily free',
   points: 'Set points',
-  stars: 'Stars + points',
+  stars: 'Tickets + points',
   bonus: 'Bonus packs',
 };
 
@@ -127,7 +129,7 @@ export function packPrice(quote: PaidPackQuote): string {
   const parts: string[] = [];
   if (quote.points_spent) parts.push(`${quote.points_spent} set points`);
   if (quote.stars_spent_units) {
-    parts.push(`${starAmount(quote.stars_spent_units, quote.units_per_star)} Stars`);
+    parts.push(`${starAmount(quote.stars_spent_units, quote.units_per_star)} tickets`);
   }
   return parts.join(' + ');
 }

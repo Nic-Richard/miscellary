@@ -146,7 +146,7 @@ export default function MembershipPanel() {
       note: sub.active ? `${sub.bonus_packs_remaining} left` : 'Any set',
       ...(sub.active ? { link: ['/packs', 'Open one'] as [string, string] } : {}),
     },
-    { count: String(sub.monthly_stars), title: 'Stars a month', note: 'Never expire' },
+    { count: String(sub.monthly_stars), title: 'Tickets a month', note: 'Never expire' },
     {
       count: '10',
       title: 'Sets published a month',
@@ -203,7 +203,7 @@ export default function MembershipPanel() {
             {sub.active
               ? sub.auto_renews
                 ? `Renews ${renewal} for ${price(sub.price_cents, sub.currency)}. Cancel anytime and keep it until then.`
-                : `Ends ${renewal}. You keep your Stars afterwards.`
+                : `Ends ${renewal}. You keep your tickets afterwards.`
               : `${price(sub.price_cents, sub.currency)} a month. A little extra for your collection, and a little support for Miscellary.`}
           </p>
           <ul className={styles.perks}>
@@ -287,20 +287,20 @@ export default function MembershipPanel() {
       <section className={styles.wallet} aria-labelledby="stars-title">
         <div className={styles.walletHead}>
           <div>
-            <h2 id="stars-title">Stars</h2>
+            <h2 id="stars-title">Tickets</h2>
             <p className={styles.note}>
-              Extra packs cost 50 points. A set&rsquo;s recycled points go first, then Stars cover
+              Extra packs cost 50 points. A set&rsquo;s recycled points go first, then tickets cover
               the rest.
             </p>
           </div>
           <p className={styles.balance}>
             {starAmount(membership.star_units, membership.units_per_star)}
-            <span>Stars</span>
+            <span>tickets</span>
           </p>
         </div>
         {membership.star_units < 0 && (
           <p className={styles.notice} role="status">
-            A refunded purchase took back Stars you&rsquo;d already spent. Trading is paused until
+            A refunded purchase took back tickets you&rsquo;d already spent. Trading is paused until
             your balance is back to zero. Your cards stay yours.
           </p>
         )}
@@ -318,7 +318,7 @@ export default function MembershipPanel() {
                     onClick={() => void checkout(bundle.id)}
                   >
                     <span className={styles.stubStars}>
-                      {bundle.total_stars.toLocaleString()} <small>Stars</small>
+                      {bundle.total_stars.toLocaleString()} <small>tickets</small>
                     </span>
                     <span className={styles.stubBonus}>
                       {bundle.bonus_stars > 0 ? `Includes ${bundle.bonus_stars} bonus` : 'Starter'}
@@ -332,13 +332,13 @@ export default function MembershipPanel() {
                 ))}
             </div>
             <p className={styles.note}>
-              Stars never expire and can&rsquo;t be cashed out. Packs hold random cards, so check
-              each set&rsquo;s odds before opening. Creators earn 20% of the Stars spent on their
+              Tickets never expire and can&rsquo;t be cashed out. Packs hold random cards, so check
+              each set&rsquo;s odds before opening. Creators earn 20% of the tickets spent on their
               sets. Prices are in USD, and any tax is shown at checkout.
             </p>
           </>
         ) : !sub.checkout_available && !sub.management_available ? (
-          <p className={styles.note}>Buying Stars isn&rsquo;t available yet.</p>
+          <p className={styles.note}>Buying tickets isn&rsquo;t available yet.</p>
         ) : null}
       </section>
 

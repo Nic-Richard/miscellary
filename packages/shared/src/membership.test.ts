@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { creatorActivity, packOdds, packPrice, starAmount } from './membership';
 import type { CreatorStats, PaidPackQuote } from './membership';
 
-describe('Stars pack confirmation', () => {
+describe('Ticket pack confirmation', () => {
   it('shows the exact mixed price, including fractions', () => {
     const quote: PaidPackQuote = {
       request_key: 'request',
@@ -13,7 +13,7 @@ describe('Stars pack confirmation', () => {
       bonus_packs_remaining: 0,
       odds: [{ rarity: 'common', basis_points: 10000, card_count: 5 }],
     };
-    expect(packPrice(quote)).toBe('17 set points + 33 Stars');
+    expect(packPrice(quote)).toBe('17 set points + 33 tickets');
     expect(packPrice({ ...quote, points_spent: 50, stars_spent_units: 0 })).toBe('50 set points');
     expect(starAmount(1200, 1000)).toBe((1.2).toLocaleString());
     expect(packOdds(quote)).toBe('Common 100% (20% per card)');

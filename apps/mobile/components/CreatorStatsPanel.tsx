@@ -70,9 +70,9 @@ export default function CreatorStatsPanel() {
             <>
               <Muted>
                 {details.recent_openings.toLocaleString()} packs opened in the last 30 days ·{' '}
-                {starAmount(details.recent_stars_earned_units, 1000)} Stars earned
+                {starAmount(details.recent_stars_earned_units, 1000)} tickets earned
               </Muted>
-              <Muted>{starAmount(details.stars_earned_units, 1000)} Stars earned overall</Muted>
+              <Muted>{starAmount(details.stars_earned_units, 1000)} tickets earned overall</Muted>
               {details.recent_openings > 0 ? (
                 <>
                   <View
@@ -124,7 +124,7 @@ export default function CreatorStatsPanel() {
                   <Muted>
                     {set.openings.toLocaleString()} packs · {set.collectors.toLocaleString()}{' '}
                     collectors · {set.follows.toLocaleString()} follows ·{' '}
-                    {starAmount(set.stars_earned_units, 1000)} Stars earned
+                    {starAmount(set.stars_earned_units, 1000)} tickets earned
                   </Muted>
                   <Muted>
                     {set.holders.toLocaleString()} current collectors ·{' '}
@@ -161,7 +161,7 @@ export default function CreatorStatsPanel() {
           )}
           {!details && (
             <Muted>
-              Supporters also see activity, collection progress, card likes and Stars earned.
+              Supporters also see activity, collection progress, card likes and tickets earned.
             </Muted>
           )}
           <Muted>

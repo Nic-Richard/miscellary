@@ -10,3 +10,8 @@ class CheckoutSerializer(serializers.Serializer):
 
 class MembershipSettingsSerializer(serializers.Serializer):
     show_badge = serializers.BooleanField()
+
+
+class PlayPurchaseSerializer(serializers.Serializer):
+    product = serializers.ChoiceField(choices=[*CREDIT_BUNDLES, "subscription"])
+    purchase_token = serializers.CharField(max_length=255)

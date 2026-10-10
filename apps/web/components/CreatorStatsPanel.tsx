@@ -74,7 +74,7 @@ export default function CreatorStatsPanel() {
                 <h3>Last 30 days</h3>
                 <p className={ui.muted}>
                   {details.recent_openings.toLocaleString()} packs opened ·{' '}
-                  {starAmount(details.recent_stars_earned_units, 1000)} Stars earned
+                  {starAmount(details.recent_stars_earned_units, 1000)} tickets earned
                 </p>
                 {details.recent_openings > 0 ? (
                   <>
@@ -119,7 +119,7 @@ export default function CreatorStatsPanel() {
                   <p className={ui.muted}>No packs opened yet.</p>
                 )}
                 <p className={ui.muted}>
-                  {starAmount(details.stars_earned_units, 1000)} Stars earned overall
+                  {starAmount(details.stars_earned_units, 1000)} tickets earned overall
                 </p>
               </div>
               {details.sets.length > 0 && (
@@ -138,7 +138,7 @@ export default function CreatorStatsPanel() {
                         <p className={ui.muted}>
                           {set.openings.toLocaleString()} packs · {set.collectors.toLocaleString()}{' '}
                           collectors · {set.follows.toLocaleString()} follows ·{' '}
-                          {starAmount(set.stars_earned_units, 1000)} Stars earned
+                          {starAmount(set.stars_earned_units, 1000)} tickets earned
                         </p>
                         <p className={ui.muted}>
                           {set.holders.toLocaleString()} current collectors ·{' '}
@@ -179,7 +179,7 @@ export default function CreatorStatsPanel() {
           )}
           {!details && (
             <p className={ui.muted}>
-              Supporters also see activity, collection progress, card likes and Stars earned.{' '}
+              Supporters also see activity, collection progress, card likes and tickets earned.{' '}
               <Link href="/account?section=membership">View membership</Link>.
             </p>
           )}

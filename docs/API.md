@@ -141,25 +141,25 @@ moved in the meantime the offer is cancelled instead.
 Platform removal of a set (admin action) wipes every distributed copy and cancels pending trades
 that included them. A creator's own delete keeps collectors' copies.
 
-## Stars and membership
+## Tickets and membership
 
 Disabled by default. See [billing setup and release gates](BILLING.md).
 
-| Method    | Path                       | Auth             | Notes                                                                                                                                                                                 |
-| --------- | -------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| GET/PATCH | `/me/membership/`          | bearer           | Balance, product catalogue, paid-period/publishing usage, available website purchase controls and pending checkout keys. PATCH only accepts `{show_badge}`.                           |
-| GET       | `/me/creator-stats/`       | bearer           | Own aggregate counts; paid subscribers also receive per-set counts, opening types, daily activity and Stars rewards. No collector identities or another creator's private statistics. |
-| POST      | `/me/billing/checkout/`    | bearer, web      | `{product, request_key}`; fixed server price, verified email and account-bound hosted checkout. No client amount or return URL.                                                       |
-| POST      | `/me/billing/portal/`      | bearer, web      | Own website purchase management URL.                                                                                                                                                  |
-| POST      | `/billing/stripe/webhook/` | Stripe signature | Raw-body signature/timestamp verification, event deduplication and provider-verified fulfillment. No client balance grant.                                                            |
+| Method    | Path                       | Auth             | Notes                                                                                                                                                                                  |
+| --------- | -------------------------- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GET/PATCH | `/me/membership/`          | bearer           | Balance, product catalogue, paid-period/publishing usage, available website purchase controls and pending checkout keys. PATCH only accepts `{show_badge}`.                            |
+| GET       | `/me/creator-stats/`       | bearer           | Own aggregate counts; paid subscribers also receive per-set counts, opening types, daily activity and ticket rewards. No collector identities or another creator's private statistics. |
+| POST      | `/me/billing/checkout/`    | bearer, web      | `{product, request_key}`; fixed server price, verified email and account-bound hosted checkout. No client amount or return URL.                                                        |
+| POST      | `/me/billing/portal/`      | bearer, web      | Own website purchase management URL.                                                                                                                                                   |
+| POST      | `/billing/stripe/webhook/` | Stripe signature | Raw-body signature/timestamp verification, event deduplication and provider-verified fulfillment. No client balance grant.                                                             |
 
 Pack status adds `monetization_enabled` and `paid_quote` (null while disabled).
-Quotes include points/Stars split, balance, monthly bonus packs and effective rarity/
+Quotes include points/tickets split, balance, monthly bonus packs and effective rarity/
 per-card odds. Open accepts `{payment: "stars", request_key, max_stars_units}` or
 `{payment: "bonus", request_key}` in addition to the existing free/points request.
-An explicit request key makes retries reuse the opening. Stars requests require the
+An explicit request key makes retries reuse the opening. Ticket requests require the
 confirmed maximum; the server never exceeds it. Creator rewards apply only to the
-Stars portion, not free, recycled-point or subscription bonus packs.
+ticket portion, not free, recycled-point or subscription bonus packs.
 
 Profiles add `subscriber_badge`, true only during a paid period with visibility enabled.
 

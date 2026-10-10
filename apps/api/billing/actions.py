@@ -46,7 +46,7 @@ def record_entry(
     balance: StarBalance, kind: str, units: int, *, grant=None, opening=None
 ) -> StarEntry:
     if units < 0 and balance.units + units < 0 and kind != StarEntry.Kind.REFUND:
-        raise BillingError("Not enough Stars.")
+        raise BillingError("Not enough tickets.")
     balance.units += units
     balance.save(update_fields=["units", "reward_remainder"])
     return StarEntry.objects.create(
@@ -83,7 +83,7 @@ def grant_bundle(user: User, provider: str, reference: str, product: str) -> Sta
     _validate_source(provider, reference)
     bundle = CREDIT_BUNDLES.get(product)
     if bundle is None:
-        raise PaymentMismatch("Unknown Stars bundle.")
+        raise PaymentMismatch("Unknown ticket bundle.")
     locked = lock_accounts([user.pk])[user.pk]
     if not locked.is_active:
         raise BillingError("This account is closed.")
@@ -179,10 +179,10 @@ def grant_subscription_period(
 
 @transaction.atomic
 def reverse_grant(grant: StarGrant, refunded: int, paid: int, *, restore: bool = False) -> None:
-    """Take back the refunded share of a grant's Stars, even if that leaves the balance negative.
+    """Take back the refunded share of a grant's tickets, even if that leaves the balance negative.
 
     Cards and other collectors' creator rewards are never touched. Refund totals only grow,
-    except for a won dispute (restore=True), which can give Stars back.
+    except for a won dispute (restore=True), which can give tickets back.
     """
     if paid <= 0:
         raise PaymentMismatch("Refunded payment has no amount.")
@@ -210,7 +210,7 @@ def reverse_grant(grant: StarGrant, refunded: int, paid: int, *, restore: bool =
 
 
 def trade_restricted(user: User) -> bool:
-    # Collectors whose refunds left them owing Stars can't trade until the balance is back to zero.
+    # Collectors left owing tickets by a refund can't trade until the balance is back to zero.
     return StarBalance.objects.filter(user=user, units__lt=0).exists()
 
 

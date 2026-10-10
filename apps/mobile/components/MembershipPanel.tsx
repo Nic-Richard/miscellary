@@ -10,6 +10,7 @@ import { ApiRequestError, apiFetch } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { createThemedStyles, fonts, useColors } from '@/lib/theme';
 import { STAR_PATH } from './Avatar';
+import { usePlayStore } from '@/lib/play';
 import { Button, ErrorText, Muted } from './ui';
 
 export default function MembershipPanel() {
@@ -23,6 +24,7 @@ export default function MembershipPanel() {
   const [refreshing, setRefreshing] = useState(true);
   const [saveError, setSaveError] = useState<string | null>(null);
   const saveController = useRef<AbortController | null>(null);
+  const store = usePlayStore(membership, () => setRetry((value) => value + 1));
   useEffect(() => setMembership(null), [user?.id]);
   async function toggleBadge(show_badge: boolean) {
     if (saveController.current && !saveController.current.signal.aborted) return;
@@ -91,6 +93,12 @@ export default function MembershipPanel() {
   if (!membership.enabled) return null;
   const sub = membership.subscription;
   const publications = membership.publishing;
+  const subPrice = store.prices[membership.play?.subscription_id ?? ''];
+  // Local preview shows the tickets with website prices, switched off, like the website does.
+  const sample = !store.ready && Boolean(membership.preview);
+  const stubs = sample
+    ? membership.bundles
+    : membership.bundles.filter((bundle) => store.prices[bundle.id]);
   const name = user?.profile.display_name || user?.profile.username || '';
   const renewal = sub.paid_through
     ? new Date(sub.paid_through).toLocaleDateString(undefined, { dateStyle: 'long' })
@@ -109,7 +117,7 @@ export default function MembershipPanel() {
     },
     {
       count: String(sub.monthly_stars),
-      title: 'Stars a month',
+      title: 'Tickets a month',
       note: 'Never expire',
     },
     {
@@ -168,7 +176,7 @@ export default function MembershipPanel() {
           {sub.active
             ? sub.auto_renews
               ? `Renews ${renewal} for ${price(sub.price_cents, sub.currency)}.`
-              : `Ends ${renewal}. You keep your Stars afterwards.`
+              : `Ends ${renewal}. You keep your tickets afterwards.`
             : `${price(sub.price_cents, sub.currency)} a month. A little extra for your collection, and a little support for Miscellary.`}
         </Muted>
         <View>
@@ -227,28 +235,74 @@ export default function MembershipPanel() {
           </View>
         </View>
         <ErrorText>{saveError}</ErrorText>
-        {!sub.active && <Muted style={styles.small}>Joining in the app isn’t available yet.</Muted>}
+        {sub.active ? (
+          sub.provider === 'play' && store.ready ? (
+            <Button title="Manage in Google Play" kind="secondary" onPress={store.manage} />
+          ) : sub.provider === 'web' ? (
+            <Muted style={styles.small}>You joined on the website, so it’s managed there.</Muted>
+          ) : null
+        ) : store.ready && subPrice ? (
+          <Button
+            title={
+              store.busy === 'subscription'
+                ? 'Opening Google Play…'
+                : `Join for ${subPrice} a month`
+            }
+            disabled={store.busy !== null}
+            onPress={store.subscribe}
+          />
+        ) : (
+          <Muted style={styles.small}>Joining in the app isn’t available yet.</Muted>
+        )}
       </View>
 
       <View style={styles.panel}>
         <View style={styles.walletHead}>
           <Text accessibilityRole="header" style={styles.title}>
-            Stars
+            Tickets
           </Text>
           <Text style={styles.balance}>
             {starAmount(membership.star_units, membership.units_per_star)}
-            <Text style={styles.balanceUnit}> Stars</Text>
+            <Text style={styles.balanceUnit}> tickets</Text>
           </Text>
         </View>
         {membership.star_units < 0 && (
           <Text style={styles.notice}>
-            A refunded purchase took back Stars you’d already spent. Trading is paused until your
+            A refunded purchase took back tickets you’d already spent. Trading is paused until your
             balance is back to zero. Your cards stay yours.
           </Text>
         )}
         <Muted>
-          Extra packs cost 50 points. A set’s recycled points go first, then Stars cover the rest.
+          Extra packs cost 50 points. A set’s recycled points go first, then tickets cover the rest.
         </Muted>
+        {stubs.length > 0 && (
+          <>
+            <View style={styles.stubs}>
+              {stubs.map((bundle) => (
+                <TicketStub
+                  key={bundle.id}
+                  stars={bundle.total_stars}
+                  bonus={bundle.bonus_stars}
+                  price={
+                    sample
+                      ? price(bundle.price_cents, bundle.currency)
+                      : store.busy === bundle.id
+                        ? 'Opening…'
+                        : store.prices[bundle.id]!
+                  }
+                  disabled={sample || store.busy !== null}
+                  onPress={() => store.buy(bundle.id)}
+                />
+              ))}
+            </View>
+            <Muted style={styles.small}>
+              Tickets never expire and can’t be cashed out. Packs hold random cards, so check each
+              set’s odds before opening. Creators earn 20% of the tickets spent on their sets.
+            </Muted>
+          </>
+        )}
+        {store.notice && <Text style={styles.notice}>{store.notice}</Text>}
+        <ErrorText>{store.error}</ErrorText>
       </View>
 
       <View style={styles.panel}>
@@ -277,6 +331,72 @@ export default function MembershipPanel() {
         onPress={() => setRetry((value) => value + 1)}
       />
     </View>
+  );
+}
+
+// Notches are cut into the outline itself, so the panel shows through rather than a painted circle.
+function ticketPath(w: number, h: number, r = 10, notch = 9, cut = 0.64): string {
+  const y = h * cut;
+  return [
+    `M ${r} 0 H ${w - r} A ${r} ${r} 0 0 1 ${w} ${r}`,
+    `V ${y - notch} A ${notch} ${notch} 0 0 0 ${w} ${y + notch}`,
+    `V ${h - r} A ${r} ${r} 0 0 1 ${w - r} ${h} H ${r} A ${r} ${r} 0 0 1 0 ${h - r}`,
+    `V ${y + notch} A ${notch} ${notch} 0 0 0 0 ${y - notch}`,
+    `V ${r} A ${r} ${r} 0 0 1 ${r} 0 Z`,
+  ].join(' ');
+}
+
+function TicketStub({
+  stars,
+  bonus,
+  price,
+  disabled,
+  onPress,
+}: {
+  stars: number;
+  bonus: number;
+  price: string;
+  disabled: boolean;
+  onPress: () => void;
+}) {
+  const colors = useColors();
+  const styles = useStyles();
+  const [width, setWidth] = useState(0);
+  const height = 128;
+  const perforation = height * 0.64;
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`${stars} tickets for ${price}`}
+      disabled={disabled}
+      onPress={onPress}
+      onLayout={(event) => setWidth(event.nativeEvent.layout.width)}
+      style={({ pressed }) => [styles.stub, { height }, pressed && { opacity: 0.8 }]}
+    >
+      {width > 0 && (
+        <Svg width={width} height={height} style={styles.stubShape}>
+          <Path
+            d={ticketPath(width - 1, height - 1)}
+            transform="translate(0.5 0.5)"
+            fill={colors.sur2}
+            stroke={colors.bdr2}
+          />
+          <Path
+            d={`M 15 ${perforation} H ${width - 15}`}
+            stroke={colors.bdr2}
+            strokeWidth={2}
+            strokeDasharray="5 4"
+          />
+        </Svg>
+      )}
+      <View style={[styles.stubTop, { height: perforation }]}>
+        <Text style={styles.stubStars}>
+          {stars.toLocaleString()} <Text style={styles.stubUnit}>tickets</Text>
+        </Text>
+        <Text style={styles.stubBonus}>{bonus > 0 ? `Includes ${bonus} bonus` : 'Starter'}</Text>
+      </View>
+      <Text style={styles.stubPrice}>{price}</Text>
+    </Pressable>
   );
 }
 
@@ -396,6 +516,21 @@ const useStyles = createThemedStyles((colors) => ({
   perkNote: { color: colors.faint, fontFamily: fonts.body, fontSize: 13 },
   perkLink: { color: colors.accentInk, fontFamily: fonts.medium, fontSize: 15 },
   small: { fontSize: 14 },
+  stubs: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  stub: { width: '47%', flexGrow: 1 },
+  stubShape: { position: 'absolute', top: 0, left: 0 },
+  stubTop: { paddingHorizontal: 16, justifyContent: 'center', gap: 2 },
+  stubStars: { color: colors.text, fontFamily: fonts.display, fontSize: 32 },
+  stubUnit: { color: colors.muted, fontFamily: fonts.medium, fontSize: 13 },
+  stubBonus: { color: colors.gold, fontFamily: fonts.medium, fontSize: 13 },
+  stubPrice: {
+    flex: 1,
+    paddingHorizontal: 16,
+    textAlignVertical: 'center',
+    color: colors.text,
+    fontFamily: fonts.medium,
+    fontSize: 16,
+  },
   walletHead: {
     flexDirection: 'row',
     alignItems: 'center',

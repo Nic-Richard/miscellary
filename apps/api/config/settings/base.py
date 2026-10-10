@@ -53,6 +53,13 @@ STRIPE_PRICE_IDS = env.json("STRIPE_PRICE_IDS", default={})
 STRIPE_PORTAL_CONFIGURATION = env.str("STRIPE_PORTAL_CONFIGURATION", default="")
 STRIPE_RETURN_URL = env.str("STRIPE_RETURN_URL", default="https://miscellary.com/account")
 STRIPE_MANAGED_PAYMENTS = env.bool("STRIPE_MANAGED_PAYMENTS", default=True)
+PLAY_BILLING_ENABLED = env.bool("PLAY_BILLING_ENABLED", default=False)
+PLAY_LIVE_APPROVED = env.bool("PLAY_LIVE_APPROVED", default=False)
+PLAY_PACKAGE_NAME = env.str("PLAY_PACKAGE_NAME", default="com.miscellary.app")
+PLAY_SERVICE_ACCOUNT = env.str("PLAY_SERVICE_ACCOUNT", default="")
+PLAY_SUBSCRIPTION_ID = env.str("PLAY_SUBSCRIPTION_ID", default="supporter")
+PLAY_RTDN_AUDIENCE = env.str("PLAY_RTDN_AUDIENCE", default="")
+PLAY_RTDN_SERVICE_ACCOUNT = env.str("PLAY_RTDN_SERVICE_ACCOUNT", default="")
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",

@@ -10,7 +10,7 @@ class PackOpening(models.Model):
     class Kind(models.TextChoices):
         FREE = "free", "Daily free pack"
         POINTS = "points", "Bought with set points"
-        STARS = "stars", "Bought with Stars and set points"
+        STARS = "stars", "Bought with tickets and set points"
         BONUS = "bonus", "Monthly bonus pack"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

@@ -89,7 +89,7 @@ def _price(product: str) -> int:
         return SUBSCRIPTION_PRICE_CENTS
     bundle = CREDIT_BUNDLES.get(product)
     if bundle is None:
-        raise actions.BillingError("Unknown Stars bundle.")
+        raise actions.BillingError("Unknown ticket bundle.")
     return bundle.price_cents
 
 

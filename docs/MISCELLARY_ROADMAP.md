@@ -16,16 +16,16 @@ Items are ordered roughly by current priority. The order can change as dependenc
 
 Monetization is now the next implementation batch, before the final Android build.
 Nic's detailed decisions are recorded in local-only `MONETIZATION_PLAN.md`: no ads,
-$4.99/month with 10 bonus packs and 100 Stars, 3/10 monthly publications,
+$4.99/month with 10 bonus packs and 100 tickets, 3/10 monthly publications,
 creator stats, subtle badge/showcases and a Lounge open to everyone. Credit bundles
 are $5/125, $10/275, $20/600 and $50/1,500; all credit spending earns the creator 20%,
 including own-set and reward-credit spending. Cancellation retains benefits through
-the paid period. The customer-facing currency is Stars for now; internal product
+the paid period. The customer-facing currency is tickets for now; internal product
 identifiers remain separate so renaming does not change balances.
 Local backend groundwork includes balances, transaction history, retry-safe grants,
-mixed points/Stars spending, creator rewards, monthly bonus packs and publishing usage.
+mixed points/ticket spending, creator rewards, monthly bonus packs and publishing usage.
 Paid pack modes and publication limits are disabled by default; production is unchanged.
-Local web/Android account and pack screens now show Stars/benefits, mixed-payment
+Local web/Android account and pack screens now show tickets/benefits, mixed-payment
 confirmation, monthly bonus options and effective set/per-card odds, with stable retry keys.
 Website checkout/management and the server-side Stripe adapter are implemented locally,
 including signed callbacks, retry-safe fulfillment and cancellation on account closure.
@@ -43,7 +43,7 @@ selection and reuses the same binder renderer on native. Headless preview checks
 replace native-device QA or clear the billing release gates.
 Nic selected Stripe first, Xsolla as backup; Managed Payments eligibility still needs
 written approval. Nothing committed yet. See docs/BILLING.md for setup and release gates.
-No live sales or new Android build. Provider setup/costs, refund adjustments, spent-Star
+No live sales or new Android build. Provider setup/costs, refund adjustments, spent-ticket
 refund policy, real billing QA and legal/store disclosures remain release gates.
 
 Google sign-in and all 13 themes were committed, pushed and deployed as 98b4759

@@ -15,7 +15,7 @@ class StarBalance(models.Model):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="star_balance"
     )
-    # Refunds of spent Stars can leave this below zero; see actions.reverse_grant.
+    # Refunds of spent tickets can leave this below zero; see actions.reverse_grant.
     units = models.BigIntegerField(default=0)
     reward_remainder = models.PositiveSmallIntegerField(default=0)
 
@@ -179,10 +179,11 @@ class StripeEvent(models.Model):
 
 
 class BillingReview(models.Model):
-    event = models.OneToOneField(StripeEvent, on_delete=models.CASCADE)
+    provider = models.CharField(max_length=10, choices=Provider.choices, default=Provider.WEB)
+    event = models.OneToOneField(StripeEvent, null=True, blank=True, on_delete=models.CASCADE)
     payment_reference = models.CharField(max_length=255)
     reason = models.CharField(max_length=100)
     resolved_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self) -> str:
-        return f"BillingReview<{self.event_id}>"
+        return f"BillingReview<{self.event_id or self.payment_reference}>"

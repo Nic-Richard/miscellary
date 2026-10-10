@@ -22,7 +22,7 @@ class OpenPackRequestSerializer(serializers.Serializer):
             )
         if payment == "stars" and "max_stars_units" not in attrs:
             raise serializers.ValidationError(
-                {"max_stars_units": "Confirm the maximum Stars to spend."}
+                {"max_stars_units": "Confirm the maximum tickets to spend."}
             )
         return attrs
 

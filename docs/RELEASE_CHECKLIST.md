@@ -26,7 +26,7 @@
 ## Every release
 
 - [ ] Before enabling monetization: complete `docs/BILLING.md` release gates, including
-      provider approval, spent-Star refund policy/adjustments, real billing QA,
+      provider approval, spent-ticket refund policy/adjustments, real billing QA,
       Android purchase restoration, Lounge moderation and updated legal/store disclosures.
 
 - [ ] CI green on `main`.

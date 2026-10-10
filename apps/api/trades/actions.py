@@ -14,7 +14,7 @@ from packs.models import OwnedCard
 from .models import TradeOffer, TradeOfferItem
 
 MAX_CARDS_PER_SIDE = 20
-RESTRICTED = "Trading is paused until your Stars balance is back to zero after a refund."
+RESTRICTED = "Trading is paused until your ticket balance is back to zero after a refund."
 
 
 class TradeError(Exception):

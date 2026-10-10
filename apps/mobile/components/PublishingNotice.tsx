@@ -11,8 +11,8 @@ export default function PublishingNotice({ allowance }: { allowance: PublishingA
         {new Date(allowance.resets_at).toLocaleDateString(undefined, { timeZone: 'UTC' })} (UTC).
       </Muted>
       <Muted>
-        Creators earn {allowance.creator_reward_percent}% of the Stars spent on their packs. Free
-        packs, set points and bonus packs do not earn Stars.
+        Creators earn {allowance.creator_reward_percent}% of the tickets spent on their packs. Free
+        packs, set points and bonus packs do not earn tickets.
       </Muted>
       {allowance.used >= (allowance.limit ?? Infinity) && (
         <Muted>You can keep making drafts while you wait for next month's allowance.</Muted>

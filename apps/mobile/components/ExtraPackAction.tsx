@@ -74,8 +74,8 @@ export default function ExtraPackAction({
         <>
           <Text style={styles.title}>Extra pack · {packPrice(quote)}</Text>
           <Muted>
-            You have {starAmount(quote.star_units, quote.units_per_star)} Stars. Set points are used
-            first.
+            You have {starAmount(quote.star_units, quote.units_per_star)} tickets. Set points are
+            used first.
           </Muted>
           <Muted>
             Per-card odds: {packOdds(quote)}. Cards are drawn independently; duplicates are

@@ -164,9 +164,9 @@ def open_pack_with_stars(
         or type(max_stars_units) is not int
         or not 0 <= max_stars_units <= EXTRA_PACK_POINT_COST * CREDIT_UNITS_PER_CREDIT
     ):
-        raise PackError("Confirm the Stars amount and purchase request key.")
+        raise PackError("Confirm the ticket amount and purchase request key.")
     if not settings.MONETIZATION_ENABLED:
-        raise PackError("Stars packs are not available yet.")
+        raise PackError("Ticket packs are not available yet.")
     if not card_set.is_published:
         raise PackError("This set isn't open for packs.")
     accounts = billing.lock_accounts([user.pk, card_set.creator_id])
@@ -187,9 +187,9 @@ def open_pack_with_stars(
     points_spent = min(points.balance, EXTRA_PACK_POINT_COST)
     stars_spent = (EXTRA_PACK_POINT_COST - points_spent) * CREDIT_UNITS_PER_CREDIT
     if stars_spent > max_stars_units:
-        raise PackError("The pack price changed. Check the points and Stars before opening.")
+        raise PackError("The pack price changed. Check the points and tickets before opening.")
     if balance.units < stars_spent:
-        raise PackError("You need more Stars or set points for this pack.")
+        raise PackError("You need more tickets or set points for this pack.")
     points.balance -= points_spent
     points.save(update_fields=["balance"])
     opening = _open(buyer, card_set, PackOpening.Kind.STARS)
