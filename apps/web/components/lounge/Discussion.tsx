@@ -34,7 +34,7 @@ const REMOVED: Partial<LoungePost> = {
 
 export default function Discussion({ postId }: { postId: string }) {
   const { user } = useAuth();
-  const { subscriber, patchPost, hideAuthor, reload } = useLounge();
+  const { subscriber, patchPost, hideAuthor, reload, showPost } = useLounge();
   const [post, setPost] = useState<LoungePost | null>(null);
   const [author, setAuthor] = useState<UserSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -73,6 +73,9 @@ export default function Discussion({ postId }: { postId: string }) {
       });
     return () => controller.abort();
   }, [postId, version, user, patchPost]);
+
+  useEffect(() => showPost(post), [post, showPost]);
+  useEffect(() => () => showPost(null), [showPost]);
 
   function update(patch: Partial<LoungePost>) {
     setPost((current) => (current ? { ...current, ...patch } : current));

@@ -72,6 +72,11 @@ class Profile(models.Model):
         "packs.OwnedCard", null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
     )
     avatar_key = models.CharField(max_length=255, blank=True)
+    # Copied from billing whenever a paid month or badge setting changes, so a supporter's
+    # emblem can be shown wherever their name appears without querying billing each time.
+    supporter_months = models.PositiveSmallIntegerField(default=0)
+    supporter_until = models.DateTimeField(null=True, blank=True)
+    supporter_shown = models.BooleanField(default=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self) -> str:

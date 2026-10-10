@@ -120,7 +120,6 @@ export function Button({ title, kind = 'primary', disabled, style, ...rest }: Bu
         {
           backgroundColor: bg,
           borderColor: border,
-          // A darker bottom edge makes buttons read as something you press.
           borderBottomWidth: solid || kind === 'secondary' ? 2 : 1,
           opacity: disabled ? (solid ? 1 : 0.5) : state.pressed ? 0.85 : 1,
           transform: [{ translateY: state.pressed && !disabled ? 1 : 0 }],

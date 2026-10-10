@@ -4,20 +4,30 @@ import { useEffect, useRef, useState } from 'react';
 import type { PackPayment, PaidPackQuote } from '@miscellary/shared';
 import { packOdds, packPrice, starAmount } from '@miscellary/shared';
 import { useAuth } from '@/lib/auth';
+import { refreshMembership, useMembership } from '@/lib/membership';
 import { getPackStatus } from '@/lib/packs';
+import Link from 'next/link';
 import ui from './ui.module.css';
 import styles from './ExtraPackAction.module.css';
 
 export default function ExtraPackAction({
   slug,
+  points,
+  packCost,
   busy,
   onOpen,
 }: {
   slug: string;
+  points: number;
+  packCost: number;
   busy: boolean;
   onOpen: (payment: PackPayment) => Promise<boolean>;
 }) {
   const { user } = useAuth();
+  const { tickets } = useMembership();
+  // Set points are spent first and each missing point costs one ticket.
+  const needed = Math.max(0, packCost - points);
+  const short = needed > tickets;
   const [quote, setQuote] = useState<PaidPackQuote | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -62,6 +72,7 @@ export default function ExtraPackAction({
       if (await onOpen(payment)) {
         setQuote(null);
         setAttempt(null);
+        refreshMembership();
       }
     } finally {
       sending.current = false;
@@ -135,14 +146,25 @@ export default function ExtraPackAction({
           </div>
         </div>
       ) : (
-        <button
-          type="button"
-          className={ui.btnQuiet}
-          disabled={busy || loading}
-          onClick={() => void show()}
-        >
-          {loading ? 'Loading options…' : 'Extra pack options'}
-        </button>
+        <div className={styles.offer}>
+          <button
+            type="button"
+            className={ui.btnOutline}
+            disabled={busy || loading || short}
+            onClick={() => void show()}
+          >
+            {loading
+              ? 'Loading…'
+              : needed
+                ? `Open with ${needed} ${needed === 1 ? 'ticket' : 'tickets'}`
+                : 'Open with set points'}
+          </button>
+          {short && (
+            <span className={styles.short}>
+              You have {Math.max(0, tickets)}. <Link href="/membership">Get tickets</Link>
+            </span>
+          )}
+        </div>
       )}
       {error ? (
         <p role="alert" className={ui.error}>

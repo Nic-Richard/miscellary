@@ -3,7 +3,7 @@
 import MembershipPanel from '@/components/MembershipPanel';
 import PageHeader from '@/components/PageHeader';
 import { useRequireAccount } from '@/lib/requireAccount';
-import styles from '../account/page.module.css';
+import styles from './page.module.css';
 
 export default function MembershipPage() {
   useRequireAccount();

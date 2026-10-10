@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import type { LoungePost, SavedFolder } from '@miscellary/shared';
 import { cardCode, loungeTopicLabel } from '@miscellary/shared';
 import CardPreview from '@/components/CardPreview';
@@ -11,6 +11,7 @@ import { timeAgo } from '@/lib/time';
 import ui from '@/components/ui.module.css';
 import type { LoungeSort, LoungeView } from './LoungeShell';
 import styles from './Lounge.module.css';
+import SupporterEmblem from '@/components/SupporterEmblem';
 
 type Window = 'today' | 'week' | 'month' | 'all';
 const WINDOWS = [
@@ -72,6 +73,12 @@ export default function DiscussionList({
   onReload: () => void;
 }) {
   const list = useRef<HTMLDivElement>(null);
+  const place = useRef(0);
+
+  // Hidden while a discussion is open, which resets its scroll, so put the reader back.
+  useLayoutEffect(() => {
+    if (!openId && list.current) list.current.scrollTop = place.current;
+  }, [openId]);
   const sentinel = useRef<HTMLDivElement>(null);
   const canLoad = hasNext && !loading && !error;
 
@@ -155,7 +162,14 @@ export default function DiscussionList({
           )}
         </div>
       )}
-      <div className={styles.rows} ref={list} aria-busy={loading}>
+      <div
+        className={styles.rows}
+        ref={list}
+        aria-busy={loading}
+        onScroll={(event) => {
+          if (!openId) place.current = event.currentTarget.scrollTop;
+        }}
+      >
         {newCount > 0 && view === 'all' && (
           <div className={styles.newPill}>
             <button
@@ -184,7 +198,10 @@ export default function DiscussionList({
               <span className={styles.rowTitle}>{post.title}</span>
               {post.body && <span className={styles.excerpt}>{post.body}</span>}
               <span className={styles.meta}>
-                <span>{post.author?.display_name || post.author?.username || 'Deleted'}</span>
+                <span>
+                  {post.author?.display_name || post.author?.username || 'Deleted'}
+                  <SupporterEmblem tier={post.author?.supporter_tier} />
+                </span>
                 {!topicLabel && (
                   <span className={styles.topic}>{loungeTopicLabel(post.topic)}</span>
                 )}
@@ -243,8 +260,7 @@ function Fan({ post }: { post: LoungePost }) {
             code={cardCode(card.printed_set_code, card.position, card.set_total)}
             printedText={card.printed_text}
             render={card.render}
-            previewThumbnail
-            renderMode="flat"
+            size="small"
           />
         </span>
       ))}

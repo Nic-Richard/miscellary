@@ -170,7 +170,7 @@ export default function LoungeThread({
           <div className={styles.replyMain}>
             <div className={styles.replyBy}>
               {reply.author ? (
-                <AuthorName person={reply.author} badge={reply.author_badge} avatarSize={28} />
+                <AuthorName person={reply.author} badge={reply.author_badge} avatarSize={32} />
               ) : (
                 <b className={ui.muted}>Removed</b>
               )}

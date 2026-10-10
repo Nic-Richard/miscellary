@@ -16,7 +16,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from accounts.models import User
-from billing.actions import badge_style, visible_badge
+from accounts.supporter import supporter_tier
+from billing.actions import badge_style, ring_style, visible_badge
 from cards import tags as tagging
 from cards.models import CardDefinition, CardSet, Tag
 from cards.serializers import CardSerializer, CardSetSerializer, CreatorSerializer
@@ -115,6 +116,9 @@ class ProfileView(APIView):
             "is_demo": user.is_demo,
             "subscriber_badge": visible_badge(user),
             "badge_style": badge_style(user),
+            "ring_style": ring_style(user),
+            "supporter_tier": supporter_tier(user),
+            "supporter_months": user.profile.supporter_months,
             "featured_card": featured_card(user),
             "showcase_slots": limit,
             "created_at": user.created_at,
@@ -696,7 +700,9 @@ class UserSummaryView(APIView):
         return Response(
             {
                 **CreatorSerializer(user).data,
-                "badge_style": badge_style(user),
+                "badge_style": ring_style(user),
+                "supporter_months": user.profile.supporter_months,
+                "bio": user.profile.bio,
                 "created_at": user.created_at,
                 "card_count": OwnedCard.objects.filter(owner=user).count(),
                 "set_count": CardSet.objects.filter(
@@ -727,3 +733,47 @@ class FeaturedCardView(APIView):
             user.profile.featured_card = get_object_or_404(OwnedCard, pk=owned_id, owner=user)
         user.profile.save(update_fields=["featured_card"])
         return Response({"featured_card": featured_card(user)})
+
+
+class StatusView(APIView):
+    """Counts for the status bar: everything waiting for this collector, in one request."""
+
+    def get(self, request: Request) -> Response:
+        from billing.models import StarBalance
+        from common.monetization import CREDIT_UNITS_PER_CREDIT
+        from trades.models import TradeOffer
+
+        user = me(request)
+        followed = set(
+            SetFollow.objects.filter(
+                user=user, card_set__status=CardSet.Status.PUBLISHED
+            ).values_list("card_set_id", flat=True)
+        )
+        if actions.has_unlimited_packs(user):
+            free_packs = len(followed)
+        else:
+            used = PackOpening.objects.filter(
+                user=user,
+                card_set_id__in=followed,
+                kind=PackOpening.Kind.FREE,
+                opened_on=timezone.now().date(),
+            ).values_list("card_set_id", flat=True)
+            free_packs = len(followed - set(used))
+        tickets = None
+        if settings.MONETIZATION_ENABLED:
+            units = (
+                StarBalance.objects.filter(user=user).values_list("units", flat=True).first() or 0
+            )
+            tickets = units // CREDIT_UNITS_PER_CREDIT
+        return Response(
+            {
+                "unread": unread_count(user),
+                "free_packs": free_packs,
+                "offers": TradeOffer.objects.filter(
+                    recipient=user, status=TradeOffer.Status.PENDING
+                ).count(),
+                "tickets": tickets,
+                "supporter_tier": supporter_tier(user),
+                "ring_style": ring_style(user),
+            }
+        )

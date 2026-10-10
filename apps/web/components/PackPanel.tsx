@@ -173,7 +173,13 @@ export default function PackPanel({
           )}
           {error ? <p className={ui.error}>{error}</p> : null}
           {status.monetization_enabled ? (
-            <ExtraPackAction slug={slug} busy={busy} onOpen={open} />
+            <ExtraPackAction
+              slug={slug}
+              points={pointBalance}
+              packCost={status.pack_cost}
+              busy={busy}
+              onOpen={open}
+            />
           ) : null}
         </div>
         {pouch}

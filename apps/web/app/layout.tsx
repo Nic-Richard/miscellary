@@ -23,6 +23,8 @@ import './globals.css';
 import { AuthProvider } from '@/lib/auth';
 import { SITE_URL } from '@/lib/seo';
 import Nav from '@/components/Nav';
+import StatusBar from '@/components/StatusBar';
+import { EmblemSprite } from '@/components/SupporterEmblem';
 import Theme from '@/components/Theme';
 import SidePanelScroll from '@/components/SidePanelScroll';
 import styles from './layout.module.css';
@@ -105,6 +107,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <div className={styles.shell}>
             <Nav />
             <div className={styles.content}>
+              <StatusBar />
               <main className={styles.main}>{children}</main>
               <footer className={styles.footer}>
                 <span>© {new Date().getFullYear()} Miscellary</span>
@@ -124,6 +127,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             document.head.appendChild(s);
           }
         `}</Script>
+        <EmblemSprite />
       </body>
     </html>
   );

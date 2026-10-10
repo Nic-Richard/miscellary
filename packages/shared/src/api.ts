@@ -210,6 +210,76 @@ export interface TagSummary extends Tag {
 
 export type SetStatus = 'draft' | 'published' | 'deleted' | 'removed';
 
+/** Everything waiting for the signed-in collector, for the status bar. */
+export interface AccountStatus {
+  unread: number;
+  free_packs: number;
+  offers: number;
+  /** Null while payments are switched off. */
+  tickets: number | null;
+  supporter_tier: SupporterTier | null;
+  ring_style: string | null;
+}
+
+/** A supporter's emblem, named after the card rarities, upgrading with months supported. */
+export type SupporterTier = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
+export const SUPPORTER_TIERS: { id: SupporterTier; label: string; months: number }[] = [
+  { id: 'common', label: 'Common', months: 1 },
+  { id: 'uncommon', label: 'Uncommon', months: 3 },
+  { id: 'rare', label: 'Rare', months: 6 },
+  { id: 'epic', label: 'Epic', months: 12 },
+  { id: 'legendary', label: 'Legendary', months: 24 },
+];
+
+/** Emblem artwork shared by web and app: a tilted card on a 26 by 34 grid. */
+export const EMBLEM_STAR =
+  'M0 -1L0.265 -0.364L0.951 -0.309L0.428 0.139L0.588 0.809L0 0.45L-0.588 0.809L-0.428 0.139L-0.951 -0.309L-0.265 -0.364Z';
+export const EMBLEM_ART: Record<
+  SupporterTier,
+  { stops: string[]; edge: string; star: string; frame: number; sparkle: boolean; shine: number }
+> = {
+  common: {
+    stops: ['#c3c8cc', '#8a9196', '#5c6368'],
+    edge: '#3f4549',
+    star: '#ffffff',
+    frame: 0,
+    sparkle: false,
+    shine: 0,
+  },
+  uncommon: {
+    stops: ['#9cc0ea', '#3f6ea8', '#244a78'],
+    edge: '#1d3c63',
+    star: '#ffffff',
+    frame: 0.45,
+    sparkle: false,
+    shine: 0,
+  },
+  rare: {
+    stops: ['#c9b4ea', '#7b5fa3', '#4d3770'],
+    edge: '#3a2858',
+    star: '#ffffff',
+    frame: 0.55,
+    sparkle: false,
+    shine: 0.5,
+  },
+  epic: {
+    stops: ['#ffd0e6', '#c0568c', '#f6b3d2', '#7d2f58'],
+    edge: '#5e2142',
+    star: '#ffffff',
+    frame: 0.7,
+    sparkle: true,
+    shine: 0.6,
+  },
+  legendary: {
+    stops: ['#fff6dc', '#c9a24a', '#f6b3c9', '#b9d7ff', '#fff1a8', '#8a6a24'],
+    edge: '#5e4518',
+    star: '#3a2a0c',
+    frame: 0.55,
+    sparkle: true,
+    shine: 0.7,
+  },
+};
+
 export interface Creator {
   username: string;
   display_name: string;
@@ -217,6 +287,7 @@ export interface Creator {
   is_demo: boolean;
   /** A closed account: show it as a deleted user and do not link to it. */
   deleted: boolean;
+  supporter_tier?: SupporterTier | null;
 }
 
 export interface Card {
@@ -379,6 +450,9 @@ export interface ProfilePage extends PublicProfile {
   is_me: boolean;
   is_blocked: boolean;
   badge_style?: string | null;
+  ring_style?: string | null;
+  supporter_tier?: SupporterTier | null;
+  supporter_months?: number;
   featured_card?: (Card & { set_title: string; set_slug: string }) | null;
   showcase_slots?: number;
   showcase_title: string;

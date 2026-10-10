@@ -15,6 +15,7 @@ import ui from '@/components/ui.module.css';
 import DiscussionList from './DiscussionList';
 import StartDiscussion from './StartDiscussion';
 import BlockedList from './BlockedList';
+import LoungeRail from './LoungeRail';
 import styles from './Lounge.module.css';
 
 export type LoungeSort = 'active' | 'new' | 'top';
@@ -27,6 +28,7 @@ interface LoungeContextValue {
   hideAuthor: (username: string) => void;
   startDiscussion: () => void;
   reload: () => void;
+  showPost: (post: LoungePost | null) => void;
 }
 
 const LoungeContext = createContext<LoungeContextValue | null>(null);
@@ -63,6 +65,7 @@ export default function LoungeShell({ children }: { children: ReactNode }) {
   const [view, setView] = useState<LoungeView>('all');
   const [folder, setFolder] = useState('');
   const [folders, setFolders] = useState<SavedFolder[]>([]);
+  const [openPost, setOpenPost] = useState<LoungePost | null>(null);
 
   useEffect(() => {
     const next = query.trim();
@@ -175,9 +178,12 @@ export default function LoungeShell({ children }: { children: ReactNode }) {
   }, [user, router, pathname]);
 
   const open = Boolean(openId) || pane !== 'discussion';
+  const railPost = openId && openPost?.id === openId && pane === 'discussion' ? openPost : null;
 
   return (
-    <LoungeContext.Provider value={{ subscriber, patchPost, hideAuthor, startDiscussion, reload }}>
+    <LoungeContext.Provider
+      value={{ subscriber, patchPost, hideAuthor, startDiscussion, reload, showPost: setOpenPost }}
+    >
       <section className={styles.shell} data-open={open || undefined}>
         <PageHeader
           title="Lounge"
@@ -210,7 +216,7 @@ export default function LoungeShell({ children }: { children: ReactNode }) {
         {!enabled ? (
           <p className={ui.muted}>The Lounge is not open yet.</p>
         ) : (
-          <>
+          <div className={styles.stage}>
             <nav className={styles.tabs} aria-label="Lounge topics">
               {[{ id: '' as const, label: 'All topics' }, ...LOUNGE_TOPICS].map((item) => (
                 <button
@@ -283,7 +289,14 @@ export default function LoungeShell({ children }: { children: ReactNode }) {
                 )}
               </div>
             </div>
-          </>
+            <LoungeRail
+              post={railPost}
+              topic={topic}
+              subscriber={subscriber}
+              onView={showView}
+              onStart={startDiscussion}
+            />
+          </div>
         )}
       </section>
     </LoungeContext.Provider>

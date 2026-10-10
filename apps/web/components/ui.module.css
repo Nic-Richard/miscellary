@@ -94,7 +94,6 @@
   background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 86%, white), var(--accent));
   border-color: var(--accent-deep);
   color: var(--accent-text);
-  /* A 1px lip under the button makes it read as something you press. */
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.22),
     0 1px 0 var(--accent-deep),
@@ -479,4 +478,64 @@ textarea.input {
   box-shadow:
     0 6px 14px rgba(var(--shadow-rgb), calc(0.12 * var(--shadow-boost))),
     inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+}
+
+/* Divider tabs of a binder, sitting on the board below them. */
+.binderTabs {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  margin: 6px 0 -18px;
+  padding-left: 4px;
+  overflow-x: auto;
+}
+.binderTab {
+  composes: surfaceTone;
+  flex: none;
+  padding: 8px 16px 9px;
+  border: 1px solid var(--bdr);
+  border-bottom: 0;
+  border-radius: 8px 8px 0 0;
+  background: var(--sur2);
+  color: var(--muted);
+  font: 600 15px / 1.2 var(--body);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.binderTab:hover {
+  color: var(--text);
+}
+.binderTab[aria-pressed='true'] {
+  position: relative;
+  z-index: 3;
+  margin-bottom: -1px;
+  padding-top: 11px;
+  padding-bottom: 10px;
+  background: var(--sur);
+  color: var(--text);
+  box-shadow:
+    inset 0 3px 0 var(--accent),
+    inset 0 4px 0 var(--edge-light);
+}
+.binderTab:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -4px;
+}
+
+/* The Lounge's main board: paper under the active binder tab, without the stitched edge. */
+.board {
+  composes: surfaceTone;
+  position: relative;
+  z-index: 2;
+  color: var(--text);
+  background:
+    var(--paper) center / 220px,
+    linear-gradient(var(--sur), var(--sur));
+  background-blend-mode: multiply;
+  border: 1px solid var(--bdr);
+  border-radius: 0 14px 14px 14px;
+  box-shadow: var(--lift);
+}
+.boardInner {
+  background: color-mix(in srgb, var(--sur2) 45%, transparent);
 }

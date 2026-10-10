@@ -42,6 +42,7 @@ import ui from '@/components/ui.module.css';
 import wide from '@/components/pageWide.module.css';
 import SetCover from '@/components/SetCover';
 import styles from './page.module.css';
+import SupporterEmblem from '@/components/SupporterEmblem';
 
 const FOLLOW_ACTION = 'follow';
 const LIKE_CARD_ACTION = 'like-card';
@@ -422,7 +423,10 @@ export default function BinderClient({
             <PersonLink person={set.creator} className={styles.creatorLink}>
               <span className={styles.monogram}>{creatorName[0]?.toUpperCase()}</span>
               <span className={styles.creatorName}>
-                <strong>{creatorName}</strong>
+                <strong>
+                  {creatorName}
+                  <SupporterEmblem tier={set.creator.supporter_tier} />
+                </strong>
                 {set.creator.deleted ? null : <small>@{set.creator.username}</small>}
               </span>
             </PersonLink>

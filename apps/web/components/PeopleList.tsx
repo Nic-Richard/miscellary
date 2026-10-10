@@ -6,6 +6,7 @@ import type { Creator } from '@miscellary/shared';
 import { listFollows } from '@/lib/social';
 import Sheet, { Empty } from './Sheet';
 import styles from './PeopleList.module.css';
+import SupporterEmblem from './SupporterEmblem';
 
 export default function PeopleList({
   username,
@@ -79,7 +80,10 @@ export default function PeopleList({
                   {(p.display_name || p.username)[0]?.toUpperCase()}
                 </span>
                 <span className={styles.names}>
-                  <strong>{p.display_name || p.username}</strong>
+                  <strong>
+                    {p.display_name || p.username}
+                    <SupporterEmblem tier={p.supporter_tier} />
+                  </strong>
                   <small>@{p.username}</small>
                 </span>
               </Link>

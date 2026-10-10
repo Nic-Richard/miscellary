@@ -5,7 +5,6 @@ import { useMembership } from '@/lib/membership';
 import { createThemedStyles, fonts } from '@/lib/theme';
 import { Button } from './ui';
 
-/** Explains a supporter feature where it would be used, while memberships are on. */
 export default function SupporterPrompt({ children }: { children: ReactNode }) {
   const styles = useStyles();
   const { enabled, supporter } = useMembership();

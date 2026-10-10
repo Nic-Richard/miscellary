@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import type { Notification, NotificationKind } from '@miscellary/shared';
 import PageHeader from '@/components/PageHeader';
 import { NOTICE_EVENT } from '@/components/Nav';
@@ -12,6 +12,7 @@ import { getNotifications, markNotificationsRead } from '@/lib/social';
 import { timeAgo } from '@/lib/time';
 import ui from '@/components/ui.module.css';
 import styles from './page.module.css';
+import SupporterEmblem from '@/components/SupporterEmblem';
 
 const HEART =
   'M12 20.4 4.2 12.8a4.6 4.6 0 0 1 0-6.6 4.6 4.6 0 0 1 6.5 0l1.3 1.3 1.3-1.3a4.6 4.6 0 0 1 6.5 0 4.6 4.6 0 0 1 0 6.6Z';
@@ -67,6 +68,17 @@ function describe(n: Notification): { text: string; href: string | null } {
   }
 }
 
+function dayGroup(iso: string): string {
+  const day = new Date(iso);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const days = Math.floor((today.getTime() - new Date(day).setHours(0, 0, 0, 0)) / 86_400_000);
+  if (days <= 0) return 'Today';
+  if (days === 1) return 'Yesterday';
+  if (days < 7) return 'This week';
+  return 'Earlier';
+}
+
 function Row({ notification }: { notification: Notification }) {
   const { text, href } = describe(notification);
   const actor = notification.actor;
@@ -88,7 +100,10 @@ function Row({ notification }: { notification: Notification }) {
 
       <span className={styles.line}>
         <span className={styles.said}>
-          <strong>{actor.display_name || `@${actor.username}`}</strong>
+          <strong>
+            {actor.display_name || `@${actor.username}`}
+            <SupporterEmblem tier={actor.supporter_tier} />
+          </strong>{' '}
           {text}
         </span>
         {notification.comment_body || notification.lounge_reply_body ? (
@@ -210,23 +225,23 @@ export default function NotificationsPage() {
       />
       {error ? <p className={ui.error}>{error}</p> : null}
 
-      <div className={styles.column}>
-        {FILTERS.some((f) => f.value !== 'all' && counts[f.value] > 0) ? (
-          <div className={`${ui.segments} ${styles.filters}`} role="tablist" aria-label="Show">
+      <div className={styles.layout}>
+        <Sheet className={styles.filterSheet}>
+          <nav className={styles.filters} aria-label="Show">
             {FILTERS.filter((f) => f.value === 'all' || counts[f.value] > 0).map((f) => (
               <button
                 key={f.value}
                 type="button"
-                role="tab"
-                aria-selected={filter === f.value}
-                className={`${ui.segment} ${filter === f.value ? ui.segmentOn : ''}`}
+                aria-pressed={filter === f.value}
+                className={styles.filter}
                 onClick={() => setFilter(f.value)}
               >
                 {f.label}
+                <span>{counts[f.value]}</span>
               </button>
             ))}
-          </div>
-        ) : null}
+          </nav>
+        </Sheet>
         <Sheet>
           {rows === null ? (
             <Empty icon="cards">Loading…</Empty>
@@ -253,9 +268,16 @@ export default function NotificationsPage() {
                 </Empty>
               ) : (
                 <ul className={styles.rows}>
-                  {shown.map((n) => (
-                    <Row key={n.id} notification={n} />
-                  ))}
+                  {shown.map((n, index) => {
+                    const group = dayGroup(n.created_at);
+                    const first = index === 0 || dayGroup(shown[index - 1]!.created_at) !== group;
+                    return (
+                      <Fragment key={n.id}>
+                        {first && <li className={styles.day}>{group}</li>}
+                        <Row notification={n} />
+                      </Fragment>
+                    );
+                  })}
                 </ul>
               )}
               {more ? (

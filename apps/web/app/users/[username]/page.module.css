@@ -2,11 +2,13 @@
   min-width: 0;
 }
 .header {
+  composes: sheet from '../../../components/Sheet.module.css';
   display: grid;
-  grid-template-columns: 208px minmax(320px, 1fr) 300px;
+  grid-template-columns: 208px minmax(320px, 1fr) 260px;
   gap: 36px;
-  align-items: start;
-  padding: 6px 8px 28px;
+  align-items: center;
+  margin-bottom: 26px;
+  padding: 30px 34px;
 }
 
 .idSleeve {
@@ -133,7 +135,31 @@
   box-shadow: var(--shadow-sm);
 }
 .statsPanel {
-  margin-top: 20px;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  padding-left: 28px;
+  border-left: 1px dashed var(--bdr2);
+}
+.statsPanel > ul {
+  width: 100%;
+}
+.lower {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 22px;
+  align-items: start;
+}
+/* An open binder needs the full width, so the sets move below it. */
+.lower:has([data-binder-open]) {
+  grid-template-columns: minmax(0, 1fr);
+}
+.binderPanel {
+  min-width: 0;
+}
+.setsSheet {
+  composes: sheet from '../../../components/Sheet.module.css';
+  min-width: 0;
 }
 
 .section {
@@ -143,6 +169,9 @@
 }
 
 @media (max-width: 1180px) {
+  .lower {
+    grid-template-columns: minmax(0, 1fr);
+  }
   .header {
     grid-template-columns: 170px minmax(0, 1fr);
   }
@@ -151,7 +180,9 @@
   }
   .statsPanel {
     grid-column: 1 / -1;
-    margin-top: 0;
+    padding: 18px 0 0;
+    border-top: 1px dashed var(--bdr2);
+    border-left: 0;
   }
   .statsPanel ul {
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -161,7 +192,7 @@
   .header {
     grid-template-columns: 110px minmax(0, 1fr);
     gap: 16px;
-    padding-inline: 0;
+    padding: 20px 18px;
   }
   .idSleeve {
     width: 110px;

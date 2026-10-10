@@ -219,7 +219,12 @@ export default function MembershipPanel() {
             </View>
             <PerkLink label="View" onPress={() => router.push('/studio')} />
           </View>
-          <View style={[styles.perk, styles.perkLast]}>
+          <View
+            style={[
+              styles.perk,
+              !(sub.active && membership.show_badge !== false) && styles.perkLast,
+            ]}
+          >
             <View style={styles.perkCount}>
               <Svg width={16} height={16} viewBox="0 0 24 24">
                 <Path
@@ -232,12 +237,14 @@ export default function MembershipPanel() {
               </Svg>
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.perkTitle}>Supporter badge</Text>
-              <Text style={styles.perkNote}>On your profile and in the Lounge</Text>
+              <Text style={styles.perkTitle}>Supporter emblem</Text>
+              <Text style={styles.perkNote}>
+                By your name everywhere. Upgrades at 3, 6, 12 and 24 months
+              </Text>
             </View>
             {sub.active && (
               <Switch
-                accessibilityLabel="Show supporter badge"
+                accessibilityLabel="Show supporter emblem"
                 value={membership.show_badge !== false}
                 disabled={saving}
                 onValueChange={(value) => void saveSettings({ show_badge: value })}
@@ -246,6 +253,32 @@ export default function MembershipPanel() {
               />
             )}
           </View>
+          {sub.active && membership.show_badge !== false && (
+            <View style={[styles.perk, styles.perkLast]}>
+              <View style={styles.perkCount}>
+                <Svg width={16} height={16} viewBox="0 0 24 24">
+                  <Path
+                    d="M12 4a8 8 0 1 0 0 16a8 8 0 1 0 0-16Z"
+                    fill="none"
+                    stroke={colors.accentInk}
+                    strokeWidth={1.8}
+                  />
+                </Svg>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.perkTitle}>Foil avatar ring</Text>
+                <Text style={styles.perkNote}>In your chosen colour and finish</Text>
+              </View>
+              <Switch
+                accessibilityLabel="Show foil avatar ring"
+                value={membership.show_ring !== false}
+                disabled={saving}
+                onValueChange={(value) => void saveSettings({ show_ring: value })}
+                trackColor={{ true: colors.accent, false: colors.bdr2 }}
+                thumbColor={colors.sur}
+              />
+            </View>
+          )}
         </View>
         {sub.active && membership.show_badge !== false && user && (
           <BadgePicker

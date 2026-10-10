@@ -8,7 +8,6 @@ import styles from './SupporterPrompt.module.css';
 
 export const MEMBERSHIP_HREF = '/membership';
 
-/** Explains a supporter feature where it would be used, while memberships are on. */
 export default function SupporterPrompt({
   children,
   compact = false,

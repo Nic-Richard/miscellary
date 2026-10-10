@@ -1,10 +1,11 @@
 from datetime import UTC, datetime, timedelta
+from uuid import UUID
 
 from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
 
-from accounts.models import User
+from accounts.models import Profile, User
 from common.monetization import (
     CREATOR_REWARD_PERCENT,
     CREDIT_BUNDLES,
@@ -174,6 +175,7 @@ def grant_subscription_period(
     )
     balance, _ = StarBalance.objects.get_or_create(user=locked)
     record_entry(balance, StarEntry.Kind.GRANT, grant.units, grant=grant)
+    sync_supporter(locked.pk)
     return period
 
 
@@ -207,6 +209,27 @@ def reverse_grant(grant: StarGrant, refunded: int, paid: int, *, restore: bool =
             period.ends_at = max(now, period.starts_at + timedelta(seconds=1))
         period.bonus_packs_remaining = 0
         period.save(update_fields=["ends_at", "bonus_packs_remaining"])
+        sync_supporter(grant.user_id)
+
+
+def sync_supporter(user_id: UUID) -> None:
+    """Copy a collector's paid months and badge setting onto their profile."""
+    periods = list(
+        SubscriptionPeriod.objects.filter(subscription__user_id=user_id).select_related("grant")
+    )
+    refunds: dict[int, int] = {}
+    for grant_id, units in StarEntry.objects.filter(
+        grant__period__subscription__user_id=user_id, kind=StarEntry.Kind.REFUND
+    ).values_list("grant_id", "units"):
+        refunds[grant_id] = refunds.get(grant_id, 0) - units
+    # A fully refunded month doesn't count towards the emblem.
+    paid = [p for p in periods if refunds.get(p.grant_id, 0) < p.grant.units]
+    shown = not MembershipSettings.objects.filter(user_id=user_id, show_badge=False).exists()
+    Profile.objects.filter(user_id=user_id).update(
+        supporter_months=len(paid),
+        supporter_until=max((p.ends_at for p in periods), default=None),
+        supporter_shown=shown,
+    )
 
 
 def trade_restricted(user: User) -> bool:
@@ -242,6 +265,14 @@ def badge_style(user: User) -> str | None:
         return None
     options = MembershipSettings.objects.filter(user=user).first()
     return f"{options.badge_colour}-{options.badge_finish}" if options else "gold-foil"
+
+
+def ring_style(user: User) -> str | None:
+    """The avatar ring as "colour-finish", or None when the supporter has turned it off."""
+    style = badge_style(user)
+    if style and MembershipSettings.objects.filter(user=user, show_ring=False).exists():
+        return None
+    return style
 
 
 def monthly_publications(user: User, at: datetime | None = None) -> tuple[int, int, datetime]:

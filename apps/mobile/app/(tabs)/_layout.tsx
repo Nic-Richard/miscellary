@@ -3,6 +3,7 @@ import { Pressable, Text } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 import Svg, { Path } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import StatusPill from '@/components/StatusPill';
 import { fonts, useColors } from '@/lib/theme';
 
 function icon(name: React.ComponentProps<typeof Feather>['name']) {
@@ -36,6 +37,7 @@ export default function TabsLayout() {
         headerTintColor: colors.pageText,
         headerTitleStyle: { fontFamily: fonts.display, fontSize: 26 },
         headerShadowVisible: false,
+        headerRight: () => <StatusPill />,
         tabBarStyle: {
           backgroundColor: colors.sur,
           borderTopColor: colors.bdr2,

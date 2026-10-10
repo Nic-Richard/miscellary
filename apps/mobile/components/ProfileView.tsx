@@ -22,6 +22,7 @@ import DemoBadge from './DemoBadge';
 import SupporterBadge from './SupporterBadge';
 import SharedSurface from './SharedSurface';
 import { Button, Muted } from './ui';
+import SupporterEmblem from '@/components/SupporterEmblem';
 
 export default function ProfileView({
   profile: initial,
@@ -115,13 +116,26 @@ export default function ProfileView({
       <View style={styles.header}>
         <Avatar
           person={{ ...profile, deleted: false }}
-          badge={profile.subscriber_badge ? (profile.badge_style ?? 'gold-foil') : null}
+          badge={
+            profile.subscriber_badge
+              ? profile.ring_style !== undefined
+                ? profile.ring_style
+                : (profile.badge_style ?? 'gold-foil')
+              : null
+          }
           size={56}
         />
         <View style={{ flex: 1, gap: 4 }}>
-          <Text style={{ color: colors.pageText, fontSize: 22, fontWeight: '700' }}>
-            {profile.display_name || profile.username}
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Text style={{ color: colors.pageText, fontSize: 22, fontWeight: '700' }}>
+              {profile.display_name || profile.username}
+            </Text>
+            <SupporterEmblem
+              tier={profile.supporter_tier}
+              months={profile.supporter_months}
+              size={22}
+            />
+          </View>
           {profile.subscriber_badge && <SupporterBadge badge={profile.badge_style} />}
           {profile.is_demo ? <DemoBadge /> : null}
           <Muted style={{ color: colors.pageMuted }}>@{profile.username}</Muted>

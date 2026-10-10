@@ -12,6 +12,7 @@ from django.utils import timezone
 from rest_framework.test import APIClient
 
 from accounts.lifecycle import delete_account
+from accounts.supporter import supporter_tier
 from billing import actions
 from billing.actions import visible_badge
 from billing.models import MembershipSettings, StarBalance, StarEntry, StarGrant, SubscriptionPeriod
@@ -137,6 +138,29 @@ def test_supporter_badge_is_optional_and_expires(user, auth_client, settings):
     period.starts_at = period.ends_at - timedelta(days=30)
     period.save()
     assert not visible_badge(user)
+
+
+def test_supporter_emblem_counts_paid_months_and_follows_settings(user, auth_client):
+    def tier():
+        user.refresh_from_db()
+        user.profile.refresh_from_db()
+        return supporter_tier(user)
+
+    assert tier() is None
+    now = timezone.now()
+    for month in range(3):
+        start = now - timedelta(days=30 * (3 - month), hours=1)
+        subscribe(user, f"old-{month}", start, start + timedelta(days=30))
+    assert tier() is None
+    current = subscribe(user, "now")
+    assert tier() == "uncommon" and user.profile.supporter_months == 4
+    route = reverse("billing:membership")
+    auth_client.patch(route, {"show_badge": False}, format="json")
+    assert tier() is None
+    response = auth_client.patch(route, {"show_badge": True, "show_ring": False}, format="json")
+    assert response.data["show_ring"] is False and tier() == "uncommon"
+    actions.reverse_grant(current.grant, 500, 500)
+    assert tier() is None and user.profile.supporter_months == 3
 
 
 def test_mixed_payment_rewards_and_retry(user):

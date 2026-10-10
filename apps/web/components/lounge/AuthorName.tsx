@@ -12,13 +12,14 @@ import { userSummary } from '@/lib/lounge';
 import { setFollow } from '@/lib/social';
 import ui from '@/components/ui.module.css';
 import styles from './Lounge.module.css';
+import SupporterEmblem from '@/components/SupporterEmblem';
 
 const OPEN_DELAY = 350;
 
 export default function AuthorName({
   person,
   badge,
-  avatarSize = 24,
+  avatarSize = 28,
   className,
 }: {
   person: Creator | null;
@@ -81,13 +82,17 @@ export default function AuthorName({
       <PersonLink person={person} className={styles.who}>
         <Avatar person={person} badge={badge} size={avatarSize} />
         {name}
+        <SupporterEmblem tier={person.supporter_tier} />
       </PersonLink>
       {open && summary && (
         <span className={styles.hoverCard} role="dialog" aria-label={`${name}'s profile`}>
           <span className={styles.hoverHead}>
             <Avatar person={summary} badge={summary.badge_style} size={40} />
             <span>
-              <b>{summary.display_name || summary.username}</b>
+              <b>
+                {summary.display_name || summary.username}
+                <SupporterEmblem tier={summary.supporter_tier} months={summary.supporter_months} />
+              </b>
               <small>Collecting since {new Date(summary.created_at).getFullYear()}</small>
             </span>
           </span>
@@ -103,8 +108,7 @@ export default function AuthorName({
                   code={cardCode(featured.printed_set_code, featured.position, featured.set_total)}
                   printedText={featured.printed_text}
                   render={featured.render}
-                  previewThumbnail
-                  renderMode="flat"
+                  size="small"
                 />
               </span>
               <span>

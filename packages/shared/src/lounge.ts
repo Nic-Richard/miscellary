@@ -69,6 +69,8 @@ export interface SavedFolder {
 }
 export interface UserSummary extends Creator {
   badge_style: BadgeStyle;
+  supporter_months: number;
+  bio: string;
   created_at: string;
   card_count: number;
   set_count: number;

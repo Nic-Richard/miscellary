@@ -5,6 +5,7 @@ import { Pressable, Text, View } from 'react-native';
 import { listFollows } from '@/lib/endpoints';
 import { fonts, createThemedStyles } from '@/lib/theme';
 import { ErrorText, Muted } from './ui';
+import SupporterEmblem from '@/components/SupporterEmblem';
 
 export default function PeopleList({
   username,
@@ -76,7 +77,10 @@ export default function PeopleList({
             href={{ pathname: '/users/[username]', params: { username: p.username } }}
             style={styles.person}
           >
-            <Text style={styles.name}>{p.display_name || p.username}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+              <Text style={styles.name}>{p.display_name || p.username}</Text>
+              <SupporterEmblem tier={p.supporter_tier} />
+            </View>
             <Text style={styles.handle}> @{p.username}</Text>
           </Link>
         ))

@@ -8,6 +8,7 @@ import { useAuth } from '@/lib/auth';
 import { deleteComment, getComments, postComment } from '@/lib/endpoints';
 import { fonts, useColors, createThemedStyles } from '@/lib/theme';
 import { Button, ErrorText, Input, Muted } from './ui';
+import SupporterEmblem from '@/components/SupporterEmblem';
 
 const MAX = 1000;
 
@@ -146,6 +147,7 @@ function Entry({
                 <Text style={styles.authorText}>{personName(author)}</Text>
               </Link>
             )}
+            <SupporterEmblem tier={author.supporter_tier} />
             {comment.is_creator ? <Text style={styles.creatorMark}>Creator</Text> : null}
             <Text style={styles.when}>{timeAgo(comment.created_at)}</Text>
           </View>

@@ -583,7 +583,13 @@ export default function BinderScreen() {
                 onPress={() => void open(true)}
               />
               {status.monetization_enabled ? (
-                <ExtraPackAction slug={slug} busy={busy} onOpen={open} />
+                <ExtraPackAction
+                  slug={slug}
+                  points={status.points}
+                  packCost={status.pack_cost}
+                  busy={busy}
+                  onOpen={open}
+                />
               ) : null}
             </>
           ) : null}

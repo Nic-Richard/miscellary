@@ -16,6 +16,7 @@ import Cards from './Cards';
 import ReplyComposer from './ReplyComposer';
 import RichText from './RichText';
 import VoteControl from './VoteControl';
+import SupporterEmblem from '@/components/SupporterEmblem';
 
 const SORTS = [
   { value: 'top', label: 'Top' },
@@ -158,6 +159,9 @@ export default function LoungeThread({
                     {reply.author.display_name || reply.author.username}
                   </Text>
                 </Pressable>
+              ) : null}
+              {reply.author ? (
+                <SupporterEmblem tier={reply.author.supporter_tier} />
               ) : (
                 <Text style={styles.removedName}>Removed</Text>
               )}
@@ -370,7 +374,7 @@ const useStyles = createThemedStyles((colors) => ({
     color: colors.accentText,
     backgroundColor: colors.accent,
     fontFamily: fonts.medium,
-    fontSize: 11,
+    fontSize: 12,
     letterSpacing: 0.5,
     paddingHorizontal: 6,
     paddingVertical: 1,

@@ -21,8 +21,10 @@ import { apiFetch } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { listFolders } from '@/lib/lounge';
 import { RETURN_PARAM } from '@/lib/returnTo';
+import Svg, { Path } from 'react-native-svg';
 import { createThemedStyles, fonts, useColors } from '@/lib/theme';
 import { lounge } from './store';
+import SupporterEmblem from '@/components/SupporterEmblem';
 
 type Sort = 'active' | 'new' | 'top';
 const SORTS: { id: Sort; label: string }[] = [
@@ -479,17 +481,19 @@ function Row({ post, showTopic }: { post: LoungePost; showTopic: boolean }) {
   const styles = useStyles();
   const name = post.author?.display_name || post.author?.username || 'Deleted collector';
   const replies = `${post.reply_count} ${post.reply_count === 1 ? 'reply' : 'replies'}`;
+  const [size, setSize] = useState({ width: 0, height: 0 });
   return (
     <Pressable
       accessibilityRole="link"
       accessibilityLabel={`${post.title}, by ${name}, ${post.score} votes, ${replies}`}
       onPress={() => router.push(`/lounge/${post.id}`)}
-      style={({ pressed }) => [styles.row, pressed && { backgroundColor: colors.sur2 }]}
+      onLayout={(event) => setSize(event.nativeEvent.layout)}
+      style={({ pressed }) => [styles.row, pressed && { opacity: 0.85 }]}
     >
+      {size.width > 0 && <Slip width={size.width} height={size.height} />}
       <View style={styles.stub}>
         <Text style={styles.stubScore}>{post.score}</Text>
         <Text style={styles.stubLabel}>{Math.abs(post.score) === 1 ? 'VOTE' : 'VOTES'}</Text>
-        <Perforation />
       </View>
       <View style={styles.rowMain}>
         <Text style={styles.rowTitle} numberOfLines={2}>
@@ -506,6 +510,7 @@ function Row({ post, showTopic }: { post: LoungePost; showTopic: boolean }) {
             <Text style={styles.metaText} numberOfLines={1}>
               {name}
             </Text>
+            <SupporterEmblem tier={post.author?.supporter_tier} size={13} />
           </View>
           {showTopic && <Text style={styles.topic}>{loungeTopicLabel(post.topic)}</Text>}
           <View style={styles.count}>
@@ -522,19 +527,36 @@ function Row({ post, showTopic }: { post: LoungePost; showTopic: boolean }) {
   );
 }
 
-// A dashed tear line with half-circle cuts, like a ticket stub.
-function Perforation() {
-  const styles = useStyles();
+const STUB = 58;
+const NOTCH = 6;
+const RADIUS = 10;
+
+function Slip({ width, height }: { width: number; height: number }) {
+  const colors = useColors();
+  const w = width - 1;
+  const h = height - 1;
+  const [r, x, n] = [RADIUS, STUB, NOTCH];
+  const outline = [
+    `M ${r} 0 H ${x - n} A ${n} ${n} 0 0 0 ${x + n} 0 H ${w - r} A ${r} ${r} 0 0 1 ${w} ${r}`,
+    `V ${h - r} A ${r} ${r} 0 0 1 ${w - r} ${h} H ${x + n} A ${n} ${n} 0 0 0 ${x - n} ${h}`,
+    `H ${r} A ${r} ${r} 0 0 1 0 ${h - r} V ${r} A ${r} ${r} 0 0 1 ${r} 0 Z`,
+  ].join(' ');
+  const stub = [
+    `M ${r} 0 H ${x - n} A ${n} ${n} 0 0 0 ${x} ${n} V ${h - n} A ${n} ${n} 0 0 0 ${x - n} ${h}`,
+    `H ${r} A ${r} ${r} 0 0 1 0 ${h - r} V ${r} A ${r} ${r} 0 0 1 ${r} 0 Z`,
+  ].join(' ');
   return (
-    <>
-      <View style={styles.perforation}>
-        {Array.from({ length: 9 }, (_, index) => (
-          <View key={index} style={styles.dash} />
-        ))}
-      </View>
-      <View style={[styles.notch, { top: -7 }]} />
-      <View style={[styles.notch, { bottom: -7 }]} />
-    </>
+    <Svg width={width} height={height} style={{ position: 'absolute', top: 0, left: 0 }}>
+      <Path d={outline} transform="translate(0.5 0.5)" fill={colors.sur} />
+      <Path d={stub} transform="translate(0.5 0.5)" fill={colors.sur2} />
+      <Path
+        d={`M ${x + 0.5} ${n + 5} V ${h - n - 4}`}
+        stroke={colors.bdr2}
+        strokeWidth={2}
+        strokeDasharray="4 4"
+      />
+      <Path d={outline} transform="translate(0.5 0.5)" fill="none" stroke={colors.bdr} />
+    </Svg>
   );
 }
 
@@ -639,49 +661,23 @@ const useStyles = createThemedStyles((colors) => ({
     flexDirection: 'row',
     alignItems: 'stretch',
     marginHorizontal: 12,
-    marginBottom: 8,
+    marginBottom: 16,
     paddingRight: 10,
-    borderRadius: 10,
-    overflow: 'hidden',
-    backgroundColor: colors.sur,
-    borderWidth: 1,
-    borderColor: colors.bdr,
-    borderBottomWidth: 2,
   },
   stub: {
-    width: 52,
+    width: STUB,
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 10,
-    backgroundColor: colors.sur2,
   },
   stubScore: { color: colors.accentInk, fontFamily: fonts.display, fontSize: 24, lineHeight: 26 },
-  stubLabel: { color: colors.faint, fontFamily: fonts.medium, fontSize: 9, letterSpacing: 1 },
-  perforation: {
-    position: 'absolute',
-    right: -1,
-    top: 8,
-    bottom: 8,
-    width: 2,
-    justifyContent: 'space-between',
-  },
-  dash: { width: 2, height: 4, borderRadius: 1, backgroundColor: colors.bdr2 },
-  notch: {
-    position: 'absolute',
-    right: -7,
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: colors.bg,
-    borderWidth: 1,
-    borderColor: colors.bdr,
-  },
+  stubLabel: { color: colors.faint, fontFamily: fonts.medium, fontSize: 11, letterSpacing: 1 },
   rowMain: { flex: 1, gap: 4, justifyContent: 'center', paddingVertical: 10, paddingLeft: 14 },
   excerpt: { color: colors.muted, fontFamily: fonts.body, fontSize: 14 },
   tag: {
     color: colors.accentInk,
     fontFamily: fonts.medium,
-    fontSize: 12,
+    fontSize: 13,
     paddingHorizontal: 7,
     paddingVertical: 1,
     borderRadius: 999,

@@ -12,8 +12,9 @@ import ui from './ui.module.css';
 import { binderClothStyle } from '@/lib/setIdentity';
 import styles from './ProfileBinder.module.css';
 
+const PREVIEW_SLEEVES = 5;
+
 interface ProfileBinderProps {
-  /** Sleeves this binder holds: 40, or 80 for supporters. */
   capacity?: number;
   slots: (ShowcaseSlot | null)[];
   title?: string;
@@ -208,16 +209,44 @@ export default function ProfileBinder({
   if (!open) {
     return (
       <div className={styles.shut}>
-        <span
-          className={styles.spine}
-          style={binderClothStyle(colour || 'teal')}
-          aria-hidden="true"
-        />
-        <div className={styles.shutText}>
-          <h2 className={styles.caption}>{caption}</h2>
-          <p className={styles.shutMeta}>
-            {filled} of {capacity} sleeves filled
-          </p>
+        <div className={styles.shutHead}>
+          <span
+            className={styles.spine}
+            style={binderClothStyle(colour || 'teal')}
+            aria-hidden="true"
+          />
+          <div className={styles.shutText}>
+            <h2 className={styles.caption}>{caption}</h2>
+            <p className={styles.shutMeta}>
+              {filled} of {capacity} sleeves filled
+            </p>
+          </div>
+        </div>
+        <div className={styles.shutStrip} aria-hidden="true">
+          {Array.from({ length: PREVIEW_SLEEVES }, (_, index) => {
+            const owned = slots.filter(Boolean)[index]?.owned_card;
+            return (
+              <span key={index} className={owned ? styles.shutCard : styles.shutEmpty}>
+                {owned ? (
+                  <CardPreview
+                    title={owned.card.title}
+                    rarity={owned.card.rarity}
+                    imageUrl={owned.card.image?.url ?? null}
+                    templateKey={owned.card.template_key}
+                    templateConfig={owned.card.template_config}
+                    code={cardCode(
+                      owned.card.printed_set_code,
+                      owned.card.position,
+                      owned.card.set_total,
+                    )}
+                    printedText={owned.card.printed_text}
+                    render={owned.card.render}
+                    size="small"
+                  />
+                ) : null}
+              </span>
+            );
+          })}
         </div>
         <button
           type="button"
@@ -234,7 +263,7 @@ export default function ProfileBinder({
   }
 
   return (
-    <div ref={rootRef} className={styles.root}>
+    <div ref={rootRef} className={styles.root} data-binder-open="">
       <div className={styles.layout}>
         <div className={styles.main}>
           <div className={styles.head}>

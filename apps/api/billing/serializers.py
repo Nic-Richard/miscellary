@@ -12,6 +12,7 @@ class CheckoutSerializer(serializers.Serializer):
 
 class MembershipSettingsSerializer(serializers.Serializer):
     show_badge = serializers.BooleanField(required=False)
+    show_ring = serializers.BooleanField(required=False)
     badge_colour = serializers.ChoiceField(
         choices=MembershipSettings.BadgeColour.choices, required=False
     )

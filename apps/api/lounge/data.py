@@ -63,13 +63,13 @@ def subscriber_ids(rows) -> set:
 
 
 def badge(author, subscribers: set) -> str | None:
-    """The supporter badge style, such as "gold-foil", or None when not shown."""
+    """The supporter's avatar ring, such as "gold-foil", or None when not shown."""
     if author.pk not in subscribers:
         return None
     options = getattr(author, "membershipsettings", None)
     if options is None:
         return "gold-foil"
-    if not options.show_badge:
+    if not options.show_badge or not options.show_ring:
         return None
     return f"{options.badge_colour}-{options.badge_finish}"
 

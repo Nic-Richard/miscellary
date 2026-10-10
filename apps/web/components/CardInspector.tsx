@@ -17,6 +17,7 @@ import CardPreview from './CardPreview';
 import Description from './Description';
 import { useDialog } from '@/lib/useDialog';
 import styles from './CardInspector.module.css';
+import SupporterEmblem from './SupporterEmblem';
 
 export interface CardInspectorProps {
   card: Card;
@@ -317,7 +318,13 @@ export default function CardInspector({
           </div>
           <p className={styles.from}>
             <Link href={`/sets/${setSlug}`}>{setTitle}</Link>
-            {creator ? <> · {personName(creator)}</> : null}
+            {creator ? (
+              <>
+                {' · '}
+                {personName(creator)}
+                <SupporterEmblem tier={creator.supporter_tier} />
+              </>
+            ) : null}
             {copies ? ` · ${copies} ${copies === 1 ? 'copy' : 'copies'}` : ''}
           </p>
           {card.description ? (

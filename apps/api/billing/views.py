@@ -23,7 +23,13 @@ from common.monetization import (
 
 from . import play
 from . import stripe as payments
-from .actions import BillingError, PaymentMismatch, active_period, publishing_summary
+from .actions import (
+    BillingError,
+    PaymentMismatch,
+    active_period,
+    publishing_summary,
+    sync_supporter,
+)
 from .models import BillingReview, Checkout, MembershipSettings, StarBalance, StripeCustomer
 from .serializers import CheckoutSerializer, MembershipSettingsSerializer, PlayPurchaseSerializer
 from .stats import creator_stats
@@ -47,6 +53,7 @@ class MembershipView(APIView):
                 or 0,
                 "units_per_star": CREDIT_UNITS_PER_CREDIT,
                 "show_badge": options.show_badge,
+                "show_ring": options.show_ring,
                 "badge_colour": options.badge_colour,
                 "badge_finish": options.badge_finish,
                 "pending_checkouts": [
@@ -100,6 +107,7 @@ class MembershipView(APIView):
         MembershipSettings.objects.update_or_create(
             user=request.user, defaults=serializer.validated_data
         )
+        sync_supporter(request.user.pk)
         return self.get(request)
 
 

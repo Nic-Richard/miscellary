@@ -2,11 +2,10 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import { useAuth } from '@/lib/auth';
 import { loginHref, registerHref, swapAuthHref } from '@/lib/returnTo';
-import { getNotifications } from '@/lib/social';
 import BrandMark from './BrandMark';
 import { useMembership } from '@/lib/membership';
 import ThemeSelector from './ThemeSelector';
@@ -58,7 +57,6 @@ export default function Nav() {
   const router = useRouter();
   const pathname = usePathname();
   const [q, setQ] = useState('');
-  const [unread, setUnread] = useState(0);
   const [menu, setMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -78,27 +76,6 @@ export default function Nav() {
       document.removeEventListener('keydown', escape);
     };
   }, [menu]);
-
-  const recount = useCallback(() => {
-    if (!user) {
-      setUnread(0);
-      return;
-    }
-    getNotifications()
-      .then((page) => setUnread(page.unread))
-      .catch(() => setUnread(0));
-  }, [user]);
-
-  // Recount when the route changes rather than on a timer: a badge that is a
-  // few minutes stale costs nothing, a poll on every open tab does.
-  useEffect(() => {
-    recount();
-  }, [recount, pathname]);
-
-  useEffect(() => {
-    window.addEventListener(NOTICE_EVENT, recount);
-    return () => window.removeEventListener(NOTICE_EVENT, recount);
-  }, [recount]);
 
   function onSearch(e: FormEvent) {
     e.preventDefault();
@@ -203,16 +180,6 @@ export default function Nav() {
                   <small>@{user.profile.username}</small>
                 </span>
               </button>
-              <Link
-                href="/notifications"
-                className={`${styles.bell} ${isActive('/notifications') ? styles.bellActive : ''}`}
-                aria-label={unread ? `Notifications, ${unread} unread` : 'Notifications'}
-              >
-                <NavIcon name="bell" />
-                {unread > 0 ? (
-                  <span className={styles.badge}>{unread > 99 ? '99+' : unread}</span>
-                ) : null}
-              </Link>
               {menu ? (
                 <div className={styles.menu} role="menu">
                   <Link role="menuitem" href={profileHref}>

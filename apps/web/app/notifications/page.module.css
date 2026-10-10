@@ -1,15 +1,60 @@
 .page {
-  max-width: 760px;
-  margin-inline: auto;
+  max-width: 1080px;
   padding-bottom: 60px;
 }
-.filters {
-  flex-wrap: wrap;
-  margin-bottom: 14px;
+.layout {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
 }
-
-.column {
-  min-width: 0;
+.filterSheet {
+  position: sticky;
+  top: 72px;
+  padding: 16px;
+}
+.filters {
+  display: grid;
+  gap: 2px;
+}
+.filter {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--muted);
+  font: 600 15px / 1.2 var(--body);
+  text-align: left;
+  cursor: pointer;
+}
+.filter span {
+  color: var(--faint);
+  font-variant-numeric: tabular-nums;
+}
+.filter:hover {
+  color: var(--text);
+}
+.filter[aria-pressed='true'] {
+  background: var(--sur2);
+  color: var(--text);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+.filter:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+.day {
+  padding: 16px 8px 8px;
+  color: var(--muted);
+  font: 700 13px / 1 var(--body);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.day:first-child {
+  padding-top: 4px;
 }
 
 .rows {
@@ -137,7 +182,7 @@ a.link:hover {
 }
 
 .unread .said strong {
-  color: #2c241c;
+  color: var(--text);
 }
 .unread .link {
   box-shadow: inset 2px 0 0 var(--accent);
@@ -146,6 +191,18 @@ a.link:hover {
   color: var(--accent-ink);
 }
 
+@media (max-width: 860px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .filterSheet {
+    position: static;
+  }
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+  }
+}
 @media (max-width: 620px) {
   .link {
     grid-template-columns: 38px minmax(0, 1fr) 38px;

@@ -19,6 +19,7 @@ urlpatterns = [
     path("me/showcase/", views.ShowcaseView.as_view(), name="showcase"),
     path("me/packs/", views.MyPacksView.as_view(), name="my-packs"),
     path("me/notifications/", views.NotificationsView.as_view(), name="notifications"),
+    path("me/status/", views.StatusView.as_view(), name="status"),
     path("sets/<slug:slug>/like/", views.LikeSetView.as_view(), name="like-set"),
     path("sets/<slug:slug>/follow/", views.FollowSetView.as_view(), name="follow-set"),
     path("sets/<slug:slug>/comments/", views.SetCommentsView.as_view(), name="comments"),

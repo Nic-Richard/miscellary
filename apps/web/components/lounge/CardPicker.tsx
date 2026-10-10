@@ -101,22 +101,28 @@ export default function CardPicker({
                   )
                 }
               />
-              <CardPreview
-                title={owned.card.title}
-                rarity={owned.card.rarity}
-                imageUrl={owned.card.image?.url ?? null}
-                templateKey={owned.card.template_key}
-                templateConfig={owned.card.template_config}
-                code={cardCode(
-                  owned.card.printed_set_code,
-                  owned.card.position,
-                  owned.card.set_total,
+              <span className={styles.pickCard}>
+                <CardPreview
+                  title={owned.card.title}
+                  rarity={owned.card.rarity}
+                  imageUrl={owned.card.image?.url ?? null}
+                  templateKey={owned.card.template_key}
+                  templateConfig={owned.card.template_config}
+                  code={cardCode(
+                    owned.card.printed_set_code,
+                    owned.card.position,
+                    owned.card.set_total,
+                  )}
+                  printedText={owned.card.printed_text}
+                  render={owned.card.render}
+                  size="small"
+                />
+                {on && (
+                  <span className={styles.pickBadge} aria-hidden="true">
+                    ✓
+                  </span>
                 )}
-                printedText={owned.card.printed_text}
-                render={owned.card.render}
-                previewThumbnail
-                renderMode="flat"
-              />
+              </span>
               <span>
                 <b>{owned.card.title}</b>
                 <small>{owned.set_title}</small>

@@ -44,6 +44,7 @@ import RichText from './RichText';
 import SaveButton from './SaveButton';
 import VoteControl from './VoteControl';
 import { lounge } from './store';
+import SupporterEmblem from '@/components/SupporterEmblem';
 
 const REMOVED: Partial<LoungePost> = {
   removed: true,
@@ -255,6 +256,7 @@ export default function Discussion({ postId }: { postId: string }) {
                 >
                   <Text style={styles.name}>{name}</Text>
                 </Pressable>
+                <SupporterEmblem tier={current.author?.supporter_tier} />
                 {author && !author.is_me && !author.is_following && !author.is_blocked && (
                   <Pressable
                     accessibilityRole="button"

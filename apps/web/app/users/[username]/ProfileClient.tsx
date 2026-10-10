@@ -24,6 +24,7 @@ import { getProfile, setBlocked, setFollow } from '@/lib/social';
 import VerifyEmailNotice from '@/components/VerifyEmailNotice';
 import ui from '@/components/ui.module.css';
 import styles from './page.module.css';
+import SupporterEmblem from '@/components/SupporterEmblem';
 
 const FOLLOW_ACTION = 'follow';
 
@@ -157,10 +158,23 @@ export default function ProfileClient({
         </div>
 
         <div className={styles.identity}>
-          <h1 className={ui.title}>{name}</h1>
+          <h1 className={ui.title}>
+            {name}
+            <SupporterEmblem
+              tier={profile.supporter_tier}
+              months={profile.supporter_months}
+              large
+            />
+          </h1>
           {profile.is_demo ? <DemoBadge /> : null}
           {profile.subscriber_badge ? <SupporterBadge badge={profile.badge_style} /> : null}
-          <p className={ui.subtitle}>@{profile.username}</p>
+          <p className={ui.subtitle}>
+            @{profile.username}, collecting since{' '}
+            {new Date(profile.created_at).toLocaleDateString(undefined, {
+              month: 'long',
+              year: 'numeric',
+            })}
+          </p>
           {profile.bio ? <p className={ui.lead}>{profile.bio}</p> : null}
           {profile.featured_card ? (
             <div className={styles.featured}>
@@ -178,8 +192,7 @@ export default function ProfileClient({
                   )}
                   printedText={profile.featured_card.printed_text}
                   render={profile.featured_card.render}
-                  previewThumbnail
-                  renderMode="flat"
+                  size="small"
                 />
               </span>
               <span>
@@ -301,7 +314,7 @@ export default function ProfileClient({
           </div>
         </div>
 
-        <div className={`${ui.panel} ${styles.statsPanel}`}>
+        <div className={styles.statsPanel}>
           <ul className={ui.stats}>
             <li>
               <button
@@ -359,41 +372,43 @@ export default function ProfileClient({
         </div>
       ) : null}
 
-      <div className={styles.section}>
-        <ProfileBinder
-          slots={binder}
-          title={profile.showcase_title}
-          colour={profile.binder_colour}
-          mine={profile.is_me}
-          onInspect={setInspect}
-          capacity={profile.showcase_slots ?? SHOWCASE_SLOTS}
-          fullscreen
-          paused={Boolean(inspect)}
-          open={false}
-        />
-      </div>
+      <div className={styles.lower}>
+        <div className={styles.binderPanel}>
+          <ProfileBinder
+            slots={binder}
+            title={profile.showcase_title}
+            colour={profile.binder_colour}
+            mine={profile.is_me}
+            onInspect={setInspect}
+            capacity={profile.showcase_slots ?? SHOWCASE_SLOTS}
+            fullscreen
+            paused={Boolean(inspect)}
+            open={false}
+          />
+        </div>
 
-      <div className={styles.section} id="sets">
-        <SectionHeader
-          title={profile.is_me ? 'Your sets' : `Sets by ${name}`}
-          note={
-            profile.sets.length
-              ? `${profile.sets.length} published`
-              : profile.is_me
-                ? 'You have not published a set yet. Anything you collect can become one.'
-                : `${name} has not published a set yet.`
-          }
-          link={profile.is_me ? { href: '/studio', label: 'Open the studio' } : undefined}
-        />
-        {profile.sets.length ? (
-          <ul className={tileStyles.grid}>
-            {profile.sets.map((s) => (
-              <li key={s.id}>
-                <SetTile set={s} meta={`${s.card_count} cards · ♥ ${s.like_count}`} />
-              </li>
-            ))}
-          </ul>
-        ) : null}
+        <div className={styles.setsSheet} id="sets">
+          <SectionHeader
+            title={profile.is_me ? 'Your sets' : `Sets by ${name}`}
+            note={
+              profile.sets.length
+                ? `${profile.sets.length} published`
+                : profile.is_me
+                  ? 'You have not published a set yet. Anything you collect can become one.'
+                  : `${name} has not published a set yet.`
+            }
+            link={profile.is_me ? { href: '/studio', label: 'Open the studio' } : undefined}
+          />
+          {profile.sets.length ? (
+            <ul className={tileStyles.grid}>
+              {profile.sets.map((s) => (
+                <li key={s.id}>
+                  <SetTile set={s} meta={`${s.card_count} cards · ♥ ${s.like_count}`} />
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
       </div>
 
       {inspect ? <OwnedCardInspector owned={inspect} onClose={() => setInspect(null)} /> : null}

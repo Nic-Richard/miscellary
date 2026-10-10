@@ -21,6 +21,7 @@ import RenderPackStage from '../../web/components/RenderPackStage';
 import PackReveal from '../../web/components/PackReveal';
 import ProfileBinder from '../../web/components/ProfileBinder';
 import LoungeShowcase from '../../web/components/LoungeShowcase';
+import { EmblemSprite } from '../../web/components/SupporterEmblem';
 import PackDesigner from '../../web/components/studio/PackDesigner';
 import CardForm from '../../web/components/CardForm';
 import { apiFetch } from './api';
@@ -211,7 +212,12 @@ function Surface({ mode, data }: Props) {
         />
       </>
     );
-  return <main id="content">{content}</main>;
+  return (
+    <main id="content">
+      {content}
+      <EmblemSprite />
+    </main>
+  );
 }
 const root = createRoot(document.getElementById('root')!);
 window.miscellaryReady = Promise.resolve();

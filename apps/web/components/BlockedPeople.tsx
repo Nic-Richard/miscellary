@@ -8,6 +8,7 @@ import PersonLink from '@/components/PersonLink';
 import { listBlocked, setBlocked } from '@/lib/social';
 import ui from '@/components/ui.module.css';
 import styles from './BlockedPeople.module.css';
+import SupporterEmblem from './SupporterEmblem';
 
 export default function BlockedPeople({
   onChange,
@@ -65,6 +66,7 @@ export default function BlockedPeople({
                 <Avatar person={person} size={28} />
                 <span>
                   {person.display_name || person.username}
+                  <SupporterEmblem tier={person.supporter_tier} />
                   <small>@{person.username}</small>
                 </span>
               </PersonLink>

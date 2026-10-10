@@ -65,8 +65,7 @@ export default function FeaturedCardPicker() {
                   code={cardCode(card.printed_set_code, card.position, card.set_total)}
                   printedText={card.printed_text}
                   render={card.render}
-                  previewThumbnail
-                  renderMode="flat"
+                  size="small"
                 />
               </span>
             ) : (

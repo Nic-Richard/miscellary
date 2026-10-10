@@ -158,3 +158,23 @@ def test_notifications_are_paged(auth_client, user, published):
     second = auth_client.get(url, {"page": 2}).json()
     assert len(second["results"]) == 5
     assert second["next"] is None
+
+
+def test_status_counts_what_is_waiting(api_client, user, published, fan, settings):
+    route = reverse("social:status")
+    api_client.post(reverse("social:follow-set", args=[published.slug]))
+    api_client.post(reverse("social:follow", args=[user.username]))
+    settings.MONETIZATION_ENABLED = False
+    data = api_client.get(route).data
+    assert data == {
+        "unread": 0,
+        "free_packs": 1,
+        "offers": 0,
+        "tickets": None,
+        "supporter_tier": None,
+        "ring_style": None,
+    }
+    api_client.force_authenticate(user)
+    assert api_client.get(route).data["unread"] == 1
+    settings.MONETIZATION_ENABLED = True
+    assert api_client.get(route).data["tickets"] == 0

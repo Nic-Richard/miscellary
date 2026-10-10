@@ -1,5 +1,6 @@
 .root {
   flex-basis: 100%;
+  order: 2;
 }
 .options {
   display: grid;
@@ -11,7 +12,7 @@
 }
 .note {
   color: var(--muted);
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.5;
 }
 .buttons {
@@ -23,4 +24,18 @@
   white-space: normal;
   line-height: 1.3;
   padding-block: 10px;
+}
+.offer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+}
+.short {
+  color: var(--muted);
+  font-size: 15px;
+}
+.short a {
+  color: var(--accent-ink);
+  font-weight: 600;
 }

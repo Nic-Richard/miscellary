@@ -29,6 +29,7 @@ import { countdown } from '@/lib/time';
 import ui from '@/components/ui.module.css';
 import wide from '@/components/pageWide.module.css';
 import styles from './page.module.css';
+import SupporterEmblem from '@/components/SupporterEmblem';
 
 const SUGGESTIONS = 3;
 const SHELF_SIZE = 8;
@@ -116,7 +117,10 @@ function Post({
         <PersonLink person={set.creator} className={styles.bylineLink}>
           <span className={styles.monogram}>{creator[0]?.toUpperCase()}</span>
           <span className={styles.bylineName}>
-            <strong>{creator}</strong>
+            <strong>
+              {creator}
+              <SupporterEmblem tier={set.creator.supporter_tier} />
+            </strong>
             {set.creator.deleted ? null : <small>@{set.creator.username}</small>}
           </span>
         </PersonLink>
@@ -169,7 +173,13 @@ function Post({
 
           <div className={styles.act}>
             {entry.monetization_enabled ? (
-              <ExtraPackAction slug={set.slug} busy={busy} onOpen={onOpen} />
+              <ExtraPackAction
+                slug={set.slug}
+                points={entry.points}
+                packCost={entry.pack_cost}
+                busy={busy}
+                onOpen={onOpen}
+              />
             ) : null}
             {entry.free_available ? (
               <button

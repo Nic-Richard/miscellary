@@ -17,6 +17,7 @@ export interface Membership {
   enabled: boolean;
   preview?: boolean;
   show_badge?: boolean;
+  show_ring?: boolean;
   badge_colour?: string;
   badge_finish?: string;
   currency_name: string;

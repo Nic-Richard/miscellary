@@ -7,6 +7,7 @@ import LoginGate from '@/components/LoginGate';
 import { Button, ErrorText, Loading, Muted } from '@/components/ui';
 import { getNotifications, markNotificationsRead } from '@/lib/endpoints';
 import { fonts, useColors, createThemedStyles } from '@/lib/theme';
+import SupporterEmblem from '@/components/SupporterEmblem';
 
 const ICONS: Record<Notification['kind'], React.ComponentProps<typeof Feather>['name']> = {
   set_like: 'heart',
@@ -89,6 +90,7 @@ function Row({ notification }: { notification: Notification }) {
       <View style={styles.line}>
         <View style={styles.said}>
           <Text style={styles.actor}>{actor.display_name || `@${actor.username}`}</Text>
+          <SupporterEmblem tier={actor.supporter_tier} />
           <Text style={styles.text}> {text}</Text>
         </View>
         {notification.comment_body || notification.lounge_reply_body ? (

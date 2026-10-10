@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { cardCode } from '@miscellary/shared';
 import type { CardSetDetail, CardSetSummary } from '@miscellary/shared';
-import { router, useFocusEffect } from 'expo-router';
+import { router } from 'expo-router';
 import Feather from '@expo/vector-icons/Feather';
 import {
   ActivityIndicator,
@@ -18,9 +18,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import CardPreview from '@/components/CardPreview';
 import SetTile from '@/components/SetTile';
 import { Button, Chip, ErrorText, Input } from '@/components/ui';
-import { useAuth } from '@/lib/auth';
-import { useMembership } from '@/lib/membership';
-import { getNotifications, getPublicSet } from '@/lib/endpoints';
+import { getPublicSet } from '@/lib/endpoints';
 import { useDiscovery } from '@/lib/discovery';
 import { readPublicCache, writePublicCache } from '@/lib/publicCache';
 import type { DiscoverySort } from '@/lib/discovery';
@@ -31,9 +29,6 @@ const FEATURED_SET = 'film-cameras';
 export default function BrowseScreen() {
   const colors = useColors();
   const styles = useStyles();
-  const { user } = useAuth();
-  const membership = useMembership();
-  const [unread, setUnread] = useState(0);
   const [sort, setSort] = useState<DiscoverySort>('new');
   const [query, setQuery] = useState('');
   const [featured, setFeatured] = useState<CardSetDetail | null>(null);
@@ -75,18 +70,6 @@ export default function BrowseScreen() {
     };
   }, [featuredSlug]);
 
-  useFocusEffect(
-    useCallback(() => {
-      if (!user) {
-        setUnread(0);
-        return;
-      }
-      getNotifications()
-        .then((page) => setUnread(page.unread))
-        .catch(() => setUnread(0));
-    }, [user]),
-  );
-
   function pickSort(next: DiscoverySort) {
     if (next === sort) return;
     list.current?.scrollToOffset({ offset: 0, animated: false });
@@ -127,45 +110,7 @@ export default function BrowseScreen() {
                 <Feather name="book-open" size={25} color={colors.accent} />
                 <Text style={styles.wordmark}>MISCELLARY</Text>
               </View>
-              {user ? (
-                <View style={styles.mastActions}>
-                  {membership.enabled && (
-                    <Pressable
-                      accessibilityRole="link"
-                      accessibilityLabel={
-                        membership.supporter ? 'Membership' : 'Become a supporter'
-                      }
-                      hitSlop={8}
-                      onPress={() => router.push('/membership')}
-                      style={({ pressed }) => [styles.bell, pressed && { opacity: 0.7 }]}
-                    >
-                      <Feather
-                        name="star"
-                        size={20}
-                        color={membership.supporter ? colors.gold : colors.muted}
-                      />
-                    </Pressable>
-                  )}
-                  <Pressable
-                    accessibilityRole="link"
-                    accessibilityLabel={
-                      unread ? `Notifications, ${unread} unread` : 'Notifications'
-                    }
-                    hitSlop={8}
-                    onPress={() => router.push('/notifications')}
-                    style={({ pressed }) => [styles.bell, pressed && { opacity: 0.7 }]}
-                  >
-                    <Feather name="bell" size={20} color={colors.muted} />
-                    {unread > 0 ? (
-                      <View style={styles.badge}>
-                        <Text style={styles.badgeText}>{unread > 99 ? '99+' : unread}</Text>
-                      </View>
-                    ) : null}
-                  </Pressable>
-                </View>
-              ) : (
-                <Text style={styles.edition}>Collect, trade, create</Text>
-              )}
+              <Text style={styles.edition}>Collect, trade, create</Text>
             </View>
             <Text accessibilityRole="header" style={styles.heading}>
               Turn collections{'\n'}into trading cards.

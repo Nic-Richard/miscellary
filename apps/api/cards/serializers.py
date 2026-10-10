@@ -2,6 +2,7 @@ from typing import Any, cast
 
 from rest_framework import serializers
 
+from accounts.supporter import supporter_tier
 from uploads.models import Image
 from uploads.serializers import ImageSerializer
 
@@ -45,9 +46,13 @@ class CreatorSerializer(serializers.Serializer):
     avatar_url = serializers.CharField(source="profile.avatar_url", allow_null=True)
     is_demo = serializers.BooleanField()
     deleted = serializers.SerializerMethodField()
+    supporter_tier = serializers.SerializerMethodField()
 
     def get_deleted(self, obj) -> bool:
         return obj.deleted_at is not None
+
+    def get_supporter_tier(self, obj) -> str | None:
+        return supporter_tier(obj)
 
 
 class CardSerializer(serializers.ModelSerializer):

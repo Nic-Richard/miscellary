@@ -1,0 +1,18 @@
+.sprite {
+  position: absolute;
+  overflow: hidden;
+}
+.emblem {
+  flex: none;
+  width: 0.8em;
+  height: 1.05em;
+  margin-left: 0.3em;
+  vertical-align: -0.18em;
+  filter: drop-shadow(0 1px 0.5px rgba(var(--shadow-rgb), calc(0.35 * var(--shadow-boost))));
+}
+.large {
+  width: 19px;
+  height: 25px;
+  margin-left: 8px;
+  vertical-align: middle;
+}

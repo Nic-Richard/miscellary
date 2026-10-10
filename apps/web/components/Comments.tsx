@@ -13,6 +13,7 @@ import { timeAgo } from '@/lib/time';
 import ReportButton from './ReportButton';
 import ui from './ui.module.css';
 import styles from './Comments.module.css';
+import SupporterEmblem from './SupporterEmblem';
 
 const MAX = 1000;
 
@@ -166,6 +167,7 @@ function Note({
           {comment.author ? (
             <PersonLink person={comment.author} className={styles.name}>
               {name}
+              <SupporterEmblem tier={comment.author.supporter_tier} />
             </PersonLink>
           ) : (
             <span className={styles.name}>{name}</span>

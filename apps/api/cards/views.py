@@ -1,7 +1,19 @@
+from datetime import timedelta
+
 from django.db import transaction
-from django.db.models import Count, Exists, IntegerField, OuterRef, Prefetch, Q, Subquery, Value
+from django.db.models import (
+    Count,
+    Exists,
+    IntegerField,
+    OuterRef,
+    Prefetch,
+    Q,
+    Subquery,
+    Value,
+)
 from django.db.models.functions import Coalesce
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from rest_framework import permissions, status
 from rest_framework.exceptions import ValidationError
 from rest_framework.pagination import PageNumberPagination
@@ -94,8 +106,22 @@ class PublicSetListView(APIView):
         tag = tagging.slugify_tag(request.query_params.get("tag", ""))
         if tag:
             queryset = queryset.filter(set_tags__tag__slug=tag)
-        if request.query_params.get("sort") == "popular":
+        from packs.models import PackOpening  # here, not at the top: import cycle
+
+        sort = request.query_params.get("sort")
+        if sort in ("popular", "top"):
             queryset = queryset.order_by("-like_count", "-opening_count", "-published_at")
+        elif sort == "hot":
+            # Packs opened in the last week, so a set that is busy now outranks an old favourite.
+            week = PackOpening.objects.filter(
+                card_set_id=OuterRef("pk"), opened_at__gte=timezone.now() - timedelta(days=7)
+            )
+            recent = week.order_by().values("card_set_id").annotate(total=Count("pk"))
+            queryset = queryset.annotate(
+                recent_openings=Coalesce(
+                    Subquery(recent.values("total"), output_field=IntegerField()), 0
+                )
+            ).order_by("-recent_openings", "-like_count", "-published_at")
         else:
             queryset = queryset.order_by("-published_at")
         paginator = SetPagination()

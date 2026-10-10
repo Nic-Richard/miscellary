@@ -154,6 +154,7 @@ class MembershipSettings(models.Model):
 
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     show_badge = models.BooleanField(default=True)
+    show_ring = models.BooleanField(default=True)
     badge_colour = models.CharField(
         max_length=10, choices=BadgeColour.choices, default=BadgeColour.GOLD
     )

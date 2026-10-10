@@ -28,6 +28,7 @@ import type {
   TradeOfferWrite,
 } from '@miscellary/shared';
 import { apiFetch, saveRefreshToken, setAccessToken } from './api';
+import { statusChanged } from './membership';
 import { listOwnedCardPages } from '@miscellary/shared';
 
 export const listPublicSets = (
@@ -88,6 +89,10 @@ export const openPack = (slug: string, payment: PackPayment) =>
   apiFetch<PackOpening>(`/api/v1/sets/${slug}/packs/open/`, {
     method: 'POST',
     body: typeof payment === 'boolean' ? { use_points: payment } : payment,
+  }).then((opening) => {
+    // Free packs and tickets in the status bar change with every opening.
+    statusChanged();
+    return opening;
   });
 export const listMyCards = (
   setSlug?: string,

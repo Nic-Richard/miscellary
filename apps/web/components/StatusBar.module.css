@@ -1,0 +1,152 @@
+/* Hangs from the top right corner of the window, like a tab clipped to the edge. */
+.dock {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 40;
+  pointer-events: none;
+}
+.bar {
+  composes: surfaceTone from './ui.module.css';
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: fit-content;
+  padding: 6px 10px 7px 8px;
+  border: 1px solid var(--bdr);
+  border-top: 0;
+  border-right: 0;
+  border-radius: 0 0 0 16px;
+  background: var(--sur);
+  box-shadow:
+    inset 0 1px 0 var(--edge-light),
+    var(--shadow-md);
+  pointer-events: auto;
+}
+.chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 36px;
+  padding: 0 11px;
+  border-radius: 8px;
+  color: var(--muted);
+  font: 500 14px / 1 var(--body);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.chip:hover,
+.me:hover {
+  background: var(--sur2);
+}
+.chip:focus-visible,
+.me:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.chip b {
+  color: var(--accent-ink);
+  font: 400 22px / 1 var(--display);
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.chip svg {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  fill: none;
+  stroke: var(--accent-ink);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.tickets {
+  background: var(--sur2);
+  box-shadow: inset 0 0 0 1px var(--bdr2);
+}
+.owed b,
+.owed small {
+  color: var(--danger);
+}
+.rule {
+  width: 1px;
+  height: 22px;
+  margin: 0 2px;
+  background: var(--bdr2);
+}
+.bell {
+  padding: 0 9px;
+}
+.badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-text);
+  font: 700 11px / 18px var(--body);
+  text-align: center;
+}
+.me {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  height: 36px;
+  padding: 0 8px 0 7px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  font-size: 16px;
+  cursor: pointer;
+}
+.menu {
+  composes: surfaceTone from './ui.module.css';
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  display: grid;
+  min-width: 190px;
+  padding: 6px;
+  border: 1px solid var(--bdr);
+  border-radius: 10px;
+  background: var(--sur);
+  box-shadow: var(--shadow-md);
+}
+.menu a,
+.menu button {
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--text);
+  font: 500 15px / 1.2 var(--body);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+.menu a:hover,
+.menu button:hover {
+  background: var(--sur2);
+}
+
+@media (max-width: 860px) {
+  .dock {
+    position: sticky;
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: -10px;
+    padding: 10px 16px 0;
+  }
+  .bar {
+    border: 1px solid var(--bdr);
+    border-radius: 12px;
+  }
+  .chip small {
+    display: none;
+  }
+}

@@ -17,18 +17,36 @@
   border-radius: 50%;
   object-fit: cover;
 }
-/* Supporters get a foil ring, like a holo card border, with a thin gap in the page colour. */
 .supporter {
   box-shadow: 0 0 0 1.5px var(--sur);
 }
 .supporter::before {
-  --ring: max(2px, calc(var(--size) * 0.08));
+  --ring: max(2.5px, calc(var(--size) * 0.06));
   content: '';
   position: absolute;
   inset: calc(-1.5px - var(--ring));
   border-radius: 50%;
-  background: var(--metal-fill);
-  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - var(--ring)), #000 0);
-  mask: radial-gradient(farthest-side, transparent calc(100% - var(--ring)), #000 0);
+  /* Darker lines at both edges and a lighter middle give the foil a bevel. */
+  background:
+    radial-gradient(
+      farthest-side,
+      rgba(40, 26, 6, 0.45) calc(100% - var(--ring)),
+      transparent calc(100% - var(--ring) + 0.9px),
+      rgba(255, 255, 255, 0.28) calc(100% - var(--ring) / 2),
+      transparent calc(100% - 0.9px),
+      rgba(40, 26, 6, 0.45) 100%
+    ),
+    var(--metal-fill);
+  /* A hard stop in a radial mask renders jagged. */
+  -webkit-mask: radial-gradient(
+    farthest-side,
+    transparent calc(100% - var(--ring) - 0.75px),
+    #000 calc(100% - var(--ring) + 0.25px)
+  );
+  mask: radial-gradient(
+    farthest-side,
+    transparent calc(100% - var(--ring) - 0.75px),
+    #000 calc(100% - var(--ring) + 0.25px)
+  );
   pointer-events: none;
 }

@@ -5,10 +5,9 @@ import { BADGE_METALS, HOLO_STOPS, splitBadge } from '@miscellary/shared';
 import { fonts, useColors } from '@/lib/theme';
 
 export const STAR_PATH = 'm12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9Z';
-const FOIL = 2.5;
 const GAP = 1.5;
+const EDGE = 'rgba(40, 26, 6, 0.45)';
 
-/** Gradient stops for a badge metal and finish, approximating the website's foil. */
 export function metalStops(badge: BadgeStyle): readonly [string, string, ...string[]] {
   const metal = splitBadge(badge) ?? splitBadge('gold-foil')!;
   const tone = BADGE_METALS[metal.colour] ?? BADGE_METALS.gold!;
@@ -58,7 +57,8 @@ export default function Avatar({
     </View>
   );
   if (!badge) return <View importantForAccessibility="no-hide-descendants">{face}</View>;
-  const outer = FOIL + GAP;
+  const foil = Math.max(2.5, size * 0.06);
+  const outer = foil + GAP;
   // The foil ring sits outside the avatar's own size, so supporters don't shift the layout.
   return (
     <LinearGradient
@@ -71,11 +71,21 @@ export default function Avatar({
         width: size + outer * 2,
         height: size + outer * 2,
         margin: -outer,
-        padding: FOIL,
+        padding: foil - 0.75,
         borderRadius: size / 2 + outer,
+        borderWidth: 0.75,
+        borderColor: EDGE,
       }}
     >
-      <View style={{ padding: GAP, borderRadius: size / 2 + GAP, backgroundColor: colors.sur }}>
+      <View
+        style={{
+          padding: GAP - 0.75,
+          borderRadius: size / 2 + GAP,
+          borderWidth: 0.75,
+          borderColor: EDGE,
+          backgroundColor: colors.sur,
+        }}
+      >
         {face}
       </View>
     </LinearGradient>

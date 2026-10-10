@@ -2,22 +2,32 @@ import { useEffect, useRef, useState } from 'react';
 import { Text, View } from 'react-native';
 import type { PackPayment, PaidPackQuote } from '@miscellary/shared';
 import { packOdds, packPrice, starAmount } from '@miscellary/shared';
+import { router } from 'expo-router';
 import { useAuth } from '@/lib/auth';
+import { refreshMembership, useMembership } from '@/lib/membership';
 import { getPackStatus } from '@/lib/endpoints';
 import { createThemedStyles, fonts } from '@/lib/theme';
 import { Button, ErrorText, Muted } from './ui';
 
 export default function ExtraPackAction({
   slug,
+  points,
+  packCost,
   busy,
   onOpen,
 }: {
   slug: string;
+  points: number;
+  packCost: number;
   busy: boolean;
   onOpen: (payment: PackPayment) => Promise<boolean>;
 }) {
   const styles = useStyles();
   const { user } = useAuth();
+  const { tickets } = useMembership();
+  // Set points are spent first and each missing point costs one ticket.
+  const needed = Math.max(0, packCost - points);
+  const short = needed > tickets;
   const [quote, setQuote] = useState<PaidPackQuote | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -62,6 +72,7 @@ export default function ExtraPackAction({
       if (await onOpen(payment)) {
         setQuote(null);
         setAttempt(null);
+        refreshMembership();
       }
     } finally {
       sending.current = false;
@@ -117,12 +128,28 @@ export default function ExtraPackAction({
           />
         </>
       ) : (
-        <Button
-          title={loading ? 'Loading options…' : 'Extra pack options'}
-          kind="secondary"
-          disabled={busy || loading}
-          onPress={() => void show()}
-        />
+        <>
+          <Button
+            title={
+              loading
+                ? 'Loading…'
+                : needed
+                  ? `Open with ${needed} ${needed === 1 ? 'ticket' : 'tickets'}`
+                  : 'Open with set points'
+            }
+            kind="secondary"
+            disabled={busy || loading || short}
+            onPress={() => void show()}
+          />
+          {short && (
+            <Text style={styles.short}>
+              You have {Math.max(0, tickets)}.{' '}
+              <Text style={styles.link} onPress={() => router.push('/membership')}>
+                Get tickets
+              </Text>
+            </Text>
+          )}
+        </>
       )}
       <ErrorText>{error}</ErrorText>
     </View>
@@ -132,4 +159,6 @@ export default function ExtraPackAction({
 const useStyles = createThemedStyles((colors) => ({
   root: { gap: 10, alignSelf: 'stretch' },
   title: { color: colors.text, fontFamily: fonts.medium, fontSize: 16 },
+  short: { color: colors.muted, fontFamily: fonts.body, fontSize: 14 },
+  link: { color: colors.accentInk, fontFamily: fonts.medium },
 }));

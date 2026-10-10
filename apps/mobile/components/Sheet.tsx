@@ -11,7 +11,6 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createThemedStyles, fonts } from '@/lib/theme';
 
-/** A bottom sheet for free-form content, drawn like ChoiceSheet. */
 export default function Sheet({
   visible,
   title,

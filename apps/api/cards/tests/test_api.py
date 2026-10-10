@@ -321,3 +321,41 @@ def test_delete_draft_hard_and_published_soft(auth_client, user):
     assert published.status == CardSet.Status.DELETED
     assert auth_client.get(reverse("cards:public-sets")).json()["results"] == []
     assert published.cards.count() == 5
+
+
+def test_public_sets_sort_by_hot(api_client, user):
+    from datetime import timedelta
+
+    from django.utils import timezone
+
+    from packs.models import PackOpening
+
+    sets = []
+    for title in ("Quiet", "Busy", "Old favourite"):
+        card_set = make_set(user, title=title)
+        fill_publishable(card_set)
+        publish_set(card_set)
+        sets.append(card_set)
+    quiet, busy, old = sets
+    now = timezone.now()
+
+    def opened(card_set, ago):
+        opening = PackOpening.objects.create(
+            user=user, card_set=card_set, kind="free", opened_on=(now - ago).date()
+        )
+        PackOpening.objects.filter(pk=opening.pk).update(opened_at=now - ago)
+
+    opened(busy, timedelta(minutes=1))
+    opened(busy, timedelta(days=2))
+    opened(old, timedelta(days=30))
+    opened(old, timedelta(days=31))
+    opened(old, timedelta(days=32))
+    opened(quiet, timedelta(seconds=10))
+
+    def titles(sort):
+        response = api_client.get(reverse("cards:public-sets"), {"sort": sort})
+        return [row["title"] for row in response.json()["results"]]
+
+    assert titles("hot")[:2] == ["Busy", "Quiet"]
+    assert titles("recent") == titles("new")
+    assert titles("top") == titles("popular")

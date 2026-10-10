@@ -267,8 +267,8 @@ export default function MembershipPanel() {
                 </svg>
               </span>
               <span className={styles.perkText}>
-                Supporter badge
-                <small>On your profile and in the Lounge</small>
+                Supporter emblem
+                <small>By your name everywhere. Upgrades at 3, 6, 12 and 24 months</small>
               </span>
               {sub.active && (
                 <label className={styles.switch}>
@@ -280,12 +280,38 @@ export default function MembershipPanel() {
                     onChange={() =>
                       void saveSettings({ show_badge: membership.show_badge === false })
                     }
-                    aria-label="Show supporter badge"
+                    aria-label="Show supporter emblem"
                   />
                   <span aria-hidden="true" />
                 </label>
               )}
             </li>
+            {sub.active && membership.show_badge !== false && (
+              <li>
+                <span className={styles.perkCount}>
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <circle cx="12" cy="12" r="8" />
+                  </svg>
+                </span>
+                <span className={styles.perkText}>
+                  Foil avatar ring
+                  <small>In your chosen colour and finish</small>
+                </span>
+                <label className={styles.switch}>
+                  <input
+                    type="checkbox"
+                    role="switch"
+                    checked={membership.show_ring !== false}
+                    disabled={busy !== null}
+                    onChange={() =>
+                      void saveSettings({ show_ring: membership.show_ring === false })
+                    }
+                    aria-label="Show foil avatar ring"
+                  />
+                  <span aria-hidden="true" />
+                </label>
+              </li>
+            )}
           </ul>
           {sub.active && membership.show_badge !== false && user && (
             <BadgePicker

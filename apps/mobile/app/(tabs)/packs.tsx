@@ -177,7 +177,13 @@ function Post({
 
       <View style={styles.actions}>
         {entry.monetization_enabled ? (
-          <ExtraPackAction slug={set.slug} busy={busy} onOpen={onOpen} />
+          <ExtraPackAction
+            slug={set.slug}
+            points={entry.points}
+            packCost={entry.pack_cost}
+            busy={busy}
+            onOpen={onOpen}
+          />
         ) : null}
         {entry.free_available ? (
           <Button title="Open today's pack" disabled={busy} onPress={() => onOpen(false)} />

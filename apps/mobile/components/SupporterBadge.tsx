@@ -9,7 +9,6 @@ import { STAR_PATH, metalStops } from './Avatar';
 const HEIGHT = 26;
 const WIDTH = 116;
 
-/** A ticket-cut foil ribbon in the supporter's chosen metal and finish. */
 export default function SupporterBadge({
   badge = 'gold-foil',
 }: {

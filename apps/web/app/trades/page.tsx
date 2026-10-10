@@ -19,6 +19,7 @@ import ui from '@/components/ui.module.css';
 import wide from '@/components/pageWide.module.css';
 import VerifyEmailNotice from '@/components/VerifyEmailNotice';
 import styles from './page.module.css';
+import SupporterEmblem from '@/components/SupporterEmblem';
 
 type Box = 'inbox' | 'outbox' | 'history';
 
@@ -237,6 +238,7 @@ export default function TradesPage() {
                       </span>
                       <span className={styles.partnerName}>
                         {person.display_name || person.username}
+                        <SupporterEmblem tier={person.supporter_tier} />
                       </span>
                     </Link>
                   </li>

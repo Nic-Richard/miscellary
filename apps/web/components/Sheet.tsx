@@ -40,7 +40,7 @@ export function Empty({
       <span className={styles.emptyMark} aria-hidden="true">
         {ICONS[icon]}
       </span>
-      <p className={styles.emptyText}>{children}</p>
+      <div className={styles.emptyText}>{children}</div>
       {action ? <div className={styles.emptyAction}>{action}</div> : null}
     </div>
   );
