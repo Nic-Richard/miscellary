@@ -3,18 +3,18 @@
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import type { LoungeReply, Paginated } from '@miscellary/shared';
+import Avatar from '@/components/Avatar';
+import { Composer } from '@/components/Comments';
+import commentStyles from '@/components/Comments.module.css';
+import LikeButton from '@/components/LikeButton';
+import PersonLink from '@/components/PersonLink';
+import ReportDialog from '@/components/ReportDialog';
+import type { ReportTarget } from '@/components/ReportDialog';
 import { apiFetch } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
-import LikeButton from './LikeButton';
-import PersonLink from './PersonLink';
-import SupporterBadge from './SupporterBadge';
-import { Composer, Monogram } from './Comments';
-import commentStyles from './Comments.module.css';
 import { timeAgo } from '@/lib/time';
-import ReportDialog from './ReportDialog';
-import type { ReportTarget } from './ReportDialog';
-import ui from './ui.module.css';
-import styles from '@/app/lounge/page.module.css';
+import ui from '@/components/ui.module.css';
+import styles from './Lounge.module.css';
 
 export default function LoungeThread({
   postId,
@@ -41,8 +41,11 @@ export default function LoungeThread({
   const [report, setReport] = useState<ReportTarget | null>(null);
   const [confirm, setConfirm] = useState<string | null>(null);
   const mutation = useRef<AbortController | null>(null);
+
   useEffect(() => {
     setRows([]);
+    setPage(1);
+    setOpen(null);
     setReport(null);
     setConfirm(null);
     setBusy(false);
@@ -51,6 +54,7 @@ export default function LoungeThread({
       mutation.current = null;
     };
   }, [user?.id, postId]);
+
   useEffect(() => {
     const controller = new AbortController();
     setLoading(true);
@@ -59,11 +63,14 @@ export default function LoungeThread({
       { signal: controller.signal },
     )
       .then((data) => {
-        if (!controller.signal.aborted) {
-          setRows(data.results);
-          setHasNext(Boolean(data.next));
-          setError(null);
-        }
+        if (controller.signal.aborted) return;
+        setRows((current) => {
+          if (page === 1) return data.results;
+          const seen = new Set(current.map((row) => row.id));
+          return [...current, ...data.results.filter((row) => !seen.has(row.id))];
+        });
+        setHasNext(Boolean(data.next));
+        setError(null);
       })
       .catch((err: unknown) => {
         if (!controller.signal.aborted)
@@ -74,9 +81,10 @@ export default function LoungeThread({
       });
     return () => controller.abort();
   }, [postId, parentId, page, version, user?.id]);
+
   async function mutate(path: string, method: string, data?: unknown) {
-    if (mutation.current || loading) {
-      if (data) throw new Error('Please wait for the replies to finish loading.');
+    if (mutation.current) {
+      if (data) throw new Error('Please wait a moment and try again.');
       return;
     }
     const controller = new AbortController();
@@ -125,33 +133,37 @@ export default function LoungeThread({
       }
     }
   }
-  return (
+
+  const composer =
+    user && !removed ? (
+      <Composer
+        placeholder={parentId ? 'Reply to this thread…' : 'Join the discussion…'}
+        submitLabel="Reply"
+        rows={parentId ? 2 : 1}
+        disabled={loading && !rows.length}
+        autoFocus={autoFocus}
+        onSubmit={(body) =>
+          mutate(`/api/v1/lounge/posts/${postId}/replies/`, 'POST', {
+            body,
+            parent_id: parentId ?? null,
+          })
+        }
+      />
+    ) : !user && !parentId && !removed ? (
+      <p className={styles.signedOut}>
+        <Link
+          href={`/login?next=${encodeURIComponent(`/lounge/${postId}`)}`}
+          className={commentStyles.link}
+        >
+          Log in
+        </Link>{' '}
+        to join the discussion.
+      </p>
+    ) : null;
+
+  const list = (
     <div className={styles.thread}>
-      {user && !removed && (
-        <Composer
-          placeholder={parentId ? 'Reply to this thread…' : 'Join the discussion…'}
-          submitLabel="Post reply"
-          disabled={loading}
-          autoFocus={autoFocus}
-          onSubmit={(body) =>
-            mutate(`/api/v1/lounge/posts/${postId}/replies/`, 'POST', {
-              body,
-              parent_id: parentId ?? null,
-            })
-          }
-        />
-      )}
-      {!user && !parentId && !removed && (
-        <p className={commentStyles.signedOut}>
-          <Link
-            href={`/login?next=${encodeURIComponent(`/lounge/${postId}`)}`}
-            className={commentStyles.link}
-          >
-            Sign in
-          </Link>{' '}
-          to join the discussion.
-        </p>
-      )}
+      {!parentId && <h2 className={styles.repliesHead}>Replies</h2>}
       {loading && !rows.length && (
         <p role="status" className={ui.muted}>
           Loading replies…
@@ -162,103 +174,98 @@ export default function LoungeThread({
       )}
       {rows.map((reply) => (
         <div key={reply.id} className={styles.reply}>
-          <div className={styles.byline}>
-            <Monogram name={reply.author?.display_name || reply.author?.username || '?'} />
-            {reply.author ? (
-              <PersonLink person={reply.author} className={commentStyles.name}>
-                {reply.author.display_name || reply.author.username}
-              </PersonLink>
-            ) : (
-              <span className={ui.muted}>Removed reply</span>
-            )}
-            {reply.author_badge && <SupporterBadge />}
-            <time dateTime={reply.created_at} className={styles.when}>
-              {timeAgo(reply.created_at)}
-            </time>
-          </div>
-          <p className={styles.body}>{reply.removed ? 'This reply was removed.' : reply.body}</p>
-          {!reply.removed && user && (
-            <div className={styles.tools}>
-              <LikeButton
-                chip
-                liked={reply.liked}
-                count={reply.likes}
-                label="reply"
-                onToggle={async (liked) => {
-                  const result = await apiFetch<{ liked: boolean; likes: number }>(
-                    `/api/v1/lounge/replies/${reply.id}/vote/`,
-                    { method: liked ? 'POST' : 'DELETE' },
-                  );
-                  setRows((current) =>
-                    current.map((row) =>
-                      row.id === reply.id
-                        ? { ...row, liked: result.liked, likes: result.likes }
-                        : row,
-                    ),
-                  );
-                  return { liked: result.liked, like_count: result.likes };
-                }}
-              />
-              {!parentId && (
-                <button
-                  type="button"
-                  className={commentStyles.tool}
-                  onClick={() => {
-                    setOpen(reply.id);
-                  }}
-                >
-                  Reply
-                </button>
+          <Avatar person={reply.author} supporter={reply.author_badge} size={32} />
+          <div className={styles.replyMain}>
+            <div className={styles.replyBy}>
+              {reply.author ? (
+                <PersonLink person={reply.author} className={commentStyles.name}>
+                  {reply.author.display_name || reply.author.username}
+                </PersonLink>
+              ) : (
+                <b className={ui.muted}>Removed</b>
               )}
-              <button
-                type="button"
-                className={commentStyles.tool}
-                onClick={() => setReport({ lounge_reply_id: reply.id })}
-              >
-                Report
-              </button>
-              {reply.can_delete && (
+              <time dateTime={reply.created_at} className={styles.when}>
+                {timeAgo(reply.created_at)}
+              </time>
+            </div>
+            <p className={styles.body}>{reply.removed ? 'This reply was removed.' : reply.body}</p>
+            {!reply.removed && user && (
+              <div className={styles.replyTools}>
+                <LikeButton
+                  chip
+                  liked={reply.liked}
+                  count={reply.likes}
+                  label="reply"
+                  onToggle={async (liked) => {
+                    const result = await apiFetch<{ liked: boolean; likes: number }>(
+                      `/api/v1/lounge/replies/${reply.id}/vote/`,
+                      { method: liked ? 'POST' : 'DELETE' },
+                    );
+                    setRows((current) =>
+                      current.map((row) =>
+                        row.id === reply.id
+                          ? { ...row, liked: result.liked, likes: result.likes }
+                          : row,
+                      ),
+                    );
+                    return { liked: result.liked, like_count: result.likes };
+                  }}
+                />
+                {!parentId && (
+                  <button
+                    type="button"
+                    className={commentStyles.tool}
+                    onClick={() => setOpen(reply.id)}
+                  >
+                    Reply
+                  </button>
+                )}
                 <button
                   type="button"
                   className={commentStyles.tool}
-                  disabled={busy || loading}
-                  onClick={() => setConfirm(reply.id)}
+                  onClick={() => setReport({ lounge_reply_id: reply.id })}
+                >
+                  Report
+                </button>
+                {reply.can_delete && (
+                  <button
+                    type="button"
+                    className={commentStyles.tool}
+                    disabled={busy}
+                    onClick={() => setConfirm(reply.id)}
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+            )}
+            {confirm === reply.id && (
+              <div className={styles.replyTools}>
+                <span className={ui.muted}>Remove this reply?</span>
+                <button
+                  type="button"
+                  className={`${commentStyles.tool} ${commentStyles.danger}`}
+                  disabled={busy}
+                  onClick={() => void mutate(`/api/v1/lounge/replies/${reply.id}/`, 'DELETE')}
                 >
                   Remove
                 </button>
-              )}
-            </div>
-          )}
-          {confirm === reply.id && (
-            <div className={styles.tools}>
-              <span className={ui.muted}>Remove this reply?</span>
-              <button
-                type="button"
-                className={`${commentStyles.tool} ${commentStyles.danger}`}
-                disabled={busy || loading}
-                onClick={() => void mutate(`/api/v1/lounge/replies/${reply.id}/`, 'DELETE')}
-              >
-                Remove
+                <button
+                  type="button"
+                  className={commentStyles.tool}
+                  disabled={busy}
+                  onClick={() => setConfirm(null)}
+                >
+                  Keep
+                </button>
+              </div>
+            )}
+            {!parentId && reply.child_count > 0 && open !== reply.id && (
+              <button type="button" className={ui.link} onClick={() => setOpen(reply.id)}>
+                Show {reply.child_count} {reply.child_count === 1 ? 'reply' : 'replies'}
               </button>
-              <button
-                type="button"
-                className={commentStyles.tool}
-                disabled={busy}
-                onClick={() => setConfirm(null)}
-              >
-                Keep
-              </button>
-            </div>
-          )}
-          {!parentId && reply.child_count > 0 && (
-            <button
-              type="button"
-              className={ui.link}
-              onClick={() => setOpen(open === reply.id ? null : reply.id)}
-            >
-              {open === reply.id ? 'Hide' : 'Show'} replies ({reply.child_count})
-            </button>
-          )}
+            )}
+          </div>
           {open === reply.id && (
             <div className={styles.children}>
               <LoungeThread
@@ -279,39 +286,22 @@ export default function LoungeThread({
                   onCountChange?.(delta);
                 }}
               />
+              <button type="button" className={ui.link} onClick={() => setOpen(null)}>
+                Hide replies
+              </button>
             </div>
           )}
         </div>
       ))}
-      {(page > 1 || hasNext) && (
-        <div className={styles.tools}>
-          {page > 1 && (
-            <button
-              type="button"
-              className={ui.btnQuiet}
-              disabled={busy || loading}
-              onClick={() => {
-                setRows([]);
-                setPage((value) => value - 1);
-              }}
-            >
-              Previous replies
-            </button>
-          )}
-          {hasNext && (
-            <button
-              type="button"
-              className={ui.btnQuiet}
-              disabled={busy || loading}
-              onClick={() => {
-                setRows([]);
-                setPage((value) => value + 1);
-              }}
-            >
-              More replies
-            </button>
-          )}
-        </div>
+      {hasNext && (
+        <button
+          type="button"
+          className={ui.btnQuiet}
+          disabled={loading}
+          onClick={() => setPage((value) => value + 1)}
+        >
+          More replies
+        </button>
       )}
       {error && (
         <>
@@ -323,11 +313,27 @@ export default function LoungeThread({
             className={ui.btnQuiet}
             onClick={() => setVersion((value) => value + 1)}
           >
-            Retry replies
+            Try again
           </button>
         </>
       )}
       {report && <ReportDialog target={report} subject="reply" onClose={() => setReport(null)} />}
     </div>
+  );
+
+  if (parentId)
+    return (
+      <>
+        {list}
+        {composer}
+      </>
+    );
+  return (
+    <>
+      <section className={styles.replies} aria-label="Replies">
+        {list}
+      </section>
+      {composer && <div className={styles.replyBox}>{composer}</div>}
+    </>
   );
 }

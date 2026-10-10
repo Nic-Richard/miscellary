@@ -67,10 +67,10 @@ class Command(BaseCommand):
                 SetPoints.objects.get_or_create(
                     user=user, card_set=card_set, defaults={"balance": 20}
                 )
-        for name, title, style in (
-            ("previewfree", "What's your favourite card?", "plain"),
-            ("previewsupporter", "A few cards from my collection", "binder"),
-            ("previewcancelled", "A few favourites", "plain"),
+        for name, title, style, topic in (
+            ("previewfree", "What's your favourite card?", "plain", "other"),
+            ("previewsupporter", "A few cards from my collection", "binder", "show"),
+            ("previewcancelled", "A few favourites", "plain", "trading"),
         ):
             user = users[name]
             post, created = Post.objects.get_or_create(
@@ -79,6 +79,7 @@ class Command(BaseCommand):
                 defaults={
                     "body": "Local preview discussion. Try replies, likes and collection layouts.",
                     "style": style,
+                    "topic": topic,
                 },
             )
             if created:

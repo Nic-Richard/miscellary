@@ -3,10 +3,11 @@
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
-import type { OwnedCard, ShowcaseSlot } from '@miscellary/shared';
+import type { Membership, OwnedCard, ShowcaseSlot } from '@miscellary/shared';
 import { cardCode, SHOWCASE_SLOTS } from '@miscellary/shared';
 import PageHeader from '@/components/PageHeader';
 import AccountSecurity from '@/components/AccountSecurity';
+import MembershipPanel from '@/components/MembershipPanel';
 import BinderColourPicker from '@/components/BinderColourPicker';
 import SearchField from '@/components/SearchField';
 import CardPreview from '@/components/CardPreview';
@@ -14,15 +15,21 @@ import ProfileBinder from '@/components/ProfileBinder';
 import { OwnedCardInspector } from '@/components/CardInspector';
 import ui from '@/components/ui.module.css';
 import { updateProfile } from '@/lib/account';
+import { apiFetch } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { useRequireAccount } from '@/lib/requireAccount';
 import { listAllMyCards } from '@/lib/packs';
 import { getShowcase, saveShowcase } from '@/lib/social';
 import styles from './page.module.css';
 
-type Section = 'profile' | 'binder' | 'account';
+type Section = 'profile' | 'binder' | 'membership' | 'account';
 
-const SECTION_LABELS = { profile: 'Profile', binder: 'Binder', account: 'Account' } as const;
+const SECTION_LABELS = {
+  profile: 'Profile',
+  binder: 'Binder',
+  membership: 'Membership',
+  account: 'Account',
+} as const;
 
 export default function AccountPage() {
   const { user, loading, refreshUser } = useAuth();
@@ -32,8 +39,20 @@ export default function AccountPage() {
   const [section, setSection] = useState<Section>('profile');
   useEffect(() => {
     const query = new URLSearchParams(window.location.search);
-    if (query.has('checkout') || query.get('section') === 'account') setSection('account');
+    if (query.has('checkout') || query.get('section') === 'membership') setSection('membership');
+    else if (query.get('section') === 'account') setSection('account');
   }, []);
+  const [membershipOn, setMembershipOn] = useState(false);
+  useEffect(() => {
+    if (!userId) return;
+    const controller = new AbortController();
+    void apiFetch<Membership>('/api/v1/me/membership/', { signal: controller.signal })
+      .then((data) => {
+        if (!controller.signal.aborted) setMembershipOn(data.enabled);
+      })
+      .catch(() => undefined);
+    return () => controller.abort();
+  }, [userId]);
   const [displayName, setDisplayName] = useState('');
   const [bio, setBio] = useState('');
   const [showcaseTitle, setShowcaseTitle] = useState('');
@@ -157,18 +176,20 @@ export default function AccountPage() {
 
       <div className={styles.tabs}>
         <div className={ui.segments} role="tablist" aria-label="Account sections">
-          {(['profile', 'binder', 'account'] as const).map((name) => (
-            <button
-              key={name}
-              type="button"
-              role="tab"
-              aria-selected={section === name}
-              className={`${ui.segment} ${section === name ? ui.segmentOn : ''}`}
-              onClick={() => setSection(name)}
-            >
-              {SECTION_LABELS[name]}
-            </button>
-          ))}
+          {(['profile', 'binder', 'membership', 'account'] as const)
+            .filter((name) => name !== 'membership' || membershipOn || section === name)
+            .map((name) => (
+              <button
+                key={name}
+                type="button"
+                role="tab"
+                aria-selected={section === name}
+                className={`${ui.segment} ${section === name ? ui.segmentOn : ''}`}
+                onClick={() => setSection(name)}
+              >
+                {SECTION_LABELS[name]}
+              </button>
+            ))}
         </div>
       </div>
 
@@ -315,6 +336,7 @@ export default function AccountPage() {
         </>
       ) : null}
 
+      {section === 'membership' ? <MembershipPanel /> : null}
       {section === 'account' ? <AccountSecurity user={user} onChanged={refreshUser} /> : null}
 
       {inspect ? <OwnedCardInspector owned={inspect} onClose={() => setInspect(null)} /> : null}

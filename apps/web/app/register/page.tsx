@@ -45,6 +45,7 @@ function RegisterForm() {
   return (
     <div className={styles.wrap}>
       <h1 className={styles.title}>Create your account</h1>
+      <p className={styles.sub}>Collect, trade and make your own sets.</p>
       <GoogleAuth onDone={() => router.replace(returnPath(search, '/packs'))} />
       <form className={styles.fields} onSubmit={onSubmit}>
         {error && <div className={styles.error}>{error}</div>}

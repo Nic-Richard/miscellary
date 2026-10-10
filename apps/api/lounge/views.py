@@ -6,6 +6,7 @@ from django.db import transaction
 from django.db.models import Count, Exists, OuterRef, Prefetch, Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 from rest_framework import permissions
 from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
 from rest_framework.pagination import PageNumberPagination
@@ -69,6 +70,7 @@ def post_data(post, viewer, subscriber_authors: set) -> dict:
         "author_badge": not removed and author_badge(post.author, subscriber_authors),
         "created_at": post.created_at,
         "removed": removed,
+        "topic": post.topic,
         "style": "binder"
         if post.style == Post.Style.BINDER and post.author_id in subscriber_authors
         else "plain",
@@ -160,11 +162,35 @@ class LoungeView(APIView):
                     "subscriber": False,
                 }
             )
-        sort = request.query_params.get("sort", "new")
-        window = request.query_params.get("window", "week")
+        params = request.query_params
+        sort = params.get("sort", "new")
+        window = params.get("window", "week")
+        topic = params.get("topic", "")
         if sort not in {"new", "top", "active"} or window not in {"today", "week", "month", "all"}:
             raise ValidationError("Choose New, Top or Active and a valid time window.")
+        if topic and topic not in Post.Topic.values:
+            raise ValidationError("Choose a Lounge topic.")
+        if "new_since" in params:
+            try:
+                since = parse_datetime(params["new_since"])
+            except ValueError:
+                since = None
+            if since is None or timezone.is_naive(since):
+                raise ValidationError("Use a full timestamp for new discussions.")
+            rows = visible_posts(request.user).filter(deleted_at__isnull=True, created_at__gt=since)
+            if topic:
+                rows = rows.filter(topic=topic)
+            return Response({"new_count": rows.count()})
         rows = post_rows(request.user).filter(deleted_at__isnull=True)
+        if topic:
+            rows = rows.filter(topic=topic)
+        query = params.get("q", "").strip()[:100]
+        for word in query.split()[:6]:
+            rows = rows.filter(
+                Q(title__icontains=word)
+                | Q(body__icontains=word)
+                | Q(author__username__icontains=word)
+            )
         if sort == "top" and window != "all":
             since = timezone.now() - timedelta(days={"today": 1, "week": 7, "month": 30}[window])
             rows = rows.filter(created_at__gte=since)
@@ -212,7 +238,11 @@ class LoungeView(APIView):
         if len(cards) != len(data["card_ids"]):
             raise ValidationError("Choose cards currently in your own collection.")
         post = Post.objects.create(
-            author=user, title=data["title"], body=data["body"], style=data["style"]
+            author=user,
+            title=data["title"],
+            body=data["body"],
+            style=data["style"],
+            topic=data["topic"],
         )
         Attachment.objects.bulk_create(
             [

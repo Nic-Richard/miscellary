@@ -2,11 +2,14 @@ from typing import Any
 
 from rest_framework import serializers
 
+from .models import Post
+
 
 class PostWriteSerializer(serializers.Serializer):
     title = serializers.CharField(max_length=120, trim_whitespace=True)
     body = serializers.CharField(max_length=3000, trim_whitespace=True)
     style: Any = serializers.ChoiceField(choices=["plain", "binder"], default="plain")
+    topic: Any = serializers.ChoiceField(choices=Post.Topic.values, default=Post.Topic.OTHER)
     card_ids = serializers.ListField(child=serializers.UUIDField(), max_length=6, default=list)
     rules_accepted = serializers.BooleanField()
 

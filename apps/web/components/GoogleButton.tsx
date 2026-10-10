@@ -19,6 +19,9 @@ interface GoogleId {
       theme: 'outline';
       size: 'large';
       text: 'continue_with';
+      shape: 'rectangular';
+      logo_alignment: 'center';
+      width: number;
     },
   ) => void;
 }
@@ -127,6 +130,13 @@ export default function GoogleButton({
           theme: 'outline',
           size: 'large',
           text: 'continue_with',
+          shape: 'rectangular',
+          logo_alignment: 'center',
+          // Google draws its own button, capped at 400px; match the form width.
+          width: Math.min(
+            400,
+            Math.max(200, Math.floor(element.parentElement?.clientWidth ?? 320)),
+          ),
         });
         setReady(true);
       } catch (err) {

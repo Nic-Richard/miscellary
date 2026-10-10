@@ -6,7 +6,6 @@ import type { Membership } from '@miscellary/shared';
 import { starAmount } from '@miscellary/shared';
 import { ApiRequestError, apiFetch } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
-import Sheet from './Sheet';
 import ui from './ui.module.css';
 import styles from './MembershipPanel.module.css';
 
@@ -130,25 +129,52 @@ export default function MembershipPanel() {
     );
   if (!membership)
     return refreshing && user ? (
-      <Sheet title="Stars & membership" className={styles.membership}>
-        <p role="status" className={ui.muted}>
-          Loading membership…
-        </p>
-      </Sheet>
+      <p role="status" className={ui.muted}>
+        Loading membership…
+      </p>
     ) : null;
   if (!membership.enabled) return null;
   const sub = membership.subscription;
   const publications = membership.publishing;
+  const name = user?.profile.display_name || user?.profile.username || '';
+  const canBuy =
+    membership.preview || membership.bundles.some((bundle) => bundle.checkout_available);
+  const perks: { count: string; title: string; note?: string; link?: [string, string] }[] = [
+    {
+      count: String(sub.monthly_bonus_packs),
+      title: 'Bonus packs a month',
+      note: sub.active ? `${sub.bonus_packs_remaining} left` : 'Any set',
+      ...(sub.active ? { link: ['/packs', 'Open one'] as [string, string] } : {}),
+    },
+    { count: String(sub.monthly_stars), title: 'Stars a month', note: 'Never expire' },
+    {
+      count: '10',
+      title: 'Sets published a month',
+      note: 'Instead of 3',
+      link: ['/studio', 'Studio'],
+    },
+    {
+      count: '6',
+      title: 'Cards per Lounge post',
+      note: 'Instead of 1',
+      link: ['/lounge', 'Lounge'],
+    },
+  ];
+  const renewal = sub.paid_through
+    ? new Date(sub.paid_through).toLocaleDateString(undefined, { dateStyle: 'long' })
+    : 'at the end of your paid period';
+
   return (
-    <Sheet title="Stars & membership" className={styles.membership}>
+    <div className={styles.membership}>
       {membership.preview && (
         <p className={styles.notice} role="status">
-          Local preview. Purchases are disabled; these are sample benefits.
+          Local preview. Purchases are switched off and these are sample benefits.
         </p>
       )}
       {returned && (
-        <p role="status" className={styles.note}>
-          Your balance updates after payment confirmation. Refresh below if it has not arrived yet.
+        <p role="status" className={styles.notice}>
+          Your balance updates once the payment is confirmed. Refresh below if it hasn&rsquo;t
+          arrived yet.
         </p>
       )}
       {error && (
@@ -156,145 +182,142 @@ export default function MembershipPanel() {
           {error}
         </p>
       )}
-      <div className={styles.section}>
-        <div className={styles.heading}>
-          <div>
-            <h3>Supporter membership</h3>
-            <p className={styles.note}>
-              A little extra for your collection. A little support for Miscellary.
-            </p>
+      <section className={styles.member} aria-labelledby="membership-title">
+        <div className={styles.cardSleeve} aria-hidden="true">
+          <div className={styles.card}>
+            <span className={styles.cardLabel}>{sub.active ? 'Supporter' : 'Collector'}</span>
+            <span className={`${styles.seal} ${sub.active ? styles.sealGold : ''}`}>
+              {name.charAt(0).toUpperCase()}
+            </span>
+            <span className={styles.cardHandle}>@{user?.profile.username}</span>
           </div>
-          <span className={styles.status}>
-            {sub.active ? 'Active supporter' : 'Free collector'}
-          </span>
         </div>
-        {sub.active ? (
-          <p className={styles.note}>
-            {sub.auto_renews ? 'Renews' : 'Benefits end'}{' '}
-            {sub.paid_through
-              ? new Date(sub.paid_through).toLocaleDateString()
-              : 'at the end of your paid period'}
-            .{!sub.auto_renews && ' Renewal is cancelled. You keep your Stars afterward.'}
-          </p>
-        ) : (
-          <p className={styles.price}>
-            {price(sub.price_cents, sub.currency)} <span>/ month</span>
-          </p>
-        )}
-        {sub.active && (
-          <p className={styles.note}>{price(sub.price_cents, sub.currency)} / month</p>
-        )}
-        <ul className={styles.perks}>
-          <li>
-            <b>{sub.monthly_bonus_packs} bonus packs</b>
-            <span>Each paid month, across any sets. Daily free packs stay unchanged.</span>
+        <div className={styles.detail}>
+          <div className={styles.status}>
+            <h2 id="membership-title">{sub.active ? 'Supporter' : 'Become a supporter'}</h2>
             {sub.active && (
-              <Link href="/packs" className={ui.link}>
-                {sub.bonus_packs_remaining} left · Open a pack
-              </Link>
+              <span className={styles.state}>{sub.auto_renews ? 'Active' : 'Ending'}</span>
             )}
-          </li>
-          <li>
-            <b>{sub.monthly_stars} Stars</b>
-            <span>Each paid month. Any set, no expiry.</span>
-          </li>
-          <li>
-            <b>10 published sets a month</b>
-            <span>Instead of 3. Existing sets stay published after expiry.</span>
-            <Link href="/studio" className={ui.link}>
-              Open Studio
-            </Link>
-          </li>
-          <li>
-            <b>More room to show your collection</b>
-            <span>6 cards per post, together or in a binder.</span>
-            <Link href="/lounge" className={ui.link}>
-              Visit the Lounge
-            </Link>
-          </li>
-          <li>
-            <b>Detailed creator stats</b>
-            <span>Activity, collection progress and Stars earned.</span>
-            <Link href="/studio" className={ui.link}>
-              View stats
-            </Link>
-          </li>
-          <li>
-            <b>A supporter badge</b>
-            <span>On your profile and Lounge posts. Optional.</span>
-          </li>
-        </ul>
-        {!sub.active && (sub.checkout_available || membership.preview) && (
-          <div>
-            <button
-              type="button"
-              className={ui.btnPrimary}
-              disabled={busy !== null || !sub.checkout_available}
-              onClick={() => void checkout('subscription')}
-            >
-              {busy === 'subscription'
-                ? 'Opening checkout…'
-                : `Subscribe · ${price(sub.price_cents, sub.currency)} / month`}
-            </button>
-            <p className={styles.note}>
-              Renews monthly until cancelled. Benefits last through your paid period.
-            </p>
           </div>
-        )}
-        {sub.management_available && (
-          <button
-            type="button"
-            className={ui.btnQuiet}
-            disabled={busy !== null}
-            onClick={() => void checkout()}
-          >
-            {busy === 'manage' ? 'Opening…' : 'Manage website purchases'}
-          </button>
-        )}
-        {sub.active && (
-          <label className={styles.badgeToggle}>
-            <input
-              type="checkbox"
-              checked={membership.show_badge !== false}
-              disabled={busy !== null}
-              onChange={() => void toggleBadge()}
-            />
-            Show supporter badge on my profile and in the Lounge
-          </label>
-        )}
-      </div>
-      <div className={styles.section}>
-        <div className={styles.heading}>
+          <p className={styles.lead}>
+            {sub.active
+              ? sub.auto_renews
+                ? `Renews ${renewal} for ${price(sub.price_cents, sub.currency)}. Cancel anytime and keep it until then.`
+                : `Ends ${renewal}. You keep your Stars afterwards.`
+              : `${price(sub.price_cents, sub.currency)} a month. A little extra for your collection, and a little support for Miscellary.`}
+          </p>
+          <ul className={styles.perks}>
+            {perks.map((perk) => (
+              <li key={perk.title}>
+                <span className={styles.perkCount}>{perk.count}</span>
+                <span className={styles.perkText}>
+                  {perk.title}
+                  {perk.note && <small>{perk.note}</small>}
+                </span>
+                {perk.link && (
+                  <Link href={perk.link[0]} className={styles.perkLink}>
+                    {perk.link[1]}
+                  </Link>
+                )}
+              </li>
+            ))}
+            <li>
+              <span className={styles.perkCount}>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />
+                </svg>
+              </span>
+              <span className={styles.perkText}>Detailed creator stats</span>
+              <Link href="/studio" className={styles.perkLink}>
+                View
+              </Link>
+            </li>
+            <li>
+              <span className={styles.perkCount}>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9Z" />
+                </svg>
+              </span>
+              <span className={styles.perkText}>
+                Supporter badge
+                <small>On your profile and in the Lounge</small>
+              </span>
+              {sub.active && (
+                <label className={styles.switch}>
+                  <input
+                    type="checkbox"
+                    role="switch"
+                    checked={membership.show_badge !== false}
+                    disabled={busy !== null}
+                    onChange={() => void toggleBadge()}
+                    aria-label="Show supporter badge"
+                  />
+                  <span aria-hidden="true" />
+                </label>
+              )}
+            </li>
+          </ul>
+          <div className={styles.actions}>
+            {!sub.active && (sub.checkout_available || membership.preview) && (
+              <button
+                type="button"
+                className={ui.btnPrimary}
+                disabled={busy !== null || !sub.checkout_available}
+                onClick={() => void checkout('subscription')}
+              >
+                {busy === 'subscription'
+                  ? 'Opening checkout…'
+                  : `Subscribe for ${price(sub.price_cents, sub.currency)} a month`}
+              </button>
+            )}
+            {sub.management_available && (
+              <button
+                type="button"
+                className={ui.btnOutline}
+                disabled={busy !== null}
+                onClick={() => void checkout()}
+              >
+                {busy === 'manage' ? 'Opening…' : 'Manage subscription'}
+              </button>
+            )}
+          </div>
+        </div>
+      </section>
+
+      <section className={styles.wallet} aria-labelledby="stars-title">
+        <div className={styles.walletHead}>
           <div>
-            <h3>Stars</h3>
-            <p className={styles.note}>Your balance, available on any set.</p>
+            <h2 id="stars-title">Stars</h2>
+            <p className={styles.note}>
+              Extra packs cost 50 points. A set&rsquo;s recycled points go first, then Stars cover
+              the rest.
+            </p>
           </div>
           <p className={styles.balance}>
-            {starAmount(membership.star_units, membership.units_per_star)} <span>Stars</span>
+            {starAmount(membership.star_units, membership.units_per_star)}
+            <span>Stars</span>
           </p>
         </div>
-        <p className={styles.note}>
-          Extra packs cost 50 points. A set's recycled points are used first, then your Stars cover
-          the rest.
-        </p>
-        {membership.preview || membership.bundles.some((bundle) => bundle.checkout_available) ? (
+        {canBuy ? (
           <>
-            <div className={styles.bundles}>
+            <div className={styles.stubs}>
               {membership.bundles
                 .filter((bundle) => bundle.checkout_available || membership.preview)
                 .map((bundle) => (
                   <button
                     key={bundle.id}
                     type="button"
-                    className={styles.bundle}
+                    className={styles.stub}
                     disabled={busy !== null || !bundle.checkout_available}
                     onClick={() => void checkout(bundle.id)}
                   >
-                    <span>{bundle.total_stars.toLocaleString()} Stars</span>
-                    {bundle.bonus_stars > 0 && (
-                      <span className={styles.note}>Includes {bundle.bonus_stars} bonus</span>
-                    )}
-                    <span>
+                    <span className={styles.stubStars}>
+                      {bundle.total_stars.toLocaleString()} <small>Stars</small>
+                    </span>
+                    <span className={styles.stubBonus}>
+                      {bundle.bonus_stars > 0 ? `Includes ${bundle.bonus_stars} bonus` : 'Starter'}
+                    </span>
+                    <span className={styles.stubPrice}>
                       {busy === bundle.id
                         ? 'Opening checkout…'
                         : price(bundle.price_cents, bundle.currency)}
@@ -303,32 +326,33 @@ export default function MembershipPanel() {
                 ))}
             </div>
             <p className={styles.note}>
-              Stars never expire and cannot be cashed out. Packs contain random cards; check each
-              set’s odds before opening. Creators earn 20% of Stars spent on their sets.
-            </p>
-            <p className={styles.note}>
-              Prices are in USD. Any applicable tax is shown at checkout.
+              Stars never expire and can&rsquo;t be cashed out. Packs hold random cards, so check
+              each set&rsquo;s odds before opening. Creators earn 20% of the Stars spent on their
+              sets. Prices are in USD, and any tax is shown at checkout.
             </p>
           </>
         ) : !sub.checkout_available && !sub.management_available ? (
-          <p className={styles.note}>
-            Purchases and subscription management are not available yet.
-          </p>
+          <p className={styles.note}>Buying Stars isn&rsquo;t available yet.</p>
         ) : null}
-      </div>
-      <div className={`${styles.section} ${styles.heading}`}>
+      </section>
+
+      <section className={styles.row}>
         <div>
-          <h3>Publishing this month</h3>
+          <h2>Publishing this month</h2>
           <p className={styles.note}>
             {publications.used} of {publications.limit} sets published. Resets{' '}
-            {new Date(publications.resets_at).toLocaleDateString(undefined, { timeZone: 'UTC' })}{' '}
-            (UTC).
+            {new Date(publications.resets_at).toLocaleDateString(undefined, {
+              timeZone: 'UTC',
+              dateStyle: 'long',
+            })}
+            .
           </p>
         </div>
         <Link href="/studio" className={ui.btnQuiet}>
           Your sets
         </Link>
-      </div>
+      </section>
+
       {purchaseError && (
         <p role="alert" className={ui.error}>
           {purchaseError}
@@ -336,13 +360,13 @@ export default function MembershipPanel() {
       )}
       <button
         type="button"
-        className={ui.btnQuiet}
+        className={`${ui.btnQuiet} ${ui.btnSmall} ${styles.refresh}`}
         disabled={busy !== null || refreshing}
         onClick={() => setRetry((value) => value + 1)}
       >
-        {refreshing ? 'Refreshing…' : 'Refresh membership'}
+        {refreshing ? 'Refreshing…' : 'Refresh'}
       </button>
-    </Sheet>
+    </div>
   );
 }
 

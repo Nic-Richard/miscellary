@@ -13,7 +13,6 @@ import {
 import { useAuth } from '@/lib/auth';
 import PasswordInput from './PasswordInput';
 import ThemeSelector from './ThemeSelector';
-import MembershipPanel from './MembershipPanel';
 import useGoogleConfirmation from './useGoogleConfirmation';
 import ui from './ui.module.css';
 import styles from './AccountSecurity.module.css';
@@ -473,7 +472,6 @@ export default function AccountSecurity({
 }) {
   return (
     <>
-      <MembershipPanel />
       <div className={`${ui.panel} ${styles.sheet}`}>
         <div className={ui.rows}>
           <Row

@@ -6,29 +6,42 @@
   gap: 12px;
   max-width: 420px;
   margin: 50px auto;
-  padding: 30px 32px 28px;
-  background: var(--sur);
-  border: 1px solid var(--bdr2);
-  border-radius: 6px;
+  padding: 32px 32px 28px;
+  background:
+    var(--paper) center / 220px,
+    linear-gradient(var(--sur), var(--sur));
+  background-blend-mode: multiply;
+  border: 1px solid var(--bdr);
+  border-radius: 14px;
   box-shadow:
-    0 8px 20px rgba(62, 46, 24, 0.14),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+    0 1px 2px rgba(0, 0, 0, 0.08),
+    0 14px 30px rgba(0, 0, 0, 0.1);
   position: relative;
 }
-.wrap::before {
-  content: '';
-  position: absolute;
-  inset: 7px;
-  border: 1px dashed var(--bdr2);
-  border-radius: 3px;
-  pointer-events: none;
-}
 .title {
-  margin: 0 0 8px;
+  margin: 0;
   font: 400 40px / 1 var(--display);
   letter-spacing: 0.02em;
   text-transform: uppercase;
   color: var(--text);
+}
+.sub {
+  margin: -4px 0 10px;
+  color: var(--muted);
+}
+.or {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 6px 0 2px;
+  color: var(--faint);
+  font-size: 14px;
+}
+.or::before,
+.or::after {
+  content: '';
+  flex: 1;
+  border-top: 1px solid var(--bdr2);
 }
 .fields {
   display: flex;
@@ -47,10 +60,11 @@
 }
 .input {
   composes: surfaceTone from './ui.module.css';
+  min-height: 44px;
   padding: 10px 12px;
-  background: var(--sur2);
+  background: color-mix(in srgb, var(--sur) 70%, var(--bg));
   border: 1px solid var(--bdr2);
-  border-radius: 4px;
+  border-radius: 6px;
   color: var(--text);
 }
 .input:focus {
@@ -76,8 +90,8 @@
   border: 1px solid var(--accent-deep);
   border-radius: 5px;
   color: var(--accent-text);
-  font: 400 16px / 1 var(--display);
-  letter-spacing: 0.12em;
+  font: 400 19px / 1 var(--display);
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   cursor: pointer;
   box-shadow: 0 3px 8px rgba(var(--accent-rgb), 0.28);

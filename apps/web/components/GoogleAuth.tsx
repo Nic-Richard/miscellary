@@ -89,6 +89,9 @@ export default function GoogleAuth({ onDone }: { onDone: () => void }) {
       </button>
     </form>
   ) : (
-    <GoogleButton onCredential={login} />
+    <>
+      <GoogleButton onCredential={login} />
+      <p className={form.or}>or use your email</p>
+    </>
   );
 }

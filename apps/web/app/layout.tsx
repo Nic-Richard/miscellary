@@ -86,7 +86,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className={fonts}>
+    // The colour-theme script sets the saved theme on <html> before hydration.
+    <html lang="en" className={fonts} suppressHydrationWarning>
       <body>
         <Script id="colour-theme" strategy="beforeInteractive">{`
           try {

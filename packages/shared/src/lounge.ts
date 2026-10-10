@@ -1,6 +1,17 @@
 import type { Card, Creator, Paginated } from './api';
 
 export type LoungeStyle = 'plain' | 'binder';
+export const LOUNGE_TOPICS = [
+  { id: 'show', label: 'Show and tell' },
+  { id: 'trading', label: 'Trading' },
+  { id: 'making', label: 'Making sets' },
+  { id: 'questions', label: 'Questions' },
+  { id: 'other', label: 'Anything else' },
+] as const;
+export type LoungeTopic = (typeof LOUNGE_TOPICS)[number]['id'];
+export function loungeTopicLabel(topic: string): string {
+  return LOUNGE_TOPICS.find((item) => item.id === topic)?.label ?? 'Anything else';
+}
 export interface LoungeCard extends Card {
   set_title: string;
   set_slug: string;
@@ -16,6 +27,7 @@ export interface LoungePost {
   author_badge: boolean;
   created_at: string;
   removed: boolean;
+  topic: LoungeTopic;
   style: LoungeStyle;
   can_delete: boolean;
   likes: number;
@@ -44,6 +56,7 @@ export interface LoungePostWrite {
   title: string;
   body: string;
   style: LoungeStyle;
+  topic: LoungeTopic;
   card_ids: string[];
   rules_accepted: boolean;
 }

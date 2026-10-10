@@ -27,6 +27,7 @@ export function Composer({
   onSubmit,
   onCancel,
   disabled = false,
+  rows = 2,
 }: {
   placeholder: string;
   submitLabel: string;
@@ -34,6 +35,7 @@ export function Composer({
   onSubmit: (body: string) => Promise<void>;
   onCancel?: () => void;
   disabled?: boolean;
+  rows?: number;
 }) {
   const [body, setBody] = useState('');
   const [busy, setBusy] = useState(false);
@@ -77,7 +79,7 @@ export function Composer({
         placeholder={placeholder}
         value={body}
         maxLength={MAX}
-        rows={2}
+        rows={rows}
         onChange={(e) => setBody(e.target.value)}
         onKeyDown={(e) => {
           if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {

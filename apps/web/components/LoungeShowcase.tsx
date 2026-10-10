@@ -9,10 +9,12 @@ export default function LoungeShowcase({
   cards,
   style,
   onInspect,
+  compact = false,
 }: {
   cards: (LoungeCard | null)[];
   style: LoungeStyle;
   onInspect: (card: LoungeCard) => void;
+  compact?: boolean;
 }) {
   const slots = cards.map((card, index) => (
     <div key={index}>
@@ -47,7 +49,7 @@ export default function LoungeShowcase({
     </div>
   ) : (
     <div
-      className={styles.cards}
+      className={`${styles.cards} ${compact ? styles.compact : ''}`}
       style={
         {
           '--columns': Math.min(cards.length, 3),

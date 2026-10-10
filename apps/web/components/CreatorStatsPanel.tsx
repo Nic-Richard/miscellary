@@ -180,7 +180,7 @@ export default function CreatorStatsPanel() {
           {!details && (
             <p className={ui.muted}>
               Supporters also see activity, collection progress, card likes and Stars earned.{' '}
-              <Link href="/account?section=account">View membership</Link>.
+              <Link href="/account?section=membership">View membership</Link>.
             </p>
           )}
           <p className={styles.note}>

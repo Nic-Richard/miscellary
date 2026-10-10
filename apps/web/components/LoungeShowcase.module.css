@@ -2,11 +2,11 @@
   --count: var(--columns);
   --gap: 18px;
   width: 100%;
-  max-width: calc(var(--count) * 200px + (var(--count) - 1) * var(--gap));
-  margin: 6px auto 10px;
+  max-width: calc(var(--count) * var(--showcase-card, 200px) + (var(--count) - 1) * var(--gap));
+  margin: 6px var(--showcase-margin, auto) 10px;
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
+  justify-content: var(--showcase-align, center);
   gap: var(--gap);
 }
 .cards > div {
@@ -40,8 +40,12 @@
   transform: translateY(-2px);
 }
 @media (max-width: 560px) {
-  .cards {
+  .cards:not(.compact) {
     --count: var(--narrow-columns);
     --gap: 16px;
   }
+}
+
+.compact {
+  --gap: 12px;
 }

@@ -19,8 +19,9 @@ export default function PublishingNotice({ allowance }: { allowance: PublishingA
       </p>
       {allowance.used >= (allowance.limit ?? Infinity) && (
         <p className={ui.muted}>
-          You can keep making drafts. <Link href="/account?section=account">View membership</Link>{' '}
-          or wait for next month's allowance.
+          You can keep making drafts.{' '}
+          <Link href="/account?section=membership">View membership</Link> or wait for next month's
+          allowance.
         </p>
       )}
     </div>

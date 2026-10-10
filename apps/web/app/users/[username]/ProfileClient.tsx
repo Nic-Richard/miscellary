@@ -117,7 +117,9 @@ export default function ProfileClient({
       <div className={styles.header}>
         <div className={styles.idSleeve} aria-hidden="true">
           <div className={styles.idCard}>
-            <span className={styles.idLabel}>Collector</span>
+            <span className={styles.idLabel}>
+              {profile.subscriber_badge ? 'Supporter' : 'Collector'}
+            </span>
             <span className={styles.monogram}>{profile.username[0]?.toUpperCase()}</span>
             <span className={styles.idHandle}>@{profile.username}</span>
             <span className={styles.idSince}>Since {joined}</span>

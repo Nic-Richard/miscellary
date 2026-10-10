@@ -10,11 +10,19 @@ class Post(models.Model):
         BINDER = "binder", "Binder"
         DISPLAY = "display", "Display"
 
+    class Topic(models.TextChoices):
+        SHOW = "show", "Show and tell"
+        TRADING = "trading", "Trading"
+        MAKING = "making", "Making sets"
+        QUESTIONS = "questions", "Questions"
+        OTHER = "other", "Anything else"
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     title = models.CharField(max_length=120)
     body = models.TextField(max_length=3000)
     style = models.CharField(max_length=10, choices=Style.choices, default=Style.PLAIN)
+    topic = models.CharField(max_length=12, choices=Topic.choices, default=Topic.OTHER)
     created_at = models.DateTimeField(auto_now_add=True)
     active_at = models.DateTimeField(auto_now_add=True)
     deleted_at = models.DateTimeField(null=True, blank=True)
@@ -24,6 +32,7 @@ class Post(models.Model):
         indexes = [
             models.Index(fields=["deleted_at", "created_at"]),
             models.Index(fields=["deleted_at", "active_at"]),
+            models.Index(fields=["topic", "deleted_at", "active_at"]),
         ]
 
     def __str__(self) -> str:

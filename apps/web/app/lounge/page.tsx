@@ -1,5 +1,5 @@
-import LoungeView from './LoungeClient';
+import LoungeWelcome from '@/components/lounge/LoungeWelcome';
 
 export default function LoungePage() {
-  return <LoungeView />;
+  return <LoungeWelcome />;
 }

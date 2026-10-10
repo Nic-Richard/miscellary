@@ -37,6 +37,7 @@ function LoginForm() {
   return (
     <div className={styles.wrap}>
       <h1 className={styles.title}>Log in</h1>
+      <p className={styles.sub}>Welcome back to your collection.</p>
       <GoogleAuth onDone={() => router.replace(returnPath(search))} />
       <form className={styles.fields} onSubmit={onSubmit}>
         {error && <div className={styles.error}>{error}</div>}

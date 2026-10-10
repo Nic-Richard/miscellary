@@ -214,3 +214,28 @@ def test_permissions_rules_disabled_and_pagination(user, auth_client, settings):
         and len(response.data["results"]) == 20
         and response.data["next"]
     )
+
+
+def test_topics_search_and_new_count(user, auth_client, api_client):
+    other = make_user()
+    trade = Post.objects.create(
+        author=user, title="Dreamcast wanted", body="Swapping spares.", topic="trading"
+    )
+    Post.objects.create(author=other, title="My binder", body="Candy so far.", topic="show")
+    route = reverse("lounge:feed")
+
+    def titles(**query):
+        return [row["title"] for row in api_client.get(route, query).json()["results"]]
+
+    assert titles(topic="trading") == ["Dreamcast wanted"]
+    assert titles(q="dream SPARES") == ["Dreamcast wanted"]
+    assert titles(q=other.username) == ["My binder"]
+    assert titles(q="dreamcast candy") == []
+    assert api_client.get(route, {"topic": "gossip"}).status_code == 400
+    assert api_client.get(route, {"new_since": "yesterday"}).status_code == 400
+    since = (trade.created_at - timedelta(seconds=1)).isoformat()
+    assert api_client.get(route, {"new_since": since}).json() == {"new_count": 2}
+    assert api_client.get(route, {"new_since": since, "topic": "show"}).json() == {"new_count": 1}
+    created = auth_client.post(route, payload(topic="questions"), format="json")
+    assert created.status_code == 201 and created.json()["topic"] == "questions"
+    assert auth_client.post(route, payload(topic="gossip"), format="json").status_code == 400
