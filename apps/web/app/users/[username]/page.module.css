@@ -78,6 +78,27 @@
   gap: 10px;
   margin-top: 20px;
 }
+.confirm {
+  composes: surfaceTone from '../../../components/ui.module.css';
+  display: grid;
+  gap: 10px;
+  flex-basis: 100%;
+  max-width: 520px;
+  padding: 12px 14px;
+  border: 1px solid var(--bdr);
+  border-radius: 8px;
+  background: var(--sur);
+  color: var(--text);
+}
+.confirm p {
+  margin: 0;
+  line-height: 1.45;
+}
+.confirmActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
 .statsPanel {
   margin-top: 20px;
 }

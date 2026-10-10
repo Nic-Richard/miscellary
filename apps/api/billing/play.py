@@ -15,7 +15,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from accounts.models import User
-from common.monetization import CREDIT_BUNDLES
+from common.monetization import CREDIT_BUNDLES, PURCHASE_BLOCKED_COUNTRIES
 
 from . import actions
 from .models import BillingReview, StarGrant, Subscription, SubscriptionPeriod
@@ -157,6 +157,8 @@ def verify_product(user: User, product: str, token: str) -> str:
     order = remote.get("orderId")
     if not isinstance(order, str) or not order:
         raise actions.PaymentMismatch("Google Play purchase has no order.")
+    if remote.get("regionCode") in PURCHASE_BLOCKED_COUNTRIES:
+        return _refuse_region(order)
     try:
         actions.grant_bundle(user, "play", f"play:{order}", product)
     except actions.PaymentMismatch as exc:
@@ -164,6 +166,12 @@ def verify_product(user: User, product: str, token: str) -> str:
     if remote.get("acknowledgementState") == 0:
         call("POST", f"purchases/products/{_quote(product)}/tokens/{_quote(token)}:acknowledge", {})
     return "granted"
+
+
+def _refuse_region(order: str) -> str:
+    # Refunding with revoke also ends a subscription; the purchase is never granted.
+    call("POST", f"orders/{_quote(order)}:refund?revoke=true", {})
+    return "unavailable"
 
 
 def _when(value) -> datetime:
@@ -195,6 +203,8 @@ def verify_subscription(user: User, token: str) -> str:
     order = item.get("latestSuccessfulOrderId") or remote.get("latestOrderId")
     if not isinstance(order, str) or not order:
         raise actions.PaymentMismatch("Google Play subscription has no paid order.")
+    if remote.get("regionCode") in PURCHASE_BLOCKED_COUNTRIES:
+        return _refuse_region(order)
     ends_at = _when(item.get("expiryTime"))
     auto_renews = bool((item.get("autoRenewingPlan") or {}).get("autoRenewEnabled"))
     with transaction.atomic():

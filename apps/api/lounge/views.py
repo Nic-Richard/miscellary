@@ -20,18 +20,10 @@ from billing.actions import active_period, lock_accounts
 from cards.models import CardSet
 from cards.serializers import CardSerializer, CreatorSerializer
 from packs.models import OwnedCard
+from social.blocks import blocked_ids
 
-from .models import Attachment, Block, Post, Reply, Vote
+from .models import Attachment, Post, Reply, Vote
 from .serializers import PostWriteSerializer, ReplyWriteSerializer
-
-
-def blocked_ids(user) -> set:
-    if not user.is_authenticated:
-        return set()
-    links = Block.objects.filter(Q(user=user) | Q(blocked=user)).values_list(
-        "user_id", "blocked_id"
-    )
-    return {other if owner == user.pk else owner for owner, other in links}
 
 
 def visible_posts(user):
@@ -438,44 +430,3 @@ class VoteView(APIView):
         else:
             Vote.objects.filter(user=request.user, **fields).delete()
         return Response({"liked": liked, "likes": Vote.objects.filter(**fields).count()})
-
-
-class BlocksView(APIView):
-    throttle_scope = "lounge.block"
-
-    def get(self, request: Request) -> Response:
-        require_enabled()
-        assert isinstance(request.user, User)
-        return Response(
-            CreatorSerializer(
-                [
-                    link.blocked
-                    for link in Block.objects.filter(user=request.user).select_related(
-                        "blocked__profile"
-                    )
-                ],
-                many=True,
-            ).data
-        )
-
-    @transaction.atomic
-    def post(self, request: Request, username: str) -> Response:
-        require_enabled()
-        assert isinstance(request.user, User)
-        target = get_object_or_404(User, username=username.lower(), is_active=True)
-        if target.pk == request.user.pk:
-            raise ValidationError("You cannot block yourself.")
-        user = lock_accounts([request.user.pk, target.pk])[request.user.pk]
-        if not user.is_active:
-            raise PermissionDenied("This account is closed.")
-        Block.objects.get_or_create(user=request.user, blocked=target)
-        return Response(status=204)
-
-    @transaction.atomic
-    def delete(self, request: Request, username: str) -> Response:
-        require_enabled()
-        assert isinstance(request.user, User)
-        target = User.objects.filter(username=username.lower()).first()
-        lock_accounts([request.user.pk, *([target.pk] if target else [])])
-        Block.objects.filter(user=request.user, blocked__username=username.lower()).delete()
-        return Response(status=204)

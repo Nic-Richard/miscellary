@@ -7,15 +7,17 @@ export default function TermsPage() {
   return (
     <article className={styles.page}>
       <h1>Terms of use</h1>
-      <p className={styles.updated}>Effective September 28, 2026</p>
+      <p className={styles.updated}>Effective October 10, 2026</p>
       <p>Miscellary is operated by Nic Richard in New Brunswick, Canada.</p>
 
       <section>
         <h2>Using Miscellary</h2>
         <p>
           Miscellary is a creative collecting service for making card sets, opening packs, keeping
-          collections, and trading cards. You must be at least 13 years old to create an account.
-          Keep your account details accurate and protect your sign-in information.
+          collections, and trading cards. You must be at least 13 years old to create an account. If
+          you are under the age of majority where you live, you need a parent or guardian’s
+          permission before buying anything. Keep your account details accurate and protect your
+          sign-in information.
         </p>
       </section>
 
@@ -47,6 +49,19 @@ export default function TermsPage() {
       </section>
 
       <section>
+        <h2>Community and the Lounge</h2>
+        <p>
+          You agree to these rules when you create an account, and again before you post in the
+          Lounge. Comments, Lounge posts and replies are public. You can report any post, reply,
+          comment, card, set or collector from inside the app or website, and reports are reviewed
+          by a person. You can also block another collector at any time: blocked collectors can’t
+          follow you, trade with you or reply to you, and you won’t see their posts, comments or
+          notifications. Content that breaks these rules may be removed and accounts may be
+          suspended or closed.
+        </p>
+      </section>
+
+      <section>
         <h2>Copyright complaints</h2>
         <p>
           If you believe something on Miscellary uses your photo, writing, or other work without
@@ -58,11 +73,47 @@ export default function TermsPage() {
       </section>
 
       <section>
-        <h2>Cards have no financial value</h2>
+        <h2>Cards and tickets have no financial value</h2>
         <p>
-          Miscellary cards, points, packs, and trades are creative product features. They are not
-          investments, currency, financial assets, or claims on a limited supply, and they cannot be
-          redeemed for money through Miscellary.
+          Miscellary cards, tickets, points, packs, and trades are creative product features. They
+          are not investments, currency, financial assets, or claims on a limited supply. They
+          cannot be sold, transferred outside Miscellary, or redeemed for money.
+        </p>
+      </section>
+
+      <section>
+        <h2>Tickets, packs and memberships</h2>
+        <p>
+          Tickets are a limited licence to open extra packs in Miscellary. You can buy them on the
+          website or, in the Android app, through Google Play. They don’t expire while your account
+          is open, and any you still hold when you close your account are lost.
+        </p>
+        <p>
+          Packs contain randomly chosen cards. The odds for each rarity are shown before you open a
+          paid pack. When tickets are spent on a set, its creator receives 20% of them as tickets.
+        </p>
+        <p>
+          A membership costs the price shown when you join, charged every month until you cancel.
+          You can cancel at any time and keep the benefits until the end of the month you paid for.
+          Memberships started on the website are managed in your account settings; ones started in
+          the Android app are managed in Google Play.
+        </p>
+        <p>
+          Buying tickets and memberships isn’t available in Belgium or Brazil, where paid random
+          packs are restricted. Purchases made from those countries are refunded and not added.
+        </p>
+      </section>
+
+      <section>
+        <h2>Refunds</h2>
+        <p>
+          Purchases are final except where the law or the store you bought from says otherwise.
+          Google Play purchases follow Google Play’s refund policies. If a purchase is refunded or
+          charged back, the tickets or membership month it paid for are taken back, even if they
+          were already spent, so your ticket balance can go below zero. While it is below zero you
+          can’t trade until new tickets bring it back up. Cards you already own are not taken back.
+          Contact <a href="mailto:support@miscellary.com">support@miscellary.com</a> with any
+          problem with a purchase.
         </p>
       </section>
 

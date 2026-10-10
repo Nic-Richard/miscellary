@@ -252,7 +252,11 @@ export default function MembershipPanel() {
             onPress={store.subscribe}
           />
         ) : (
-          <Muted style={styles.small}>Joining in the app isn’t available yet.</Muted>
+          <Muted style={styles.small}>
+            {store.regionBlocked
+              ? 'Buying tickets and memberships isn’t available in your country.'
+              : 'Joining in the app isn’t available yet.'}
+          </Muted>
         )}
       </View>
 

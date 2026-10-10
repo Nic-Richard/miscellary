@@ -1,6 +1,15 @@
 from django.contrib import admin
 
-from .models import Comment, Follow, Notification, Reaction, Report, SetFollow, ShowcaseSlot
+from .models import (
+    Block,
+    Comment,
+    Follow,
+    Notification,
+    Reaction,
+    Report,
+    SetFollow,
+    ShowcaseSlot,
+)
 
 
 @admin.register(Report)
@@ -34,6 +43,7 @@ class NotificationAdmin(admin.ModelAdmin):
     list_filter = ["kind"]
 
 
+admin.site.register(Block)
 admin.site.register(Follow)
 admin.site.register(SetFollow)
 admin.site.register(Reaction)

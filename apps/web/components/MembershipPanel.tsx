@@ -18,6 +18,18 @@ export default function MembershipPanel() {
   const [purchaseError, setPurchaseError] = useState<string | null>(null);
   const [returned, setReturned] = useState(false);
   const [refreshing, setRefreshing] = useState(true);
+  const [country, setCountry] = useState<string | null>(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    void fetch('/region', { signal: controller.signal })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data: { country: string | null } | null) => {
+        if (!controller.signal.aborted) setCountry(data?.country ?? null);
+      })
+      .catch(() => undefined);
+    return () => controller.abort();
+  }, []);
   const requests = useRef<Record<string, string>>({});
   const controllerRef = useRef<AbortController | null>(null);
 
@@ -137,8 +149,10 @@ export default function MembershipPanel() {
   const sub = membership.subscription;
   const publications = membership.publishing;
   const name = user?.profile.display_name || user?.profile.username || '';
+  const regionBlocked = Boolean(country && membership.blocked_countries?.includes(country));
   const canBuy =
-    membership.preview || membership.bundles.some((bundle) => bundle.checkout_available);
+    !regionBlocked &&
+    (membership.preview || membership.bundles.some((bundle) => bundle.checkout_available));
   const perks: { count: string; title: string; note?: string; link?: [string, string] }[] = [
     {
       count: String(sub.monthly_bonus_packs),
@@ -258,7 +272,7 @@ export default function MembershipPanel() {
             </li>
           </ul>
           <div className={styles.actions}>
-            {!sub.active && (sub.checkout_available || membership.preview) && (
+            {!sub.active && !regionBlocked && (sub.checkout_available || membership.preview) && (
               <button
                 type="button"
                 className={ui.btnPrimary}
@@ -337,6 +351,10 @@ export default function MembershipPanel() {
               sets. Prices are in USD, and any tax is shown at checkout.
             </p>
           </>
+        ) : regionBlocked ? (
+          <p className={styles.note}>
+            Buying tickets and memberships isn&rsquo;t available in your country.
+          </p>
         ) : !sub.checkout_available && !sub.management_available ? (
           <p className={styles.note}>Buying tickets isn&rsquo;t available yet.</p>
         ) : null}

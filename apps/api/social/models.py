@@ -126,6 +126,29 @@ class Comment(models.Model):
         return self.deleted_at is not None
 
 
+class Block(models.Model):
+    """Blocking works across the app and in both directions; the blocked person isn't told."""
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="blocks"
+    )
+    blocked = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="blocked_by"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["user", "blocked"], name="one_block"),
+            models.CheckConstraint(
+                condition=~models.Q(user=models.F("blocked")), name="no_self_block"
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"Block<{self.user_id}:{self.blocked_id}>"
+
+
 class Report(models.Model):
     class Reason(models.TextChoices):
         EXPLICIT = "explicit", "Explicit or adult content"

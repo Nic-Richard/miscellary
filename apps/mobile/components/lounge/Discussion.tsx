@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Stack, router } from 'expo-router';
 import {
-  Alert,
   Keyboard,
   KeyboardAvoidingView,
   Pressable,
@@ -15,6 +14,7 @@ import type { LoungeCard, LoungePost, LoungeReply } from '@miscellary/shared';
 import { cardCode, loungeTopicLabel, timeAgo } from '@miscellary/shared';
 import Avatar from '@/components/Avatar';
 import CardInspector from '@/components/CardInspector';
+import { confirmBlock } from '@/components/BlockedPeople';
 import CardPreview from '@/components/CardPreview';
 import { Composer } from '@/components/Comments';
 import InspectorModal from '@/components/InspectorModal';
@@ -224,24 +224,16 @@ export default function Discussion({ postId }: { postId: string }) {
                   ...(blockable
                     ? [
                         {
-                          label: 'Block in Lounge',
+                          label: `Block @${post.author!.username}`,
                           icon: 'slash' as const,
                           onSelect: () =>
-                            Alert.alert(
-                              `Block @${post.author!.username} in the Lounge?`,
-                              'Hides each other’s Lounge posts and stops replies and likes. Nothing else in the app changes.',
-                              [
-                                { text: 'Cancel', style: 'cancel' },
-                                {
-                                  text: 'Block',
-                                  style: 'destructive',
-                                  onPress: () =>
-                                    void mutation.run(
-                                      `/api/v1/me/lounge-blocks/${post.author!.username}/`,
-                                      'POST',
-                                    ),
-                                },
-                              ],
+                            confirmBlock(
+                              post.author!.username,
+                              () =>
+                                void mutation.run(
+                                  `/api/v1/me/blocks/${post.author!.username}/`,
+                                  'POST',
+                                ),
                             ),
                         },
                       ]

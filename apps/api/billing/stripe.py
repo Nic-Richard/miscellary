@@ -8,7 +8,12 @@ from django.db import transaction
 from django.utils import timezone
 
 from accounts.models import User
-from common.monetization import CREDIT_BUNDLES, CURRENCY, SUBSCRIPTION_PRICE_CENTS
+from common.monetization import (
+    CREDIT_BUNDLES,
+    CURRENCY,
+    PURCHASE_BLOCKED_COUNTRIES,
+    SUBSCRIPTION_PRICE_CENTS,
+)
 
 from . import actions
 from .models import (
@@ -292,6 +297,20 @@ def _checkout_for_subscription(subscription) -> Checkout:
     return checkout
 
 
+def _refund(api, payment_id: str, receipt: StripeEvent, payment_reference: str) -> None:
+    # Refunded straight away and kept on the review list, resolved, as a record.
+    if payment_id:
+        api.v1.refunds.create(
+            {"payment_intent": payment_id}, options={"idempotency_key": f"miscellary-{payment_id}"}
+        )
+    BillingReview.objects.create(
+        event=receipt,
+        payment_reference=payment_reference,
+        reason="restricted_country" if payment_id else "restricted_country_unrefunded",
+        resolved_at=timezone.now() if payment_id else None,
+    )
+
+
 def _fulfill_session(session_id: str, receipt: StripeEvent) -> None:
     session = client().v1.checkout.sessions.retrieve(session_id).to_dict()
     key = (session.get("metadata") or {}).get("miscellary_checkout")
@@ -321,6 +340,14 @@ def _fulfill_session(session_id: str, receipt: StripeEvent) -> None:
         BillingReview.objects.create(
             event=receipt, payment_reference=session_id, reason="payment_after_closure"
         )
+        return
+    country = ((session.get("customer_details") or {}).get("address") or {}).get("country")
+    if country in PURCHASE_BLOCKED_COUNTRIES:
+        if checkout.product != "subscription":
+            _refund(client(), reference(session.get("payment_intent")), receipt, session_id)
+        checkout.completed = True
+        checkout.session_reference = session_id
+        checkout.save(update_fields=["completed", "session_reference"])
         return
     if checkout.product != "subscription":
         payment_id = reference(session.get("payment_intent"))
@@ -374,6 +401,19 @@ def _fulfill_invoice(invoice_id: str, receipt: StripeEvent) -> None:
         BillingReview.objects.create(
             event=receipt, payment_reference=invoice_id, reason="payment_after_closure"
         )
+        return
+    if (invoice.get("customer_address") or {}).get("country") in PURCHASE_BLOCKED_COUNTRIES:
+        if subscription.get("status") not in {"canceled", "incomplete_expired"}:
+            api.v1.subscriptions.cancel(subscription_id, {"invoice_now": False, "prorate": False})
+        payments = api.v1.invoice_payments.list({"invoice": invoice_id, "limit": 1}).to_dict()
+        payment_id = next(
+            (
+                reference((row.get("payment") or {}).get("payment_intent"))
+                for row in payments.get("data", [])
+            ),
+            "",
+        )
+        _refund(api, payment_id, receipt, invoice_id)
         return
     period = line["period"]
     actions.grant_subscription_period(

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import type { LoungeCard, LoungePost } from '@miscellary/shared';
-import { loungeTopicLabel } from '@miscellary/shared';
+import { BLOCK_COPY, loungeTopicLabel } from '@miscellary/shared';
 import Avatar from '@/components/Avatar';
 import CardInspector from '@/components/CardInspector';
 import LikeButton from '@/components/LikeButton';
@@ -14,6 +14,7 @@ import ReportDialog from '@/components/ReportDialog';
 import ShareButton from '@/components/ShareButton';
 import { apiFetch } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
+import { setBlocked } from '@/lib/social';
 import { timeAgo } from '@/lib/time';
 import ui from '@/components/ui.module.css';
 import { useLounge } from './LoungeShell';
@@ -72,7 +73,7 @@ export default function Discussion({ postId }: { postId: string }) {
         await apiFetch(`/api/v1/lounge/posts/${post.id}/`, { method: 'DELETE' });
         update(REMOVED);
       } else if (post.author) {
-        await apiFetch(`/api/v1/me/lounge-blocks/${post.author.username}/`, { method: 'POST' });
+        await setBlocked(post.author.username, true);
         hideAuthor(post.author.username);
         setVersion((value) => value + 1);
       }
@@ -177,7 +178,7 @@ export default function Discussion({ postId }: { postId: string }) {
                   ...(post.author && !post.author.deleted && !own
                     ? [
                         {
-                          label: 'Block in Lounge',
+                          label: `Block @${post.author.username}`,
                           onSelect: () => setConfirm('block'),
                           danger: true,
                         },
@@ -200,7 +201,7 @@ export default function Discussion({ postId }: { postId: string }) {
               <p>
                 {confirm === 'remove'
                   ? 'Remove this post? Replies keep their place.'
-                  : `Block @${post.author?.username}? You won't see each other's Lounge posts, replies or likes. Other app features stay the same.`}
+                  : BLOCK_COPY.confirm(post.author?.username ?? '')}
               </p>
               <div className={styles.tools}>
                 <button

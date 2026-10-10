@@ -36,6 +36,7 @@ export interface Membership {
   };
   publishing: PublishingAllowance;
   play?: { available: boolean; subscription_id: string; account_id: string | null };
+  blocked_countries?: string[];
   bundles: {
     id: string;
     price_cents: number;

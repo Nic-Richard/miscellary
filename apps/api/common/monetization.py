@@ -9,6 +9,9 @@ SUBSCRIPTION_BONUS_PACKS = 10
 SUBSCRIPTION_BONUS_CREDITS = 100
 FREE_MONTHLY_PUBLICATIONS = 3
 SUBSCRIBER_MONTHLY_PUBLICATIONS = 10
+# Paid random packs count as gambling in Belgium and are barred for minors in Brazil, whose
+# ages we can't verify, so neither country can buy tickets or memberships.
+PURCHASE_BLOCKED_COUNTRIES = frozenset({"BE", "BR"})
 
 
 @dataclass(frozen=True)

@@ -97,24 +97,3 @@ class Vote(models.Model):
 
     def __str__(self) -> str:
         return f"Vote<{self.pk}>"
-
-
-class Block(models.Model):
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="lounge_blocks"
-    )
-    blocked = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="lounge_blocked_by"
-    )
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(fields=["user", "blocked"], name="one_lounge_block"),
-            models.CheckConstraint(
-                condition=~models.Q(user=models.F("blocked")), name="no_lounge_self_block"
-            ),
-        ]
-
-    def __str__(self) -> str:
-        return f"Block<{self.user_id}:{self.blocked_id}>"

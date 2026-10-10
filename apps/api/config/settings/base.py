@@ -143,7 +143,7 @@ REST_FRAMEWORK = {
         "lounge.post": "10/hour",
         "lounge.reply": "30/hour",
         "lounge.vote": "60/min",
-        "lounge.block": "20/hour",
+        "block": "20/hour",
     },
 }
 

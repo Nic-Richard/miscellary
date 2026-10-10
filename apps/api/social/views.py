@@ -25,8 +25,10 @@ from packs import actions
 from packs.models import OwnedCard, PackOpening, SetPoints
 from packs.views import with_copies
 
+from .blocks import between, blocked_ids
 from .models import (
     SHOWCASE_SLOTS,
+    Block,
     Comment,
     Follow,
     Notification,
@@ -99,6 +101,7 @@ class ProfileView(APIView):
             "is_following": bool(me)
             and Follow.objects.filter(follower=me, following=user).exists(),
             "is_me": me == user,
+            "is_blocked": bool(me) and Block.objects.filter(user=me, blocked=user).exists(),
             "showcase": slots,
             "sets": sets,
         }
@@ -110,6 +113,8 @@ class FollowView(APIView):
         target = public_user(username)
         if target == request.user:
             raise ValidationError("You can't follow yourself.")
+        if between(request.user, target):
+            raise ValidationError("You can't follow this collector.")
         _, created = Follow.objects.get_or_create(follower=me(request), following=target)
         if created:
             notify(target, me(request), Notification.Kind.FOLLOW)
@@ -264,7 +269,14 @@ def thread(card_set: CardSet, viewer) -> tuple[list[Comment], dict[str, Any]]:
     is only worth keeping when something hangs off it, so childless tombstones
     are dropped here rather than shown as gaps.
     """
-    rows = list(Comment.objects.filter(card_set=card_set).select_related("author__profile"))
+    hidden = blocked_ids(viewer)
+    rows = [
+        row
+        for row in Comment.objects.filter(card_set=card_set).select_related("author__profile")
+        if row.author_id not in hidden
+    ]
+    shown = {row.pk for row in rows}
+    rows = [row for row in rows if row.parent_id is None or row.parent_id in shown]
     replies: dict[Any, list[Comment]] = {}
     for row in rows:
         if row.parent_id:
@@ -317,7 +329,7 @@ class SetCommentsView(APIView):
             # Replies stop at one level: a reply to a reply joins the same run.
             if parent.parent is not None:
                 parent = parent.parent
-            if parent.removed:
+            if parent.removed or parent.author_id in blocked_ids(request.user):
                 raise ValidationError("That comment was removed.")
 
         comment = Comment.objects.create(
@@ -581,8 +593,10 @@ class MyPacksView(APIView):
 class NotificationsView(APIView):
     def get(self, request: Request) -> Response:
         user = me(request)
-        rows = Notification.objects.filter(recipient=user).select_related(
-            "actor__profile", "card_set", "card", "comment"
+        rows = (
+            Notification.objects.filter(recipient=user)
+            .exclude(actor_id__in=blocked_ids(user))
+            .select_related("actor__profile", "card_set", "card", "comment")
         )
         paginator = NotificationPagination()
         page = paginator.paginate_queryset(rows, request) or []
@@ -598,3 +612,47 @@ class NotificationsView(APIView):
             rows = rows.filter(id=wanted)
         rows.update(read_at=timezone.now())
         return Response({"unread": unread_count(user)})
+
+
+class BlocksView(APIView):
+    throttle_scope = "block"
+
+    def get(self, request: Request) -> Response:
+        return Response(
+            CreatorSerializer(
+                [
+                    link.blocked
+                    for link in Block.objects.filter(user=me(request)).select_related(
+                        "blocked__profile"
+                    )
+                ],
+                many=True,
+            ).data
+        )
+
+    @transaction.atomic
+    def post(self, request: Request, username: str) -> Response:
+        from billing.actions import lock_accounts
+        from trades.models import TradeOffer
+
+        target = public_user(username)
+        if target.pk == request.user.pk:
+            raise ValidationError("You can't block yourself.")
+        user = lock_accounts([request.user.pk, target.pk])[request.user.pk]
+        if not user.is_active:
+            raise PermissionDenied("This account is closed.")
+        Block.objects.get_or_create(user=user, blocked=target)
+        Follow.objects.filter(
+            Q(follower=user, following=target) | Q(follower=target, following=user)
+        ).delete()
+        withdraw(target, user, Notification.Kind.FOLLOW)
+        TradeOffer.objects.filter(
+            Q(sender=user, recipient=target) | Q(sender=target, recipient=user),
+            status=TradeOffer.Status.PENDING,
+        ).update(status=TradeOffer.Status.CANCELLED, resolved_at=timezone.now())
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @transaction.atomic
+    def delete(self, request: Request, username: str) -> Response:
+        Block.objects.filter(user=me(request), blocked__username=username.lower()).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

@@ -72,6 +72,12 @@ class RegisterSerializer(serializers.Serializer[User]):
     email = serializers.EmailField()
     username = serializers.CharField()
     password = serializers.CharField(write_only=True, trim_whitespace=False)
+    terms_accepted = serializers.BooleanField(write_only=True)
+
+    def validate_terms_accepted(self, value: bool) -> bool:
+        if value is not True:
+            raise serializers.ValidationError("Accept the terms before creating an account.")
+        return value
 
     def validate_email(self, value: str) -> str:
         value = value.lower()
@@ -95,6 +101,7 @@ class RegisterSerializer(serializers.Serializer[User]):
         return attrs
 
     def create(self, validated_data: dict) -> User:
+        validated_data.pop("terms_accepted")
         return User.objects.create_user(**validated_data)
 
 

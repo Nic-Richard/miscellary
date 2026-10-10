@@ -6,17 +6,22 @@ Our own accounts, ticket ledger and paid-period benefits remain authoritative.
 
 ## Before enabling sales
 
-- Obtain written acceptance of random digital packs, user-created sets, card trading
-  and closed-loop creator rewards. No cash-out or card resale does not by itself
-  establish provider eligibility. Managed Payments eligibility is still unconfirmed.
-- Set up Google Play products, the service account and notifications (below), then test
-  with licence testers on an internal-testing build.
-- Review Lounge moderation operations and account-blocking scope before store submission.
-- Update terms, privacy, creator publishing agreement/notice and store disclosures.
-- Run real sandbox checkout, tax, renewal, cancellation, refund and closure tests.
-  Offline tests do not establish that the Stripe account or products are eligible.
-- Approve costs, configuration and deployment separately. No provider account,
-  product, secret, external request for approval or real transaction has been created.
+- Obtain Stripe's written acceptance of random digital packs, user-created sets, card
+  trading and closed-loop creator rewards. Managed Payments eligibility is still unconfirmed.
+- Set up Google Play products, the service account and notifications (below), make the
+  products unavailable in Belgium and Brazil, then test with licence testers on an
+  internal-testing build.
+- Run real Stripe sandbox checkout, tax, renewal, cancellation, refund and closure tests,
+  including that Checkout returns the billing country. Offline tests do not establish that
+  the Stripe account or products are eligible.
+- Read the updated terms and privacy pages and set their effective date at launch.
+- Approve costs, configuration and deployment separately.
+
+Purchases are refused in `PURCHASE_BLOCKED_COUNTRIES` (Belgium and Brazil, in
+`common/monetization.py`). Play purchases from there are refunded through the Orders API;
+website payments whose billing country is listed are refunded automatically and logged as a
+resolved review. The website hides purchases using Vercel's country header (`/region`), the
+app using its Play Store country.
 
 ## Website configuration
 

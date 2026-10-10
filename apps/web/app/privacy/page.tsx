@@ -7,7 +7,7 @@ export default function PrivacyPage() {
   return (
     <article className={styles.page}>
       <h1>Privacy</h1>
-      <p className={styles.updated}>Effective October 8, 2026</p>
+      <p className={styles.updated}>Effective October 10, 2026</p>
       <p>Miscellary is operated by Nic Richard in New Brunswick, Canada.</p>
 
       <section>
@@ -20,6 +20,11 @@ export default function PrivacyPage() {
             Technical information such as request logs, IP addresses, device details, and errors.
           </li>
           <li>Records needed for email verification, password resets, security, and moderation.</li>
+          <li>
+            Purchase records, including what you bought, when, the price, the country it was bought
+            from, and the payment provider’s order reference.
+          </li>
+          <li>Lounge posts, replies and likes, and the collectors you have blocked.</li>
         </ul>
       </section>
 
@@ -42,6 +47,22 @@ export default function PrivacyPage() {
       </section>
 
       <section>
+        <h2>Payments</h2>
+        <p>
+          Website payments are handled by Stripe and Android payments by Google Play. They collect
+          your payment details directly; Miscellary never receives your full card number. They send
+          us confirmation of each purchase, the billing country, and later any refund or chargeback,
+          so we can add or take back what you bought. In the Android app we give Google Play a coded
+          account reference, not your email or username, so purchases are tied to the right account.
+          Stripe and Google process payments under their own privacy policies.
+        </p>
+        <p>
+          To decide whether purchases are offered, the website checks the country your connection
+          comes from. That check isn’t stored.
+        </p>
+      </section>
+
+      <section>
         <h2>How we use information</h2>
         <p>
           We use this information to provide accounts and collections, process uploads and trades,
@@ -54,8 +75,10 @@ export default function PrivacyPage() {
         <h2>What is public</h2>
         <p>
           Usernames, display names, biographies, avatars, published sets and cards, public binders,
-          follows, likes, and comments may be visible to anyone. Email addresses, password details,
-          account preferences, draft sets, and report details are not public through the product.
+          follows, likes, comments, Lounge posts and replies, and the supporter badge (if you choose
+          to show it) may be visible to anyone. Who you have blocked is private. Email addresses,
+          password details, account preferences, draft sets, and report details are not public
+          through the product.
         </p>
       </section>
 
@@ -89,11 +112,25 @@ export default function PrivacyPage() {
         <h2>Storage and retention</h2>
         <p>
           Information is retained while an account is active and as reasonably needed for security,
-          backups, moderation, legal obligations, and service operation. Published-set deletion may
-          leave archived cards in collectors’ inventories as described by the product. You can
-          delete your account at any time from your account settings on the website or in the app.
-          You can also ask about access, correction, or deletion of your personal information by
-          contacting us.
+          backups, moderation, legal obligations, and service operation. Purchase records are kept
+          for as long as tax and accounting law requires, including after an account is closed.
+          Published-set deletion may leave archived cards in collectors’ inventories as described by
+          the product. You can delete your account at any time from your account settings on the
+          website or in the app. You can also ask about access, correction, or deletion of your
+          personal information by contacting us.
+        </p>
+      </section>
+
+      <section id="delete-account">
+        <h2>Deleting your account</h2>
+        <p>
+          On the website, open Account, choose the Account tab and select Close account. In the
+          Android app, open Settings and select Close account. You can also email{' '}
+          <a href="mailto:privacy@miscellary.com">privacy@miscellary.com</a> from the address on
+          your account and we will close it for you. Closing an account removes your email,
+          password, collection, trades, follows, likes, blocks and unused tickets, and cancels any
+          membership. Published sets stay for the collectors who own their cards, and your comments
+          and posts stay under a deleted-user label. Purchase records are kept as described above.
         </p>
       </section>
 

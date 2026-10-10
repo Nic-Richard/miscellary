@@ -15,6 +15,7 @@ from common.monetization import (
     CREDIT_UNITS_PER_CREDIT,
     CURRENCY,
     CURRENCY_NAME,
+    PURCHASE_BLOCKED_COUNTRIES,
     SUBSCRIPTION_BONUS_CREDITS,
     SUBSCRIPTION_BONUS_PACKS,
     SUBSCRIPTION_PRICE_CENTS,
@@ -68,6 +69,7 @@ class MembershipView(APIView):
                     "monthly_stars": SUBSCRIPTION_BONUS_CREDITS,
                 },
                 "publishing": publishing_summary(request.user),
+                "blocked_countries": sorted(PURCHASE_BLOCKED_COUNTRIES),
                 "play": {
                     "available": play.configured() and request.user.email_verified,
                     "subscription_id": settings.PLAY_SUBSCRIPTION_ID,

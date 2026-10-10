@@ -140,6 +140,12 @@ export const setFollow = (username: string, follow: boolean) =>
       method: follow ? 'POST' : 'DELETE',
     },
   );
+export const setBlocked = (username: string, blocked: boolean) =>
+  apiFetch<void>(`/api/v1/me/blocks/${encodeURIComponent(username)}/`, {
+    method: blocked ? 'POST' : 'DELETE',
+  });
+export const listBlocked = (signal?: AbortSignal) =>
+  apiFetch<Creator[]>('/api/v1/me/blocks/', signal ? { signal } : {});
 export const listFollows = (username: string, direction: 'followers' | 'following', page = 1) =>
   apiFetch<Paginated<Creator>>(
     `/api/v1/users/${encodeURIComponent(username)}/${direction}/?page=${page}`,

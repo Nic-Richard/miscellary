@@ -31,7 +31,7 @@ def test_a_reserved_name_cannot_be_taken_by_anyone_else(api_client, auth_client,
 
     response = api_client.post(
         "/api/v1/auth/register/",
-        {"email": "new@example.com", "username": was, "password": PASSWORD},
+        {"email": "new@example.com", "username": was, "password": PASSWORD, "terms_accepted": True},
         format="json",
     )
     assert response.status_code == 400

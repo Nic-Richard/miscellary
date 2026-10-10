@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils import timezone
 
-from .models import Block, Post, Reply
+from .models import Post, Reply
 
 
 @admin.action(description="Remove selected Lounge content")
@@ -29,6 +29,3 @@ class ReplyAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return False
-
-
-admin.site.register(Block)

@@ -93,6 +93,17 @@ def test_bundle_is_granted_once_acknowledged_and_bound_to_the_account(user, auth
     assert StarGrant.objects.count() == 1
 
 
+def test_purchases_from_blocked_countries_are_refunded(user, google):
+    responses, calls = google
+    responses["purchases/products/"] = product(user, regionCode="BR")
+    assert play.verify_product(user, "credits_125", TOKEN) == "unavailable"
+    responses["purchases/subscriptionsv2/"] = subscription(user, regionCode="BE")
+    assert play.verify_subscription(user, TOKEN) == "unavailable"
+    assert not StarGrant.objects.exists()
+    assert ("POST", "orders/GPA.1:refund?revoke=true") in calls
+    assert ("POST", "orders/GPA.2:refund?revoke=true") in calls
+
+
 def test_subscription_months_follow_each_other_and_refunds_end_them(user, google, settings):
     responses, calls = google
     responses["purchases/subscriptionsv2/"] = subscription(user)

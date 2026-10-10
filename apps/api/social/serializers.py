@@ -35,6 +35,7 @@ class ProfilePageSerializer(serializers.Serializer):
     card_count = serializers.IntegerField()
     is_following = serializers.BooleanField()
     is_me = serializers.BooleanField()
+    is_blocked = serializers.BooleanField()
     showcase = ShowcaseSlotSerializer(many=True)
     sets = CardSetSerializer(many=True)
 

@@ -25,9 +25,11 @@
 
 ## Every release
 
-- [ ] Before enabling monetization: complete `docs/BILLING.md` release gates, including
-      provider approval, spent-ticket refund policy/adjustments, real billing QA,
-      Android purchase restoration, Lounge moderation and updated legal/store disclosures.
+- [ ] Before enabling monetization: complete the `docs/BILLING.md` release gates (Stripe
+      approval, Play Console setup, real purchase, refund and cancellation tests).
+- [ ] Play Store: complete `docs/PLAY_STORE.md` (listing, Data safety, content rating, app
+      access, products unavailable in BE/BR, internal testing).
+- [ ] Someone checks the report queue in Django admin daily once the Lounge is on.
 
 - [ ] CI green on `main`.
 - [ ] `docs/API.md` updated if endpoints changed.

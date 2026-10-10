@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import type { OwnedCard, ProfilePage } from '@miscellary/shared';
-import { profilePath, SHOWCASE_SLOTS } from '@miscellary/shared';
+import { BLOCK_COPY, profilePath, SHOWCASE_SLOTS } from '@miscellary/shared';
 import SectionHeader from '@/components/SectionHeader';
 import SetTile from '@/components/SetTile';
 import tileStyles from '@/components/SetTile.module.css';
@@ -19,7 +19,7 @@ import SupporterBadge from '@/components/SupporterBadge';
 import { useAuth } from '@/lib/auth';
 import { loginHref } from '@/lib/returnTo';
 import { useContinuation } from '@/lib/useContinuation';
-import { getProfile, setFollow } from '@/lib/social';
+import { getProfile, setBlocked, setFollow } from '@/lib/social';
 import VerifyEmailNotice from '@/components/VerifyEmailNotice';
 import ui from '@/components/ui.module.css';
 import styles from './page.module.css';
@@ -51,6 +51,8 @@ export default function ProfileClient({
   const [reporting, setReporting] = useState(false);
   const [followBusy, setFollowBusy] = useState(false);
   const [followError, setFollowError] = useState<string | null>(null);
+  const [blockConfirm, setBlockConfirm] = useState(false);
+  const [blockBusy, setBlockBusy] = useState(false);
 
   useEffect(() => {
     if (loading || !user) return;
@@ -95,6 +97,33 @@ export default function ProfileClient({
       setFollowBusy(false);
     }
   }, [profile, followBusy]);
+
+  async function toggleBlock(blocked: boolean) {
+    if (!profile || blockBusy) return;
+    setBlockBusy(true);
+    setFollowError(null);
+    try {
+      await setBlocked(profile.username, blocked);
+      setProfile((current) =>
+        current
+          ? {
+              ...current,
+              is_blocked: blocked,
+              is_following: blocked ? false : current.is_following,
+              follower_count:
+                blocked && current.is_following
+                  ? current.follower_count - 1
+                  : current.follower_count,
+            }
+          : current,
+      );
+      setBlockConfirm(false);
+    } catch (e) {
+      setFollowError(e instanceof Error ? e.message : 'Could not update the block.');
+    } finally {
+      setBlockBusy(false);
+    }
+  }
 
   useContinuation(
     FOLLOW_ACTION,
@@ -148,6 +177,19 @@ export default function ProfileClient({
               <Link href="/account" className={`${ui.btnOutline} ${ui.btnSmall}`}>
                 Edit profile
               </Link>
+            ) : user && profile.is_blocked ? (
+              <>
+                <span className={ui.muted}>{BLOCK_COPY.blocked}</span>
+                <button
+                  type="button"
+                  className={`${ui.btnOutline} ${ui.btnSmall}`}
+                  disabled={blockBusy}
+                  onClick={() => void toggleBlock(false)}
+                >
+                  Unblock
+                </button>
+                {followError ? <span className={ui.error}>{followError}</span> : null}
+              </>
             ) : user ? (
               <>
                 <button
@@ -184,8 +226,40 @@ export default function ProfileClient({
                     onSelect: () => setReporting(true),
                     danger: true,
                   },
+                  ...(profile.is_blocked
+                    ? []
+                    : [
+                        {
+                          label: `Block @${profile.username}`,
+                          onSelect: () => setBlockConfirm(true),
+                          danger: true,
+                        },
+                      ]),
                 ]}
               />
+            ) : null}
+            {blockConfirm ? (
+              <div className={styles.confirm} role="alertdialog" aria-label="Block collector">
+                <p>{BLOCK_COPY.confirm(profile.username)}</p>
+                <div className={styles.confirmActions}>
+                  <button
+                    type="button"
+                    className={`${ui.btnQuiet} ${ui.btnSmall}`}
+                    disabled={blockBusy}
+                    onClick={() => setBlockConfirm(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className={`${ui.btnOutline} ${ui.btnSmall}`}
+                    disabled={blockBusy}
+                    onClick={() => void toggleBlock(true)}
+                  >
+                    Block
+                  </button>
+                </div>
+              </div>
             ) : null}
             {reporting ? (
               <ReportDialog

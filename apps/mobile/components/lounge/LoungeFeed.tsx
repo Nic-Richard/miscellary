@@ -288,7 +288,7 @@ export default function LoungeFeed() {
                   {
                     label: 'Blocked collectors',
                     icon: 'slash',
-                    onSelect: () => router.push('/lounge/blocked'),
+                    onSelect: () => router.push('/blocked'),
                   },
                 ]}
               />

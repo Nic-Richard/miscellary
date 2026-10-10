@@ -141,17 +141,28 @@ moved in the meantime the offer is cancelled instead.
 Platform removal of a set (admin action) wipes every distributed copy and cancels pending trades
 that included them. A creator's own delete keeps collectors' copies.
 
+## Blocking
+
+| Method      | Path                     | Notes                                                                                                                                    |
+| ----------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| GET         | `/me/blocks/`            | Own block list.                                                                                                                          |
+| POST/DELETE | `/me/blocks/<username>/` | Block or unblock across the app, both ways: hides Lounge posts, comments and notifications, and stops follows and trades. Not announced. |
+
+Profiles include `is_blocked` (whether you blocked them). Registration requires `terms_accepted: true`.
+
 ## Tickets and membership
 
 Disabled by default. See [billing setup and release gates](BILLING.md).
 
-| Method    | Path                       | Auth             | Notes                                                                                                                                                                                  |
-| --------- | -------------------------- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| GET/PATCH | `/me/membership/`          | bearer           | Balance, product catalogue, paid-period/publishing usage, available website purchase controls and pending checkout keys. PATCH only accepts `{show_badge}`.                            |
-| GET       | `/me/creator-stats/`       | bearer           | Own aggregate counts; paid subscribers also receive per-set counts, opening types, daily activity and ticket rewards. No collector identities or another creator's private statistics. |
-| POST      | `/me/billing/checkout/`    | bearer, web      | `{product, request_key}`; fixed server price, verified email and account-bound hosted checkout. No client amount or return URL.                                                        |
-| POST      | `/me/billing/portal/`      | bearer, web      | Own website purchase management URL.                                                                                                                                                   |
-| POST      | `/billing/stripe/webhook/` | Stripe signature | Raw-body signature/timestamp verification, event deduplication and provider-verified fulfillment. No client balance grant.                                                             |
+| Method    | Path                       | Auth                       | Notes                                                                                                                                                                                   |
+| --------- | -------------------------- | -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GET/PATCH | `/me/membership/`          | bearer                     | Balance, product catalogue, paid-period/publishing usage, available website purchase controls and pending checkout keys. PATCH only accepts `{show_badge}`.                             |
+| GET       | `/me/creator-stats/`       | bearer                     | Own aggregate counts; paid subscribers also receive per-set counts, opening types, daily activity and ticket rewards. No collector identities or another creator's private statistics.  |
+| POST      | `/me/billing/checkout/`    | bearer, web                | `{product, request_key}`; fixed server price, verified email and account-bound hosted checkout. No client amount or return URL.                                                         |
+| POST      | `/me/billing/portal/`      | bearer, web                | Own website purchase management URL.                                                                                                                                                    |
+| POST      | `/billing/stripe/webhook/` | Stripe signature           | Raw-body signature/timestamp verification, event deduplication and provider-verified fulfillment. No client balance grant.                                                              |
+| POST      | `/me/billing/play/`        | bearer, mobile             | `{product, purchase_token}`; checks the purchase with Google Play, matches the account code, grants and acknowledges. Returns `granted`, `pending` or `unavailable` (refunded country). |
+| POST      | `/billing/play/notify/`    | Google-signed Pub/Sub push | Real-time developer notifications; re-reads state from Google for renewals and refunds.                                                                                                 |
 
 Pack status adds `monetization_enabled` and `paid_quote` (null while disabled).
 Quotes include points/tickets split, balance, monthly bonus packs and effective rarity/
@@ -187,8 +198,6 @@ place without rereading or remounting the thread. Removed replies remain as tomb
 | GET/POST    | `/lounge/posts/<id>/replies/`                            | Page roots or `parent_id` children. POST `{body, parent_id?}`; one thread level, same-post parent required.                                                                  |
 | DELETE      | `/lounge/replies/<id>/`                                  | Author/staff removal, keeping child replies.                                                                                                                                 |
 | POST/DELETE | `/lounge/posts/<id>/vote/`, `/lounge/replies/<id>/vote/` | Idempotent like/unlike; no paid ranking advantage.                                                                                                                           |
-| GET         | `/me/lounge-blocks/`                                     | Own Lounge block list.                                                                                                                                                       |
-| POST/DELETE | `/me/lounge-blocks/<username>/`                          | Mutual Lounge-only blocking/unblocking. Other app features unchanged.                                                                                                        |
 
 `/reports/` also accepts exactly one `lounge_post_id` or `lounge_reply_id` target.
 Retained cards from creator-deleted sets can still be showcased, like profile binders.

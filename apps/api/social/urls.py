@@ -12,6 +12,8 @@ urlpatterns = [
         views.FollowListView.as_view(),
         name="follow-list",
     ),
+    path("me/blocks/", views.BlocksView.as_view(), name="blocks"),
+    path("me/blocks/<str:username>/", views.BlocksView.as_view(), name="block"),
     path("me/showcase/", views.ShowcaseView.as_view(), name="showcase"),
     path("me/packs/", views.MyPacksView.as_view(), name="my-packs"),
     path("me/notifications/", views.NotificationsView.as_view(), name="notifications"),

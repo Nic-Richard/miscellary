@@ -10,6 +10,4 @@ urlpatterns = [
     path("lounge/posts/<uuid:post_id>/vote/", views.VoteView.as_view(), name="vote-post"),
     path("lounge/replies/<uuid:reply_id>/", views.ReplyView.as_view(), name="reply"),
     path("lounge/replies/<uuid:reply_id>/vote/", views.VoteView.as_view(), name="vote-reply"),
-    path("me/lounge-blocks/", views.BlocksView.as_view(), name="blocks"),
-    path("me/lounge-blocks/<str:username>/", views.BlocksView.as_view(), name="block"),
 ]

@@ -89,7 +89,12 @@ def test_deleted_names_and_emails_are_free_again(api_client):
     client_for(gone).post(reverse("accounts:delete"), {"current_password": PASSWORD}, format="json")
     response = api_client.post(
         reverse("accounts:register"),
-        {"email": "gone@example.com", "username": "gone", "password": "a-long-passphrase-9"},
+        {
+            "email": "gone@example.com",
+            "username": "gone",
+            "password": "a-long-passphrase-9",
+            "terms_accepted": True,
+        },
         format="json",
     )
     assert response.status_code == 201

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
 import type { CurrentUser } from '@miscellary/shared';
+import { BLOCK_COPY } from '@miscellary/shared';
 import { ApiRequestError, apiFetch } from '@/lib/api';
 import {
   changePassword,
@@ -11,6 +12,7 @@ import {
   resendVerificationEmail,
 } from '@/lib/account';
 import { useAuth } from '@/lib/auth';
+import BlockedPeople from './BlockedPeople';
 import PasswordInput from './PasswordInput';
 import ThemeSelector from './ThemeSelector';
 import useGoogleConfirmation from './useGoogleConfirmation';
@@ -282,7 +284,7 @@ function CloseAccount() {
   return (
     <Row
       title="Close account"
-      note="Your cards, drafts, follows, likes and open trades go. Published sets stay, so the people who collected them keep their cards; those sets and your comments show as a deleted user."
+      note="Your cards, drafts, follows, likes, open trades and unused tickets go, and any membership is cancelled. Published sets stay, so the people who collected them keep their cards; those sets and your comments show as a deleted user."
     >
       {open ? (
         <form className={styles.form} onSubmit={(e) => void submit(e)}>
@@ -484,6 +486,9 @@ export default function AccountSecurity({
           <Email user={user} />
           <Password user={user} onChanged={onChanged} />
           <GoogleConnection user={user} onChanged={onChanged} />
+          <Row title="Blocked collectors" note={BLOCK_COPY.explain}>
+            <BlockedPeople explain={false} />
+          </Row>
           <CloseAccount />
         </div>
       </div>

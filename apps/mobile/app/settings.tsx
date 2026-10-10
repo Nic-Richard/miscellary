@@ -1,4 +1,4 @@
-import { Stack, useFocusEffect, useRouter } from 'expo-router';
+import { Stack, router as appRouter, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import LoginGate from '@/components/LoginGate';
@@ -69,7 +69,7 @@ function CloseAccount() {
   return (
     <Card
       title="Close account"
-      note="Your cards, drafts, follows, likes and open trades go. Published sets stay, so the people who collected them keep their cards; those sets and your comments show as a deleted user."
+      note="Your cards, drafts, follows, likes, open trades and unused tickets go, and any membership is cancelled. Published sets stay, so the people who collected them keep their cards; those sets and your comments show as a deleted user."
     >
       {open ? (
         <>
@@ -270,6 +270,13 @@ function Account() {
       </Card>
 
       <GoogleConnection />
+      <Card title="Blocked collectors" note="See who you've blocked, or unblock them.">
+        <Button
+          title="Blocked collectors"
+          kind="secondary"
+          onPress={() => appRouter.push('/blocked')}
+        />
+      </Card>
       <CloseAccount />
     </ScrollView>
   );

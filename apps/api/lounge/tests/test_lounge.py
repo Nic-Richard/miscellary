@@ -11,9 +11,9 @@ from cards.models import CardSet
 from cards.publishing import publish_set
 from cards.tests.helpers import fill_publishable, make_set
 from conftest import make_user
-from lounge.models import Attachment, Block, Post, Reply
+from lounge.models import Attachment, Post, Reply
 from packs.actions import open_free_pack
-from social.models import Report
+from social.models import Block, Report
 
 pytestmark = pytest.mark.django_db
 
@@ -146,7 +146,7 @@ def test_blocks_hide_both_directions_and_stop_interactions(user, auth_client):
     other = make_user()
     their_post = Post.objects.create(author=other, title="Other", body="Hello")
     own_post = Post.objects.create(author=user, title="Mine", body="Hello")
-    auth_client.post(reverse("lounge:block", args=[other.username]))
+    auth_client.post(reverse("social:block", args=[other.username]))
     assert auth_client.get(reverse("lounge:feed")).data["count"] == 1
     assert client_for(other).get(reverse("lounge:feed")).data["count"] == 1
     assert (
@@ -158,9 +158,9 @@ def test_blocks_hide_both_directions_and_stop_interactions(user, auth_client):
     assert (
         client_for(other).post(reverse("lounge:vote-post", args=[own_post.pk])).status_code == 404
     )
-    assert auth_client.post(reverse("lounge:block", args=[user.username])).status_code == 400
-    assert auth_client.get(reverse("lounge:blocks")).data[0]["username"] == other.username
-    auth_client.delete(reverse("lounge:block", args=[other.username]))
+    assert auth_client.post(reverse("social:block", args=[user.username])).status_code == 400
+    assert auth_client.get(reverse("social:blocks")).data[0]["username"] == other.username
+    auth_client.delete(reverse("social:block", args=[other.username]))
     assert not Block.objects.exists()
     assert auth_client.get(reverse("lounge:feed")).data["count"] == 2
 

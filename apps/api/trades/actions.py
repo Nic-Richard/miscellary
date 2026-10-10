@@ -10,6 +10,7 @@ from django.utils import timezone
 
 from billing.actions import trade_restricted
 from packs.models import OwnedCard
+from social.blocks import between
 
 from .models import TradeOffer, TradeOfferItem
 
@@ -53,6 +54,8 @@ def create_offer(sender, recipient, give_ids, want_ids, message="", counter_of=N
         raise TradeError("You can't trade with yourself.")
     if trade_restricted(sender):
         raise TradeError(RESTRICTED)
+    if between(sender, recipient):
+        raise TradeError("You can't trade with this collector.")
     if not give_ids and not want_ids:
         raise TradeError("Pick at least one card.")
     if set(give_ids) & set(want_ids):
@@ -92,6 +95,8 @@ def accept_offer(user, offer: TradeOffer) -> TradeOffer:
             raise TradeError("Only the recipient can accept an offer.")
         if trade_restricted(user):
             raise TradeError(RESTRICTED)
+        if between(offer.sender, offer.recipient):
+            raise TradeError("You can't trade with this collector.")
 
         items = list(offer.items.all())
         # Lock cards in a fixed order so two trades touching the same cards can't deadlock.

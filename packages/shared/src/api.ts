@@ -41,6 +41,7 @@ export interface RegisterRequest {
   email: string;
   username: string;
   password: string;
+  terms_accepted: boolean;
 }
 
 export interface LoginRequest {
@@ -376,6 +377,7 @@ export interface ProfilePage extends PublicProfile {
   card_count: number;
   is_following: boolean;
   is_me: boolean;
+  is_blocked: boolean;
   showcase_title: string;
   showcase: ShowcaseSlot[];
   sets: CardSetSummary[];

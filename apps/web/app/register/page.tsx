@@ -21,6 +21,7 @@ function RegisterForm() {
   const [error, setError] = useState<string | null>(null);
   const [fields, setFields] = useState<Record<string, string[]>>({});
   const [busy, setBusy] = useState(false);
+  const [accepted, setAccepted] = useState(false);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -28,7 +29,7 @@ function RegisterForm() {
     setError(null);
     setFields({});
     try {
-      await register({ email, username, password });
+      await register({ email, username, password, terms_accepted: accepted });
       router.replace(returnPath(search, '/packs'));
     } catch (err) {
       if (err instanceof ApiRequestError) {
@@ -79,11 +80,19 @@ function RegisterForm() {
           hint="At least 8 characters."
           required
         />
-        <p className={styles.alt}>
-          By signing up you agree to the <Link href="/terms">terms</Link> and{' '}
-          <Link href="/privacy">privacy policy</Link>.
-        </p>
-        <button className={styles.submit} type="submit" disabled={busy}>
+        <label className={styles.agree}>
+          <input
+            type="checkbox"
+            checked={accepted}
+            onChange={(e) => setAccepted(e.target.checked)}
+            required
+          />
+          <span>
+            I agree to the <Link href="/terms">terms</Link>, including the community rules, and the{' '}
+            <Link href="/privacy">privacy policy</Link>.
+          </span>
+        </label>
+        <button className={styles.submit} type="submit" disabled={busy || !accepted}>
           {busy ? 'Creating…' : 'Sign up'}
         </button>
       </form>

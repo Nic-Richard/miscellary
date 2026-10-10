@@ -18,6 +18,7 @@ function loadSdk(): Promise<Sdk | null> {
 
 export interface PlayStore {
   ready: boolean;
+  regionBlocked: boolean;
   prices: Record<string, string>;
   busy: string | null;
   error: string | null;
@@ -38,6 +39,8 @@ export function usePlayStore(membership: Membership | null, onSettled: () => voi
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [regionBlocked, setRegionBlocked] = useState(false);
+  const blockedCountries = (membership?.blocked_countries ?? []).join(',');
   const settled = useRef(onSettled);
   settled.current = onSettled;
 
@@ -54,6 +57,12 @@ export function usePlayStore(membership: Membership | null, onSettled: () => voi
           method: 'POST',
           body: { product, purchase_token: purchase.purchaseToken },
         });
+        if (result.status === 'unavailable') {
+          setNotice(
+            'Buying tickets and memberships isn’t available in your country, so Google Play has refunded it.',
+          );
+          return;
+        }
         if (result.status === 'pending') {
           setNotice('Your payment is pending. It will be added once Google Play confirms it.');
           return;
@@ -85,6 +94,11 @@ export function usePlayStore(membership: Membership | null, onSettled: () => voi
       try {
         await store.initConnection();
         if (cancelled) return;
+        const country = await store.getStorefront().catch(() => '');
+        if (country && blockedCountries.split(',').includes(country.toUpperCase())) {
+          setRegionBlocked(true);
+          return;
+        }
         removers.push(
           store.purchaseUpdatedListener((purchase) => void settle(store, purchase)).remove,
           store.purchaseErrorListener((err) => {
@@ -120,10 +134,11 @@ export function usePlayStore(membership: Membership | null, onSettled: () => voi
       removers.forEach((remove) => remove());
       void loadSdk().then((store) => store?.endConnection().catch(() => undefined));
     };
-  }, [available, bundles, subscriptionId, settle]);
+  }, [available, bundles, blockedCountries, subscriptionId, settle]);
 
   return {
     ready: Boolean(sdk),
+    regionBlocked,
     prices,
     busy,
     error,

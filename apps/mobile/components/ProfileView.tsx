@@ -1,10 +1,10 @@
-import { profilePath, SHOWCASE_SLOTS } from '@miscellary/shared';
+import { BLOCK_COPY, profilePath, SHOWCASE_SLOTS } from '@miscellary/shared';
 import type { OwnedCard, ProfilePage } from '@miscellary/shared';
 import { Link, router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { useAuth } from '@/lib/auth';
-import { setFollow } from '@/lib/endpoints';
+import { setBlocked, setFollow } from '@/lib/endpoints';
 import BinderViewer from './BinderViewer';
 import VerifyEmailNotice from './VerifyEmailNotice';
 import InspectorModal from './InspectorModal';
@@ -16,6 +16,7 @@ import PeopleList from './PeopleList';
 import { useColors, createThemedStyles } from '@/lib/theme';
 import CardInspector from './CardInspector';
 import Avatar from './Avatar';
+import { confirmBlock } from './BlockedPeople';
 import DemoBadge from './DemoBadge';
 import SupporterBadge from './SupporterBadge';
 import SharedSurface from './SharedSurface';
@@ -42,6 +43,7 @@ export default function ProfileView({
   const [binderOpen, setBinderOpen] = useState(false);
   const [people, setPeople] = useState<'followers' | 'following' | null>(null);
   const [followBusy, setFollowBusy] = useState(false);
+  const [blockBusy, setBlockBusy] = useState(false);
   const [reporting, setReporting] = useState(false);
   const showcase = useMemo(
     () =>
@@ -56,6 +58,25 @@ export default function ProfileView({
     colour: profile.binder_colour,
     mine: profile.is_me,
   };
+  async function toggleBlock(blocked: boolean) {
+    if (blockBusy) return;
+    setBlockBusy(true);
+    try {
+      await setBlocked(profile.username, blocked);
+      setProfile((current) => ({
+        ...current,
+        is_blocked: blocked,
+        is_following: blocked ? false : current.is_following,
+        follower_count:
+          blocked && current.is_following ? current.follower_count - 1 : current.follower_count,
+      }));
+    } catch (e) {
+      Alert.alert('Could not update the block', e instanceof Error ? e.message : 'Try again.');
+    } finally {
+      setBlockBusy(false);
+    }
+  }
+
   async function toggleFollow() {
     if (followBusy) return;
     const next = !profile.is_following;
@@ -144,7 +165,17 @@ export default function ProfileView({
       ) : null}
       <View style={styles.actions}>
         {headerExtra}
-        {!profile.is_me && user ? (
+        {!profile.is_me && user && profile.is_blocked ? (
+          <>
+            <Muted style={{ flexBasis: '100%' }}>{BLOCK_COPY.blocked}</Muted>
+            <Button
+              title="Unblock"
+              kind="secondary"
+              disabled={blockBusy}
+              onPress={() => void toggleBlock(false)}
+            />
+          </>
+        ) : !profile.is_me && user ? (
           <>
             <Button
               title={profile.is_following ? 'Following' : 'Follow'}
@@ -177,6 +208,16 @@ export default function ProfileView({
                       icon: 'flag',
                       onSelect: () => setReporting(true),
                     },
+                    ...(profile.is_blocked
+                      ? []
+                      : [
+                          {
+                            label: `Block @${profile.username}`,
+                            icon: 'slash' as const,
+                            onSelect: () =>
+                              confirmBlock(profile.username, () => void toggleBlock(true)),
+                          },
+                        ]),
                   ]
                 : []
           }

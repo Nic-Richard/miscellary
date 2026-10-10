@@ -200,6 +200,19 @@ def test_signed_callbacks_bind_payment_and_deduplicate(user, provider, api_clien
     assert StarGrant.objects.count() == 1
 
 
+def test_purchases_from_blocked_countries_are_refunded_not_granted(user, provider):
+    checkout = prepare(user, provider)
+    provider.v1.checkout.sessions.retrieve.return_value = settled(
+        checkout, customer_details={"address": {"country": "BE"}}
+    )
+    payments.process_event(event("checkout.session.completed", id="cs_test"))
+    assert not StarGrant.objects.exists()
+    provider.v1.refunds.create.assert_called_once()
+    assert provider.v1.refunds.create.call_args.args[0] == {"payment_intent": "pi_test"}
+    review = BillingReview.objects.get()
+    assert review.reason == "restricted_country" and review.resolved_at is not None
+
+
 def test_late_payment_after_closure_is_kept_for_review(user, provider):
     checkout = prepare(user, provider)
     delete_account(user)

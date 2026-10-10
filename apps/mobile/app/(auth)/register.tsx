@@ -1,17 +1,19 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Linking, Text, View } from 'react-native';
+import { Linking, Switch, Text, View } from 'react-native';
 import { ApiRequestError } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import GoogleAuth from '@/components/GoogleAuth';
 import { internalRoute, RETURN_PARAM } from '@/lib/returnTo';
 import AuthCard, { useAuthStyles } from '@/components/AuthCard';
+import { useColors } from '@/lib/theme';
 import { Button, ErrorText, Input, PasswordInput } from '@/components/ui';
 
 const SITE = 'https://miscellary.com';
 
 export default function RegisterScreen() {
   const auth = useAuthStyles();
+  const colors = useColors();
   const { register } = useAuth();
   const params = useLocalSearchParams();
   const next = internalRoute(params[RETURN_PARAM]);
@@ -21,13 +23,14 @@ export default function RegisterScreen() {
   const [error, setError] = useState<string | null>(null);
   const [fields, setFields] = useState<Record<string, string[]>>({});
   const [busy, setBusy] = useState(false);
+  const [accepted, setAccepted] = useState(false);
 
   async function submit() {
     setBusy(true);
     setError(null);
     setFields({});
     try {
-      await register({ email, username, password });
+      await register({ email, username, password, terms_accepted: accepted });
       router.replace(next ?? '/(tabs)/packs');
     } catch (e) {
       if (e instanceof ApiRequestError) {
@@ -78,20 +81,29 @@ export default function RegisterScreen() {
       />
       {fieldError('password')}
       <Text style={auth.note}>At least 8 characters.</Text>
-      <Text style={auth.note}>
-        By signing up you agree to the{' '}
-        <Text style={auth.link} onPress={() => void Linking.openURL(`${SITE}/terms`)}>
-          terms
-        </Text>{' '}
-        and{' '}
-        <Text style={auth.link} onPress={() => void Linking.openURL(`${SITE}/privacy`)}>
-          privacy policy
+      <View style={auth.agree}>
+        <Switch
+          accessibilityLabel="I agree to the terms and privacy policy"
+          value={accepted}
+          onValueChange={setAccepted}
+          trackColor={{ true: colors.accent, false: colors.bdr2 }}
+          thumbColor={colors.sur}
+        />
+        <Text style={[auth.note, { flex: 1 }]}>
+          I agree to the{' '}
+          <Text style={auth.link} onPress={() => void Linking.openURL(`${SITE}/terms`)}>
+            terms
+          </Text>
+          , including the community rules, and the{' '}
+          <Text style={auth.link} onPress={() => void Linking.openURL(`${SITE}/privacy`)}>
+            privacy policy
+          </Text>
+          .
         </Text>
-        .
-      </Text>
+      </View>
       <Button
         title={busy ? 'Creating…' : 'Sign up'}
-        disabled={busy}
+        disabled={busy || !accepted}
         onPress={() => void submit()}
       />
       <View style={auth.footer}>

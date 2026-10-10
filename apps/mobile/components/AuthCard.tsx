@@ -47,6 +47,7 @@ export const useAuthStyles = createThemedStyles((colors) => ({
   note: { color: colors.muted, fontFamily: fonts.body, fontSize: 14, lineHeight: 20 },
   fieldError: { color: colors.danger, fontFamily: fonts.body, fontSize: 14 },
   footer: { alignItems: 'center', gap: 14, paddingTop: 4 },
+  agree: { flexDirection: 'row', alignItems: 'center', gap: 10 },
 }));
 
 const useStyles = createThemedStyles((colors) => ({

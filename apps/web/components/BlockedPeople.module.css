@@ -1,0 +1,36 @@
+.blocked {
+  display: grid;
+  gap: 12px;
+}
+.list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid var(--bdr);
+}
+.who {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  color: var(--text);
+  font-weight: 600;
+  text-decoration: none;
+}
+.who span {
+  display: grid;
+  min-width: 0;
+}
+.who small {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
+}

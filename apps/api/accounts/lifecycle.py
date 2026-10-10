@@ -34,7 +34,8 @@ def delete_account(user: User) -> None:
     from billing.actions import record_entry
     from billing.models import StarBalance, StarEntry, Subscription
     from billing.stripe import cancel_for_closure
-    from lounge.models import Block, Vote
+    from lounge.models import Vote
+    from social.models import Block
 
     cancel_for_closure(user)
     play.cancel_for_closure(user)

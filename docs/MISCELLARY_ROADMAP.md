@@ -12,6 +12,22 @@ Status:
 
 Items are ordered roughly by current priority. The order can change as dependencies or product decisions become clearer.
 
+## Launch readiness: 1.0 on Play and payments on (Oct 10, in progress)
+
+Built locally and committed in one batch for a single push: Lounge rebuild (web and app),
+refund handling, Google Play billing, tickets (renamed from Stars), app-wide blocking,
+required terms acceptance at sign-up, purchases refused in Belgium and Brazil, updated terms
+and privacy pages, Play Console answers in `docs/PLAY_STORE.md`, app version 1.0.0.
+
+Remaining, mostly outside the code:
+
+- Stripe written approval; Stripe sandbox tests.
+- Play Console: products, service account, notifications, BE/BR availability, listing,
+  Data safety, content rating, reviewer account, internal-testing build and real purchase tests.
+- Real-phone QA of the new build (Google sign-in, purchases, Lounge, blocking).
+- Production checklist items in `docs/RELEASE_CHECKLIST.md`.
+- Push, deploy, then switch on `MONETIZATION_ENABLED`, checkout, Play billing and the Lounge.
+
 ## Current follow-up: theme polish and Google QA (Oct 9, in progress)
 
 Monetization is now the next implementation batch, before the final Android build.

@@ -21,3 +21,4 @@ export * from './themes';
 export * from './membership';
 export * from './lounge';
 export * from './time';
+export * from './blocks';

@@ -11,7 +11,12 @@ from conftest import PASSWORD, make_user
 
 pytestmark = pytest.mark.django_db
 
-REGISTER = {"email": "Nic@Example.com", "username": "Nic_01", "password": "a-long-passphrase-9"}
+REGISTER = {
+    "email": "Nic@Example.com",
+    "username": "Nic_01",
+    "password": "a-long-passphrase-9",
+    "terms_accepted": True,
+}
 
 
 def test_register_creates_user_profile_and_session(api_client):
@@ -29,6 +34,14 @@ def test_register_creates_user_profile_and_session(api_client):
     assert len(mail.outbox) == 1 and "verify-email?token=" in mail.outbox[0].body
     html, _ = mail.outbox[0].alternatives[0]
     assert "verify-email?token=" in str(html) and "@nic_01" in str(html)
+
+
+def test_register_needs_the_terms_accepted(api_client):
+    for accepted in [False, None]:
+        body = {**REGISTER, "terms_accepted": accepted}
+        response = api_client.post(reverse("accounts:register"), body, format="json")
+        assert response.status_code == 400
+    assert not User.objects.exists()
 
 
 def test_register_rejects_duplicates_and_bad_usernames(api_client):

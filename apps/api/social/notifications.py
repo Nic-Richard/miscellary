@@ -16,6 +16,10 @@ def notify(recipient, actor, kind: str, **target) -> Notification | None:
     """
     if recipient is None or actor is None or recipient.pk == actor.pk:
         return None
+    from .blocks import between
+
+    if between(recipient, actor):
+        return None
     try:
         with transaction.atomic():
             return Notification.objects.create(
