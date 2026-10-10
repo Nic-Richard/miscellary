@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import type { OwnedCard, ProfilePage } from '@miscellary/shared';
-import { BLOCK_COPY, profilePath, SHOWCASE_SLOTS } from '@miscellary/shared';
+import { BLOCK_COPY, cardCode, profilePath, SHOWCASE_SLOTS } from '@miscellary/shared';
 import SectionHeader from '@/components/SectionHeader';
 import SetTile from '@/components/SetTile';
 import tileStyles from '@/components/SetTile.module.css';
@@ -15,6 +15,7 @@ import MoreMenu from '@/components/MoreMenu';
 import ReportDialog from '@/components/ReportDialog';
 import ShareButton from '@/components/ShareButton';
 import DemoBadge from '@/components/DemoBadge';
+import CardPreview from '@/components/CardPreview';
 import SupporterBadge from '@/components/SupporterBadge';
 import { useAuth } from '@/lib/auth';
 import { loginHref } from '@/lib/returnTo';
@@ -137,7 +138,7 @@ export default function ProfileClient({
   const name = profile.display_name || profile.username;
   const joined = new Date(profile.created_at).getFullYear();
   const binder = Array.from(
-    { length: SHOWCASE_SLOTS },
+    { length: profile.showcase_slots ?? SHOWCASE_SLOTS },
     (_, i) => profile.showcase.find((s) => s.position === i + 1) ?? null,
   );
 
@@ -158,9 +159,38 @@ export default function ProfileClient({
         <div className={styles.identity}>
           <h1 className={ui.title}>{name}</h1>
           {profile.is_demo ? <DemoBadge /> : null}
-          {profile.subscriber_badge ? <SupporterBadge /> : null}
+          {profile.subscriber_badge ? <SupporterBadge badge={profile.badge_style} /> : null}
           <p className={ui.subtitle}>@{profile.username}</p>
           {profile.bio ? <p className={ui.lead}>{profile.bio}</p> : null}
+          {profile.featured_card ? (
+            <div className={styles.featured}>
+              <span className={styles.featuredCard}>
+                <CardPreview
+                  title={profile.featured_card.title}
+                  rarity={profile.featured_card.rarity}
+                  imageUrl={profile.featured_card.image?.url ?? null}
+                  templateKey={profile.featured_card.template_key}
+                  templateConfig={profile.featured_card.template_config}
+                  code={cardCode(
+                    profile.featured_card.printed_set_code,
+                    profile.featured_card.position,
+                    profile.featured_card.set_total,
+                  )}
+                  printedText={profile.featured_card.printed_text}
+                  render={profile.featured_card.render}
+                  previewThumbnail
+                  renderMode="flat"
+                />
+              </span>
+              <span>
+                <small>Featured card</small>
+                <b>{profile.featured_card.title}</b>
+                <Link href={`/sets/${profile.featured_card.set_slug}`}>
+                  {profile.featured_card.set_title}
+                </Link>
+              </span>
+            </div>
+          ) : null}
           {profile.is_demo ? (
             <p className={styles.demoNote}>
               This collector is fictional and is here to demonstrate Miscellary. The photographs are
@@ -336,6 +366,7 @@ export default function ProfileClient({
           colour={profile.binder_colour}
           mine={profile.is_me}
           onInspect={setInspect}
+          capacity={profile.showcase_slots ?? SHOWCASE_SLOTS}
           fullscreen
           paused={Boolean(inspect)}
           open={false}

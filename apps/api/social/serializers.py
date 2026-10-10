@@ -4,7 +4,14 @@ from cards.rendering import render_url
 from cards.serializers import CardSerializer, CardSetSerializer, CreatorSerializer
 from packs.serializers import OwnedCardSerializer
 
-from .models import COMMENT_MAX, SHOWCASE_SLOTS, Comment, Notification, Report, ShowcaseSlot
+from .models import (
+    COMMENT_MAX,
+    SUPPORTER_SHOWCASE_SLOTS,
+    Comment,
+    Notification,
+    Report,
+    ShowcaseSlot,
+)
 
 
 class ShowcaseSlotSerializer(serializers.ModelSerializer):
@@ -28,6 +35,9 @@ class ProfilePageSerializer(serializers.Serializer):
     avatar_url = serializers.CharField(allow_null=True)
     is_demo = serializers.BooleanField()
     subscriber_badge = serializers.BooleanField()
+    badge_style = serializers.CharField(allow_null=True)
+    featured_card = serializers.DictField(allow_null=True)
+    showcase_slots = serializers.IntegerField()
     created_at = serializers.DateTimeField()
     follower_count = serializers.IntegerField()
     following_count = serializers.IntegerField()
@@ -42,7 +52,8 @@ class ProfilePageSerializer(serializers.Serializer):
 
 class ShowcaseWriteSerializer(serializers.Serializer):
     slots = serializers.ListField(
-        child=serializers.DictField(child=serializers.CharField()), max_length=SHOWCASE_SLOTS
+        child=serializers.DictField(child=serializers.CharField()),
+        max_length=SUPPORTER_SHOWCASE_SLOTS,
     )
 
 
@@ -152,6 +163,11 @@ class NotificationSerializer(serializers.ModelSerializer):
     card_image = serializers.SerializerMethodField()
     set_pack_image = serializers.SerializerMethodField()
     read = serializers.SerializerMethodField()
+    lounge_post_id = serializers.UUIDField(read_only=True, default=None)
+    lounge_post_title = serializers.CharField(
+        source="lounge_post.title", default=None, read_only=True
+    )
+    lounge_reply_body = serializers.SerializerMethodField()
 
     class Meta:
         model = Notification
@@ -165,6 +181,9 @@ class NotificationSerializer(serializers.ModelSerializer):
             "comment_body",
             "card_image",
             "set_pack_image",
+            "lounge_post_id",
+            "lounge_post_title",
+            "lounge_reply_body",
             "read",
             "created_at",
         ]
@@ -187,6 +206,12 @@ class NotificationSerializer(serializers.ModelSerializer):
         if comment is None or comment.removed:
             return ""
         return comment.body[:140]
+
+    def get_lounge_reply_body(self, obj: Notification) -> str:
+        reply = obj.lounge_reply
+        if reply is None or reply.deleted_at is not None:
+            return ""
+        return reply.body[:140]
 
     def get_read(self, obj: Notification) -> bool:
         return obj.read_at is not None

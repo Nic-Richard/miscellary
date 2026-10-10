@@ -23,6 +23,8 @@ const MARKS: Record<NotificationKind, string> = {
   comment_reply: 'M9 8 4 12l5 4M4 12h9a6 6 0 0 1 6 6',
   follow:
     'M12 11a3.4 3.4 0 1 0 0-7 3.4 3.4 0 0 0 0 7Zm-6 9c0-3.6 2.7-5.6 6-5.6s6 2 6 5.6M18 4v5m2.5-2.5h-5',
+  lounge_reply: 'M9 8 4 12l5 4M4 12h9a6 6 0 0 1 6 6',
+  lounge_mention: 'M16 12a4 4 0 1 1-1.2-2.9M16 8v5a2.5 2.5 0 0 0 5 0v-1a9 9 0 1 0-3.5 7.1',
 };
 
 const FILLED: NotificationKind[] = ['set_like', 'card_like'];
@@ -34,6 +36,8 @@ const FILTERS: { value: 'all' | NotificationKind; label: string }[] = [
   { value: 'set_comment', label: 'Comments' },
   { value: 'comment_reply', label: 'Replies' },
   { value: 'follow', label: 'Followers' },
+  { value: 'lounge_reply', label: 'Lounge' },
+  { value: 'lounge_mention', label: 'Mentions' },
 ];
 
 function describe(n: Notification): { text: string; href: string | null } {
@@ -50,6 +54,16 @@ function describe(n: Notification): { text: string; href: string | null } {
       return { text: `replied to you on ${set}`, href: setHref };
     case 'follow':
       return { text: 'started following you', href: `/users/${n.actor.username}` };
+    case 'lounge_reply':
+      return {
+        text: `replied in ${n.lounge_post_title ? `“${n.lounge_post_title}”` : 'a discussion'}`,
+        href: n.lounge_post_id ? `/lounge/${n.lounge_post_id}` : null,
+      };
+    case 'lounge_mention':
+      return {
+        text: `mentioned you in ${n.lounge_post_title ? `“${n.lounge_post_title}”` : 'the Lounge'}`,
+        href: n.lounge_post_id ? `/lounge/${n.lounge_post_id}` : null,
+      };
   }
 }
 
@@ -77,8 +91,10 @@ function Row({ notification }: { notification: Notification }) {
           <strong>{actor.display_name || `@${actor.username}`}</strong>
           {text}
         </span>
-        {notification.comment_body ? (
-          <q className={styles.quote}>{notification.comment_body}</q>
+        {notification.comment_body || notification.lounge_reply_body ? (
+          <q className={styles.quote}>
+            {notification.comment_body || notification.lounge_reply_body}
+          </q>
         ) : null}
         <time className={styles.when} dateTime={notification.created_at}>
           {timeAgo(notification.created_at)}
@@ -232,7 +248,7 @@ export default function NotificationsPage() {
                   }
                 >
                   {filter === 'all'
-                    ? 'Nothing yet. You will hear when someone likes or comments on a set of yours, replies to you, or follows you — and nothing else.'
+                    ? 'Nothing yet. You will hear when someone likes or comments on a set of yours, follows you, or replies to or mentions you.'
                     : 'Nothing of that kind yet.'}
                 </Empty>
               ) : (

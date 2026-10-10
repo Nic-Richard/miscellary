@@ -16,7 +16,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from accounts.models import User
-from billing.actions import visible_badge
+from billing.actions import badge_style, visible_badge
 from cards import tags as tagging
 from cards.models import CardDefinition, CardSet, Tag
 from cards.serializers import CardSerializer, CardSetSerializer, CreatorSerializer
@@ -28,6 +28,7 @@ from packs.views import with_copies
 from .blocks import between, blocked_ids
 from .models import (
     SHOWCASE_SLOTS,
+    SUPPORTER_SHOWCASE_SLOTS,
     Block,
     Comment,
     Follow,
@@ -61,11 +62,30 @@ def public_user(username: str) -> User:
     )
 
 
-def showcase_for(user):
+def showcase_limit(user) -> int:
+    from lounge.data import is_subscriber
+
+    return SUPPORTER_SHOWCASE_SLOTS if is_subscriber(user) else SHOWCASE_SLOTS
+
+
+def showcase_for(user, limit: int | None = None):
     # Only slots whose card the user still owns (trades move cards, recycling deletes them).
-    return ShowcaseSlot.objects.filter(user=user, owned_card__owner=user).select_related(
-        "owned_card"
-    )
+    return ShowcaseSlot.objects.filter(
+        user=user,
+        owned_card__owner=user,
+        position__lt=showcase_limit(user) if limit is None else limit,
+    ).select_related("owned_card")
+
+
+def featured_card(user) -> dict | None:
+    from lounge.data import is_subscriber, showcase_card
+
+    owned = user.profile.featured_card
+    if owned is None or owned.owner_id != user.pk or not is_subscriber(user):
+        return None
+    if owned.card.card_set.status not in {CardSet.Status.PUBLISHED, CardSet.Status.DELETED}:
+        return None
+    return showcase_card(owned.card)
 
 
 class ProfileView(APIView):
@@ -74,7 +94,8 @@ class ProfileView(APIView):
     def get(self, request: Request, username: str) -> Response:
         user = public_user(username)
         me = request.user if request.user.is_authenticated else None
-        slots = list(showcase_for(user))
+        limit = showcase_limit(user)
+        slots = list(showcase_for(user, limit))
         owned = {
             c.pk: c
             for c in with_copies(OwnedCard.objects.filter(pk__in=[s.owned_card_id for s in slots]))
@@ -93,6 +114,9 @@ class ProfileView(APIView):
             "avatar_url": user.profile.avatar_url,
             "is_demo": user.is_demo,
             "subscriber_badge": visible_badge(user),
+            "badge_style": badge_style(user),
+            "featured_card": featured_card(user),
+            "showcase_slots": limit,
             "created_at": user.created_at,
             "follower_count": user.followers.count(),
             "following_count": user.following.count(),
@@ -163,13 +187,13 @@ class ShowcaseView(APIView):
         owned = set(OwnedCard.objects.filter(pk__in=ids, owner=user).values_list("pk", flat=True))
         if len(owned) != len(set(ids)):
             raise ValidationError("You can only showcase cards you own.")
+        limit = showcase_limit(user)
         positions = [int(s.get("position", 0)) - 1 for s in slots]
-        if any(p < 0 or p >= SHOWCASE_SLOTS for p in positions) or len(set(positions)) != len(
-            positions
-        ):
-            raise ValidationError(f"Positions must be unique and between 1 and {SHOWCASE_SLOTS}.")
+        if any(p < 0 or p >= limit for p in positions) or len(set(positions)) != len(positions):
+            raise ValidationError(f"Positions must be unique and between 1 and {limit}.")
         with transaction.atomic():
-            ShowcaseSlot.objects.filter(user=user).delete()
+            # Sleeves past the current limit belong to a lapsed membership and are kept.
+            ShowcaseSlot.objects.filter(user=user, position__lt=limit).delete()
             ShowcaseSlot.objects.bulk_create(
                 [
                     ShowcaseSlot(user=user, position=p, owned_card_id=i)
@@ -393,8 +417,9 @@ class ReportView(APIView):
         elif data.get("comment_id"):
             report.comment = get_object_or_404(Comment, id=data["comment_id"])
         elif data.get("lounge_post_id") or data.get("lounge_reply_id"):
+            from lounge.data import visible_posts
             from lounge.models import Reply
-            from lounge.views import require_enabled, visible_posts
+            from lounge.views import require_enabled
 
             require_enabled()
             if data.get("lounge_post_id"):
@@ -596,7 +621,9 @@ class NotificationsView(APIView):
         rows = (
             Notification.objects.filter(recipient=user)
             .exclude(actor_id__in=blocked_ids(user))
-            .select_related("actor__profile", "card_set", "card", "comment")
+            .select_related(
+                "actor__profile", "card_set", "card", "comment", "lounge_post", "lounge_reply"
+            )
         )
         paginator = NotificationPagination()
         page = paginator.paginate_queryset(rows, request) or []
@@ -656,3 +683,47 @@ class BlocksView(APIView):
     def delete(self, request: Request, username: str) -> Response:
         Block.objects.filter(user=me(request), blocked__username=username.lower()).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class UserSummaryView(APIView):
+    """The small profile preview shown when hovering a name in the Lounge."""
+
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request: Request, username: str) -> Response:
+        user = public_user(username)
+        viewer = request.user if request.user.is_authenticated else None
+        return Response(
+            {
+                **CreatorSerializer(user).data,
+                "badge_style": badge_style(user),
+                "created_at": user.created_at,
+                "card_count": OwnedCard.objects.filter(owner=user).count(),
+                "set_count": CardSet.objects.filter(
+                    creator=user, status=CardSet.Status.PUBLISHED
+                ).count(),
+                "follower_count": user.followers.count(),
+                "featured_card": featured_card(user),
+                "is_me": viewer == user,
+                "is_following": bool(viewer)
+                and Follow.objects.filter(follower=viewer, following=user).exists(),
+                "is_blocked": bool(viewer)
+                and Block.objects.filter(user=viewer, blocked=user).exists(),
+            }
+        )
+
+
+class FeaturedCardView(APIView):
+    def put(self, request: Request) -> Response:
+        from lounge.data import is_subscriber
+
+        user = me(request)
+        owned_id = request.data.get("owned_card_id") if isinstance(request.data, dict) else None
+        if owned_id is None:
+            user.profile.featured_card = None
+        else:
+            if not is_subscriber(user):
+                raise PermissionDenied("A featured card is a supporter extra.")
+            user.profile.featured_card = get_object_or_404(OwnedCard, pk=owned_id, owner=user)
+        user.profile.save(update_fields=["featured_card"])
+        return Response({"featured_card": featured_card(user)})

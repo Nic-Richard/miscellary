@@ -67,6 +67,10 @@ class Profile(models.Model):
     bio = models.TextField(max_length=280, blank=True)
     showcase_title = models.CharField(max_length=60, blank=True)
     binder_colour = models.CharField(max_length=20, choices=BINDER_COLOUR_CHOICES, blank=True)
+    # A supporter extra; it stays saved but stops showing if the membership ends.
+    featured_card = models.ForeignKey(
+        "packs.OwnedCard", null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
     avatar_key = models.CharField(max_length=255, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
 

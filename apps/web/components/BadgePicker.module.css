@@ -1,0 +1,49 @@
+.picker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 14px 24px;
+  padding: 12px 0 4px;
+}
+.preview {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.group {
+  display: grid;
+  gap: 6px;
+}
+.group > span {
+  margin: 0;
+}
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 4px;
+}
+.swatch {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--metal-fill);
+  box-shadow:
+    0 0 0 2px var(--sur),
+    0 0 0 3px var(--bdr2);
+  cursor: pointer;
+}
+.swatch[aria-checked='true'] {
+  box-shadow:
+    0 0 0 2px var(--sur),
+    0 0 0 4px var(--accent);
+}
+.swatch:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+.swatch:disabled {
+  cursor: default;
+}

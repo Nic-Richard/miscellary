@@ -257,6 +257,10 @@ export const THEMES = palettes.map((palette) => {
     '--accent-deep': colors.accentDeep,
     '--accent-text': accentText,
     '--accent-rgb': channels(accent).join(', '),
+    // Shadows and top-edge highlights read differently on light and dark grounds.
+    '--shadow-rgb': luminance(bg) > 0.18 ? '40, 34, 26' : '0, 0, 0',
+    '--shadow-boost': luminance(bg) > 0.18 ? '1' : '1.9',
+    '--edge-light': luminance(bg) > 0.18 ? 'rgba(255, 255, 255, 0.5)' : 'rgba(255, 255, 255, 0.06)',
     '--reveal-bg': colors.revealBg,
     '--cloth': colors.clothSoft,
     '--cloth-deep': accent,

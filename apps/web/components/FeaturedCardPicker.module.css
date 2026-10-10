@@ -1,0 +1,35 @@
+.featured {
+  display: grid;
+  gap: 8px;
+  margin-top: 6px;
+}
+.current {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 14px;
+}
+.card,
+.empty {
+  width: 56px;
+  aspect-ratio: 5 / 7;
+  border-radius: 5px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+.empty {
+  border: 1.5px dashed var(--bdr2);
+  box-shadow: none;
+}
+.text {
+  display: grid;
+  flex: 1 1 160px;
+  min-width: 0;
+}
+.text small {
+  color: var(--muted);
+}
+.buttons {
+  display: flex;
+  gap: 8px;
+}

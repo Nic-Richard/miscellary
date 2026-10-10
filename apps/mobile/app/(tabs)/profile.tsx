@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import CardPreview from '@/components/CardPreview';
+import FeaturedCardPicker from '@/components/FeaturedCardPicker';
 import FilterField from '@/components/FilterField';
 import LoginGate from '@/components/LoginGate';
 import ProfileView from '@/components/ProfileView';
@@ -55,7 +56,7 @@ function Me() {
       setDisplayName(p.display_name);
       setBio(p.bio);
       setCards(page.results);
-      const next: (string | null)[] = Array(SHOWCASE_SLOTS).fill(null);
+      const next: (string | null)[] = Array(p.showcase_slots ?? SHOWCASE_SLOTS).fill(null);
       for (const s of showcase) next[s.position - 1] = s.owned_card.id;
       setSlots(next);
     } catch (e) {
@@ -199,6 +200,10 @@ function Me() {
           onPress={async () => {
             if (await saveProfile()) setEditing(false);
           }}
+        />
+        <FeaturedCardPicker
+          card={profile.featured_card ?? null}
+          onChange={(featured_card) => setProfile({ ...profile, featured_card })}
         />
       </ScrollView>
     );

@@ -7,6 +7,8 @@ from cards.models import CardDefinition, CardSet
 from packs.models import OwnedCard
 
 SHOWCASE_SLOTS = 40
+# Supporters get a second binder's worth of sleeves; extras stay saved if they lapse.
+SUPPORTER_SHOWCASE_SLOTS = 80
 COMMENT_MAX = 1000
 
 
@@ -215,6 +217,8 @@ class Notification(models.Model):
         SET_COMMENT = "set_comment", "Commented on a set"
         COMMENT_REPLY = "comment_reply", "Replied to a comment"
         FOLLOW = "follow", "Followed you"
+        LOUNGE_REPLY = "lounge_reply", "Replied in the Lounge"
+        LOUNGE_MENTION = "lounge_mention", "Mentioned you in the Lounge"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     recipient = models.ForeignKey(
@@ -231,6 +235,12 @@ class Notification(models.Model):
     comment = models.ForeignKey(
         Comment, null=True, blank=True, on_delete=models.CASCADE, related_name="+"
     )
+    lounge_post = models.ForeignKey(
+        "lounge.Post", null=True, blank=True, on_delete=models.CASCADE, related_name="+"
+    )
+    lounge_reply = models.ForeignKey(
+        "lounge.Reply", null=True, blank=True, on_delete=models.CASCADE, related_name="+"
+    )
     read_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -240,7 +250,16 @@ class Notification(models.Model):
         constraints = [
             # Follows have no target, so null targets must compare equal here.
             models.UniqueConstraint(
-                fields=["recipient", "actor", "kind", "card_set", "card", "comment"],
+                fields=[
+                    "recipient",
+                    "actor",
+                    "kind",
+                    "card_set",
+                    "card",
+                    "comment",
+                    "lounge_post",
+                    "lounge_reply",
+                ],
                 condition=models.Q(read_at__isnull=True),
                 nulls_distinct=False,
                 name="one_unread_notification_per_target",

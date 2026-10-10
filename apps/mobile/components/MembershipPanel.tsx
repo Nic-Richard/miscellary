@@ -4,12 +4,13 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router, useFocusEffect } from 'expo-router';
 import { Pressable, Switch, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
-import type { Membership } from '@miscellary/shared';
+import type { BadgeColour, BadgeFinish, Membership } from '@miscellary/shared';
 import { starAmount } from '@miscellary/shared';
 import { ApiRequestError, apiFetch } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { createThemedStyles, fonts, useColors } from '@/lib/theme';
 import { STAR_PATH } from './Avatar';
+import BadgePicker from './BadgePicker';
 import { usePlayStore } from '@/lib/play';
 import { Button, ErrorText, Muted } from './ui';
 
@@ -26,7 +27,7 @@ export default function MembershipPanel() {
   const saveController = useRef<AbortController | null>(null);
   const store = usePlayStore(membership, () => setRetry((value) => value + 1));
   useEffect(() => setMembership(null), [user?.id]);
-  async function toggleBadge(show_badge: boolean) {
+  async function saveSettings(body: Record<string, unknown>) {
     if (saveController.current && !saveController.current.signal.aborted) return;
     const controller = new AbortController();
     saveController.current = controller;
@@ -35,13 +36,13 @@ export default function MembershipPanel() {
     try {
       const updated = await apiFetch<Membership>('/api/v1/me/membership/', {
         method: 'PATCH',
-        body: { show_badge },
+        body,
         signal: controller.signal,
       });
       if (!controller.signal.aborted) setMembership(updated);
     } catch (err: unknown) {
       if (!controller.signal.aborted)
-        setSaveError(err instanceof Error ? err.message : 'Could not save badge preference.');
+        setSaveError(err instanceof Error ? err.message : 'Could not save your badge.');
     } finally {
       controller.abort();
       if (saveController.current === controller) setSaving(false);
@@ -127,10 +128,22 @@ export default function MembershipPanel() {
       link: ['/studio', 'Studio'],
     },
     {
-      count: '6',
-      title: 'Cards per Lounge post',
-      note: 'Instead of 1',
+      count: '40',
+      title: 'Cards in a Lounge binder post',
+      note: 'Instead of 6',
       link: ['/lounge', 'Lounge'],
+    },
+    {
+      count: '80',
+      title: 'Sleeves in your profile binder',
+      note: 'Instead of 40',
+      link: ['/profile', 'Binder'],
+    },
+    {
+      count: '★',
+      title: 'Featured card and saved folders',
+      note: 'Plus drafts in the Lounge',
+      link: ['/profile', 'Profile'],
     },
   ];
 
@@ -227,13 +240,22 @@ export default function MembershipPanel() {
                 accessibilityLabel="Show supporter badge"
                 value={membership.show_badge !== false}
                 disabled={saving}
-                onValueChange={(value) => void toggleBadge(value)}
+                onValueChange={(value) => void saveSettings({ show_badge: value })}
                 trackColor={{ true: colors.accent, false: colors.bdr2 }}
                 thumbColor={colors.sur}
               />
             )}
           </View>
         </View>
+        {sub.active && membership.show_badge !== false && user && (
+          <BadgePicker
+            person={{ ...user.profile, deleted: false }}
+            colour={(membership.badge_colour ?? 'gold') as BadgeColour}
+            finish={(membership.badge_finish ?? 'foil') as BadgeFinish}
+            disabled={saving}
+            onChange={(change) => void saveSettings(change)}
+          />
+        )}
         <ErrorText>{saveError}</ErrorText>
         {sub.active ? (
           sub.provider === 'play' && store.ready ? (

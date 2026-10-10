@@ -1,4 +1,4 @@
-import { BLOCK_COPY, profilePath, SHOWCASE_SLOTS } from '@miscellary/shared';
+import { BLOCK_COPY, cardCode, profilePath, SHOWCASE_SLOTS } from '@miscellary/shared';
 import type { OwnedCard, ProfilePage } from '@miscellary/shared';
 import { Link, router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
@@ -16,6 +16,7 @@ import PeopleList from './PeopleList';
 import { useColors, createThemedStyles } from '@/lib/theme';
 import CardInspector from './CardInspector';
 import Avatar from './Avatar';
+import CardPreview from './CardPreview';
 import { confirmBlock } from './BlockedPeople';
 import DemoBadge from './DemoBadge';
 import SupporterBadge from './SupporterBadge';
@@ -45,13 +46,14 @@ export default function ProfileView({
   const [followBusy, setFollowBusy] = useState(false);
   const [blockBusy, setBlockBusy] = useState(false);
   const [reporting, setReporting] = useState(false);
+  const capacity = profile.showcase_slots ?? SHOWCASE_SLOTS;
   const showcase = useMemo(
     () =>
       Array.from(
-        { length: SHOWCASE_SLOTS },
+        { length: capacity },
         (_, index) => profile.showcase.find((slot) => slot.position === index + 1) ?? null,
       ),
-    [profile.showcase],
+    [profile.showcase, capacity],
   );
   const binderData = {
     slots: showcase,
@@ -113,19 +115,57 @@ export default function ProfileView({
       <View style={styles.header}>
         <Avatar
           person={{ ...profile, deleted: false }}
-          supporter={Boolean(profile.subscriber_badge)}
+          badge={profile.subscriber_badge ? (profile.badge_style ?? 'gold-foil') : null}
           size={56}
         />
         <View style={{ flex: 1, gap: 4 }}>
           <Text style={{ color: colors.pageText, fontSize: 22, fontWeight: '700' }}>
             {profile.display_name || profile.username}
           </Text>
-          {profile.subscriber_badge && <SupporterBadge />}
+          {profile.subscriber_badge && <SupporterBadge badge={profile.badge_style} />}
           {profile.is_demo ? <DemoBadge /> : null}
           <Muted style={{ color: colors.pageMuted }}>@{profile.username}</Muted>
         </View>
       </View>
       {profile.bio ? <Muted style={{ color: colors.pageMuted }}>{profile.bio}</Muted> : null}
+      {profile.featured_card ? (
+        <Pressable
+          accessibilityRole="link"
+          accessibilityLabel={`Featured card, ${profile.featured_card.title}`}
+          onPress={() =>
+            router.push({
+              pathname: '/sets/[slug]',
+              params: { slug: profile.featured_card!.set_slug },
+            })
+          }
+          style={({ pressed }) => [styles.featured, pressed && { opacity: 0.8 }]}
+        >
+          <CardPreview
+            width={44}
+            title={profile.featured_card.title}
+            rarity={profile.featured_card.rarity}
+            imageUrl={profile.featured_card.image?.url ?? null}
+            templateKey={profile.featured_card.template_key}
+            templateConfig={profile.featured_card.template_config}
+            code={cardCode(
+              profile.featured_card.printed_set_code,
+              profile.featured_card.position,
+              profile.featured_card.set_total,
+            )}
+            printedText={profile.featured_card.printed_text}
+            render={profile.featured_card.render}
+          />
+          <View style={{ flex: 1, gap: 1 }}>
+            <Text style={styles.featuredLabel}>Featured card</Text>
+            <Text style={styles.featuredTitle} numberOfLines={1}>
+              {profile.featured_card.title}
+            </Text>
+            <Text style={styles.featuredSet} numberOfLines={1}>
+              {profile.featured_card.set_title}
+            </Text>
+          </View>
+        </Pressable>
+      ) : null}
       {profile.is_demo ? (
         <Muted style={{ fontSize: 14 }}>
           This collector is fictional and is here to demonstrate Miscellary. The photographs are
@@ -251,7 +291,7 @@ export default function ProfileView({
         </Pressable>
         <Muted>
           {profile.showcase_title?.trim() || 'The pride of the collection'} ·{' '}
-          {profile.showcase.length} of {SHOWCASE_SLOTS} sleeves filled
+          {profile.showcase.length} of {capacity} sleeves filled
         </Muted>
         <Button title="Open binder" onPress={() => setBinderOpen(true)} />
       </View>
@@ -259,7 +299,7 @@ export default function ProfileView({
         <BinderViewer
           title={profile.showcase_title?.trim() || 'The pride of the collection'}
           subtitle={`@${profile.username}`}
-          spreads={SHOWCASE_SLOTS / 8}
+          spreads={Math.ceil(capacity / 8)}
           surface={(spread, editing) => ({
             mode: 'profile-binder',
             data: { ...binderData, fill: true, page: spread, editing },
@@ -319,6 +359,22 @@ const useStyles = createThemedStyles((colors) => ({
     backgroundColor: colors.sur,
   },
   binderPreview: { borderRadius: 10, overflow: 'hidden' },
+  featured: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    alignSelf: 'flex-start',
+    paddingVertical: 8,
+    paddingLeft: 8,
+    paddingRight: 16,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.bdr,
+    backgroundColor: colors.sur,
+  },
+  featuredLabel: { color: colors.faint, fontSize: 12 },
+  featuredTitle: { color: colors.text, fontSize: 15, fontWeight: '700' },
+  featuredSet: { color: colors.accentInk, fontSize: 13 },
   counts: {
     flexDirection: 'row',
     alignItems: 'center',

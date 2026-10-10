@@ -72,3 +72,9 @@ variable "db_instance_class" {
   type    = string
   default = "db.t4g.micro"
 }
+
+variable "lounge_enabled" {
+  description = "Opens the Lounge on the API. The web nav also needs NEXT_PUBLIC_LOUNGE_ENABLED on Vercel."
+  type        = bool
+  default     = false
+}

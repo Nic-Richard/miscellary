@@ -63,7 +63,7 @@ def test_owned_showcases_and_expiry(user, auth_client):
     response = auth_client.post(route, payload(card_ids=ids, style="binder"), format="json")
     assert response.status_code == 201
     assert response.data["style"] == "binder" and len(response.data["cards"]) == 2
-    assert response.data["author_badge"] is True
+    assert response.data["author_badge"] == "gold-foil"
     assert response.data["cards"][0]["set_slug"] == card_set.slug
     assert response.data["cards"][0]["set_title"] == card_set.title
     assert response.data["cards"][0]["set_creator"]["username"] == user.username
@@ -74,7 +74,7 @@ def test_owned_showcases_and_expiry(user, auth_client):
     Post.objects.filter(pk=response.data["id"]).update(style=Post.Style.BINDER)
     MembershipSettings.objects.create(user=user, show_badge=False)
     hidden = auth_client.get(reverse("lounge:post", args=[response.data["id"]]))
-    assert hidden.data["author_badge"] is False and hidden.data["style"] == "binder"
+    assert hidden.data["author_badge"] is None and hidden.data["style"] == "binder"
     MembershipSettings.objects.filter(user=user).update(show_badge=True)
     CardSet.objects.filter(pk=card_set.pk).update(status=CardSet.Status.DELETED)
     assert (
@@ -94,7 +94,7 @@ def test_owned_showcases_and_expiry(user, auth_client):
     period.save()
     response = auth_client.get(reverse("lounge:post", args=[response.data["id"]]))
     assert response.data["style"] == "plain" and response.data["body"] == "A few favourites."
-    assert response.data["author_badge"] is False
+    assert response.data["author_badge"] is None
     assert response.data["cards"][0] is None and response.data["cards"][1] is not None
     owned[1].delete()
     assert Attachment.objects.filter(owned_card__isnull=True).count() == 1
@@ -114,7 +114,7 @@ def test_threads_parent_binding_and_tombstones(user, auth_client):
     assert response.data["parent_id"] == str(root.pk)
     assert response.data["body"] == "A reply" and response.data["can_delete"]
     assert response.data["author"]["username"] == user.username
-    assert response.data["likes"] == 0 and not response.data["liked"]
+    assert response.data["score"] == 0 and response.data["my_vote"] == 0
     assert response.data["child_count"] == 0 and not response.data["removed"]
     assert auth_client.get(route + f"?parent_id={root.pk}").data["results"][0] == response.data
     assert (
@@ -170,7 +170,11 @@ def test_sorting_votes_and_moderation(user, auth_client):
     second = Post.objects.create(author=user, title="Newer", body="Hello")
     vote = reverse("lounge:vote-post", args=[first.pk])
     for _ in range(2):
-        assert auth_client.post(vote).data == {"liked": True, "likes": 1}
+        assert auth_client.post(vote).data == {"score": 1, "my_vote": 1}
+    down = client_for(make_user()).post(
+        reverse("lounge:vote-post", args=[second.pk]), {"value": -1}, format="json"
+    )
+    assert down.data == {"score": -1, "my_vote": -1}
     feed = reverse("lounge:feed")
     assert auth_client.get(feed).data["results"][0]["id"] == str(second.pk)
     assert auth_client.get(feed + "?sort=top&window=all").data["results"][0]["id"] == str(first.pk)

@@ -17,6 +17,8 @@ export interface Membership {
   enabled: boolean;
   preview?: boolean;
   show_badge?: boolean;
+  badge_colour?: string;
+  badge_finish?: string;
   currency_name: string;
   star_units: number;
   units_per_star: number;

@@ -51,9 +51,20 @@
   --radius-lg: 14px;
   --radius-pill: 999px;
 
-  --shadow-sm: 0 1px 2px rgba(58, 42, 20, 0.12);
-  --shadow-md: 0 4px 14px rgba(58, 42, 20, 0.14);
-  --shadow-lg: 0 18px 40px rgba(40, 28, 12, 0.24);
+  --shadow-rgb: 40, 34, 26;
+  --shadow-boost: 1;
+  --edge-light: rgba(255, 255, 255, 0.5);
+  --shadow-sm: 0 1px 2px rgba(var(--shadow-rgb), calc(0.14 * var(--shadow-boost)));
+  --shadow-md:
+    0 1px 1px rgba(var(--shadow-rgb), calc(0.1 * var(--shadow-boost))),
+    0 6px 16px -6px rgba(var(--shadow-rgb), calc(0.3 * var(--shadow-boost)));
+  --shadow-lg: 0 18px 40px -12px rgba(var(--shadow-rgb), calc(0.42 * var(--shadow-boost)));
+  /* Card stock on a table: a lit top edge and a soft shadow underneath. */
+  --lift: inset 0 1px 0 var(--edge-light), var(--shadow-md);
+  --lift-hover:
+    inset 0 1px 0 var(--edge-light),
+    0 2px 2px rgba(var(--shadow-rgb), calc(0.1 * var(--shadow-boost))),
+    0 14px 26px -10px rgba(var(--shadow-rgb), calc(0.4 * var(--shadow-boost)));
 
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --dur-fast: 150ms;
@@ -107,4 +118,99 @@ h3 {
 }
 ::selection {
   background: rgba(var(--accent-rgb), 0.25);
+}
+
+/* Scroll areas inside the page hide their bars; the page itself keeps its own. */
+body * {
+  scrollbar-width: none;
+}
+body *::-webkit-scrollbar {
+  display: none;
+}
+
+/* Supporter badge metals. They are materials like card foil, so they look the same in every
+   theme. data-metal sets the colour and data-finish the surface; foil gold is the default. */
+[data-metal] {
+  --metal-lo: #5e4518;
+  --metal-mid: #c9a24a;
+  --metal-hi: #fff6dc;
+  --metal-ink: #3a2a0c;
+  --metal-fill: conic-gradient(
+    from 200deg,
+    var(--metal-lo),
+    var(--metal-mid),
+    var(--metal-hi),
+    var(--metal-mid),
+    var(--metal-lo),
+    var(--metal-mid),
+    var(--metal-hi),
+    var(--metal-lo)
+  );
+  --metal-sheen: linear-gradient(
+    100deg,
+    var(--metal-lo),
+    var(--metal-mid) 30%,
+    var(--metal-hi) 45%,
+    var(--metal-mid) 60%,
+    var(--metal-lo)
+  );
+}
+[data-metal='silver'] {
+  --metal-lo: #50565e;
+  --metal-mid: #b9bec5;
+  --metal-hi: #ffffff;
+  --metal-ink: #24282d;
+}
+[data-metal='rose'] {
+  --metal-lo: #6b372f;
+  --metal-mid: #d09180;
+  --metal-hi: #fff0ea;
+  --metal-ink: #3d1c16;
+}
+[data-metal='jade'] {
+  --metal-lo: #1b4a3d;
+  --metal-mid: #64ad94;
+  --metal-hi: #eafff7;
+  --metal-ink: #0f2a22;
+}
+[data-metal='sapphire'] {
+  --metal-lo: #1b2c58;
+  --metal-mid: #6688d2;
+  --metal-hi: #eef3ff;
+  --metal-ink: #101a36;
+}
+[data-metal][data-finish='satin'] {
+  --metal-fill: linear-gradient(
+    150deg,
+    color-mix(in srgb, var(--metal-mid) 80%, var(--metal-hi)),
+    var(--metal-mid) 55%,
+    color-mix(in srgb, var(--metal-mid) 75%, var(--metal-lo))
+  );
+  --metal-sheen: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--metal-mid) 70%, var(--metal-hi)),
+    var(--metal-mid)
+  );
+}
+[data-metal][data-finish='holo'] {
+  --metal-fill: conic-gradient(
+    from 90deg,
+    var(--metal-mid),
+    #f6b3c9,
+    #b9d7ff,
+    #c8f5d2,
+    #fff1a8,
+    var(--metal-mid),
+    #f6b3c9,
+    var(--metal-mid)
+  );
+  --metal-sheen: linear-gradient(
+    100deg,
+    var(--metal-mid),
+    #f6b3c9 25%,
+    #b9d7ff 45%,
+    #c8f5d2 62%,
+    #fff1a8 80%,
+    var(--metal-mid)
+  );
 }

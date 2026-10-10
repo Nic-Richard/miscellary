@@ -8,6 +8,7 @@ import { useAuth } from '@/lib/auth';
 import { loginHref, registerHref, swapAuthHref } from '@/lib/returnTo';
 import { getNotifications } from '@/lib/social';
 import BrandMark from './BrandMark';
+import { useMembership } from '@/lib/membership';
 import ThemeSelector from './ThemeSelector';
 import styles from './Nav.module.css';
 
@@ -22,11 +23,13 @@ type IconName =
   | 'search'
   | 'plus'
   | 'lounge'
-  | 'bell';
+  | 'bell'
+  | 'member';
 
 export const NOTICE_EVENT = 'miscellary:notifications';
 
 const ICONS: Record<IconName, string> = {
+  member: 'm12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9Z',
   home: 'M4 11.5 12 4.5l8 7V20h-5.5v-5h-5v5H4Z',
   binders:
     'M4 5.5h6a2 2 0 0 1 2 2V19a2 2 0 0 0-2-2H4Zm16 0h-6a2 2 0 0 0-2 2V19a2 2 0 0 1 2-2h6ZM12 7.5V19',
@@ -51,6 +54,7 @@ export function NavIcon({ name }: { name: IconName }) {
 
 export default function Nav() {
   const { user, loading, logout } = useAuth();
+  const membership = useMembership();
   const router = useRouter();
   const pathname = usePathname();
   const [q, setQ] = useState('');
@@ -122,6 +126,11 @@ export default function Nav() {
             : []),
           { href: '/studio', label: 'Studio', icon: 'studio', match: '/studio' },
           { href: profileHref, label: 'Profile', icon: 'profile', match: '/users' },
+          ...(membership.enabled
+            ? ([
+                { href: '/membership', label: 'Membership', icon: 'member', match: '/membership' },
+              ] as const)
+            : []),
         ] as const)
       : []),
   ];
@@ -146,7 +155,7 @@ export default function Nav() {
             <Link
               key={l.label}
               href={l.href}
-              className={`${isActive(l.match) ? styles.active : ''} ${held ? styles.pending : ''}`}
+              className={`${isActive(l.match) ? styles.active : ''} ${held ? styles.pending : ''} ${l.icon === 'member' ? styles.member : ''}`}
               aria-current={isActive(l.match) ? 'page' : undefined}
               aria-hidden={held || undefined}
               tabIndex={held ? -1 : undefined}

@@ -87,8 +87,21 @@ export function Button({ title, kind = 'primary', disabled, style, ...rest }: Bu
   const colors = useColors();
   const styles = useStyles();
   const solid = kind === 'primary';
-  const bg = solid ? (disabled ? colors.bdr : colors.accent) : 'transparent';
-  const border = kind === 'danger' ? colors.danger : kind === 'secondary' ? colors.bdr2 : bg;
+  const bg = solid
+    ? disabled
+      ? colors.bdr
+      : colors.accent
+    : kind === 'secondary'
+      ? colors.sur
+      : 'transparent';
+  const border =
+    kind === 'danger'
+      ? colors.danger
+      : kind === 'secondary'
+        ? colors.bdr2
+        : solid
+          ? colors.accentDeep
+          : bg;
   const fg = solid
     ? disabled
       ? colors.muted
@@ -103,10 +116,14 @@ export function Button({ title, kind = 'primary', disabled, style, ...rest }: Bu
       disabled={disabled}
       style={(state) => [
         styles.button,
+        solid && !disabled && styles.lifted,
         {
           backgroundColor: bg,
           borderColor: border,
-          opacity: disabled ? (solid ? 1 : 0.5) : state.pressed ? 0.75 : 1,
+          // A darker bottom edge makes buttons read as something you press.
+          borderBottomWidth: solid || kind === 'secondary' ? 2 : 1,
+          opacity: disabled ? (solid ? 1 : 0.5) : state.pressed ? 0.85 : 1,
+          transform: [{ translateY: state.pressed && !disabled ? 1 : 0 }],
         },
         typeof style === 'function' ? style(state) : style,
       ]}
@@ -114,6 +131,38 @@ export function Button({ title, kind = 'primary', disabled, style, ...rest }: Bu
     >
       <Text style={[styles.buttonText, { color: fg }]}>{title}</Text>
     </Pressable>
+  );
+}
+
+export function Segmented<T extends string>({
+  options,
+  value,
+  onChange,
+  label,
+}: {
+  options: readonly { value: T; label: string }[];
+  value: T;
+  onChange: (value: T) => void;
+  label: string;
+}) {
+  const styles = useStyles();
+  return (
+    <View style={styles.segments} accessibilityRole="radiogroup" accessibilityLabel={label}>
+      {options.map((option) => {
+        const active = option.value === value;
+        return (
+          <Pressable
+            key={option.value}
+            accessibilityRole="radio"
+            accessibilityState={{ selected: active }}
+            onPress={() => onChange(option.value)}
+            style={[styles.segment, active && styles.segmentOn]}
+          >
+            <Text style={[styles.segmentText, active && styles.segmentTextOn]}>{option.label}</Text>
+          </Pressable>
+        );
+      })}
+    </View>
   );
 }
 
@@ -184,6 +233,33 @@ const useStyles = createThemedStyles((colors) => ({
     alignItems: 'center',
   },
   buttonText: { fontFamily: fonts.medium, fontSize: 17 },
+  lifted: {
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOpacity: 0.18,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  segments: {
+    flexDirection: 'row',
+    alignSelf: 'flex-start',
+    padding: 3,
+    borderRadius: 9,
+    borderWidth: 1,
+    borderColor: colors.bdr,
+    backgroundColor: colors.sur2,
+  },
+  segment: { minHeight: 34, paddingHorizontal: 14, justifyContent: 'center', borderRadius: 6 },
+  segmentOn: {
+    backgroundColor: colors.sur,
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOpacity: 0.12,
+    shadowRadius: 2,
+    shadowOffset: { width: 0, height: 1 },
+  },
+  segmentText: { color: colors.muted, fontFamily: fonts.medium, fontSize: 14 },
+  segmentTextOn: { color: colors.text },
   chip: {
     borderWidth: 1,
     borderColor: colors.bdr2,
@@ -193,7 +269,7 @@ const useStyles = createThemedStyles((colors) => ({
     paddingVertical: 8,
     paddingHorizontal: 12,
   },
-  chipActive: { borderColor: colors.accent, backgroundColor: colors.accent },
+  chipActive: { borderColor: colors.accentDeep, backgroundColor: colors.accent },
   passwordWrap: { justifyContent: 'center' },
   passwordInput: { paddingRight: 48 },
   passwordToggle: {

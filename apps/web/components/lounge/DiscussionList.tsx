@@ -2,15 +2,23 @@
 
 import Link from 'next/link';
 import { useEffect, useRef } from 'react';
-import type { LoungePost } from '@miscellary/shared';
+import type { LoungePost, SavedFolder } from '@miscellary/shared';
 import { cardCode, loungeTopicLabel } from '@miscellary/shared';
-import Avatar from '@/components/Avatar';
 import CardPreview from '@/components/CardPreview';
+import MenuSelect from '@/components/MenuSelect';
 import SearchField from '@/components/SearchField';
 import { timeAgo } from '@/lib/time';
 import ui from '@/components/ui.module.css';
-import type { LoungeSort } from './LoungeShell';
+import type { LoungeSort, LoungeView } from './LoungeShell';
 import styles from './Lounge.module.css';
+
+type Window = 'today' | 'week' | 'month' | 'all';
+const WINDOWS = [
+  { value: 'today', label: 'Today' },
+  { value: 'week', label: 'This week' },
+  { value: 'month', label: 'This month' },
+  { value: 'all', label: 'All time' },
+] as const;
 
 const SORTS: { id: LoungeSort; label: string }[] = [
   { id: 'active', label: 'Active' },
@@ -19,6 +27,11 @@ const SORTS: { id: LoungeSort; label: string }[] = [
 ];
 
 export default function DiscussionList({
+  view,
+  folders,
+  folder,
+  onFolder,
+  onCloseView,
   rows,
   openId,
   sort,
@@ -36,6 +49,11 @@ export default function DiscussionList({
   onMore,
   onReload,
 }: {
+  view: LoungeView;
+  folders: SavedFolder[];
+  folder: string;
+  onFolder: (folder: string) => void;
+  onCloseView: () => void;
   rows: LoungePost[];
   openId: string | null;
   sort: LoungeSort;
@@ -70,44 +88,75 @@ export default function DiscussionList({
     return () => observer.disconnect();
   }, [canLoad, onMore]);
 
+  const empty =
+    view === 'saved'
+      ? 'Nothing saved yet. Use Save on a discussion to keep it here.'
+      : view === 'drafts'
+        ? 'No drafts. Choose Save as draft when starting a discussion.'
+        : searching
+          ? 'No discussions match that search.'
+          : topicLabel
+            ? `Nothing in ${topicLabel} yet. Start the first discussion.`
+            : 'No discussions yet. Start the first one.';
+
   return (
     <div className={styles.list}>
-      <div className={styles.listTools}>
-        <SearchField
-          value={query}
-          onChange={onQuery}
-          label="Search the Lounge"
-          placeholder={topicLabel ? `Search ${topicLabel}` : 'Search discussions'}
-        />
-        <div className={styles.sortRow} role="group" aria-label="Sort discussions">
-          {SORTS.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              className={styles.sort}
-              aria-pressed={sort === item.id}
-              onClick={() => onSort(item.id)}
-            >
-              {item.label}
-            </button>
-          ))}
-          {sort === 'top' && (
-            <select
-              aria-label="Top discussions from"
-              className={styles.window}
-              value={timeWindow}
-              onChange={(event) => onWindow(event.target.value)}
-            >
-              <option value="today">Today</option>
-              <option value="week">This week</option>
-              <option value="month">This month</option>
-              <option value="all">All time</option>
-            </select>
+      {view === 'all' ? (
+        <div className={styles.listTools}>
+          <SearchField
+            value={query}
+            onChange={onQuery}
+            label="Search the Lounge"
+            placeholder={topicLabel ? `Search ${topicLabel}` : 'Search discussions'}
+          />
+          <div className={styles.sortRow}>
+            <div className={ui.segments} role="group" aria-label="Sort discussions">
+              {SORTS.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  className={`${ui.segment} ${sort === item.id ? ui.segmentOn : ''} ${styles.sort}`}
+                  aria-pressed={sort === item.id}
+                  onClick={() => onSort(item.id)}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+            {sort === 'top' && (
+              <MenuSelect
+                small
+                label="Top discussions from"
+                value={timeWindow as Window}
+                options={WINDOWS}
+                onChange={onWindow}
+              />
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className={styles.viewHead}>
+          <button type="button" className={styles.back} onClick={onCloseView}>
+            <span aria-hidden="true">←</span> All discussions
+          </button>
+          <h2>{view === 'saved' ? 'Saved discussions' : 'Your drafts'}</h2>
+          {view === 'saved' && folders.length > 0 && (
+            <MenuSelect
+              small
+              label="Folder"
+              value={folder}
+              options={[
+                { value: '', label: 'Everything saved' },
+                { value: 'none', label: 'Not in a folder' },
+                ...folders.map((item) => ({ value: String(item.id), label: item.name })),
+              ]}
+              onChange={onFolder}
+            />
           )}
         </div>
-      </div>
+      )}
       <div className={styles.rows} ref={list} aria-busy={loading}>
-        {newCount > 0 && (
+        {newCount > 0 && view === 'all' && (
           <div className={styles.newPill}>
             <button
               type="button"
@@ -124,32 +173,30 @@ export default function DiscussionList({
           <Link
             key={post.id}
             href={`/lounge/${post.id}`}
-            className={styles.row}
+            className={styles.slip}
             aria-current={post.id === openId ? 'page' : undefined}
           >
-            <Fan post={post} />
-            <span>
+            <span className={styles.stub} aria-label={`${post.score} votes`}>
+              <b>{post.score}</b>
+              <small>{Math.abs(post.score) === 1 ? 'vote' : 'votes'}</small>
+            </span>
+            <span className={styles.slipMain}>
               <span className={styles.rowTitle}>{post.title}</span>
+              {post.body && <span className={styles.excerpt}>{post.body}</span>}
               <span className={styles.meta}>
-                <span className={styles.who}>
-                  <Avatar person={post.author} supporter={post.author_badge} size={20} />
-                  {post.author?.display_name || post.author?.username || 'Deleted collector'}
-                </span>
+                <span>{post.author?.display_name || post.author?.username || 'Deleted'}</span>
                 {!topicLabel && (
                   <span className={styles.topic}>{loungeTopicLabel(post.topic)}</span>
                 )}
-                <span
-                  className={styles.count}
-                  aria-label={`${post.reply_count} ${post.reply_count === 1 ? 'reply' : 'replies'}`}
-                >
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M4 5h16v11H9l-5 4Z" />
-                  </svg>
-                  {post.reply_count}
+                <span>
+                  {post.reply_count} {post.reply_count === 1 ? 'reply' : 'replies'}
                 </span>
                 <time dateTime={post.created_at}>{timeAgo(post.created_at)}</time>
+                {post.unread && <span className={styles.newTag}>New replies</span>}
+                {post.draft && <span className={styles.newTag}>Draft</span>}
               </span>
             </span>
+            <Fan post={post} />
           </Link>
         ))}
         {error ? (
@@ -166,13 +213,7 @@ export default function DiscussionList({
             Loading discussions…
           </p>
         ) : !rows.length ? (
-          <p className={styles.listNote}>
-            {searching
-              ? 'No discussions match that search.'
-              : topicLabel
-                ? `Nothing in ${topicLabel} yet. Start the first discussion.`
-                : 'No discussions yet. Start the first one.'}
-          </p>
+          <p className={styles.listNote}>{empty}</p>
         ) : null}
         {hasNext && !error && (
           <div className={styles.more} ref={sentinel}>
@@ -188,14 +229,7 @@ export default function DiscussionList({
 
 function Fan({ post }: { post: LoungePost }) {
   const cards = post.cards.filter((card) => card !== null).slice(0, 3);
-  if (!cards.length)
-    return (
-      <span className={styles.fanText} aria-hidden="true">
-        <svg viewBox="0 0 24 24">
-          <path d="M4 5h16v11H9l-5 4Z" />
-        </svg>
-      </span>
-    );
+  if (!cards.length) return <span aria-hidden="true" />;
   return (
     <span className={styles.fan} aria-hidden="true">
       {cards.map((card) => (

@@ -33,6 +33,9 @@ class MembershipView(APIView):
     def get(self, request: Request) -> Response:
         assert isinstance(request.user, User)
         period = active_period(request.user) if settings.MONETIZATION_ENABLED else None
+        options = MembershipSettings.objects.filter(
+            user=request.user
+        ).first() or MembershipSettings(user=request.user)
         return Response(
             {
                 "enabled": settings.MONETIZATION_ENABLED,
@@ -43,9 +46,9 @@ class MembershipView(APIView):
                 .first()
                 or 0,
                 "units_per_star": CREDIT_UNITS_PER_CREDIT,
-                "show_badge": not MembershipSettings.objects.filter(
-                    user=request.user, show_badge=False
-                ).exists(),
+                "show_badge": options.show_badge,
+                "badge_colour": options.badge_colour,
+                "badge_finish": options.badge_finish,
                 "pending_checkouts": [
                     {"product": checkout.product, "request_key": str(checkout.request_key)}
                     for checkout in Checkout.objects.filter(

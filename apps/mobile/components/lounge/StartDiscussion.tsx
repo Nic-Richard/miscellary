@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
-import Feather from '@expo/vector-icons/Feather';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
-import { Pressable, ScrollView, Switch, Text, View, useWindowDimensions } from 'react-native';
+import { ScrollView, Switch, Text, View } from 'react-native';
 import type {
   LoungeFeed,
   LoungePost,
@@ -9,22 +8,21 @@ import type {
   LoungeTopic,
   OwnedCard,
 } from '@miscellary/shared';
-import { LOUNGE_TOPICS, cardCode } from '@miscellary/shared';
-import CardPreview from '@/components/CardPreview';
-import FilterField from '@/components/FilterField';
-import { Button, ErrorText, Input, Muted } from '@/components/ui';
+import { LOUNGE_LIMITS, LOUNGE_TOPICS } from '@miscellary/shared';
+import SupporterPrompt from '@/components/SupporterPrompt';
+import { Button, Chip, ErrorText, Input, Muted, Segmented } from '@/components/ui';
 import { apiFetch } from '@/lib/api';
-import { listMyCards } from '@/lib/endpoints';
+import { useMembership } from '@/lib/membership';
 import { createThemedStyles, fonts, useColors } from '@/lib/theme';
 import { useMutation } from './actions';
+import CardPicker from './CardPicker';
 import { RULES, lounge } from './store';
 
 export default function StartDiscussion() {
   const colors = useColors();
   const styles = useStyles();
-  const { width } = useWindowDimensions();
+  const membership = useMembership();
   const [subscriber, setSubscriber] = useState(Boolean(lounge.subscriber));
-  const maxCards = subscriber ? 6 : 1;
   const params = useLocalSearchParams<{ topic?: string }>();
   const [topic, setTopic] = useState<LoungeTopic>(
     LOUNGE_TOPICS.find((item) => item.id === params.topic)?.id ?? 'other',
@@ -32,15 +30,10 @@ export default function StartDiscussion() {
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [style, setStyle] = useState<LoungeStyle>('plain');
+  const [locked, setLocked] = useState(false);
   const [accepted, setAccepted] = useState(false);
   const [selected, setSelected] = useState<OwnedCard[]>([]);
-  const [cards, setCards] = useState<OwnedCard[]>([]);
-  const [cardQuery, setCardQuery] = useState('');
-  const [cardPage, setCardPage] = useState(1);
-  const [cardsNext, setCardsNext] = useState(false);
-  const [cardsLoading, setCardsLoading] = useState(false);
-  const [cardsError, setCardsError] = useState<string | null>(null);
-  const [cardsRetry, setCardsRetry] = useState(0);
+  const max = style === 'binder' ? LOUNGE_LIMITS.binderCards : LOUNGE_LIMITS.postCards;
   const posting = useMutation<LoungePost>((post) => {
     lounge.emit({ type: 'posted', post });
     router.replace(`/lounge/${post.id}`);
@@ -58,40 +51,27 @@ export default function StartDiscussion() {
     return () => controller.abort();
   }, []);
 
-  useEffect(() => {
-    const controller = new AbortController();
-    setCardsLoading(true);
-    setCardsError(null);
-    const timer = setTimeout(
-      () => {
-        void listMyCards(undefined, cardPage, {
-          query: cardQuery.trim(),
-          signal: controller.signal,
-        })
-          .then((data) => {
-            if (controller.signal.aborted) return;
-            setCards((current) => (cardPage === 1 ? data.results : [...current, ...data.results]));
-            setCardsNext(Boolean(data.next));
-          })
-          .catch((err: unknown) => {
-            if (!controller.signal.aborted)
-              setCardsError(err instanceof Error ? err.message : 'Could not load cards.');
-          })
-          .finally(() => {
-            if (!controller.signal.aborted) setCardsLoading(false);
-          });
-      },
-      cardQuery ? 250 : 0,
-    );
-    return () => {
-      clearTimeout(timer);
-      controller.abort();
-    };
-  }, [cardPage, cardQuery, cardsRetry]);
+  function chooseStyle(next: LoungeStyle) {
+    if (next === 'binder' && !subscriber) {
+      setLocked(true);
+      return;
+    }
+    setLocked(false);
+    setStyle(next);
+    if (next === 'plain') setSelected((cards) => cards.slice(0, LOUNGE_LIMITS.postCards));
+  }
 
-  const isSelected = (owned: OwnedCard) => selected.some((copy) => copy.id === owned.id);
-  // Screen padding, panel padding and borders, then two gaps between three cards.
-  const pickWidth = Math.floor((width - 2 * 12 - 2 * 16 - 2 - 2 * 10) / 3);
+  const ready = !posting.busy && accepted && Boolean(title.trim()) && Boolean(body.trim());
+  const submit = (draft: boolean) =>
+    void posting.run('/api/v1/lounge/', 'POST', {
+      title,
+      body,
+      topic,
+      style,
+      draft,
+      card_ids: selected.map((card) => card.id),
+      rules_accepted: accepted,
+    });
 
   return (
     <ScrollView
@@ -103,22 +83,14 @@ export default function StartDiscussion() {
       <View style={styles.panel}>
         <Text style={styles.label}>Topic</Text>
         <View style={styles.topics} accessibilityRole="radiogroup">
-          {LOUNGE_TOPICS.map((item) => {
-            const active = topic === item.id;
-            return (
-              <Pressable
-                key={item.id}
-                accessibilityRole="radio"
-                accessibilityState={{ selected: active }}
-                onPress={() => setTopic(item.id)}
-                style={[styles.topic, active && styles.topicActive]}
-              >
-                <Text style={[styles.topicText, active && styles.topicTextActive]}>
-                  {item.label}
-                </Text>
-              </Pressable>
-            );
-          })}
+          {LOUNGE_TOPICS.map((item) => (
+            <Chip
+              key={item.id}
+              label={item.label}
+              active={topic === item.id}
+              onPress={() => setTopic(item.id)}
+            />
+          ))}
         </View>
         <Text style={styles.label}>Title</Text>
         <Input accessibilityLabel="Title" maxLength={120} value={title} onChangeText={setTitle} />
@@ -135,112 +107,26 @@ export default function StartDiscussion() {
 
       <View style={styles.panel}>
         <Text style={styles.label}>
-          Cards <Text style={styles.hint}>(optional, up to {maxCards})</Text>
+          Cards <Text style={styles.hint}>(optional)</Text>
         </Text>
-        <FilterField
-          value={cardQuery}
-          onChange={(value) => {
-            setCardQuery(value);
-            setCardPage(1);
-          }}
-          label="Find a card in your collection"
-          placeholder="Find a card or set"
+        <Segmented
+          label="Card layout"
+          options={[
+            { value: 'plain', label: 'Cards' },
+            {
+              value: 'binder',
+              label: subscriber || !membership.enabled ? 'Binder' : 'Binder (supporters)',
+            },
+          ]}
+          value={style}
+          onChange={chooseStyle}
         />
-        <ErrorText>{cardsError}</ErrorText>
-        {cardsError ? (
-          <Button
-            kind="secondary"
-            title="Try again"
-            onPress={() => setCardsRetry((value) => value + 1)}
-          />
-        ) : !cardsLoading && !cards.length ? (
-          <Muted>
-            {cardQuery
-              ? 'No cards match that search.'
-              : 'Open a pack to start your collection, or post without a card.'}
-          </Muted>
-        ) : null}
-        <View style={styles.picker}>
-          {cards.map((owned) => {
-            const on = isSelected(owned);
-            const full = !on && selected.length >= maxCards;
-            return (
-              <Pressable
-                key={owned.id}
-                accessibilityRole="checkbox"
-                accessibilityLabel={`${owned.card.title}, ${owned.set_title}`}
-                accessibilityState={{ checked: on, disabled: full }}
-                disabled={full}
-                onPress={() =>
-                  setSelected((values) =>
-                    on ? values.filter((copy) => copy.id !== owned.id) : [...values, owned],
-                  )
-                }
-                style={[styles.pick, { width: pickWidth }, full && { opacity: 0.45 }]}
-              >
-                <View style={[styles.pickCard, on && styles.pickCardOn]}>
-                  <CardPreview
-                    width={pickWidth - 8}
-                    title={owned.card.title}
-                    rarity={owned.card.rarity}
-                    imageUrl={owned.card.image?.url ?? null}
-                    templateKey={owned.card.template_key}
-                    templateConfig={owned.card.template_config}
-                    code={cardCode(
-                      owned.card.printed_set_code,
-                      owned.card.position,
-                      owned.card.set_total,
-                    )}
-                    printedText={owned.card.printed_text}
-                    render={owned.card.render}
-                  />
-                  {on && (
-                    <View style={styles.check}>
-                      <Feather name="check" size={14} color={colors.accentText} />
-                    </View>
-                  )}
-                </View>
-                <Text style={styles.pickTitle} numberOfLines={1}>
-                  {owned.card.title}
-                </Text>
-                <Text style={styles.pickSet} numberOfLines={1}>
-                  {owned.set_title}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
-        {cardsLoading && <Muted>Loading cards…</Muted>}
-        {cardsNext && !cardsLoading && (
-          <Button
-            kind="secondary"
-            title="More cards"
-            onPress={() => setCardPage((value) => value + 1)}
-          />
+        {locked && (
+          <SupporterPrompt>
+            Supporters can fill binder pages with up to {LOUNGE_LIMITS.binderCards} cards.
+          </SupporterPrompt>
         )}
-        {subscriber && selected.length > 1 && (
-          <>
-            <Text style={styles.label}>Card layout</Text>
-            <View style={styles.topics}>
-              {(['plain', 'binder'] as const).map((value) => {
-                const active = style === value;
-                return (
-                  <Pressable
-                    key={value}
-                    accessibilityRole="radio"
-                    accessibilityState={{ selected: active }}
-                    onPress={() => setStyle(value)}
-                    style={[styles.topic, active && styles.topicActive]}
-                  >
-                    <Text style={[styles.topicText, active && styles.topicTextActive]}>
-                      {value === 'plain' ? 'Cards' : 'Binder'}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-          </>
-        )}
+        <CardPicker max={max} selected={selected} onChange={setSelected} />
       </View>
 
       <View style={styles.panel}>
@@ -258,18 +144,17 @@ export default function StartDiscussion() {
         <ErrorText>{posting.error}</ErrorText>
         <Button
           title={posting.busy ? 'Posting…' : 'Post discussion'}
-          disabled={posting.busy || !accepted || !title.trim() || !body.trim()}
-          onPress={() =>
-            void posting.run('/api/v1/lounge/', 'POST', {
-              title,
-              body,
-              topic,
-              style: subscriber ? style : 'plain',
-              card_ids: selected.map((card) => card.id),
-              rules_accepted: accepted,
-            })
-          }
+          disabled={!ready}
+          onPress={() => submit(false)}
         />
+        {subscriber && (
+          <Button
+            kind="secondary"
+            title="Save as draft"
+            disabled={!ready}
+            onPress={() => submit(true)}
+          />
+        )}
       </View>
     </ScrollView>
   );
@@ -289,40 +174,6 @@ const useStyles = createThemedStyles((colors) => ({
   label: { color: colors.text, fontFamily: fonts.medium, fontSize: 15 },
   hint: { color: colors.muted, fontFamily: fonts.body },
   topics: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 4 },
-  topic: {
-    minHeight: 38,
-    justifyContent: 'center',
-    paddingHorizontal: 13,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: colors.bdr2,
-  },
-  topicActive: { borderColor: colors.accent, backgroundColor: colors.accent },
-  topicText: { color: colors.muted, fontFamily: fonts.medium, fontSize: 14 },
-  topicTextActive: { color: colors.accentText },
-  picker: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  pick: { gap: 3 },
-  pickCard: {
-    padding: 2,
-    borderRadius: 7,
-    borderWidth: 2,
-    borderColor: 'transparent',
-    alignItems: 'center',
-  },
-  pickCardOn: { borderColor: colors.accent },
-  check: {
-    position: 'absolute',
-    top: 6,
-    right: 6,
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.accent,
-  },
-  pickTitle: { color: colors.text, fontFamily: fonts.medium, fontSize: 13 },
-  pickSet: { color: colors.muted, fontFamily: fonts.body, fontSize: 12 },
   agree: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   agreeText: { flex: 1, color: colors.text, fontFamily: fonts.body, fontSize: 16 },
 }));

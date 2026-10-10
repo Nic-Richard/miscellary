@@ -178,10 +178,20 @@ export default function CreatorStatsPanel() {
             </details>
           )}
           {!details && (
-            <p className={ui.muted}>
-              Supporters also see activity, collection progress, card likes and tickets earned.{' '}
-              <Link href="/account?section=membership">View membership</Link>.
-            </p>
+            <div className={styles.teaser}>
+              <div className={styles.teaserBars} aria-hidden="true">
+                {[30, 55, 40, 80, 62, 90, 45, 70, 52, 84].map((height, index) => (
+                  <i key={index} style={{ height: `${height}%` }} />
+                ))}
+              </div>
+              <div className={styles.teaserOver}>
+                <b>See who&rsquo;s opening your sets</b>
+                <span>Activity, collection progress, card likes and tickets earned.</span>
+                <Link href="/membership" className={`${ui.btnPrimary} ${ui.btnSmall}`}>
+                  Become a supporter
+                </Link>
+              </div>
+            </div>
           )}
           <p className={styles.note}>
             Counts include your own collecting. Collector totals include closed accounts; set

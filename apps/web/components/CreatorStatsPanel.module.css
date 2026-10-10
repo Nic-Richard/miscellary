@@ -81,3 +81,40 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* Supporter stats, shown blurred with a prompt for everyone else. */
+.teaser {
+  position: relative;
+  overflow: hidden;
+  border-radius: 10px;
+  background: var(--sur2);
+}
+.teaserBars {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 120px;
+  padding: 14px;
+  filter: blur(5px);
+}
+.teaserBars i {
+  flex: 1;
+  border-radius: 3px 3px 0 0;
+  background: var(--accent);
+  opacity: 0.7;
+}
+.teaserOver {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 6px;
+  padding: 12px;
+  background: color-mix(in srgb, var(--sur) 50%, transparent);
+  text-align: center;
+}
+.teaserOver span {
+  color: var(--muted);
+  font-size: 14px;
+}

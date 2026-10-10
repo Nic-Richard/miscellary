@@ -145,6 +145,7 @@ function Surface({ mode, data }: Props) {
           slots={data.slots as (ShowcaseSlot | null)[]}
           colour={data.colour as string}
           mine={Boolean(data.mine)}
+          capacity={(data.slots as unknown[]).length}
           onInspect={data.editing ? undefined : (owned) => send('inspect', owned.id)}
           onPick={data.editing ? (position) => send('pick', position) : undefined}
           onRemove={data.editing ? (position) => send('remove', position) : undefined}
@@ -160,6 +161,7 @@ function Surface({ mode, data }: Props) {
         title={String(data.title ?? '')}
         colour={data.colour as string}
         mine={Boolean(data.mine)}
+        capacity={(data.slots as unknown[]).length}
         open
         onPick={editing ? (position) => send('pick', position) : undefined}
         onRemove={editing ? (position) => send('remove', position) : undefined}

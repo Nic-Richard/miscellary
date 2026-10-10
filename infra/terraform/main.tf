@@ -609,6 +609,7 @@ resource "aws_ecs_task_definition" "api" {
       { name = "AWS_S3_REGION", value = var.aws_region },
       { name = "AWS_STORAGE_BUCKET_NAME", value = aws_s3_bucket.media.id },
       { name = "MEDIA_PUBLIC_URL", value = local.media_url },
+      { name = "LOUNGE_ENABLED", value = tostring(var.lounge_enabled) },
       { name = "WEB_CONCURRENCY", value = "2" },
       { name = "WEB_TIMEOUT", value = "30" }
     ]

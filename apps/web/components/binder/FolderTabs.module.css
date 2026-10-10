@@ -72,7 +72,7 @@
   border-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='48'><path d='M0.5 48 L17 8 Q20 1 28 1 H172 Q180 1 183 8 L199.5 48' fill='%23f9f4ea' stroke='%2364b0a8'/></svg>")
     0 34 0 34 fill / 0 34px 0 34px stretch;
   color: var(--accent-ink);
-  filter: drop-shadow(0 -2px 2px rgba(58, 42, 20, 0.08));
+  filter: drop-shadow(0 -2px 2px rgba(var(--shadow-rgb), calc(0.08 * var(--shadow-boost))));
 }
 .active b {
   border-color: #7ab8b1;

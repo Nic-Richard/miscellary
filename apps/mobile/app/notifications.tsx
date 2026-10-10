@@ -14,6 +14,8 @@ const ICONS: Record<Notification['kind'], React.ComponentProps<typeof Feather>['
   set_comment: 'message-square',
   comment_reply: 'corner-up-left',
   follow: 'user-plus',
+  lounge_reply: 'corner-down-right',
+  lounge_mention: 'at-sign',
 };
 
 function when(iso: string): string {
@@ -44,6 +46,18 @@ function describe(n: Notification): { text: string; go: (() => void) | null } {
         go: () =>
           router.push({ pathname: '/users/[username]', params: { username: n.actor.username } }),
       };
+    case 'lounge_reply':
+    case 'lounge_mention': {
+      const where = n.lounge_post_title ? `“${n.lounge_post_title}”` : null;
+      const id = n.lounge_post_id;
+      return {
+        text:
+          n.kind === 'lounge_reply'
+            ? `replied in ${where ?? 'a discussion'}`
+            : `mentioned you in ${where ?? 'the Lounge'}`,
+        go: id ? () => router.push(`/lounge/${id}`) : null,
+      };
+    }
   }
 }
 
@@ -77,9 +91,9 @@ function Row({ notification }: { notification: Notification }) {
           <Text style={styles.actor}>{actor.display_name || `@${actor.username}`}</Text>
           <Text style={styles.text}> {text}</Text>
         </View>
-        {notification.comment_body ? (
+        {notification.comment_body || notification.lounge_reply_body ? (
           <Text numberOfLines={2} style={styles.quote}>
-            “{notification.comment_body}”
+            “{notification.comment_body || notification.lounge_reply_body}”
           </Text>
         ) : null}
         <Text style={styles.when}>{when(notification.created_at)}</Text>
@@ -103,6 +117,8 @@ const FILTERS: { value: 'all' | Notification['kind']; label: string }[] = [
   { value: 'set_comment', label: 'Comments' },
   { value: 'comment_reply', label: 'Replies' },
   { value: 'follow', label: 'Followers' },
+  { value: 'lounge_reply', label: 'Lounge' },
+  { value: 'lounge_mention', label: 'Mentions' },
 ];
 
 function Notifications() {
@@ -224,8 +240,8 @@ function Notifications() {
           <Feather name="bell" size={28} color={colors.cloth} />
           <Text style={styles.emptyTitle}>Nothing yet</Text>
           <Muted>
-            You will hear when someone likes or comments on a set of yours, replies to you, or
-            follows you — and nothing else.
+            You will hear when someone likes or comments on a set of yours, follows you, or replies
+            to or mentions you.
           </Muted>
         </View>
       ) : (

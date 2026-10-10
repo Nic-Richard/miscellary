@@ -10,15 +10,16 @@ import {
   Text,
   View,
 } from 'react-native';
-import type { LoungeFeed as Feed, LoungePost, LoungeTopic } from '@miscellary/shared';
+import type { LoungeFeed as Feed, LoungePost, LoungeTopic, SavedFolder } from '@miscellary/shared';
 import { LOUNGE_TOPICS, cardCode, loungeTopicLabel, timeAgo } from '@miscellary/shared';
 import Avatar from '@/components/Avatar';
 import CardPreview from '@/components/CardPreview';
 import FilterField from '@/components/FilterField';
 import MoreButton from '@/components/MoreButton';
-import { Button, ErrorText, Muted } from '@/components/ui';
+import { Button, Chip, ErrorText, Muted } from '@/components/ui';
 import { apiFetch } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
+import { listFolders } from '@/lib/lounge';
 import { RETURN_PARAM } from '@/lib/returnTo';
 import { createThemedStyles, fonts, useColors } from '@/lib/theme';
 import { lounge } from './store';
@@ -37,6 +38,8 @@ const WINDOWS = [
 ] as const;
 const TABS = [{ id: '' as const, label: 'All topics' }, ...LOUNGE_TOPICS];
 const NEW_CHECK_MS = 45_000;
+
+type FeedView = 'all' | 'saved' | 'drafts';
 
 export default function LoungeFeed() {
   const colors = useColors();
@@ -58,6 +61,12 @@ export default function LoungeFeed() {
   const [version, setVersion] = useState(0);
   const [since, setSince] = useState<string | null>(null);
   const [newCount, setNewCount] = useState(0);
+  const [view, setView] = useState<FeedView>('all');
+  const [folder, setFolder] = useState('');
+  const [folders, setFolders] = useState<SavedFolder[]>([]);
+  const [subscriber, setSubscriber] = useState(Boolean(lounge.subscriber));
+  const viewRef = useRef(view);
+  viewRef.current = view;
 
   useEffect(() => {
     const next = query.trim();
@@ -75,12 +84,19 @@ export default function LoungeFeed() {
     const params = new URLSearchParams({ sort, window: timeWindow, page: String(page) });
     if (topic) params.set('topic', topic);
     if (search) params.set('q', search);
+    if (view === 'saved') params.set('saved', '1');
+    if (view === 'saved' && folder) params.set('folder', folder);
+    const url =
+      view === 'drafts' ? `/api/v1/me/lounge/drafts/?page=${page}` : `/api/v1/lounge/?${params}`;
     setLoading(true);
-    void apiFetch<Feed>(`/api/v1/lounge/?${params}`, { signal: controller.signal })
+    void apiFetch<Feed>(url, { signal: controller.signal })
       .then((data) => {
         if (controller.signal.aborted) return;
-        setEnabled(data.enabled);
-        lounge.subscriber = data.subscriber;
+        if (view === 'all') {
+          setEnabled(data.enabled);
+          lounge.subscriber = data.subscriber;
+          setSubscriber(data.subscriber);
+        }
         setHasNext(Boolean(data.next));
         setError(null);
         if (page === 1) {
@@ -106,11 +122,18 @@ export default function LoungeFeed() {
         }
       });
     return () => controller.abort();
-  }, [topic, sort, timeWindow, search, page, version, user?.id]);
+  }, [topic, sort, timeWindow, search, page, version, view, folder, user?.id]);
+
+  useEffect(() => {
+    if (view === 'saved' && subscriber)
+      void listFolders()
+        .then(setFolders)
+        .catch(() => undefined);
+  }, [view, subscriber]);
 
   useFocusEffect(
     useCallback(() => {
-      if (!since || search || !enabled) return;
+      if (!since || search || !enabled || view !== 'all') return;
       const controller = new AbortController();
       const check = () => {
         if (AppState.currentState !== 'active') return;
@@ -129,7 +152,7 @@ export default function LoungeFeed() {
         clearInterval(timer);
         controller.abort();
       };
-    }, [since, search, enabled, topic]),
+    }, [since, search, enabled, topic, view]),
   );
 
   useEffect(
@@ -137,17 +160,33 @@ export default function LoungeFeed() {
       lounge.listen((event) => {
         if (event.type === 'patch')
           setRows((current) =>
-            current.map((row) => (row.id === event.id ? { ...row, ...event.patch } : row)),
+            current
+              .map((row) => (row.id === event.id ? { ...row, ...event.patch } : row))
+              // Unsaving from the saved view takes the discussion out of it.
+              .filter((row) => viewRef.current !== 'saved' || row.saved),
           );
         else if (event.type === 'hide')
           setRows((current) => current.filter((row) => row.author?.username !== event.username));
-        else {
+        else if (viewRef.current === 'drafts')
+          setRows((current) =>
+            event.post.draft
+              ? [event.post, ...current.filter((row) => row.id !== event.post.id)]
+              : current.filter((row) => row.id !== event.post.id),
+          );
+        else if (viewRef.current === 'all' && !event.post.draft) {
           setRows((current) => [event.post, ...current.filter((row) => row.id !== event.post.id)]);
           list.current?.scrollToOffset({ offset: 0, animated: false });
         }
       }),
     [],
   );
+
+  function showView(next: FeedView) {
+    setView(next);
+    setFolder('');
+    setRows([]);
+    setPage(1);
+  }
 
   const reload = useCallback(() => {
     setPage(1);
@@ -159,99 +198,142 @@ export default function LoungeFeed() {
     else router.push(topic ? `/lounge/new?topic=${topic}` : '/lounge/new');
   }
 
-  const header = (
-    <View style={styles.header}>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.tabs}
-        accessibilityRole="tablist"
-      >
-        {TABS.map((item) => {
-          const active = topic === item.id;
-          return (
-            <Pressable
-              key={item.id}
-              accessibilityRole="tab"
-              accessibilityState={{ selected: active }}
-              onPress={() => {
-                setTopic(item.id);
-                setPage(1);
-              }}
-              style={[styles.tab, active && styles.tabActive]}
-            >
-              <Text style={[styles.tabText, active && styles.tabTextActive]}>{item.label}</Text>
-            </Pressable>
-          );
-        })}
-      </ScrollView>
-      <View style={styles.tools}>
-        <View style={styles.searchRow}>
-          <FilterField
-            value={query}
-            onChange={setQuery}
-            label="Search the Lounge"
-            placeholder={topic ? `Search ${loungeTopicLabel(topic)}` : 'Search discussions'}
-            style={{ flex: 1 }}
-          />
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Start a discussion"
-            onPress={startDiscussion}
-            style={({ pressed }) => [styles.compose, pressed && { opacity: 0.8 }]}
-          >
-            <Feather name="edit-3" size={20} color={colors.accentText} />
-          </Pressable>
-        </View>
-        <View style={styles.sorts} accessibilityRole="radiogroup">
-          {SORTS.map((item) => {
-            const active = sort === item.id;
-            return (
-              <Pressable
-                key={item.id}
-                accessibilityRole="radio"
-                accessibilityState={{ selected: active }}
-                onPress={() => {
-                  setSort(item.id);
-                  setPage(1);
-                }}
-                style={[styles.sort, active && styles.sortActive]}
-              >
-                <Text style={[styles.sortText, active && styles.sortTextActive]}>{item.label}</Text>
-              </Pressable>
-            );
-          })}
-        </View>
-        {sort === 'top' && (
+  const savedFilters = [
+    { value: '', label: 'Everything saved' },
+    { value: 'none', label: 'Not in a folder' },
+    ...folders.map((item) => ({ value: String(item.id), label: item.name })),
+  ];
+
+  const header =
+    view !== 'all' ? (
+      <View style={[styles.header, styles.tools]}>
+        <Pressable
+          accessibilityRole="button"
+          hitSlop={8}
+          onPress={() => showView('all')}
+          style={styles.back}
+        >
+          <Feather name="arrow-left" size={16} color={colors.pageAccent} />
+          <Text style={styles.headerLink}>All discussions</Text>
+        </Pressable>
+        <Text accessibilityRole="header" style={styles.viewTitle}>
+          {view === 'saved' ? 'Saved discussions' : 'Your drafts'}
+        </Text>
+        {view === 'saved' && folders.length > 0 && (
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.windows}
           >
-            {WINDOWS.map(([value, label]) => {
-              const active = timeWindow === value;
+            {savedFilters.map((item) => (
+              <Chip
+                key={item.value}
+                label={item.label}
+                active={folder === item.value}
+                onPress={() => {
+                  setFolder(item.value);
+                  setPage(1);
+                }}
+              />
+            ))}
+          </ScrollView>
+        )}
+      </View>
+    ) : (
+      <View style={styles.header}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.tabs}
+          accessibilityRole="tablist"
+        >
+          {TABS.map((item) => {
+            const active = topic === item.id;
+            return (
+              <Pressable
+                key={item.id}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: active }}
+                onPress={() => {
+                  setTopic(item.id);
+                  setPage(1);
+                }}
+                style={[styles.tab, active && styles.tabActive]}
+              >
+                <Text style={[styles.tabText, active && styles.tabTextActive]}>{item.label}</Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+        <View style={styles.tools}>
+          <View style={styles.searchRow}>
+            <FilterField
+              value={query}
+              onChange={setQuery}
+              label="Search the Lounge"
+              placeholder={topic ? `Search ${loungeTopicLabel(topic)}` : 'Search discussions'}
+              style={{ flex: 1 }}
+            />
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Start a discussion"
+              onPress={startDiscussion}
+              style={({ pressed }) => [styles.compose, pressed && { opacity: 0.8 }]}
+            >
+              <Feather name="edit-3" size={20} color={colors.accentText} />
+            </Pressable>
+          </View>
+          <View style={styles.sorts} accessibilityRole="radiogroup">
+            {SORTS.map((item) => {
+              const active = sort === item.id;
               return (
                 <Pressable
-                  key={value}
+                  key={item.id}
                   accessibilityRole="radio"
                   accessibilityState={{ selected: active }}
                   onPress={() => {
-                    setTimeWindow(value);
+                    setSort(item.id);
                     setPage(1);
                   }}
-                  style={[styles.window, active && styles.windowActive]}
+                  style={[styles.sort, active && styles.sortActive]}
                 >
-                  <Text style={[styles.windowText, active && styles.windowTextActive]}>
-                    {label}
+                  <Text style={[styles.sortText, active && styles.sortTextActive]}>
+                    {item.label}
                   </Text>
                 </Pressable>
               );
             })}
-          </ScrollView>
-        )}
+          </View>
+          {sort === 'top' && (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.windows}
+            >
+              {WINDOWS.map(([value, label]) => {
+                const active = timeWindow === value;
+                return (
+                  <Pressable
+                    key={value}
+                    accessibilityRole="radio"
+                    accessibilityState={{ selected: active }}
+                    onPress={() => {
+                      setTimeWindow(value);
+                      setPage(1);
+                    }}
+                    style={[styles.window, active && styles.windowActive]}
+                  >
+                    <Text style={[styles.windowText, active && styles.windowTextActive]}>
+                      {label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          )}
+        </View>
       </View>
-    </View>
-  );
+    );
 
   const empty = error ? (
     <View style={styles.note}>
@@ -262,11 +344,15 @@ export default function LoungeFeed() {
     <Muted style={styles.noteText}>Loading discussions…</Muted>
   ) : (
     <Muted style={styles.noteText}>
-      {search
-        ? 'No discussions match that search.'
-        : topic
-          ? `Nothing in ${loungeTopicLabel(topic)} yet. Start the first discussion.`
-          : 'No discussions yet. Start the first one.'}
+      {view === 'saved'
+        ? 'Nothing saved yet. Use Save on a discussion to keep it here.'
+        : view === 'drafts'
+          ? 'No drafts. Choose Save as draft when starting a discussion.'
+          : search
+            ? 'No discussions match that search.'
+            : topic
+              ? `Nothing in ${loungeTopicLabel(topic)} yet. Start the first discussion.`
+              : 'No discussions yet. Start the first one.'}
     </Muted>
   );
 
@@ -281,9 +367,23 @@ export default function LoungeFeed() {
                 title="Lounge"
                 items={[
                   {
+                    label: 'Saved discussions',
+                    icon: 'bookmark',
+                    onSelect: () => showView('saved'),
+                  },
+                  ...(subscriber
+                    ? [
+                        {
+                          label: 'Drafts',
+                          icon: 'file-text' as const,
+                          onSelect: () => showView('drafts'),
+                        },
+                      ]
+                    : []),
+                  {
                     label: 'Membership',
                     icon: 'star',
-                    onSelect: () => router.push('/settings'),
+                    onSelect: () => router.push('/membership'),
                   },
                   {
                     label: 'Blocked collectors',
@@ -312,7 +412,7 @@ export default function LoungeFeed() {
           ref={list}
           data={rows}
           keyExtractor={(post) => post.id}
-          renderItem={({ item }) => <Row post={item} showTopic={!topic} />}
+          renderItem={({ item }) => <Row post={item} showTopic={!topic || view !== 'all'} />}
           ListHeaderComponent={header}
           ListEmptyComponent={empty}
           ListFooterComponent={
@@ -353,7 +453,7 @@ export default function LoungeFeed() {
           contentContainerStyle={styles.content}
         />
       )}
-      {newCount > 0 && (
+      {newCount > 0 && view === 'all' && (
         <View style={styles.pillWrap} pointerEvents="box-none">
           <Pressable
             accessibilityRole="button"
@@ -378,21 +478,31 @@ function Row({ post, showTopic }: { post: LoungePost; showTopic: boolean }) {
   const colors = useColors();
   const styles = useStyles();
   const name = post.author?.display_name || post.author?.username || 'Deleted collector';
+  const replies = `${post.reply_count} ${post.reply_count === 1 ? 'reply' : 'replies'}`;
   return (
     <Pressable
       accessibilityRole="link"
-      accessibilityLabel={`${post.title}, by ${name}, ${post.reply_count} ${post.reply_count === 1 ? 'reply' : 'replies'}`}
+      accessibilityLabel={`${post.title}, by ${name}, ${post.score} votes, ${replies}`}
       onPress={() => router.push(`/lounge/${post.id}`)}
       style={({ pressed }) => [styles.row, pressed && { backgroundColor: colors.sur2 }]}
     >
-      <Fan post={post} />
+      <View style={styles.stub}>
+        <Text style={styles.stubScore}>{post.score}</Text>
+        <Text style={styles.stubLabel}>{Math.abs(post.score) === 1 ? 'VOTE' : 'VOTES'}</Text>
+        <Perforation />
+      </View>
       <View style={styles.rowMain}>
         <Text style={styles.rowTitle} numberOfLines={2}>
           {post.title}
         </Text>
+        {post.body ? (
+          <Text style={styles.excerpt} numberOfLines={1}>
+            {post.body}
+          </Text>
+        ) : null}
         <View style={styles.meta}>
           <View style={styles.who}>
-            <Avatar person={post.author} supporter={post.author_badge} size={18} />
+            <Avatar person={post.author} badge={post.author_badge} size={18} />
             <Text style={styles.metaText} numberOfLines={1}>
               {name}
             </Text>
@@ -403,22 +513,35 @@ function Row({ post, showTopic }: { post: LoungePost; showTopic: boolean }) {
             <Text style={styles.metaText}>{post.reply_count}</Text>
           </View>
           <Text style={styles.metaText}>{timeAgo(post.created_at)}</Text>
+          {post.unread && <Text style={styles.tag}>New replies</Text>}
+          {post.draft && <Text style={styles.tag}>Draft</Text>}
         </View>
       </View>
+      <Fan post={post} />
     </Pressable>
   );
 }
 
+// A dashed tear line with half-circle cuts, like a ticket stub.
+function Perforation() {
+  const styles = useStyles();
+  return (
+    <>
+      <View style={styles.perforation}>
+        {Array.from({ length: 9 }, (_, index) => (
+          <View key={index} style={styles.dash} />
+        ))}
+      </View>
+      <View style={[styles.notch, { top: -7 }]} />
+      <View style={[styles.notch, { bottom: -7 }]} />
+    </>
+  );
+}
+
 function Fan({ post }: { post: LoungePost }) {
-  const colors = useColors();
   const styles = useStyles();
   const cards = post.cards.filter((card) => card !== null).slice(0, 3);
-  if (!cards.length)
-    return (
-      <View style={styles.fanText}>
-        <Feather name="message-square" size={18} color={colors.faint} />
-      </View>
-    );
+  if (!cards.length) return null;
   const spots =
     cards.length === 1
       ? [{ left: 10, rotate: '0deg' }]
@@ -514,24 +637,67 @@ const useStyles = createThemedStyles((colors) => ({
   windowTextActive: { color: colors.accentText },
   row: {
     flexDirection: 'row',
-    gap: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    alignItems: 'stretch',
     marginHorizontal: 12,
-    marginBottom: 6,
+    marginBottom: 8,
+    paddingRight: 10,
     borderRadius: 10,
+    overflow: 'hidden',
     backgroundColor: colors.sur,
     borderWidth: 1,
     borderColor: colors.bdr,
+    borderBottomWidth: 2,
   },
-  rowMain: { flex: 1, gap: 6, justifyContent: 'center' },
+  stub: {
+    width: 52,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    backgroundColor: colors.sur2,
+  },
+  stubScore: { color: colors.accentInk, fontFamily: fonts.display, fontSize: 24, lineHeight: 26 },
+  stubLabel: { color: colors.faint, fontFamily: fonts.medium, fontSize: 9, letterSpacing: 1 },
+  perforation: {
+    position: 'absolute',
+    right: -1,
+    top: 8,
+    bottom: 8,
+    width: 2,
+    justifyContent: 'space-between',
+  },
+  dash: { width: 2, height: 4, borderRadius: 1, backgroundColor: colors.bdr2 },
+  notch: {
+    position: 'absolute',
+    right: -7,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: colors.bg,
+    borderWidth: 1,
+    borderColor: colors.bdr,
+  },
+  rowMain: { flex: 1, gap: 4, justifyContent: 'center', paddingVertical: 10, paddingLeft: 14 },
+  excerpt: { color: colors.muted, fontFamily: fonts.body, fontSize: 14 },
+  tag: {
+    color: colors.accentInk,
+    fontFamily: fonts.medium,
+    fontSize: 12,
+    paddingHorizontal: 7,
+    paddingVertical: 1,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: colors.accent,
+    overflow: 'hidden',
+  },
+  back: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start' },
+  viewTitle: { color: colors.pageText, fontFamily: fonts.display, fontSize: 28 },
   rowTitle: { color: colors.text, fontFamily: fonts.medium, fontSize: 17, lineHeight: 21 },
   meta: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 12, rowGap: 4 },
   who: { flexDirection: 'row', alignItems: 'center', gap: 6, maxWidth: '60%' },
   metaText: { color: colors.muted, fontFamily: fonts.body, fontSize: 13 },
   topic: { color: colors.accentInk, fontFamily: fonts.medium, fontSize: 13 },
   count: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  fan: { width: 56, height: 56 },
+  fan: { width: 56, height: 56, alignSelf: 'center' },
   fanCard: {
     position: 'absolute',
     top: 3,

@@ -2,6 +2,8 @@ from rest_framework import serializers
 
 from common.monetization import CREDIT_BUNDLES
 
+from .models import MembershipSettings
+
 
 class CheckoutSerializer(serializers.Serializer):
     product = serializers.ChoiceField(choices=[*CREDIT_BUNDLES, "subscription"])
@@ -9,7 +11,13 @@ class CheckoutSerializer(serializers.Serializer):
 
 
 class MembershipSettingsSerializer(serializers.Serializer):
-    show_badge = serializers.BooleanField()
+    show_badge = serializers.BooleanField(required=False)
+    badge_colour = serializers.ChoiceField(
+        choices=MembershipSettings.BadgeColour.choices, required=False
+    )
+    badge_finish = serializers.ChoiceField(
+        choices=MembershipSettings.BadgeFinish.choices, required=False
+    )
 
 
 class PlayPurchaseSerializer(serializers.Serializer):

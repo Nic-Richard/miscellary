@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import type { Membership, OwnedCard, ShowcaseSlot } from '@miscellary/shared';
-import { cardCode, SHOWCASE_SLOTS } from '@miscellary/shared';
+import { cardCode, SHOWCASE_SLOTS, SUPPORTER_SHOWCASE_SLOTS } from '@miscellary/shared';
 import PageHeader from '@/components/PageHeader';
 import AccountSecurity from '@/components/AccountSecurity';
 import MembershipPanel from '@/components/MembershipPanel';
@@ -12,11 +12,14 @@ import BinderColourPicker from '@/components/BinderColourPicker';
 import SearchField from '@/components/SearchField';
 import CardPreview from '@/components/CardPreview';
 import ProfileBinder from '@/components/ProfileBinder';
+import FeaturedCardPicker from '@/components/FeaturedCardPicker';
+import SupporterPrompt from '@/components/SupporterPrompt';
 import { OwnedCardInspector } from '@/components/CardInspector';
 import ui from '@/components/ui.module.css';
 import { updateProfile } from '@/lib/account';
 import { apiFetch } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
+import { useMembership } from '@/lib/membership';
 import { useRequireAccount } from '@/lib/requireAccount';
 import { listAllMyCards } from '@/lib/packs';
 import { getShowcase, saveShowcase } from '@/lib/social';
@@ -60,6 +63,8 @@ export default function AccountPage() {
   const [saved, setSaved] = useState(false);
   const [cards, setCards] = useState<OwnedCard[]>([]);
   const [inspect, setInspect] = useState<OwnedCard | null>(null);
+  const membership = useMembership();
+  const capacity = membership.supporter ? SUPPORTER_SHOWCASE_SLOTS : SHOWCASE_SLOTS;
   const [slots, setSlots] = useState<(string | null)[]>(Array(SHOWCASE_SLOTS).fill(null));
   // Use binder payload cards so pinned copies beyond page one stay resolvable.
   const [pinned, setPinned] = useState<Map<string, OwnedCard>>(new Map());
@@ -82,7 +87,7 @@ export default function AccountPage() {
     Promise.all([listAllMyCards(), getShowcase()])
       .then(([owned, showcase]) => {
         setCards(owned);
-        const next: (string | null)[] = Array(SHOWCASE_SLOTS).fill(null);
+        const next: (string | null)[] = Array(capacity).fill(null);
         const held = new Map<string, OwnedCard>();
         for (const s of showcase as ShowcaseSlot[]) {
           next[s.position - 1] = s.owned_card.id;
@@ -92,7 +97,7 @@ export default function AccountPage() {
         setSlots(next);
       })
       .catch((e: Error) => setError(e.message));
-  }, [userId]);
+  }, [userId, capacity]);
 
   useEffect(() => {
     if (picking === null) return;
@@ -194,65 +199,74 @@ export default function AccountPage() {
       </div>
 
       {section === 'profile' ? (
-        <form className={`${ui.panel} ${styles.form}`} onSubmit={(e) => void saveProfile(e)}>
-          <label className={ui.label} htmlFor="display">
-            Display name
-          </label>
-          <input
-            id="display"
-            className={ui.input}
-            value={displayName}
-            onChange={(e) => {
-              setDisplayName(e.target.value);
-              setSaved(false);
-            }}
-            maxLength={40}
-          />
-          <label className={ui.label} htmlFor="bio">
-            Bio
-          </label>
-          <textarea
-            id="bio"
-            className={ui.input}
-            rows={3}
-            value={bio}
-            onChange={(e) => {
-              setBio(e.target.value);
-              setSaved(false);
-            }}
-            maxLength={280}
-          />
-          <label className={ui.label} htmlFor="case">
-            Binder caption
-          </label>
-          <input
-            id="case"
-            className={ui.input}
-            value={showcaseTitle}
-            onChange={(e) => {
-              setShowcaseTitle(e.target.value);
-              setSaved(false);
-            }}
-            maxLength={60}
-            placeholder="The pride of the collection"
-          />
-          <div className={styles.row}>
-            <button className={ui.btnPrimary} type="submit">
-              Save profile
-            </button>
-            {saved ? <span className={styles.saved}>Saved</span> : null}
+        <>
+          <form className={`${ui.panel} ${styles.form}`} onSubmit={(e) => void saveProfile(e)}>
+            <label className={ui.label} htmlFor="display">
+              Display name
+            </label>
+            <input
+              id="display"
+              className={ui.input}
+              value={displayName}
+              onChange={(e) => {
+                setDisplayName(e.target.value);
+                setSaved(false);
+              }}
+              maxLength={40}
+            />
+            <label className={ui.label} htmlFor="bio">
+              Bio
+            </label>
+            <textarea
+              id="bio"
+              className={ui.input}
+              rows={3}
+              value={bio}
+              onChange={(e) => {
+                setBio(e.target.value);
+                setSaved(false);
+              }}
+              maxLength={280}
+            />
+            <label className={ui.label} htmlFor="case">
+              Binder caption
+            </label>
+            <input
+              id="case"
+              className={ui.input}
+              value={showcaseTitle}
+              onChange={(e) => {
+                setShowcaseTitle(e.target.value);
+                setSaved(false);
+              }}
+              maxLength={60}
+              placeholder="The pride of the collection"
+            />
+            <div className={styles.row}>
+              <button className={ui.btnPrimary} type="submit">
+                Save profile
+              </button>
+              {saved ? <span className={styles.saved}>Saved</span> : null}
+            </div>
+          </form>
+          <div className={`${ui.panel} ${styles.form}`}>
+            <FeaturedCardPicker />
           </div>
-        </form>
+        </>
       ) : null}
 
       {section === 'binder' ? (
         <>
           <h2 className={styles.h2}>Your binder</h2>
           <p className={styles.muted}>
-            Ten pages with {SHOWCASE_SLOTS} sleeves at the top of your profile, for anyone who
+            {capacity / 8} pages with {capacity} sleeves at the top of your profile, for anyone who
             visits. Pin the cards you want shown; a card you trade away leaves its sleeve on its
             own.
           </p>
+          <SupporterPrompt>
+            Supporters get a second binder&rsquo;s worth of sleeves: {SUPPORTER_SHOWCASE_SLOTS} in
+            all.
+          </SupporterPrompt>
           <div className={styles.cover}>
             <span className={ui.label}>Cover</span>
             <BinderColourPicker value={binderColour} onChange={(c) => void pickCover(c)} />
@@ -262,6 +276,7 @@ export default function AccountPage() {
               title={showcaseTitle}
               colour={binderColour}
               mine
+              capacity={capacity}
               onInspect={setInspect}
               onPick={(i) => setPicking(picking === i ? null : i)}
               onRemove={(position) =>

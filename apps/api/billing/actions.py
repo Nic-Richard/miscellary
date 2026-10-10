@@ -236,6 +236,14 @@ def visible_badge(user: User) -> bool:
     )
 
 
+def badge_style(user: User) -> str | None:
+    """The supporter badge as "colour-finish", or None when it isn't shown."""
+    if not visible_badge(user):
+        return None
+    options = MembershipSettings.objects.filter(user=user).first()
+    return f"{options.badge_colour}-{options.badge_finish}" if options else "gold-foil"
+
+
 def monthly_publications(user: User, at: datetime | None = None) -> tuple[int, int, datetime]:
     from cards.models import CardSet
 

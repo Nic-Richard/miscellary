@@ -7,6 +7,7 @@ app_name = "social"
 urlpatterns = [
     path("users/<str:username>/", views.ProfileView.as_view(), name="profile"),
     path("users/<str:username>/follow/", views.FollowView.as_view(), name="follow"),
+    path("users/<str:username>/summary/", views.UserSummaryView.as_view(), name="summary"),
     path(
         "users/<str:username>/<str:direction>/",
         views.FollowListView.as_view(),
@@ -14,6 +15,7 @@ urlpatterns = [
     ),
     path("me/blocks/", views.BlocksView.as_view(), name="blocks"),
     path("me/blocks/<str:username>/", views.BlocksView.as_view(), name="block"),
+    path("me/featured-card/", views.FeaturedCardView.as_view(), name="featured-card"),
     path("me/showcase/", views.ShowcaseView.as_view(), name="showcase"),
     path("me/packs/", views.MyPacksView.as_view(), name="my-packs"),
     path("me/notifications/", views.NotificationsView.as_view(), name="notifications"),

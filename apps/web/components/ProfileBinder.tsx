@@ -13,6 +13,8 @@ import { binderClothStyle } from '@/lib/setIdentity';
 import styles from './ProfileBinder.module.css';
 
 interface ProfileBinderProps {
+  /** Sleeves this binder holds: 40, or 80 for supporters. */
+  capacity?: number;
   slots: (ShowcaseSlot | null)[];
   title?: string;
   colour?: string | undefined;
@@ -124,6 +126,7 @@ export default function ProfileBinder({
   bare,
   fullscreen = false,
   paused = false,
+  capacity = SHOWCASE_SLOTS,
 }: ProfileBinderProps) {
   const [open, setOpen] = useState(startOpen);
   const [ownPage, setPage] = useState(0);
@@ -148,7 +151,7 @@ export default function ProfileBinder({
   }, [slots]);
   const pages = useMemo(
     () =>
-      Array.from({ length: Math.ceil(SHOWCASE_SLOTS / 8) }, (_, pageIndex) => ({
+      Array.from({ length: Math.ceil(capacity / 8) }, (_, pageIndex) => ({
         startIndex: pageIndex * 8,
         slots: Array.from({ length: 8 }, (_, slotIndex) => {
           const position = pageIndex * 8 + slotIndex;
@@ -164,7 +167,7 @@ export default function ProfileBinder({
           ) : null;
         }),
       })),
-    [onInspect, onPick, onRemove, slots],
+    [capacity, onInspect, onPick, onRemove, slots],
   );
 
   function navigate(direction: -1 | 1) {
@@ -213,7 +216,7 @@ export default function ProfileBinder({
         <div className={styles.shutText}>
           <h2 className={styles.caption}>{caption}</h2>
           <p className={styles.shutMeta}>
-            {filled} of {SHOWCASE_SLOTS} sleeves filled
+            {filled} of {capacity} sleeves filled
           </p>
         </div>
         <button
@@ -237,7 +240,7 @@ export default function ProfileBinder({
           <div className={styles.head}>
             <h2 className={styles.caption}>{caption}</h2>
             <span className={styles.count}>
-              {filled} of {SHOWCASE_SLOTS}
+              {filled} of {capacity}
               {startOpen ? null : (
                 <button type="button" className={styles.shutBtn} onClick={() => setOpen(false)}>
                   Close
@@ -249,7 +252,7 @@ export default function ProfileBinder({
           {viewing ? (
             <BinderViewer
               title={caption}
-              subtitle={`${filled} of ${SHOWCASE_SLOTS} sleeves filled`}
+              subtitle={`${filled} of ${capacity} sleeves filled`}
               spread={page}
               spreads={pages.length}
               onTurn={navigate}
@@ -315,7 +318,7 @@ export default function ProfileBinder({
               </li>
               <li className={ui.stat}>
                 <StatIcon name="sleeves" />
-                <b>{SHOWCASE_SLOTS - filled}</b>
+                <b>{capacity - filled}</b>
                 <span>Open sleeves</span>
               </li>
               <li className={ui.stat}>

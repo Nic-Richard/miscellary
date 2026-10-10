@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import type { Membership } from '@miscellary/shared';
 import { starAmount } from '@miscellary/shared';
+import type { BadgeColour, BadgeFinish } from '@miscellary/shared';
+import BadgePicker from './BadgePicker';
 import { ApiRequestError, apiFetch } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import ui from './ui.module.css';
@@ -74,7 +76,7 @@ export default function MembershipPanel() {
     }
   }
 
-  async function toggleBadge() {
+  async function saveSettings(body: Record<string, unknown>) {
     if (
       !membership ||
       busy !== null ||
@@ -88,7 +90,7 @@ export default function MembershipPanel() {
     try {
       const updated = await apiFetch<Membership>('/api/v1/me/membership/', {
         method: 'PATCH',
-        body: { show_badge: membership.show_badge === false },
+        body,
         signal: controller.signal,
       });
       if (!controller.signal.aborted) setMembership(updated);
@@ -168,10 +170,22 @@ export default function MembershipPanel() {
       link: ['/studio', 'Studio'],
     },
     {
-      count: '6',
-      title: 'Cards per Lounge post',
-      note: 'Instead of 1',
+      count: '40',
+      title: 'Cards in a Lounge binder post',
+      note: 'Instead of 6',
       link: ['/lounge', 'Lounge'],
+    },
+    {
+      count: '80',
+      title: 'Sleeves in your profile binder',
+      note: 'Instead of 40',
+      link: ['/account?section=binder', 'Binder'],
+    },
+    {
+      count: '★',
+      title: 'Featured card and saved folders',
+      note: 'Plus drafts in the Lounge',
+      link: ['/account', 'Profile'],
     },
   ];
   const renewal = sub.paid_through
@@ -263,7 +277,9 @@ export default function MembershipPanel() {
                     role="switch"
                     checked={membership.show_badge !== false}
                     disabled={busy !== null}
-                    onChange={() => void toggleBadge()}
+                    onChange={() =>
+                      void saveSettings({ show_badge: membership.show_badge === false })
+                    }
                     aria-label="Show supporter badge"
                   />
                   <span aria-hidden="true" />
@@ -271,6 +287,15 @@ export default function MembershipPanel() {
               )}
             </li>
           </ul>
+          {sub.active && membership.show_badge !== false && user && (
+            <BadgePicker
+              person={{ ...user.profile, deleted: false }}
+              colour={(membership.badge_colour ?? 'gold') as BadgeColour}
+              finish={(membership.badge_finish ?? 'foil') as BadgeFinish}
+              disabled={busy !== null}
+              onChange={(change) => void saveSettings(change)}
+            />
+          )}
           <div className={styles.actions}>
             {!sub.active && !regionBlocked && (sub.checkout_available || membership.preview) && (
               <button

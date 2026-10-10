@@ -14,7 +14,7 @@
   border: 1px solid rgba(255, 255, 255, 0.95);
   box-shadow:
     0 0 0 1px rgba(120, 105, 80, 0.18),
-    0 10px 24px rgba(58, 42, 20, 0.16);
+    0 10px 24px rgba(var(--shadow-rgb), calc(0.16 * var(--shadow-boost)));
   transform: rotate(-1.5deg);
   transform-origin: 50% 90%;
 }
@@ -28,7 +28,7 @@
   background-blend-mode: multiply;
   border: 1px solid #cdbfa6;
   border-radius: 6px;
-  box-shadow: 0 2px 4px rgba(58, 42, 20, 0.18);
+  box-shadow: 0 2px 4px rgba(var(--shadow-rgb), calc(0.18 * var(--shadow-boost)));
 }
 .card img {
   display: block;

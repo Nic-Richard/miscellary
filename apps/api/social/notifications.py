@@ -3,8 +3,14 @@ from django.db import IntegrityError, transaction
 from .models import Notification
 
 
-def _target(card_set=None, card=None, comment=None) -> dict:
-    return {"card_set": card_set, "card": card, "comment": comment}
+def _target(card_set=None, card=None, comment=None, lounge_post=None, lounge_reply=None) -> dict:
+    return {
+        "card_set": card_set,
+        "card": card,
+        "comment": comment,
+        "lounge_post": lounge_post,
+        "lounge_reply": lounge_reply,
+    }
 
 
 def notify(recipient, actor, kind: str, **target) -> Notification | None:

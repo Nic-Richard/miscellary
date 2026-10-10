@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import type { PointerEvent as ReactPointerEvent, ReactNode } from 'react';
 import {
   cardCode,
@@ -70,9 +71,12 @@ export default function CardInspector({
     t0: 0,
     eased: false,
   });
+  const [mounted, setMounted] = useState(false);
   const [facing, setFacing] = useState<'front' | 'back'>('front');
   const [still, setStill] = useState(false);
   const credit = card.image.credit ?? null;
+
+  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     const query = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -213,7 +217,9 @@ export default function CardInspector({
 
   const corner = resolveCardTokens(card.template_key, card.template_config, card.rarity).corner;
 
-  return (
+  // Rendered at the page root so containers with their own stacking order cannot sit above it.
+  // A card link renders it on the server too, so it moves there once the page has loaded.
+  const inspector = (
     <div
       className={styles.scrim}
       role="dialog"
@@ -341,6 +347,7 @@ export default function CardInspector({
       </div>
     </div>
   );
+  return mounted ? createPortal(inspector, document.body) : inspector;
 }
 
 export function OwnedCardInspector({ owned, onClose }: { owned: OwnedCard; onClose: () => void }) {

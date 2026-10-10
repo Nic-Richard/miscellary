@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import type { LoungePost, LoungeStyle, LoungeTopic, OwnedCard } from '@miscellary/shared';
-import { LOUNGE_TOPICS, cardCode } from '@miscellary/shared';
-import CardPreview from '@/components/CardPreview';
-import SearchField from '@/components/SearchField';
+import { LOUNGE_LIMITS, LOUNGE_TOPICS } from '@miscellary/shared';
+import SupporterPrompt, { SupporterTag } from '@/components/SupporterPrompt';
 import { apiFetch } from '@/lib/api';
-import { listMyCards } from '@/lib/packs';
+import { useMembership } from '@/lib/membership';
 import ui from '@/components/ui.module.css';
+import CardPicker from './CardPicker';
 import { useLounge } from './LoungeShell';
 import styles from './Lounge.module.css';
 
@@ -21,55 +21,29 @@ export default function StartDiscussion({
   onPosted: (post: LoungePost) => void;
 }) {
   const { subscriber } = useLounge();
-  const maxCards = subscriber ? 6 : 1;
+  const membership = useMembership();
   const [topic, setTopic] = useState<LoungeTopic>(defaultTopic);
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [style, setStyle] = useState<LoungeStyle>('plain');
+  const [locked, setLocked] = useState(false);
   const [accepted, setAccepted] = useState(false);
   const [selected, setSelected] = useState<OwnedCard[]>([]);
-  const [cards, setCards] = useState<OwnedCard[]>([]);
-  const [cardQuery, setCardQuery] = useState('');
-  const [cardPage, setCardPage] = useState(1);
-  const [cardsNext, setCardsNext] = useState(false);
-  const [cardsLoading, setCardsLoading] = useState(false);
-  const [cardsError, setCardsError] = useState<string | null>(null);
-  const [cardsRetry, setCardsRetry] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const max = style === 'binder' ? LOUNGE_LIMITS.binderCards : LOUNGE_LIMITS.postCards;
 
-  useEffect(() => {
-    const controller = new AbortController();
-    setCardsLoading(true);
-    setCardsError(null);
-    const timer = window.setTimeout(
-      () => {
-        void listMyCards(undefined, cardPage, {
-          query: cardQuery.trim(),
-          signal: controller.signal,
-        })
-          .then((data) => {
-            if (controller.signal.aborted) return;
-            setCards(data.results);
-            setCardsNext(Boolean(data.next));
-          })
-          .catch((err: unknown) => {
-            if (!controller.signal.aborted)
-              setCardsError(err instanceof Error ? err.message : 'Could not load cards.');
-          })
-          .finally(() => {
-            if (!controller.signal.aborted) setCardsLoading(false);
-          });
-      },
-      cardQuery ? 250 : 0,
-    );
-    return () => {
-      window.clearTimeout(timer);
-      controller.abort();
-    };
-  }, [cardPage, cardQuery, cardsRetry]);
+  function chooseStyle(next: LoungeStyle) {
+    if (next === 'binder' && !subscriber) {
+      setLocked(true);
+      return;
+    }
+    setLocked(false);
+    setStyle(next);
+    if (next === 'plain') setSelected((cards) => cards.slice(0, LOUNGE_LIMITS.postCards));
+  }
 
-  async function submit() {
+  async function submit(draft: boolean) {
     if (busy) return;
     setBusy(true);
     setError(null);
@@ -80,7 +54,8 @@ export default function StartDiscussion({
           title,
           body,
           topic,
-          style: subscriber ? style : 'plain',
+          style,
+          draft,
           card_ids: selected.map((card) => card.id),
           rules_accepted: accepted,
         },
@@ -92,15 +67,14 @@ export default function StartDiscussion({
     }
   }
 
-  const isSelected = (owned: OwnedCard) => selected.some((copy) => copy.id === owned.id);
-
+  const ready = !busy && accepted && Boolean(title.trim()) && Boolean(body.trim());
   return (
     <div className={styles.paneScroll}>
       <form
         className={styles.form}
         onSubmit={(event) => {
           event.preventDefault();
-          void submit();
+          void submit(false);
         }}
       >
         <button type="button" className={styles.back} onClick={onCancel}>
@@ -142,134 +116,35 @@ export default function StartDiscussion({
             value={body}
             onChange={(event) => setBody(event.target.value)}
           />
+          <small className={ui.muted}>Mention someone with @username to let them know.</small>
         </label>
         <div className={styles.field}>
-          <span className={ui.label}>
-            Cards <span className={ui.muted}>(optional, up to {maxCards})</span>
-          </span>
-          <SearchField
-            value={cardQuery}
-            onChange={(value) => {
-              setCardQuery(value);
-              setCardPage(1);
-            }}
-            label="Find a card in your collection"
-            placeholder="Find a card or set"
-          />
-        </div>
-        {selected.length > 0 && (
-          <div className={styles.selected} aria-label="Selected cards">
-            {selected.map((owned) => (
-              <button
-                key={owned.id}
-                type="button"
-                className={ui.action}
-                onClick={() =>
-                  setSelected((current) => current.filter((copy) => copy.id !== owned.id))
-                }
-                aria-label={`Remove ${owned.card.title}`}
-              >
-                {owned.card.title}
-                <span aria-hidden="true">×</span>
-              </button>
-            ))}
-          </div>
-        )}
-        {cardsError ? (
-          <div>
-            <p role="alert" className={ui.error}>
-              {cardsError}
-            </p>
+          <span className={ui.label}>Cards</span>
+          <div className={`${ui.segments} ${styles.fit}`} role="group" aria-label="Card layout">
             <button
               type="button"
-              className={ui.btnQuiet}
-              onClick={() => setCardsRetry((value) => value + 1)}
+              className={`${ui.segment} ${style === 'plain' ? ui.segmentOn : ''}`}
+              aria-pressed={style === 'plain'}
+              onClick={() => chooseStyle('plain')}
             >
-              Try again
+              Cards
+            </button>
+            <button
+              type="button"
+              className={`${ui.segment} ${style === 'binder' ? ui.segmentOn : ''}`}
+              aria-pressed={style === 'binder'}
+              onClick={() => chooseStyle('binder')}
+            >
+              Binder {!subscriber && membership.enabled && <SupporterTag />}
             </button>
           </div>
-        ) : !cardsLoading && !cards.length ? (
-          <p className={ui.muted}>
-            {cardQuery
-              ? 'No cards match that search.'
-              : 'Open a pack to start your collection, or post without a card.'}
-          </p>
-        ) : null}
-        <div className={styles.picker} aria-busy={cardsLoading}>
-          {cards.map((owned) => (
-            <label key={owned.id} className={styles.pick}>
-              <input
-                type="checkbox"
-                checked={isSelected(owned)}
-                disabled={cardsLoading || (!isSelected(owned) && selected.length >= maxCards)}
-                onChange={() =>
-                  setSelected((values) =>
-                    isSelected(owned)
-                      ? values.filter((copy) => copy.id !== owned.id)
-                      : [...values, owned],
-                  )
-                }
-              />
-              <CardPreview
-                title={owned.card.title}
-                rarity={owned.card.rarity}
-                imageUrl={owned.card.image?.url ?? null}
-                templateKey={owned.card.template_key}
-                templateConfig={owned.card.template_config}
-                code={cardCode(
-                  owned.card.printed_set_code,
-                  owned.card.position,
-                  owned.card.set_total,
-                )}
-                printedText={owned.card.printed_text}
-                render={owned.card.render}
-                previewThumbnail
-                renderMode="flat"
-              />
-              <span>
-                <b>{owned.card.title}</b>
-                <small>{owned.set_title}</small>
-              </span>
-            </label>
-          ))}
+          {locked && (
+            <SupporterPrompt>
+              Supporters can fill binder pages with up to {LOUNGE_LIMITS.binderCards} cards.
+            </SupporterPrompt>
+          )}
         </div>
-        {(cardPage > 1 || cardsNext) && (
-          <div className={styles.formActions}>
-            {cardPage > 1 && (
-              <button
-                type="button"
-                className={ui.btnQuiet}
-                disabled={cardsLoading}
-                onClick={() => setCardPage((value) => value - 1)}
-              >
-                Previous cards
-              </button>
-            )}
-            {cardsNext && (
-              <button
-                type="button"
-                className={ui.btnQuiet}
-                disabled={cardsLoading}
-                onClick={() => setCardPage((value) => value + 1)}
-              >
-                More cards
-              </button>
-            )}
-          </div>
-        )}
-        {subscriber && selected.length > 1 && (
-          <label className={styles.field}>
-            <span className={ui.label}>Card layout</span>
-            <select
-              className={ui.input}
-              value={style}
-              onChange={(event) => setStyle(event.target.value as LoungeStyle)}
-            >
-              <option value="plain">Cards</option>
-              <option value="binder">Binder</option>
-            </select>
-          </label>
-        )}
+        <CardPicker max={max} selected={selected} onChange={setSelected} />
         <p className={styles.rules}>
           Keep it kind and about collecting. No harassment, adult content, spam or stolen work.
           Share only cards you own, and report problems for a moderator to review.
@@ -288,12 +163,19 @@ export default function StartDiscussion({
           </p>
         )}
         <div className={styles.formActions}>
-          <button
-            className={ui.btnPrimary}
-            disabled={busy || !accepted || !title.trim() || !body.trim()}
-          >
+          <button className={ui.btnPrimary} disabled={!ready}>
             Post discussion
           </button>
+          {subscriber && (
+            <button
+              type="button"
+              className={ui.btnOutline}
+              disabled={!ready}
+              onClick={() => void submit(true)}
+            >
+              Save as draft
+            </button>
+          )}
           <button type="button" className={ui.btnQuiet} onClick={onCancel}>
             Cancel
           </button>

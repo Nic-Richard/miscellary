@@ -4,6 +4,8 @@ export const EXTRA_PACK_POINT_COST = 50;
 export const FREE_PACKS_PER_DAY = 1;
 // Mirrored in apps/api/social/models.py.
 export const SHOWCASE_SLOTS = 40;
+/** Supporters get a second binder's worth of sleeves. */
+export const SUPPORTER_SHOWCASE_SLOTS = 80;
 // Mirrored in apps/api/trades/actions.py.
 export const TRADE_MAX_PER_SIDE = 20;
 // Mirrored in apps/api/cards/tags.py.

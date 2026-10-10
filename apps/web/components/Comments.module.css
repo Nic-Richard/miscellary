@@ -12,7 +12,7 @@
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.6),
     var(--shadow-sm),
-    0 14px 30px rgba(58, 42, 20, 0.12);
+    0 14px 30px rgba(var(--shadow-rgb), calc(0.12 * var(--shadow-boost)));
 }
 
 .column {
@@ -114,7 +114,7 @@
   border-radius: var(--radius-md);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    0 1px 2px rgba(58, 42, 20, 0.09);
+    0 1px 2px rgba(var(--shadow-rgb), calc(0.09 * var(--shadow-boost)));
 }
 
 .head {

@@ -378,6 +378,9 @@ export interface ProfilePage extends PublicProfile {
   is_following: boolean;
   is_me: boolean;
   is_blocked: boolean;
+  badge_style?: string | null;
+  featured_card?: (Card & { set_title: string; set_slug: string }) | null;
+  showcase_slots?: number;
   showcase_title: string;
   showcase: ShowcaseSlot[];
   sets: CardSetSummary[];
@@ -408,7 +411,13 @@ export interface PacksPage {
 }
 
 export type NotificationKind =
-  'set_like' | 'card_like' | 'set_comment' | 'comment_reply' | 'follow';
+  | 'set_like'
+  | 'card_like'
+  | 'set_comment'
+  | 'comment_reply'
+  | 'follow'
+  | 'lounge_reply'
+  | 'lounge_mention';
 
 export interface Notification {
   id: string;
@@ -423,6 +432,10 @@ export interface Notification {
   card_image: string | null;
   /** The set's baked wrapper for set notifications. */
   set_pack_image: string | null;
+  lounge_post_id: string | null;
+  lounge_post_title: string | null;
+  /** Empty when the reply has since been removed. */
+  lounge_reply_body: string;
   read: boolean;
   created_at: string;
 }

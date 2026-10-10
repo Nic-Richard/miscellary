@@ -20,9 +20,23 @@
   min-width: 190px;
   padding: 6px;
   background: var(--sur);
-  border: 1px solid var(--bdr2);
-  border-radius: 8px;
-  box-shadow: var(--shadow-md);
+  border: 1px solid var(--bdr);
+  border-radius: 10px;
+  box-shadow:
+    inset 0 1px 0 var(--edge-light),
+    var(--shadow-lg);
+  animation: menuIn 140ms var(--ease-out);
+}
+@keyframes menuIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .menu {
+    animation: none;
+  }
 }
 .menuRight {
   right: auto;
@@ -31,8 +45,11 @@
 .menu a,
 .menu button {
   padding: 9px 10px;
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
   border: 0;
-  border-radius: 5px;
+  border-radius: 6px;
   background: none;
   color: var(--text);
   font-size: 15px;
@@ -42,8 +59,21 @@
   cursor: pointer;
 }
 .menu a:hover,
-.menu button:hover {
-  background: rgba(var(--accent-rgb), 0.08);
+.menu button:hover,
+.menu .active,
+.menu a:focus-visible,
+.menu button:focus-visible {
+  outline: none;
+  background: var(--sur2);
+}
+.menu [aria-selected='true']::after {
+  content: '✓';
+  color: var(--accent-ink);
+  font-weight: 700;
+}
+.select {
+  justify-content: space-between;
+  min-width: 150px;
 }
 .rule {
   margin: 4px 6px;
@@ -54,5 +84,5 @@
   color: var(--danger);
 }
 .menu .danger:hover {
-  background: rgba(174, 74, 58, 0.08);
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
 }

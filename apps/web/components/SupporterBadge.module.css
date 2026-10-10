@@ -1,25 +1,34 @@
+/* A ticket-cut foil ribbon; the foil catches the light when hovered. */
 .badge {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: 6px;
   width: fit-content;
-  padding: 3px 11px 3px 4px;
-  border-radius: 999px;
-  background: var(--sur);
-  box-shadow: inset 0 0 0 1px var(--gold);
-  color: var(--panel-text);
-  font: 700 13px / 1.2 var(--body);
+  height: 26px;
+  padding: 0 16px 0 9px;
+  background: var(--metal-sheen);
+  background-size: 200% 100%;
+  color: var(--metal-ink);
+  font: 700 12px / 1 var(--body);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 8px) 50%, 100% 100%, 0 100%);
 }
-.star {
-  display: grid;
-  place-items: center;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: var(--gold);
+.badge svg {
+  width: 13px;
+  height: 13px;
+  fill: currentColor;
 }
-.star svg {
-  width: 12px;
-  height: 12px;
-  fill: var(--sur);
+.badge:hover {
+  animation: sheen 1.2s linear;
+}
+@keyframes sheen {
+  to {
+    background-position: 200% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .badge:hover {
+    animation: none;
+  }
 }

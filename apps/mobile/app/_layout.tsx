@@ -88,6 +88,7 @@ function Navigation() {
         <Stack.Screen name="studio/card" options={{ title: 'Card', presentation: 'modal' }} />
         <Stack.Screen name="trades/new" options={{ title: 'New offer' }} />
         <Stack.Screen name="search" options={{ title: 'Search' }} />
+        <Stack.Screen name="membership" options={{ title: 'Membership' }} />
       </Stack>
       <StatusBarScrim />
       <SurfaceWarmup />

@@ -1,9 +1,10 @@
 from datetime import timedelta
 from typing import Any
+from uuid import UUID
 
 from django.conf import settings
 from django.db import transaction
-from django.db.models import Count, Exists, OuterRef, Prefetch, Q
+from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
@@ -16,118 +17,91 @@ from rest_framework.views import APIView
 
 from accounts.models import User
 from accounts.permissions import EmailVerified
-from billing.actions import active_period, lock_accounts
+from billing.actions import lock_accounts
 from cards.models import CardSet
-from cards.serializers import CardSerializer, CreatorSerializer
 from packs.models import OwnedCard
 from social.blocks import blocked_ids
+from social.models import Notification
+from social.notifications import notify
 
-from .models import Attachment, Post, Reply, Vote
-from .serializers import PostWriteSerializer, ReplyWriteSerializer
+from . import data
+from .data import (
+    BINDER_CARDS,
+    POST_CARDS,
+    REPLY_CARDS,
+    SUPPORTER_REPLY_CARDS,
+    is_subscriber,
+    post_data,
+    post_rows,
+    reply_data,
+    reply_rows,
+    subscriber_ids,
+    visible_posts,
+)
+from .models import Attachment, Post, PostRead, Reply, SavedFolder, SavedPost, Vote
+from .serializers import (
+    FolderSerializer,
+    PostEditSerializer,
+    PostWriteSerializer,
+    ReplyEditSerializer,
+    ReplyWriteSerializer,
+    SaveSerializer,
+    VoteSerializer,
+)
 
-
-def visible_posts(user):
-    return Post.objects.exclude(author_id__in=blocked_ids(user))
-
-
-def is_subscriber(user) -> bool:
-    return bool(settings.MONETIZATION_ENABLED and active_period(user))
-
-
-def author_badge(author, subscribers: set) -> bool:
-    return author.pk in subscribers and getattr(
-        getattr(author, "membershipsettings", None), "show_badge", True
-    )
-
-
-def showcase_card(card) -> dict:
-    card_set = card.card_set
-    return {
-        **CardSerializer(card).data,
-        "set_title": card_set.title,
-        "set_slug": card_set.slug,
-        "set_mark": card_set.mark,
-        "set_pack_colour": card_set.pack_colour,
-        "set_creator": CreatorSerializer(card_set.creator).data,
-    }
-
-
-def post_data(post, viewer, subscriber_authors: set) -> dict:
-    removed = post.deleted_at is not None
-    return {
-        "id": str(post.pk),
-        "title": "Removed post" if removed else post.title,
-        "body": "" if removed else post.body,
-        "author": None if removed else CreatorSerializer(post.author).data,
-        "author_badge": not removed and author_badge(post.author, subscriber_authors),
-        "created_at": post.created_at,
-        "removed": removed,
-        "topic": post.topic,
-        "style": "binder"
-        if post.style == Post.Style.BINDER and post.author_id in subscriber_authors
-        else "plain",
-        "can_delete": viewer.is_authenticated and (viewer.pk == post.author_id or viewer.is_staff),
-        "likes": post.like_count,
-        "liked": post.liked,
-        "reply_count": post.reply_count,
-        "cards": []
-        if removed
-        else [
-            showcase_card(attachment.owned_card.card)
-            if attachment.owned_card
-            and attachment.owned_card.owner_id == post.author_id
-            and attachment.owned_card.card.card_set.status
-            in {CardSet.Status.PUBLISHED, CardSet.Status.DELETED}
-            else None
-            for attachment in post.attachments.all()
-        ],
-    }
-
-
-def post_rows(user):
-    attachments = Attachment.objects.select_related(
-        "owned_card__card__image", "owned_card__card__card_set__creator__profile"
-    ).prefetch_related("owned_card__card__card_tags__tag")
-    votes = (
-        Vote.objects.filter(post=OuterRef("pk"), user=user)
-        if user.is_authenticated
-        else Vote.objects.none()
-    )
-    return (
-        visible_posts(user)
-        .select_related("author__profile", "author__membershipsettings")
-        .prefetch_related(Prefetch("attachments", queryset=attachments))
-        .annotate(
-            like_count=Count("votes", distinct=True),
-            reply_count=Count(
-                "replies",
-                filter=Q(replies__deleted_at__isnull=True)
-                & ~Q(replies__author_id__in=blocked_ids(user)),
-                distinct=True,
-            ),
-            liked=Exists(votes),
-        )
-    )
-
-
-def subscriber_ids(posts) -> set:
-    from billing.models import SubscriptionPeriod
-
-    if not settings.MONETIZATION_ENABLED:
-        return set()
-    now = timezone.now()
-    return set(
-        SubscriptionPeriod.objects.filter(
-            subscription__user_id__in=[post.author_id for post in posts],
-            subscription__user__is_active=True,
-            starts_at__lte=now,
-            ends_at__gt=now,
-        ).values_list("subscription__user_id", flat=True)
-    )
+MAX_FOLDERS = 20
 
 
 class Pagination(PageNumberPagination):
     page_size = 20
+
+
+def require_enabled() -> None:
+    if not settings.LOUNGE_ENABLED:
+        raise NotFound("The Lounge is not available yet.")
+
+
+def signed_in(request: Request) -> User:
+    assert isinstance(request.user, User)
+    return request.user
+
+
+def active_user(request: Request, *others) -> User:
+    assert isinstance(request.user, User)
+    user = lock_accounts([request.user.pk, *others])[request.user.pk]
+    if not user.is_active:
+        raise PermissionDenied("This account is closed.")
+    return user
+
+
+def own_cards(user: User, card_ids: list) -> list:
+    cards = list(
+        OwnedCard.objects.select_for_update()
+        .filter(
+            owner=user,
+            pk__in=card_ids,
+            card__card_set__status__in=[CardSet.Status.PUBLISHED, CardSet.Status.DELETED],
+        )
+        .order_by("pk")
+    )
+    if len(cards) != len(card_ids):
+        raise ValidationError("Choose cards currently in your own collection.")
+    return cards
+
+
+def notify_mentions(author: User, text: str, already: set, **target) -> None:
+    names = data.mentioned_usernames(text)
+    if not names:
+        return
+    for person in User.objects.filter(username__in=names, is_active=True):
+        if person.pk != author.pk and person.pk not in already:
+            notify(person, author, Notification.Kind.LOUNGE_MENTION, **target)
+
+
+def page_of(rows, request: Request, build) -> Response:
+    paginator = Pagination()
+    page: list[Any] = paginator.paginate_queryset(rows, request) or []
+    return paginator.get_paginated_response(build(page))
 
 
 class LoungeView(APIView):
@@ -169,11 +143,25 @@ class LoungeView(APIView):
                 since = None
             if since is None or timezone.is_naive(since):
                 raise ValidationError("Use a full timestamp for new discussions.")
-            rows = visible_posts(request.user).filter(deleted_at__isnull=True, created_at__gt=since)
+            rows = visible_posts(request.user).filter(
+                deleted_at__isnull=True, draft=False, created_at__gt=since
+            )
             if topic:
                 rows = rows.filter(topic=topic)
             return Response({"new_count": rows.count()})
-        rows = post_rows(request.user).filter(deleted_at__isnull=True)
+        rows = post_rows(request.user).filter(deleted_at__isnull=True, draft=False)
+        if params.get("saved"):
+            if not request.user.is_authenticated:
+                raise PermissionDenied("Log in to see saved discussions.")
+            saved = Q(saves__user=request.user)
+            folder = params.get("folder")
+            if folder == "none":
+                saved &= Q(saves__folder__isnull=True)
+            elif folder:
+                if not folder.isdigit():
+                    raise ValidationError("Choose a saved folder.")
+                saved &= Q(saves__folder_id=int(folder))
+            rows = rows.filter(saved)
         if topic:
             rows = rows.filter(topic=topic)
         query = params.get("q", "").strip()[:100]
@@ -189,19 +177,16 @@ class LoungeView(APIView):
         rows = rows.order_by(
             *{
                 "new": ["-created_at", "-id"],
-                "top": ["-like_count", "-created_at", "-id"],
+                "top": ["-score", "-created_at", "-id"],
                 "active": ["-active_at", "-id"],
             }[sort]
         )
-        paginator = Pagination()
-        page: list[Any] = paginator.paginate_queryset(rows, request) or []
-        authors = subscriber_ids(page)
-        response = paginator.get_paginated_response(
-            [post_data(post, request.user, authors) for post in page]
+        response = page_of(
+            rows,
+            request,
+            lambda page: [post_data(post, request.user, subscriber_ids(page)) for post in page],
         )
-        response.data.update(
-            enabled=True, subscriber=request.user.is_authenticated and is_subscriber(request.user)
-        )
+        response.data.update(enabled=True, subscriber=is_subscriber(request.user))
         return response
 
     @transaction.atomic
@@ -209,46 +194,35 @@ class LoungeView(APIView):
         require_enabled()
         serializer = PostWriteSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        assert isinstance(request.user, User)
-        user = lock_accounts([request.user.pk])[request.user.pk]
-        if not user.is_active:
-            raise PermissionDenied("This account is closed.")
-        data = serializer.validated_data
-        if not is_subscriber(user) and (len(data["card_ids"]) > 1 or data["style"] != "plain"):
-            raise PermissionDenied(
-                "Multiple-card layouts and display styles need an active membership."
-            )
-        cards = list(
-            OwnedCard.objects.select_for_update()
-            .filter(
-                owner=user,
-                pk__in=data["card_ids"],
-                card__card_set__status__in=[CardSet.Status.PUBLISHED, CardSet.Status.DELETED],
-            )
-            .order_by("pk")
-        )
-        if len(cards) != len(data["card_ids"]):
-            raise ValidationError("Choose cards currently in your own collection.")
+        user = active_user(request)
+        values = serializer.validated_data
+        supporter = is_subscriber(user)
+        if values["style"] == "binder" and not supporter:
+            raise PermissionDenied("Binder layouts are for supporters.")
+        if values["draft"] and not supporter:
+            raise PermissionDenied("Drafts are for supporters.")
+        limit = BINDER_CARDS if values["style"] == "binder" else POST_CARDS
+        if len(values["card_ids"]) > limit:
+            raise ValidationError(f"Choose up to {limit} cards.")
+        own_cards(user, values["card_ids"])
         post = Post.objects.create(
             author=user,
-            title=data["title"],
-            body=data["body"],
-            style=data["style"],
-            topic=data["topic"],
+            title=values["title"],
+            body=values["body"],
+            style=values["style"],
+            topic=values["topic"],
+            draft=values["draft"],
         )
         Attachment.objects.bulk_create(
             [
                 Attachment(post=post, owned_card_id=pk, position=position)
-                for position, pk in enumerate(data["card_ids"])
+                for position, pk in enumerate(values["card_ids"])
             ]
         )
+        if not post.draft:
+            notify_mentions(user, f"{post.title} {post.body}", set(), lounge_post=post)
         row = post_rows(user).get(pk=post.pk)
         return Response(post_data(row, user, subscriber_ids([row])), status=201)
-
-
-def require_enabled() -> None:
-    if not settings.LOUNGE_ENABLED:
-        raise NotFound("The Lounge is not available yet.")
 
 
 class PostView(APIView):
@@ -257,7 +231,36 @@ class PostView(APIView):
     def get(self, request: Request, post_id) -> Response:
         require_enabled()
         post = get_object_or_404(post_rows(request.user), pk=post_id)
+        if request.user.is_authenticated and not post.draft:
+            PostRead.objects.update_or_create(
+                user=request.user, post=post, defaults={"read_at": timezone.now()}
+            )
         return Response(post_data(post, request.user, subscriber_ids([post])))
+
+    @transaction.atomic
+    def patch(self, request: Request, post_id) -> Response:
+        require_enabled()
+        serializer = PostEditSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = active_user(request)
+        post = get_object_or_404(
+            Post.objects.select_for_update(), pk=post_id, author=user, deleted_at__isnull=True
+        )
+        values = serializer.validated_data
+        changes = {key: values[key] for key in ("title", "body", "topic") if key in values}
+        now = timezone.now()
+        publishing = values["publish"] and post.draft
+        if publishing:
+            # A published draft enters the feed as new, not at the time it was started.
+            changes.update(draft=False, created_at=now, active_at=now)
+        elif changes and not post.draft:
+            changes["edited_at"] = now
+        if changes:
+            Post.objects.filter(pk=post.pk).update(**changes)
+        row = post_rows(user).get(pk=post.pk)
+        if publishing:
+            notify_mentions(user, f"{row.title} {row.body}", set(), lounge_post=row)
+        return Response(post_data(row, user, subscriber_ids([row])))
 
     @transaction.atomic
     def delete(self, request: Request, post_id) -> Response:
@@ -265,8 +268,23 @@ class PostView(APIView):
         post = get_object_or_404(Post.objects.select_for_update(), pk=post_id)
         if post.author_id != request.user.pk and not request.user.is_staff:
             raise PermissionDenied("That post is not yours to remove.")
-        Post.objects.filter(pk=post.pk).update(deleted_at=timezone.now())
+        if post.draft:
+            post.delete()
+        else:
+            Post.objects.filter(pk=post.pk).update(deleted_at=timezone.now())
         return Response(status=204)
+
+
+class DraftsView(APIView):
+    def get(self, request: Request) -> Response:
+        require_enabled()
+        user = signed_in(request)
+        rows = post_rows(user).filter(author=user, draft=True, deleted_at=None)
+        return page_of(
+            rows.order_by("-created_at"),
+            request,
+            lambda page: [post_data(post, request.user, subscriber_ids(page)) for post in page],
+        )
 
 
 class RepliesView(APIView):
@@ -283,102 +301,98 @@ class RepliesView(APIView):
 
     def get(self, request: Request, post_id) -> Response:
         require_enabled()
-        post = get_object_or_404(visible_posts(request.user), pk=post_id)
+        post = get_object_or_404(visible_posts(request.user), pk=post_id, draft=False)
         parent_id = request.query_params.get("parent_id")
+        parent = None
         if parent_id:
             try:
-                from uuid import UUID
-
-                parent = UUID(parent_id)
+                parent = get_object_or_404(
+                    Reply, pk=UUID(parent_id), post=post, parent__isnull=True
+                )
             except ValueError as exc:
                 raise ValidationError("Invalid reply thread.") from exc
-            get_object_or_404(Reply, pk=parent, post=post, parent__isnull=True)
-        else:
-            parent = None
+        sort = request.query_params.get("sort", "top" if parent is None else "oldest")
+        if sort not in {"top", "new", "oldest"}:
+            raise ValidationError("Sort replies by Top, New or Oldest.")
         blocked = blocked_ids(request.user)
-        votes = (
-            Vote.objects.filter(reply=OuterRef("pk"), user=request.user)
-            if request.user.is_authenticated
-            else Vote.objects.none()
+        rows = reply_rows(request.user, post, parent).order_by(
+            *{
+                "top": ["-score", "created_at", "id"],
+                "new": ["-created_at", "-id"],
+                "oldest": ["created_at", "id"],
+            }[sort]
         )
-        rows = (
-            Reply.objects.filter(post=post, parent_id=parent)
-            .select_related("author__profile", "author__membershipsettings")
-            .annotate(
-                like_count=Count("votes", distinct=True),
-                child_count=Count(
-                    "children", filter=~Q(children__author_id__in=blocked), distinct=True
-                ),
-                liked=Exists(votes),
-            )
-        )
-        rows = rows.order_by("created_at", "id")
         if parent:
             rows = rows.exclude(author_id__in=blocked)
-        paginator = Pagination()
-        page = paginator.paginate_queryset(rows, request) or []
-        subscribers = subscriber_ids(page)
-
-        return paginator.get_paginated_response(
-            [reply_data(reply, request.user, subscribers, blocked) for reply in page]
+        return page_of(
+            rows,
+            request,
+            lambda page: [
+                reply_data(reply, request.user, subscriber_ids(page), blocked, post.author_id)
+                for reply in page
+            ],
         )
 
     @transaction.atomic
     def post(self, request: Request, post_id) -> Response:
         require_enabled()
-        assert isinstance(request.user, User)
         serializer = ReplyWriteSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        post_owner = get_object_or_404(Post, pk=post_id).author_id
-        actors = [request.user.pk, post_owner]
-        if serializer.validated_data.get("parent_id"):
-            actors.append(
-                get_object_or_404(
-                    Reply, pk=serializer.validated_data["parent_id"], post_id=post_id
-                ).author_id
-            )
-        user = lock_accounts(actors)[request.user.pk]
-        if not user.is_active:
-            raise PermissionDenied("This account is closed.")
+        values = serializer.validated_data
+        target = get_object_or_404(Post, pk=post_id, draft=False)
+        actors = [target.author_id]
+        if values.get("parent_id"):
+            actors.append(get_object_or_404(Reply, pk=values["parent_id"], post=target).author_id)
+        user = active_user(request, *actors)
         post = get_object_or_404(
-            visible_posts(request.user).select_for_update(), pk=post_id, deleted_at__isnull=True
+            visible_posts(user).select_for_update(), pk=post_id, deleted_at__isnull=True
         )
         parent = None
-        if serializer.validated_data.get("parent_id"):
+        if values.get("parent_id"):
             parent = get_object_or_404(
-                Reply,
-                pk=serializer.validated_data["parent_id"],
-                post=post,
-                parent__isnull=True,
-                deleted_at__isnull=True,
+                Reply, pk=values["parent_id"], post=post, parent__isnull=True, deleted_at=None
             )
-            if parent.author_id in blocked_ids(request.user):
+            if parent.author_id in blocked_ids(user):
                 raise PermissionDenied("You cannot reply to a blocked collector.")
-        reply = Reply.objects.create(
-            post=post, author=request.user, parent=parent, body=serializer.validated_data["body"]
+        limit = SUPPORTER_REPLY_CARDS if is_subscriber(user) else REPLY_CARDS
+        if len(values["card_ids"]) > limit:
+            raise ValidationError(f"Choose up to {limit} cards for a reply.")
+        own_cards(user, values["card_ids"])
+        reply = Reply.objects.create(post=post, author=user, parent=parent, body=values["body"])
+        Attachment.objects.bulk_create(
+            [
+                Attachment(reply=reply, owned_card_id=pk, position=position)
+                for position, pk in enumerate(values["card_ids"])
+            ]
         )
         Post.objects.filter(pk=post.pk).update(active_at=timezone.now())
-        return Response(reply_data(reply, user, subscriber_ids([reply]), set()), status=201)
-
-
-def reply_data(reply, viewer, subscribers: set, blocked: set) -> dict[str, Any]:
-    removed = reply.deleted_at is not None or reply.author_id in blocked
-    return {
-        "id": str(reply.pk),
-        "body": "" if removed else reply.body,
-        "author": None if removed else CreatorSerializer(reply.author).data,
-        "author_badge": not removed and author_badge(reply.author, subscribers),
-        "parent_id": str(reply.parent_id) if reply.parent_id else None,
-        "created_at": reply.created_at,
-        "removed": removed,
-        "can_delete": viewer.is_authenticated and (viewer.pk == reply.author_id or viewer.is_staff),
-        "likes": 0 if removed else getattr(reply, "like_count", 0),
-        "liked": False if removed else getattr(reply, "liked", False),
-        "child_count": getattr(reply, "child_count", 0),
-    }
+        recipient = parent.author if parent else post.author
+        notify(
+            recipient, user, Notification.Kind.LOUNGE_REPLY, lounge_post=post, lounge_reply=reply
+        )
+        notify_mentions(user, reply.body, {recipient.pk}, lounge_post=post, lounge_reply=reply)
+        row = reply_rows(user, post, parent).get(pk=reply.pk)
+        return Response(
+            reply_data(row, user, subscriber_ids([row]), set(), post.author_id), status=201
+        )
 
 
 class ReplyView(APIView):
+    @transaction.atomic
+    def patch(self, request: Request, reply_id) -> Response:
+        require_enabled()
+        serializer = ReplyEditSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = active_user(request)
+        reply = get_object_or_404(
+            Reply.objects.select_for_update(), pk=reply_id, author=user, deleted_at__isnull=True
+        )
+        Reply.objects.filter(pk=reply.pk).update(
+            body=serializer.validated_data["body"], edited_at=timezone.now()
+        )
+        row = reply_rows(user, reply.post, reply.parent).get(pk=reply.pk)
+        return Response(reply_data(row, user, subscriber_ids([row]), set(), reply.post.author_id))
+
     @transaction.atomic
     def delete(self, request: Request, reply_id) -> Response:
         require_enabled()
@@ -395,38 +409,115 @@ class VoteView(APIView):
 
     @transaction.atomic
     def post(self, request: Request, post_id=None, reply_id=None) -> Response:
-        return self.change(request, True, post_id, reply_id)
+        serializer = VoteSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        return self.change(request, serializer.validated_data["value"], post_id, reply_id)
 
     @transaction.atomic
     def delete(self, request: Request, post_id=None, reply_id=None) -> Response:
-        return self.change(request, False, post_id, reply_id)
+        return self.change(request, 0, post_id, reply_id)
 
-    def change(self, request, liked, post_id, reply_id):
+    def change(self, request, value: int, post_id, reply_id):
         require_enabled()
-        initial = get_object_or_404(Reply if reply_id else Post, pk=reply_id or post_id)
-        actors = [request.user.pk, initial.author_id]
+        initial: Any = get_object_or_404(Reply if reply_id else Post, pk=reply_id or post_id)
+        actors = [initial.author_id]
         if reply_id:
             actors.append(initial.post.author_id)
-        user = lock_accounts(actors)[request.user.pk]
-        if not user.is_active:
-            raise PermissionDenied("This account is closed.")
+        user = active_user(request, *actors)
+        fields: dict[str, Any]
         if reply_id:
-            target = get_object_or_404(
+            reply = get_object_or_404(
                 Reply.objects.select_for_update(), pk=reply_id, deleted_at__isnull=True
             )
             get_object_or_404(
-                visible_posts(request.user), pk=target.post_id, deleted_at__isnull=True
+                visible_posts(user), pk=reply.post_id, deleted_at__isnull=True, draft=False
             )
-            if target.author_id in blocked_ids(request.user):
+            if reply.author_id in blocked_ids(user):
                 raise NotFound()
-            fields = {"reply": target}
+            fields = {"reply": reply}
         else:
-            target = get_object_or_404(
-                visible_posts(request.user).select_for_update(), pk=post_id, deleted_at__isnull=True
+            fields = {
+                "post": get_object_or_404(
+                    visible_posts(user).select_for_update(),
+                    pk=post_id,
+                    deleted_at__isnull=True,
+                    draft=False,
+                )
+            }
+        if value:
+            Vote.objects.update_or_create(user=user, **fields, defaults={"value": value})
+        else:
+            Vote.objects.filter(user=user, **fields).delete()
+        votes = Vote.objects.filter(**fields)
+        return Response({"score": sum(votes.values_list("value", flat=True)), "my_vote": value})
+
+
+class SaveView(APIView):
+    @transaction.atomic
+    def post(self, request: Request, post_id) -> Response:
+        require_enabled()
+        serializer = SaveSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = active_user(request)
+        post = get_object_or_404(visible_posts(user), pk=post_id, draft=False)
+        folder = None
+        if serializer.validated_data.get("folder_id"):
+            if not is_subscriber(user):
+                raise PermissionDenied("Folders are for supporters.")
+            folder = get_object_or_404(
+                SavedFolder, pk=serializer.validated_data["folder_id"], user=user
             )
-            fields = {"post": target}
-        if liked:
-            Vote.objects.get_or_create(user=request.user, **fields)
-        else:
-            Vote.objects.filter(user=request.user, **fields).delete()
-        return Response({"liked": liked, "likes": Vote.objects.filter(**fields).count()})
+        SavedPost.objects.update_or_create(user=user, post=post, defaults={"folder": folder})
+        return Response({"saved": True, "folder_id": folder.pk if folder else None})
+
+    def delete(self, request: Request, post_id) -> Response:
+        require_enabled()
+        SavedPost.objects.filter(user=signed_in(request), post_id=post_id).delete()
+        return Response({"saved": False, "folder_id": None})
+
+
+def folder_data(folder) -> dict:
+    return {"id": folder.pk, "name": folder.name, "count": getattr(folder, "count", 0)}
+
+
+class FoldersView(APIView):
+    def get(self, request: Request) -> Response:
+        require_enabled()
+        rows = SavedFolder.objects.filter(user=signed_in(request)).annotate(
+            count=Count("savedpost")
+        )
+        return Response([folder_data(folder) for folder in rows])
+
+    @transaction.atomic
+    def post(self, request: Request) -> Response:
+        require_enabled()
+        serializer = FolderSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = active_user(request)
+        if not is_subscriber(user):
+            raise PermissionDenied("Folders are for supporters.")
+        if SavedFolder.objects.filter(user=user).count() >= MAX_FOLDERS:
+            raise ValidationError(f"You can have up to {MAX_FOLDERS} folders.")
+        folder, _ = SavedFolder.objects.get_or_create(
+            user=user, name=serializer.validated_data["name"]
+        )
+        return Response(folder_data(folder), status=201)
+
+
+class FolderView(APIView):
+    def patch(self, request: Request, folder_id) -> Response:
+        require_enabled()
+        serializer = FolderSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        folder = get_object_or_404(SavedFolder, pk=folder_id, user=signed_in(request))
+        name = serializer.validated_data["name"]
+        if SavedFolder.objects.filter(user=folder.user, name=name).exclude(pk=folder.pk).exists():
+            raise ValidationError("You already have a folder with that name.")
+        folder.name = name
+        folder.save(update_fields=["name"])
+        return Response(folder_data(folder))
+
+    def delete(self, request: Request, folder_id) -> Response:
+        require_enabled()
+        get_object_or_404(SavedFolder, pk=folder_id, user=signed_in(request)).delete()
+        return Response(status=204)

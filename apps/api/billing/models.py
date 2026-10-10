@@ -140,8 +140,26 @@ class StripeCustomer(models.Model):
 
 
 class MembershipSettings(models.Model):
+    class BadgeColour(models.TextChoices):
+        GOLD = "gold", "Gold"
+        SILVER = "silver", "Silver"
+        ROSE = "rose", "Rose gold"
+        JADE = "jade", "Jade"
+        SAPPHIRE = "sapphire", "Sapphire"
+
+    class BadgeFinish(models.TextChoices):
+        FOIL = "foil", "Foil"
+        SATIN = "satin", "Satin"
+        HOLO = "holo", "Holographic"
+
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     show_badge = models.BooleanField(default=True)
+    badge_colour = models.CharField(
+        max_length=10, choices=BadgeColour.choices, default=BadgeColour.GOLD
+    )
+    badge_finish = models.CharField(
+        max_length=10, choices=BadgeFinish.choices, default=BadgeFinish.FOIL
+    )
 
     def __str__(self) -> str:
         return f"MembershipSettings<{self.user_id}>"

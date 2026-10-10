@@ -1,44 +1,59 @@
+import { useId } from 'react';
 import { Text, View } from 'react-native';
-import Svg, { Path } from 'react-native-svg';
-import { createThemedStyles, fonts, useColors } from '@/lib/theme';
-import { STAR_PATH } from './Avatar';
+import Svg, { Defs, LinearGradient, Path, Stop } from 'react-native-svg';
+import type { BadgeStyle } from '@miscellary/shared';
+import { BADGE_METALS, splitBadge } from '@miscellary/shared';
+import { fonts } from '@/lib/theme';
+import { STAR_PATH, metalStops } from './Avatar';
 
-export default function SupporterBadge() {
-  const colors = useColors();
-  const styles = useStyles();
+const HEIGHT = 26;
+const WIDTH = 116;
+
+/** A ticket-cut foil ribbon in the supporter's chosen metal and finish. */
+export default function SupporterBadge({
+  badge = 'gold-foil',
+}: {
+  badge?: BadgeStyle | undefined;
+}) {
+  const id = `ribbon${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
+  const style = badge ?? 'gold-foil';
+  const stops = metalStops(style);
+  const ink = BADGE_METALS[splitBadge(style)?.colour ?? 'gold']?.ink ?? '#3a2a0c';
   return (
-    <View style={styles.badge}>
-      <View style={styles.star}>
-        <Svg width={12} height={12} viewBox="0 0 24 24">
-          <Path d={STAR_PATH} fill={colors.sur} />
+    <View
+      accessible
+      accessibilityLabel="Supporter"
+      style={{ width: WIDTH, height: HEIGHT, alignSelf: 'flex-start' }}
+    >
+      <Svg width={WIDTH} height={HEIGHT} style={{ position: 'absolute' }}>
+        <Defs>
+          <LinearGradient id={id} x1="0" y1="0" x2="1" y2="0.4">
+            {stops.map((colour, index) => (
+              <Stop key={index} offset={index / (stops.length - 1)} stopColor={colour} />
+            ))}
+          </LinearGradient>
+        </Defs>
+        <Path
+          d={`M0 0H${WIDTH}L${WIDTH - 8} ${HEIGHT / 2}L${WIDTH} ${HEIGHT}H0Z`}
+          fill={`url(#${id})`}
+        />
+      </Svg>
+      <View
+        style={{
+          flex: 1,
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 6,
+          paddingLeft: 9,
+        }}
+      >
+        <Svg width={13} height={13} viewBox="0 0 24 24">
+          <Path d={STAR_PATH} fill={ink} />
         </Svg>
+        <Text style={{ color: ink, fontFamily: fonts.medium, fontSize: 12, letterSpacing: 1.4 }}>
+          SUPPORTER
+        </Text>
       </View>
-      <Text style={styles.label}>Supporter</Text>
     </View>
   );
 }
-
-const useStyles = createThemedStyles((colors) => ({
-  badge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    gap: 7,
-    paddingVertical: 3,
-    paddingLeft: 4,
-    paddingRight: 11,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: colors.gold,
-    backgroundColor: colors.sur,
-  },
-  star: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.gold,
-  },
-  label: { color: colors.text, fontFamily: fonts.medium, fontSize: 13 },
-}));
