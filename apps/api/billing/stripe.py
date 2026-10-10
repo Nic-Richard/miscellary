@@ -282,11 +282,11 @@ def _checkout_for_subscription(subscription) -> Checkout:
     try:
         checkout = Checkout.objects.get(pk=UUID(key), product="subscription")
     except (ValueError, TypeError, Checkout.DoesNotExist) as exc:
-        raise actions.BillingError("Subscription purchase could not be matched.") from exc
+        raise actions.PaymentMismatch("Subscription purchase could not be matched.") from exc
     if not StripeCustomer.objects.filter(
         user=checkout.user, reference=reference(subscription.get("customer"))
     ).exists():
-        raise actions.BillingError("Subscription account does not match the purchase.")
+        raise actions.PaymentMismatch("Subscription account does not match the purchase.")
     return checkout
 
 
@@ -298,11 +298,11 @@ def _fulfill_session(session_id: str, receipt: StripeEvent) -> None:
     try:
         checkout = Checkout.objects.get(pk=UUID(key))
     except (ValueError, TypeError, Checkout.DoesNotExist) as exc:
-        raise actions.BillingError("Checkout could not be matched.") from exc
+        raise actions.PaymentMismatch("Checkout could not be matched.") from exc
     locked = actions.lock_accounts([checkout.user_id])[checkout.user_id]
     checkout.refresh_from_db()
     if checkout.session_reference and checkout.session_reference != session_id:
-        raise actions.BillingError("Checkout confirmation does not match the purchase.")
+        raise actions.PaymentMismatch("Checkout confirmation does not match the purchase.")
     if session.get("payment_status") != "paid" or session.get("status") != "complete":
         return
     if (
@@ -314,7 +314,7 @@ def _fulfill_session(session_id: str, receipt: StripeEvent) -> None:
             user=checkout.user, reference=reference(session.get("customer"))
         ).exists()
     ):
-        raise actions.BillingError("Checkout payment does not match the purchase.")
+        raise actions.PaymentMismatch("Checkout payment does not match the purchase.")
     if not locked.is_active:
         BillingReview.objects.create(
             event=receipt, payment_reference=session_id, reason="payment_after_closure"
@@ -323,7 +323,7 @@ def _fulfill_session(session_id: str, receipt: StripeEvent) -> None:
     if checkout.product != "subscription":
         payment_id = reference(session.get("payment_intent"))
         if not payment_id:
-            raise actions.BillingError("Payment confirmation is missing.")
+            raise actions.PaymentMismatch("Payment confirmation is missing.")
         actions.grant_bundle(checkout.user, "web", f"stripe:{payment_id}", checkout.product)
     if checkout.product != "subscription":
         checkout.completed = True
@@ -350,7 +350,7 @@ def _fulfill_invoice(invoice_id: str, receipt: StripeEvent) -> None:
     subscription = api.v1.subscriptions.retrieve(subscription_id).to_dict()
     lines = api.v1.invoices.line_items.list(invoice_id, {"limit": 2}).to_dict()
     if lines.get("has_more") or len(lines["data"]) != 1:
-        raise actions.BillingError("Unexpected subscription invoice items.")
+        raise actions.PaymentMismatch("Unexpected subscription invoice items.")
     line = lines["data"][0]
     if (
         invoice.get("status") != "paid"
@@ -364,7 +364,7 @@ def _fulfill_invoice(invoice_id: str, receipt: StripeEvent) -> None:
         or line.get("quantity") != 1
         or line.get("amount") != checkout.price_cents
     ):
-        raise actions.BillingError("Subscription payment does not match the offer.")
+        raise actions.PaymentMismatch("Subscription payment does not match the offer.")
     # A later failed renewal must not suppress an earlier invoice that was actually paid.
     if subscription.get("status") not in {"active", "canceled", "past_due", "unpaid", "paused"}:
         raise actions.BillingError("Subscription payment is not settled yet.")
@@ -405,6 +405,17 @@ def process_event(event) -> None:
     if not created:
         return
     obj = event["data"]["object"]
+    try:
+        with transaction.atomic():
+            _handle_event(kind, obj, receipt)
+    except actions.PaymentMismatch:
+        # Acknowledge it so Stripe stops retrying; a person decides on the refund.
+        BillingReview.objects.create(
+            event=receipt, payment_reference=obj["id"], reason="payment_mismatch"
+        )
+
+
+def _handle_event(kind: str, obj, receipt: StripeEvent) -> None:
     if kind in {"checkout.session.completed", "checkout.session.async_payment_succeeded"}:
         _fulfill_session(obj["id"], receipt)
     elif kind == "invoice.paid":
@@ -420,7 +431,7 @@ def process_event(event) -> None:
             remote = client().v1.subscriptions.retrieve(obj["id"]).to_dict()
             checkout = _checkout_for_subscription(remote)
             if checkout.user_id != subscription.user_id:
-                raise actions.BillingError("Subscription account does not match the purchase.")
+                raise actions.PaymentMismatch("Subscription account does not match the purchase.")
             actions.set_auto_renewal(
                 checkout.user,
                 "web",

@@ -211,14 +211,14 @@ def test_callback_recovers_unknown_session_and_rejects_wrong_account(user, provi
     checkout.session_reference = None
     checkout.save()
     provider.v1.checkout.sessions.retrieve.return_value = settled(checkout, customer="cus_wrong")
-    with pytest.raises(actions.BillingError):
-        payments.process_event(event("checkout.session.completed", id="cs_test"))
-    assert not StripeEvent.objects.exists()
-    assert not StarGrant.objects.exists()
+    payments.process_event(event("checkout.session.completed", "evt_wrong", id="cs_test"))
     provider.v1.checkout.sessions.retrieve.return_value = settled(checkout, amount_total=0)
-    with pytest.raises(actions.BillingError):
-        payments.process_event(event("checkout.session.completed", id="cs_test"))
+    payments.process_event(event("checkout.session.completed", "evt_short", id="cs_test"))
     assert not StarGrant.objects.exists()
+    assert list(BillingReview.objects.values_list("event", "reason").order_by("event")) == [
+        ("evt_short", "payment_mismatch"),
+        ("evt_wrong", "payment_mismatch"),
+    ]
     provider.v1.checkout.sessions.retrieve.return_value = settled(checkout)
     payments.process_event(event("checkout.session.completed", id="cs_test"))
     checkout.refresh_from_db()
@@ -276,10 +276,14 @@ def test_invoice_grants_paid_period_once_and_uses_current_cancellation(user, pro
     )
     period.subscription.refresh_from_db()
     assert not period.subscription.auto_renews
-    provider.v1.invoices.retrieve.return_value.amount_paid = 0
+    provider.v1.subscriptions.retrieve.return_value.status = "incomplete"
     with pytest.raises(actions.BillingError):
-        payments.process_event(event("invoice.paid", "evt_unpaid", id="in_test"))
-    assert not StripeEvent.objects.filter(pk="evt_unpaid").exists()
+        payments.process_event(event("invoice.paid", "evt_unsettled", id="in_test"))
+    assert not StripeEvent.objects.filter(pk="evt_unsettled").exists()
+    provider.v1.subscriptions.retrieve.return_value.status = "active"
+    provider.v1.invoices.retrieve.return_value.amount_paid = 0
+    payments.process_event(event("invoice.paid", "evt_unpaid", id="in_test"))
+    assert BillingReview.objects.get(event="evt_unpaid").reason == "payment_mismatch"
 
 
 def test_management_is_account_bound_and_closure_cancels_before_deleting(user, provider):

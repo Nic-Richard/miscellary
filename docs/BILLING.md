@@ -55,7 +55,8 @@ Register `/api/v1/billing/stripe/webhook/` for:
 Use the SDK-compatible snapshot API version and verify its invoice/session fields
 in sandbox. The signature covers the raw request body with the SDK timestamp
 tolerance. Events and provider payment references both deduplicate fulfillment.
-Failed processing rolls back the event receipt so Stripe can retry. Returning to
+Temporary failures roll back the event receipt so Stripe can retry. Payments
+that can never match their purchase are acknowledged and queued for review. Returning to
 the website never grants Stars or confirms success by itself.
 
 Purchase intents/customer binding survive ambiguous checkout failures; retries reuse

@@ -29,6 +29,11 @@ class BillingError(Exception):
     pass
 
 
+class PaymentMismatch(BillingError):
+    # Provider data that can never satisfy the purchase, so a retried callback cannot fix it.
+    pass
+
+
 def lock_accounts(user_ids) -> dict:
     # All balance writers lock account rows first, in the same order, including own-set spends.
     return {
@@ -62,13 +67,13 @@ def _validate_source(provider: str, reference: str) -> None:
         or not reference.strip()
         or len(reference) > 255
     ):
-        raise BillingError("Invalid payment reference.")
+        raise PaymentMismatch("Invalid payment reference.")
 
 
 def _existing_grant(user: User, provider: str, reference: str, product: str) -> StarGrant | None:
     grant = StarGrant.objects.filter(provider=provider, reference=reference).first()
     if grant and (grant.user_id != user.pk or grant.product != product):
-        raise BillingError("That payment is already attached to another purchase.")
+        raise PaymentMismatch("That payment is already attached to another purchase.")
     return grant
 
 
@@ -78,7 +83,7 @@ def grant_bundle(user: User, provider: str, reference: str, product: str) -> Sta
     _validate_source(provider, reference)
     bundle = CREDIT_BUNDLES.get(product)
     if bundle is None:
-        raise BillingError("Unknown Stars bundle.")
+        raise PaymentMismatch("Unknown Stars bundle.")
     locked = lock_accounts([user.pk])[user.pk]
     if not locked.is_active:
         raise BillingError("This account is closed.")
@@ -92,7 +97,7 @@ def grant_bundle(user: User, provider: str, reference: str, product: str) -> Sta
     )
     if not created:
         if grant.user_id != locked.pk or grant.product != product:
-            raise BillingError("That payment is already attached to another purchase.")
+            raise PaymentMismatch("That payment is already attached to another purchase.")
         return grant
     balance, _ = StarBalance.objects.get_or_create(user=locked)
     record_entry(balance, StarEntry.Kind.GRANT, grant.units, grant=grant)
@@ -111,7 +116,7 @@ def grant_subscription_period(
     _validate_source(provider, reference)
     _validate_source(provider, subscription_reference)
     if timezone.is_naive(starts_at) or timezone.is_naive(ends_at) or ends_at <= starts_at:
-        raise BillingError("Invalid subscription period.")
+        raise PaymentMismatch("Invalid subscription period.")
     locked = lock_accounts([user.pk])[user.pk]
     if not locked.is_active:
         raise BillingError("This account is closed.")
@@ -123,18 +128,18 @@ def grant_subscription_period(
             or period.starts_at != starts_at
             or period.ends_at != ends_at
         ):
-            raise BillingError("That payment has different subscription details.")
+            raise PaymentMismatch("That payment has different subscription details.")
         return period
     if SubscriptionPeriod.objects.filter(
         subscription__user=locked, starts_at__lt=ends_at, ends_at__gt=starts_at
     ).exists():
-        raise BillingError("You already have a subscription for that period.")
+        raise PaymentMismatch("You already have a subscription for that period.")
     if (
         Subscription.objects.filter(provider=provider, reference=subscription_reference)
         .exclude(user=locked)
         .exists()
     ):
-        raise BillingError("That subscription belongs to another account.")
+        raise PaymentMismatch("That subscription belongs to another account.")
     current = Subscription.objects.filter(
         provider=provider, reference=subscription_reference
     ).first()
@@ -144,14 +149,14 @@ def grant_subscription_period(
             subscription__user=locked, ends_at__gt=timezone.now()
         ).exists()
     ):
-        raise BillingError("You already have a subscription for that period.")
+        raise PaymentMismatch("You already have a subscription for that period.")
     subscription, _ = Subscription.objects.get_or_create(
         provider=provider,
         reference=subscription_reference,
         defaults={"user": locked, "auto_renews": True},
     )
     if subscription.user_id != locked.pk:
-        raise BillingError("That subscription belongs to another account.")
+        raise PaymentMismatch("That subscription belongs to another account.")
     grant, created = StarGrant.objects.get_or_create(
         provider=provider,
         reference=reference,
@@ -163,7 +168,7 @@ def grant_subscription_period(
         },
     )
     if not created:
-        raise BillingError("That payment is already attached to another purchase.")
+        raise PaymentMismatch("That payment is already attached to another purchase.")
     period = SubscriptionPeriod.objects.create(
         subscription=subscription, grant=grant, starts_at=starts_at, ends_at=ends_at
     )
