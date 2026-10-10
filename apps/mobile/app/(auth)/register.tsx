@@ -1,18 +1,17 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Linking, Text } from 'react-native';
+import { Linking, Text, View } from 'react-native';
 import { ApiRequestError } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import GoogleAuth from '@/components/GoogleAuth';
 import { internalRoute, RETURN_PARAM } from '@/lib/returnTo';
-import { useColors } from '@/lib/theme';
-import { Button, ErrorText, Input, Muted, Screen, Title, PasswordInput } from '@/components/ui';
+import AuthCard, { useAuthStyles } from '@/components/AuthCard';
+import { Button, ErrorText, Input, PasswordInput } from '@/components/ui';
 
 const SITE = 'https://miscellary.com';
 
 export default function RegisterScreen() {
-  const colors = useColors();
-  const link = { color: colors.accent, fontSize: 15 };
+  const auth = useAuthStyles();
   const { register } = useAuth();
   const params = useLocalSearchParams();
   const next = internalRoute(params[RETURN_PARAM]);
@@ -42,59 +41,70 @@ export default function RegisterScreen() {
 
   const fieldError = (name: string) =>
     fields[name]?.map((m) => (
-      <Text key={m} style={{ color: colors.danger, fontSize: 14 }}>
+      <Text key={m} style={auth.fieldError}>
         {m}
       </Text>
     ));
 
   return (
-    <Screen style={{ gap: 12, paddingTop: 32 }}>
-      <Title>Create your account</Title>
+    <AuthCard title="Create your account" subtitle="Collect, trade and make your own sets.">
       <GoogleAuth onDone={() => router.replace(next ?? '/(tabs)/packs')} />
       <ErrorText>{error}</ErrorText>
       <Input
+        accessibilityLabel="Email"
         placeholder="Email"
         autoCapitalize="none"
+        autoComplete="email"
         keyboardType="email-address"
         value={email}
         onChangeText={setEmail}
       />
       {fieldError('email')}
       <Input
+        accessibilityLabel="Username"
         placeholder="Username"
         autoCapitalize="none"
+        autoComplete="username-new"
         value={username}
         onChangeText={setUsername}
       />
       {fieldError('username')}
-      <PasswordInput placeholder="Password" value={password} onChangeText={setPassword} />
+      <PasswordInput
+        accessibilityLabel="Password"
+        placeholder="Password"
+        autoComplete="new-password"
+        value={password}
+        onChangeText={setPassword}
+      />
       {fieldError('password')}
-      <Muted style={{ fontSize: 14 }}>At least 8 characters.</Muted>
-      <Muted style={{ fontSize: 14 }}>
+      <Text style={auth.note}>At least 8 characters.</Text>
+      <Text style={auth.note}>
         By signing up you agree to the{' '}
-        <Text style={link} onPress={() => void Linking.openURL(`${SITE}/terms`)}>
+        <Text style={auth.link} onPress={() => void Linking.openURL(`${SITE}/terms`)}>
           terms
         </Text>{' '}
         and{' '}
-        <Text style={link} onPress={() => void Linking.openURL(`${SITE}/privacy`)}>
+        <Text style={auth.link} onPress={() => void Linking.openURL(`${SITE}/privacy`)}>
           privacy policy
         </Text>
         .
-      </Muted>
+      </Text>
       <Button
         title={busy ? 'Creating…' : 'Sign up'}
         disabled={busy}
         onPress={() => void submit()}
       />
-      <Text
-        accessibilityRole="link"
-        style={[link, { alignSelf: 'center', paddingVertical: 10 }]}
-        onPress={() =>
-          router.replace(next ? `/login?${RETURN_PARAM}=${encodeURIComponent(next)}` : '/login')
-        }
-      >
-        Already have an account? Log in
-      </Text>
-    </Screen>
+      <View style={auth.footer}>
+        <Text
+          accessibilityRole="link"
+          style={auth.link}
+          onPress={() =>
+            router.replace(next ? `/login?${RETURN_PARAM}=${encodeURIComponent(next)}` : '/login')
+          }
+        >
+          Already have an account? Log in
+        </Text>
+      </View>
+    </AuthCard>
   );
 }

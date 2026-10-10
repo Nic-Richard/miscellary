@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth';
 import { googleAvailable, googleProof } from '@/lib/google';
 import { useColors } from '@/lib/theme';
 import { Button, ErrorText, Input, Muted } from './ui';
+import { OrDivider } from './AuthCard';
 import GoogleButton from './GoogleButton';
 
 export default function GoogleAuth({ onDone }: { onDone: () => void }) {
@@ -75,14 +76,14 @@ export default function GoogleAuth({ onDone }: { onDone: () => void }) {
             <Text style={{ flex: 1, color: colors.text }}>
               I agree to the{' '}
               <Text
-                style={{ color: colors.accent }}
+                style={{ color: colors.accentInk }}
                 onPress={() => void Linking.openURL('https://miscellary.com/terms')}
               >
                 terms
               </Text>{' '}
               and{' '}
               <Text
-                style={{ color: colors.accent }}
+                style={{ color: colors.accentInk }}
                 onPress={() => void Linking.openURL('https://miscellary.com/privacy')}
               >
                 privacy policy
@@ -106,7 +107,10 @@ export default function GoogleAuth({ onDone }: { onDone: () => void }) {
           />
         </>
       ) : (
-        <GoogleButton busy={busy} onPress={login} />
+        <>
+          <GoogleButton busy={busy} onPress={login} />
+          <OrDivider label="or use your email" />
+        </>
       )}
       <ErrorText>{error}</ErrorText>
     </View>

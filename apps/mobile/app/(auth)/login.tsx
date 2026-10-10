@@ -4,11 +4,11 @@ import { Text, View } from 'react-native';
 import { useAuth } from '@/lib/auth';
 import GoogleAuth from '@/components/GoogleAuth';
 import { internalRoute, RETURN_PARAM } from '@/lib/returnTo';
-import { useColors } from '@/lib/theme';
-import { Button, ErrorText, Input, Screen, PasswordInput } from '@/components/ui';
+import AuthCard, { useAuthStyles } from '@/components/AuthCard';
+import { Button, ErrorText, Input, PasswordInput } from '@/components/ui';
 
 export default function LoginScreen() {
-  const colors = useColors();
+  const auth = useAuthStyles();
   const { login } = useAuth();
   const params = useLocalSearchParams();
   const next = internalRoute(params[RETURN_PARAM]);
@@ -33,7 +33,7 @@ export default function LoginScreen() {
   }
 
   return (
-    <Screen style={{ gap: 12, paddingTop: 32 }}>
+    <AuthCard title="Log in" subtitle="Welcome back to your collection.">
       <GoogleAuth
         onDone={() => {
           if (next) router.replace(next);
@@ -43,24 +43,30 @@ export default function LoginScreen() {
       />
       <ErrorText>{error}</ErrorText>
       <Input
+        accessibilityLabel="Email"
         placeholder="Email"
         autoCapitalize="none"
+        autoComplete="email"
         keyboardType="email-address"
         value={email}
         onChangeText={setEmail}
       />
-      <PasswordInput placeholder="Password" value={password} onChangeText={setPassword} />
+      <PasswordInput
+        accessibilityLabel="Password"
+        placeholder="Password"
+        autoComplete="current-password"
+        value={password}
+        onChangeText={setPassword}
+      />
       <Button
         title={busy ? 'Logging in…' : 'Log in'}
         disabled={busy}
         onPress={() => void submit()}
       />
-      <View style={{ alignItems: 'center', marginTop: 8 }}>
+      <View style={auth.footer}>
         <Link href="/(auth)/forgot-password">
-          <Text style={{ color: colors.accent }}>Forgot your password?</Text>
+          <Text style={auth.link}>Forgot your password?</Text>
         </Link>
-      </View>
-      <View style={{ alignItems: 'center' }}>
         <Link
           href={
             next
@@ -68,9 +74,9 @@ export default function LoginScreen() {
               : '/(auth)/register'
           }
         >
-          <Text style={{ color: colors.accent }}>No account? Sign up</Text>
+          <Text style={auth.link}>No account? Sign up</Text>
         </Link>
       </View>
-    </Screen>
+    </AuthCard>
   );
 }

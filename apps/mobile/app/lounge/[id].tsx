@@ -1,7 +1,7 @@
 import { useLocalSearchParams } from 'expo-router';
-import { LoungeView } from '../lounge';
+import Discussion from '@/components/lounge/Discussion';
 
 export default function LoungePostScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  return <LoungeView postId={id} />;
+  return <Discussion key={id} postId={id} />;
 }

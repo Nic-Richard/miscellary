@@ -15,6 +15,7 @@ import ShareButton from '@/components/ShareButton';
 import PeopleList from './PeopleList';
 import { useColors, createThemedStyles } from '@/lib/theme';
 import CardInspector from './CardInspector';
+import Avatar from './Avatar';
 import DemoBadge from './DemoBadge';
 import SupporterBadge from './SupporterBadge';
 import SharedSurface from './SharedSurface';
@@ -89,20 +90,16 @@ export default function ProfileView({
       contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 40 }}
     >
       <View style={styles.header}>
-        <View style={styles.avatar}>
-          <Text style={{ color: colors.text, fontSize: 24, fontWeight: '700' }}>
-            {profile.username[0]?.toUpperCase()}
+        <Avatar
+          person={{ ...profile, deleted: false }}
+          supporter={Boolean(profile.subscriber_badge)}
+          size={56}
+        />
+        <View style={{ flex: 1, gap: 4 }}>
+          <Text style={{ color: colors.pageText, fontSize: 22, fontWeight: '700' }}>
+            {profile.display_name || profile.username}
           </Text>
-        </View>
-        <View style={{ flex: 1 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Text
-              style={{ color: colors.pageText, fontSize: 22, fontWeight: '700', flexShrink: 1 }}
-            >
-              {profile.display_name || profile.username}
-            </Text>
-            {profile.subscriber_badge && <SupporterBadge />}
-          </View>
+          {profile.subscriber_badge && <SupporterBadge />}
           {profile.is_demo ? <DemoBadge /> : null}
           <Muted style={{ color: colors.pageMuted }}>@{profile.username}</Muted>
         </View>
@@ -271,16 +268,6 @@ export default function ProfileView({
 
 const useStyles = createThemedStyles((colors) => ({
   header: { flexDirection: 'row', gap: 14, alignItems: 'center' },
-  avatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: colors.sur2,
-    borderWidth: 2,
-    borderColor: colors.bdr2,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   actions: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
   binder: {
     gap: 10,

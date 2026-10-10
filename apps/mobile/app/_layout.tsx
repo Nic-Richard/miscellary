@@ -79,8 +79,8 @@ function Navigation() {
         }}
       >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="(auth)/login" options={{ title: 'Log in' }} />
-        <Stack.Screen name="(auth)/register" options={{ title: 'Sign up' }} />
+        <Stack.Screen name="(auth)/login" options={{ title: '' }} />
+        <Stack.Screen name="(auth)/register" options={{ title: '' }} />
         <Stack.Screen name="(auth)/forgot-password" options={{ title: 'Reset password' }} />
         <Stack.Screen name="sets/[slug]" options={{ title: '' }} />
         <Stack.Screen name="users/[username]" options={{ title: 'Profile' }} />

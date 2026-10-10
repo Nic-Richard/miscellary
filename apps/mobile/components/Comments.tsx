@@ -1,4 +1,5 @@
-import { COMMENT_COPY, personName } from '@miscellary/shared';
+import Feather from '@expo/vector-icons/Feather';
+import { COMMENT_COPY, personName, timeAgo } from '@miscellary/shared';
 import type { Comment } from '@miscellary/shared';
 import { Link, router } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
@@ -10,28 +11,24 @@ import { Button, ErrorText, Input, Muted } from './ui';
 
 const MAX = 1000;
 
-function when(iso: string): string {
-  const secs = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
-  if (secs < 60) return 'just now';
-  if (secs < 3600) return `${Math.floor(secs / 60)}m ago`;
-  if (secs < 86_400) return `${Math.floor(secs / 3600)}h ago`;
-  if (secs < 604_800) return `${Math.floor(secs / 86_400)}d ago`;
-  return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-}
-
 export function Composer({
   placeholder,
   submitLabel,
   onSubmit,
   onCancel,
   disabled = false,
+  compact = false,
+  autoFocus = false,
 }: {
   placeholder: string;
   submitLabel: string;
   onSubmit: (body: string) => Promise<void>;
   onCancel?: () => void;
   disabled?: boolean;
+  compact?: boolean;
+  autoFocus?: boolean;
 }) {
+  const colors = useColors();
   const styles = useStyles();
   const [body, setBody] = useState('');
   const [busy, setBusy] = useState(false);
@@ -50,6 +47,40 @@ export function Composer({
     } finally {
       setBusy(false);
     }
+  }
+
+  if (compact) {
+    const ready = !busy && !disabled && Boolean(body.trim());
+    return (
+      <View style={styles.composer}>
+        <View style={styles.compact}>
+          <Input
+            accessibilityLabel={placeholder}
+            placeholder={placeholder}
+            value={body}
+            onChangeText={setBody}
+            multiline
+            autoFocus={autoFocus}
+            maxLength={MAX}
+            style={styles.compactInput}
+          />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={submitLabel}
+            accessibilityState={{ disabled: !ready }}
+            disabled={!ready}
+            onPress={() => void send()}
+            style={({ pressed }) => [
+              styles.send,
+              { backgroundColor: ready ? colors.accent : colors.bdr, opacity: pressed ? 0.8 : 1 },
+            ]}
+          >
+            <Feather name="send" size={18} color={ready ? colors.accentText : colors.muted} />
+          </Pressable>
+        </View>
+        <ErrorText>{error}</ErrorText>
+      </View>
+    );
   }
 
   return (
@@ -116,7 +147,7 @@ function Entry({
               </Link>
             )}
             {comment.is_creator ? <Text style={styles.creatorMark}>Creator</Text> : null}
-            <Text style={styles.when}>{when(comment.created_at)}</Text>
+            <Text style={styles.when}>{timeAgo(comment.created_at)}</Text>
           </View>
           <Text style={styles.body}>{comment.body}</Text>
           <View style={styles.row}>
@@ -223,6 +254,15 @@ const useStyles = createThemedStyles((colors) => ({
   root: { gap: 10, marginTop: 20 },
   title: { color: colors.text, fontFamily: fonts.display, fontSize: 26 },
   composer: { gap: 8 },
+  compact: { flexDirection: 'row', alignItems: 'flex-end', gap: 8 },
+  compactInput: { flex: 1, minHeight: 44, maxHeight: 120, paddingVertical: 10 },
+  send: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   row: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 14 },
   entry: {
     gap: 6,
