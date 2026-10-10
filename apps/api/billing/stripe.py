@@ -14,6 +14,7 @@ from . import actions
 from .models import (
     BillingReview,
     Checkout,
+    StarGrant,
     StripeCustomer,
     StripeEvent,
     Subscription,
@@ -29,6 +30,7 @@ HANDLED_EVENTS = {
     "customer.subscription.deleted",
     "charge.refunded",
     "charge.dispute.created",
+    "charge.dispute.closed",
 }
 
 
@@ -392,6 +394,43 @@ def _fulfill_invoice(invoice_id: str, receipt: StripeEvent) -> None:
     checkout.save(update_fields=["completed"])
 
 
+def _grant_for_charge(charge: dict) -> StarGrant | None:
+    payment_id = reference(charge.get("payment_intent"))
+    if not payment_id:
+        return None
+    grant = StarGrant.objects.filter(provider="web", reference=f"stripe:{payment_id}").first()
+    if grant:
+        return grant
+    # Subscription grants are keyed by invoice, so find the invoice this payment settled.
+    payments = (
+        client()
+        .v1.invoice_payments.list(
+            {"payment": {"type": "payment_intent", "payment_intent": payment_id}, "limit": 1}
+        )
+        .to_dict()
+    )
+    for payment in payments.get("data", []):
+        invoice_id = reference(payment.get("invoice"))
+        if invoice_id:
+            return StarGrant.objects.filter(
+                provider="web", reference=f"stripe:{invoice_id}"
+            ).first()
+    return None
+
+
+def _refund_charge(charge_id: str, receipt: StripeEvent, *, disputed: bool, restore: bool) -> None:
+    charge = client().v1.charges.retrieve(charge_id).to_dict()
+    grant = _grant_for_charge(charge)
+    if grant is None:
+        BillingReview.objects.create(
+            event=receipt, payment_reference=charge_id, reason="refund_unmatched"
+        )
+        return
+    paid = charge.get("amount", 0)
+    refunded = paid if disputed else charge.get("amount_refunded", 0)
+    actions.reverse_grant(grant, refunded, paid, restore=restore)
+
+
 @transaction.atomic
 def process_event(event) -> None:
     if event.get("livemode") and not settings.STRIPE_LIVE_APPROVED:
@@ -438,8 +477,17 @@ def _handle_event(kind: str, obj, receipt: StripeEvent) -> None:
                 obj["id"],
                 not remote.get("cancel_at_period_end") and remote.get("status") != "canceled",
             )
-    else:
-        BillingReview.objects.create(event=receipt, payment_reference=obj["id"], reason=kind)
+    elif kind == "charge.refunded":
+        _refund_charge(obj["id"], receipt, disputed=False, restore=False)
+    elif kind == "charge.dispute.created":
+        # Stripe takes the money back when a dispute opens; a person still answers it.
+        _refund_charge(reference(obj.get("charge")), receipt, disputed=True, restore=False)
+        if not BillingReview.objects.filter(event=receipt).exists():
+            BillingReview.objects.create(event=receipt, payment_reference=obj["id"], reason=kind)
+    elif kind == "charge.dispute.closed":
+        dispute = client().v1.disputes.retrieve(obj["id"]).to_dict()
+        if dispute.get("status") == "won":
+            _refund_charge(reference(dispute.get("charge")), receipt, disputed=False, restore=True)
 
 
 def verify_event(payload: bytes, signature: str):

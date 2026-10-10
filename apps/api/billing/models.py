@@ -15,7 +15,8 @@ class StarBalance(models.Model):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="star_balance"
     )
-    units = models.PositiveBigIntegerField(default=0)
+    # Refunds of spent Stars can leave this below zero; see actions.reverse_grant.
+    units = models.BigIntegerField(default=0)
     reward_remainder = models.PositiveSmallIntegerField(default=0)
 
     class Meta:
@@ -96,12 +97,13 @@ class StarEntry(models.Model):
         SPEND = "spend", "Pack opening"
         REWARD = "reward", "Creator reward"
         CLOSURE = "closure", "Account closed"
+        REFUND = "refund", "Refunded payment"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     kind = models.CharField(max_length=10, choices=Kind.choices)
     units = models.BigIntegerField()
-    balance_after = models.PositiveBigIntegerField()
+    balance_after = models.BigIntegerField()
     remainder_after = models.PositiveSmallIntegerField(default=0)
     grant = models.ForeignKey(StarGrant, null=True, blank=True, on_delete=models.SET_NULL)
     opening = models.ForeignKey(
@@ -120,7 +122,7 @@ class StarEntry(models.Model):
             ),
             models.UniqueConstraint(
                 fields=["grant"],
-                condition=models.Q(grant__isnull=False),
+                condition=models.Q(grant__isnull=False, kind="grant"),
                 name="one_star_entry_per_grant",
             ),
         ]

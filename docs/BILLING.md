@@ -9,9 +9,7 @@ Our own accounts, Stars ledger and paid-period benefits remain authoritative.
 - Obtain written acceptance of random digital packs, user-created sets, card trading
   and closed-loop creator rewards. No cash-out or card resale does not by itself
   establish provider eligibility. Managed Payments eligibility is still unconfirmed.
-- Agree the spent-Star refund policy and implement compensating ledger entries,
-  creator-reward adjustments and subscription refund handling. Refunds/disputes are
-  currently recorded for review, not automatically reversed. Do not enable live sales.
+- Add the same refund handling for Google Play voided purchases.
 - Finish Google Play receipt verification/purchase restoration and native store controls.
 - Review Lounge moderation operations and account-blocking scope before store submission.
 - Update terms, privacy, creator publishing agreement/notice and store disclosures.
@@ -50,7 +48,7 @@ Register `/api/v1/billing/stripe/webhook/` for:
   `checkout.session.expired`
 - `invoice.paid`
 - `customer.subscription.updated`, `customer.subscription.deleted`
-- `charge.refunded`, `charge.dispute.created`
+- `charge.refunded`, `charge.dispute.created`, `charge.dispute.closed`
 
 Use the SDK-compatible snapshot API version and verify its invoice/session fields
 in sandbox. The signature covers the raw request body with the SDK timestamp
@@ -73,6 +71,18 @@ or granting spendable Stars. Financial history is read-only in Django admin.
 To pause new website sales, disable `STRIPE_CHECKOUT_ENABLED`; retain the provider
 configuration, webhook and portal so existing payments and cancellations still work.
 Do not use the global feature flag as a routine sales pause after launch.
+
+## Refunds and disputes
+
+A refund takes back the refunded share of the Stars that payment granted, even when
+they were already spent, so the balance can go negative. Cards are never taken back,
+since they may have been traded on, and other collectors keep the creator rewards they
+earned. A fully refunded membership month ends at once and loses its bonus packs.
+A collector with a negative balance can't send, counter or accept trades until new
+Stars bring it back to zero; others can still send them offers, which keeps the
+reason private. Opening a dispute takes the Stars back and queues a review so a
+person answers it; a won dispute returns them. Refunds that can't be matched to a
+purchase go to the review queue.
 
 ## Creator statistics
 

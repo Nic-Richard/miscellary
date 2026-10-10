@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 from django.conf import settings
 from django.db import transaction
@@ -45,7 +45,7 @@ def lock_accounts(user_ids) -> dict:
 def record_entry(
     balance: StarBalance, kind: str, units: int, *, grant=None, opening=None
 ) -> StarEntry:
-    if balance.units + units < 0:
+    if units < 0 and balance.units + units < 0 and kind != StarEntry.Kind.REFUND:
         raise BillingError("Not enough Stars.")
     balance.units += units
     balance.save(update_fields=["units", "reward_remainder"])
@@ -175,6 +175,43 @@ def grant_subscription_period(
     balance, _ = StarBalance.objects.get_or_create(user=locked)
     record_entry(balance, StarEntry.Kind.GRANT, grant.units, grant=grant)
     return period
+
+
+@transaction.atomic
+def reverse_grant(grant: StarGrant, refunded: int, paid: int, *, restore: bool = False) -> None:
+    """Take back the refunded share of a grant's Stars, even if that leaves the balance negative.
+
+    Cards and other collectors' creator rewards are never touched. Refund totals only grow,
+    except for a won dispute (restore=True), which can give Stars back.
+    """
+    if paid <= 0:
+        raise PaymentMismatch("Refunded payment has no amount.")
+    lock_accounts([grant.user_id])
+    target = grant.units * min(max(refunded, 0), paid) // paid
+    taken = -sum(
+        StarEntry.objects.filter(grant=grant, kind=StarEntry.Kind.REFUND).values_list(
+            "units", flat=True
+        )
+    )
+    change = target - taken
+    if change < 0 and not restore:
+        return
+    if change:
+        balance, _ = StarBalance.objects.get_or_create(user_id=grant.user_id)
+        record_entry(balance, StarEntry.Kind.REFUND, -change, grant=grant)
+    if target == grant.units and hasattr(grant, "period"):
+        # A fully refunded month ends now and loses its remaining bonus packs.
+        period = grant.period
+        now = timezone.now()
+        if period.ends_at > now:
+            period.ends_at = max(now, period.starts_at + timedelta(seconds=1))
+        period.bonus_packs_remaining = 0
+        period.save(update_fields=["ends_at", "bonus_packs_remaining"])
+
+
+def trade_restricted(user: User) -> bool:
+    # Collectors whose refunds left them owing Stars can't trade until the balance is back to zero.
+    return StarBalance.objects.filter(user=user, units__lt=0).exists()
 
 
 def active_period(user: User, at: datetime | None = None):

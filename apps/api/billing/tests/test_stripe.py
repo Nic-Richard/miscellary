@@ -2,12 +2,14 @@ import hashlib
 import hmac
 import json
 import time
+from datetime import timedelta
 from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
 import pytest
 import stripe
 from django.urls import reverse
+from django.utils import timezone
 
 from accounts.lifecycle import delete_account
 from billing import actions
@@ -16,6 +18,7 @@ from billing.models import (
     BillingReview,
     Checkout,
     StarBalance,
+    StarEntry,
     StarGrant,
     StripeCustomer,
     StripeEvent,
@@ -316,13 +319,76 @@ def test_management_is_account_bound_and_closure_cancels_before_deleting(user, p
     assert user.deleted_at is not None
 
 
-def test_refund_and_dispute_need_review_without_confiscating_cards(user, provider):
+def bought(user, provider):
     checkout = prepare(user, provider)
     provider.v1.checkout.sessions.retrieve.return_value = settled(checkout)
     payments.process_event(event("checkout.session.completed", id="cs_test"))
-    for kind, key in [("charge.refunded", "evt_refund"), ("charge.dispute.created", "evt_dispute")]:
-        notification = event(kind, key, id="ch_test")
-        payments.process_event(notification)
-        payments.process_event(notification)
-    assert BillingReview.objects.count() == 2
+    return StarGrant.objects.get()
+
+
+def charge(amount_refunded=0, **values):
+    return obj(
+        **{
+            "id": "ch_test",
+            "payment_intent": "pi_test",
+            "amount": 500,
+            "amount_refunded": amount_refunded,
+            **values,
+        }
+    )
+
+
+def test_refund_takes_back_spent_stars_and_pauses_trading(user, provider):
+    from trades.actions import TradeError, create_offer
+
+    grant = bought(user, provider)
+    creator = make_user()
+    balance = StarBalance.objects.get(user=user)
+    actions.record_entry(balance, StarEntry.Kind.SPEND, -100000)
+    actions.record_entry(StarBalance.objects.create(user=creator), StarEntry.Kind.REWARD, 10000)
+    provider.v1.charges.retrieve.return_value = charge(250)
+    payments.process_event(event("charge.refunded", "evt_half", id="ch_test"))
+    assert StarBalance.objects.get(user=user).units == 25000 - 62500
+    provider.v1.charges.retrieve.return_value = charge(500)
+    for key in ["evt_full", "evt_full", "evt_again"]:
+        payments.process_event(event("charge.refunded", key, id="ch_test"))
+    assert StarBalance.objects.get(user=user).units == -100000
+    assert StarEntry.objects.filter(grant=grant, kind="refund").count() == 2
+    assert StarBalance.objects.get(user=creator).units == 10000
+    assert not BillingReview.objects.exists()
+    assert actions.trade_restricted(user) and not actions.trade_restricted(creator)
+    with pytest.raises(TradeError):
+        create_offer(user, creator, [], [uuid4()])
+    actions.record_entry(StarBalance.objects.get(user=user), StarEntry.Kind.GRANT, 100000)
+    assert not actions.trade_restricted(user)
+    with pytest.raises(actions.BillingError):
+        actions.record_entry(StarBalance.objects.get(user=user), StarEntry.Kind.SPEND, -1)
+
+
+def test_dispute_takes_stars_until_won_and_unknown_refunds_need_review(user, provider):
+    bought(user, provider)
+    provider.v1.charges.retrieve.return_value = charge()
+    payments.process_event(
+        event("charge.dispute.created", "evt_dispute", id="dp_test", charge="ch_test")
+    )
+    assert StarBalance.objects.get(user=user).units == 0
+    assert BillingReview.objects.get().reason == "charge.dispute.created"
+    provider.v1.disputes.retrieve.return_value = obj(id="dp_test", charge="ch_test", status="won")
+    payments.process_event(event("charge.dispute.closed", "evt_won", id="dp_test"))
     assert StarBalance.objects.get(user=user).units == 125000
+    provider.v1.charges.retrieve.return_value = charge(500, payment_intent="pi_other")
+    provider.v1.invoice_payments.list.return_value = obj(data=[])
+    payments.process_event(event("charge.refunded", "evt_unknown", id="ch_test"))
+    assert BillingReview.objects.get(event="evt_unknown").reason == "refund_unmatched"
+    assert StarBalance.objects.get(user=user).units == 125000
+
+
+def test_refunded_month_ends_membership(user):
+    now = timezone.now()
+    period = actions.grant_subscription_period(
+        user, "web", "stripe:in_test", "sub_test", now - timedelta(days=1), now + timedelta(days=29)
+    )
+    actions.reverse_grant(period.grant, 499, 499)
+    period.refresh_from_db()
+    assert actions.active_period(user) is None and period.bonus_packs_remaining == 0
+    assert StarBalance.objects.get(user=user).units == 0

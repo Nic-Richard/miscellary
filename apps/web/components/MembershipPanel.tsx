@@ -298,6 +298,12 @@ export default function MembershipPanel() {
             <span>Stars</span>
           </p>
         </div>
+        {membership.star_units < 0 && (
+          <p className={styles.notice} role="status">
+            A refunded purchase took back Stars you&rsquo;d already spent. Trading is paused until
+            your balance is back to zero. Your cards stay yours.
+          </p>
+        )}
         {canBuy ? (
           <>
             <div className={styles.stubs}>

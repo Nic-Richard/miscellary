@@ -8,11 +8,13 @@ ownership, then swaps owners in one transaction.
 from django.db import transaction
 from django.utils import timezone
 
+from billing.actions import trade_restricted
 from packs.models import OwnedCard
 
 from .models import TradeOffer, TradeOfferItem
 
 MAX_CARDS_PER_SIDE = 20
+RESTRICTED = "Trading is paused until your Stars balance is back to zero after a refund."
 
 
 class TradeError(Exception):
@@ -49,6 +51,8 @@ def _check_side(cards: dict, owner, card_ids, label: str) -> list[OwnedCard]:
 def create_offer(sender, recipient, give_ids, want_ids, message="", counter_of=None) -> TradeOffer:
     if sender == recipient:
         raise TradeError("You can't trade with yourself.")
+    if trade_restricted(sender):
+        raise TradeError(RESTRICTED)
     if not give_ids and not want_ids:
         raise TradeError("Pick at least one card.")
     if set(give_ids) & set(want_ids):
@@ -86,6 +90,8 @@ def accept_offer(user, offer: TradeOffer) -> TradeOffer:
         offer = _pending_locked(offer.pk)
         if offer.recipient_id != user.id:
             raise TradeError("Only the recipient can accept an offer.")
+        if trade_restricted(user):
+            raise TradeError(RESTRICTED)
 
         items = list(offer.items.all())
         # Lock cards in a fixed order so two trades touching the same cards can't deadlock.
