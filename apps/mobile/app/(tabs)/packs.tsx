@@ -331,7 +331,7 @@ function Packs() {
   const empty = entries?.length === 0;
   useEffect(() => {
     if (!empty) return;
-    listPublicSets('popular')
+    listPublicSets('top')
       .then((page) => setStarters(page.results.slice(0, 8)))
       .catch(() => setStarters([]));
   }, [empty]);

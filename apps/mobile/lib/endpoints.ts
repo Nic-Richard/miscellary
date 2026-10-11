@@ -32,7 +32,7 @@ import { statusChanged } from './membership';
 import { listOwnedCardPages } from '@miscellary/shared';
 
 export const listPublicSets = (
-  sort: 'new' | 'popular' = 'new',
+  sort: 'top' | 'new' | 'hot' = 'new',
   next: string | null = null,
   signal?: AbortSignal,
 ) => {

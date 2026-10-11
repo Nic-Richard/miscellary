@@ -13,25 +13,27 @@ export default function SetTile({ set }: { set: CardSetSummary }) {
       <Pressable
         accessibilityRole="link"
         accessibilityLabel={`${set.title}, ${set.card_count} cards, by ${personName(set.creator)}`}
-        style={({ pressed }) => [styles.root, pressed && { opacity: 0.85 }]}
+        style={({ pressed }) => [styles.press, pressed && { opacity: 0.85 }]}
       >
-        <View
-          style={[
-            styles.stage,
-            { backgroundColor: binderColors[set.binder_colour] ?? colors.cloth },
-          ]}
-        >
-          {pack ? (
-            <Image source={{ uri: pack }} resizeMode="cover" style={StyleSheet.absoluteFill} />
-          ) : null}
-        </View>
-        <Text style={styles.title} numberOfLines={2}>
-          {set.title}
-        </Text>
-        <View style={styles.metaRow}>
-          <Text numberOfLines={1} style={styles.meta}>
-            {set.card_count} cards · {personHandle(set.creator)}
-          </Text>
+        <View style={styles.root}>
+          <View
+            style={[
+              styles.stage,
+              { backgroundColor: binderColors[set.binder_colour] ?? colors.cloth },
+            ]}
+          >
+            {pack ? (
+              <Image source={{ uri: pack }} resizeMode="cover" style={StyleSheet.absoluteFill} />
+            ) : null}
+          </View>
+          <View style={styles.label}>
+            <Text style={styles.title} numberOfLines={2}>
+              {set.title}
+            </Text>
+            <Text numberOfLines={1} style={styles.meta}>
+              {set.card_count} cards · {personHandle(set.creator)}
+            </Text>
+          </View>
         </View>
       </Pressable>
     </Link>
@@ -39,30 +41,37 @@ export default function SetTile({ set }: { set: CardSetSummary }) {
 }
 
 const useStyles = createThemedStyles((colors) => ({
-  root: { flex: 1, minWidth: 0, gap: 8 },
+  press: { flex: 1, minWidth: 0 },
+  root: {
+    flex: 1,
+    minWidth: 0,
+    overflow: 'hidden',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.bdr,
+    borderBottomWidth: 2,
+    backgroundColor: colors.sur,
+  },
   stage: {
     aspectRatio: 0.8,
-    borderRadius: 10,
     overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'flex-end',
     paddingTop: '9%',
-    borderWidth: 1,
-    borderColor: 'rgba(41,30,14,0.18)',
+  },
+  label: {
+    gap: 3,
+    paddingHorizontal: 12,
+    paddingTop: 10,
+    paddingBottom: 12,
+    borderTopWidth: 1,
+    borderColor: colors.bdr2,
   },
   title: {
     fontFamily: fonts.display,
-    fontSize: 19,
-    lineHeight: 21,
-    color: colors.pageText,
-    textAlign: 'center',
+    fontSize: 20,
+    lineHeight: 22,
+    color: colors.text,
   },
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    flexWrap: 'wrap',
-  },
-  meta: { fontFamily: fonts.body, fontSize: 14, color: colors.pageMuted },
+  meta: { fontFamily: fonts.body, fontSize: 14, color: colors.muted },
 }));

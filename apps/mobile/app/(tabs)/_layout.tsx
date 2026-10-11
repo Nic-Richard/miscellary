@@ -1,5 +1,5 @@
-import { router, Tabs } from 'expo-router';
-import { Pressable, Text } from 'react-native';
+import { Tabs } from 'expo-router';
+import { Text } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 import Svg, { Path } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -101,17 +101,6 @@ export default function TabsLayout() {
           title: 'Profile',
           tabBarAccessibilityLabel: 'Profile',
           tabBarIcon: icon('user'),
-          headerRight: () => (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Notifications"
-              hitSlop={10}
-              onPress={() => router.push('/notifications')}
-              style={({ pressed }) => ({ marginRight: 16, opacity: pressed ? 0.6 : 1 })}
-            >
-              <Feather name="bell" size={22} color={colors.text} />
-            </Pressable>
-          ),
         }}
       />
     </Tabs>

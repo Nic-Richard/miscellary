@@ -3,7 +3,7 @@ import type { CardSetSummary, Paginated } from '@miscellary/shared';
 import { listPublicSets } from './endpoints';
 import { readPublicCache, writePublicCache } from './publicCache';
 
-export type DiscoverySort = 'new' | 'popular';
+export type DiscoverySort = 'top' | 'new' | 'hot';
 
 export function useDiscovery(sort: DiscoverySort) {
   const [sets, setSets] = useState<CardSetSummary[]>([]);

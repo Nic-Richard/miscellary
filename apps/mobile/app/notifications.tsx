@@ -28,6 +28,16 @@ function when(iso: string): string {
   return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
 
+function dayGroup(iso: string): string {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const days = Math.floor((today.getTime() - new Date(iso).setHours(0, 0, 0, 0)) / 86_400_000);
+  if (days <= 0) return 'Today';
+  if (days === 1) return 'Yesterday';
+  if (days < 7) return 'This week';
+  return 'Earlier';
+}
+
 function describe(n: Notification): { text: string; go: (() => void) | null } {
   const set = n.set_title ?? 'a set';
   const slug = n.set_slug;
@@ -247,7 +257,20 @@ function Notifications() {
           </Muted>
         </View>
       ) : (
-        shown.map((n) => <Row key={n.id} notification={n} />)
+        shown.map((n, index) => {
+          const group = dayGroup(n.created_at);
+          const first = index === 0 || dayGroup(shown[index - 1]!.created_at) !== group;
+          return (
+            <View key={n.id} style={{ gap: 8 }}>
+              {first && (
+                <Text accessibilityRole="header" style={styles.day}>
+                  {group}
+                </Text>
+              )}
+              <Row notification={n} />
+            </View>
+          );
+        })
       )}
       {more ? (
         <Pressable
@@ -287,6 +310,14 @@ const useStyles = createThemedStyles((colors) => ({
     marginBottom: 6,
   },
   heading: { color: colors.pageText, fontFamily: fonts.display, fontSize: 30 },
+  day: {
+    marginTop: 10,
+    color: colors.pageMuted,
+    fontFamily: fonts.medium,
+    fontSize: 13,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
   row: {
     flexDirection: 'row',
     gap: 12,
@@ -348,7 +379,7 @@ const useStyles = createThemedStyles((colors) => ({
     paddingHorizontal: 12,
     paddingVertical: 7,
   },
-  filterOn: { borderColor: colors.accent, backgroundColor: 'rgba(30,110,103,0.1)' },
+  filterOn: { borderColor: colors.accent, backgroundColor: colors.sur2 },
   filterText: { color: colors.muted, fontFamily: fonts.body, fontSize: 14 },
   filterTextOn: { color: colors.accent, fontFamily: fonts.medium },
 }));

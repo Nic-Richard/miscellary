@@ -1,6 +1,6 @@
 import { BLOCK_COPY, cardCode, profilePath, SHOWCASE_SLOTS } from '@miscellary/shared';
 import type { OwnedCard, ProfilePage } from '@miscellary/shared';
-import { Link, router } from 'expo-router';
+import { router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { useAuth } from '@/lib/auth';
@@ -13,7 +13,7 @@ import type { MoreItem } from '@/components/MoreButton';
 import ReportSheet from '@/components/ReportSheet';
 import ShareButton from '@/components/ShareButton';
 import PeopleList from './PeopleList';
-import { useColors, createThemedStyles } from '@/lib/theme';
+import { fonts, useColors, createThemedStyles } from '@/lib/theme';
 import CardInspector from './CardInspector';
 import Avatar from './Avatar';
 import CardPreview from './CardPreview';
@@ -21,6 +21,7 @@ import { confirmBlock } from './BlockedPeople';
 import DemoBadge from './DemoBadge';
 import SupporterBadge from './SupporterBadge';
 import SharedSurface from './SharedSurface';
+import SetTile from './SetTile';
 import { Button, Muted } from './ui';
 import SupporterEmblem from '@/components/SupporterEmblem';
 
@@ -113,169 +114,171 @@ export default function ProfileView({
       style={{ backgroundColor: colors.bg }}
       contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 40 }}
     >
-      <View style={styles.header}>
-        <Avatar
-          person={{ ...profile, deleted: false }}
-          badge={
-            profile.subscriber_badge
-              ? profile.ring_style !== undefined
-                ? profile.ring_style
-                : (profile.badge_style ?? 'gold-foil')
-              : null
-          }
-          size={56}
-        />
-        <View style={{ flex: 1, gap: 4 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Text style={{ color: colors.pageText, fontSize: 22, fontWeight: '700' }}>
-              {profile.display_name || profile.username}
-            </Text>
-            <SupporterEmblem
-              tier={profile.supporter_tier}
-              months={profile.supporter_months}
-              size={22}
-            />
-          </View>
-          {profile.subscriber_badge && <SupporterBadge badge={profile.badge_style} />}
-          {profile.is_demo ? <DemoBadge /> : null}
-          <Muted style={{ color: colors.pageMuted }}>@{profile.username}</Muted>
-        </View>
-      </View>
-      {profile.bio ? <Muted style={{ color: colors.pageMuted }}>{profile.bio}</Muted> : null}
-      {profile.featured_card ? (
-        <Pressable
-          accessibilityRole="link"
-          accessibilityLabel={`Featured card, ${profile.featured_card.title}`}
-          onPress={() =>
-            router.push({
-              pathname: '/sets/[slug]',
-              params: { slug: profile.featured_card!.set_slug },
-            })
-          }
-          style={({ pressed }) => [styles.featured, pressed && { opacity: 0.8 }]}
-        >
-          <CardPreview
-            width={44}
-            title={profile.featured_card.title}
-            rarity={profile.featured_card.rarity}
-            imageUrl={profile.featured_card.image?.url ?? null}
-            templateKey={profile.featured_card.template_key}
-            templateConfig={profile.featured_card.template_config}
-            code={cardCode(
-              profile.featured_card.printed_set_code,
-              profile.featured_card.position,
-              profile.featured_card.set_total,
-            )}
-            printedText={profile.featured_card.printed_text}
-            render={profile.featured_card.render}
+      <View style={styles.hero}>
+        <View style={styles.header}>
+          <Avatar
+            person={{ ...profile, deleted: false }}
+            badge={
+              profile.subscriber_badge
+                ? profile.ring_style !== undefined
+                  ? profile.ring_style
+                  : (profile.badge_style ?? 'gold-foil')
+                : null
+            }
+            size={56}
           />
-          <View style={{ flex: 1, gap: 1 }}>
-            <Text style={styles.featuredLabel}>Featured card</Text>
-            <Text style={styles.featuredTitle} numberOfLines={1}>
-              {profile.featured_card.title}
-            </Text>
-            <Text style={styles.featuredSet} numberOfLines={1}>
-              {profile.featured_card.set_title}
-            </Text>
+          <View style={{ flex: 1, gap: 4 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Text style={{ color: colors.text, fontSize: 22, fontWeight: '700' }}>
+                {profile.display_name || profile.username}
+              </Text>
+              <SupporterEmblem
+                tier={profile.supporter_tier}
+                months={profile.supporter_months}
+                size={22}
+              />
+            </View>
+            {profile.subscriber_badge && <SupporterBadge badge={profile.badge_style} />}
+            {profile.is_demo ? <DemoBadge /> : null}
+            <Muted style={{ color: colors.muted }}>@{profile.username}</Muted>
           </View>
-        </Pressable>
-      ) : null}
-      {profile.is_demo ? (
-        <Muted style={{ fontSize: 14 }}>
-          This collector is fictional and is here to demonstrate Miscellary. The photographs are
-          real work by the people credited on each card.
-        </Muted>
-      ) : null}
-      <View style={styles.counts}>
-        <Pressable
-          accessibilityRole="button"
-          hitSlop={6}
-          onPress={() => setPeople(people === 'followers' ? null : 'followers')}
-        >
-          <Text style={styles.countLink}>
-            {profile.follower_count} {profile.follower_count === 1 ? 'follower' : 'followers'}
-          </Text>
-        </Pressable>
-        <Pressable
-          accessibilityRole="button"
-          hitSlop={6}
-          onPress={() => setPeople(people === 'following' ? null : 'following')}
-        >
-          <Text style={styles.countLink}>{profile.following_count} following</Text>
-        </Pressable>
-        <Muted style={styles.count}>
-          {profile.set_count} {profile.set_count === 1 ? 'set' : 'sets'}
-        </Muted>
-        <Muted style={styles.count}>
-          {profile.card_count} {profile.card_count === 1 ? 'card' : 'cards'}
-        </Muted>
-      </View>
-      {people ? (
-        <PeopleList
-          username={profile.username}
-          direction={people}
-          onClose={() => setPeople(null)}
-        />
-      ) : null}
-      <View style={styles.actions}>
-        {headerExtra}
-        {!profile.is_me && user && profile.is_blocked ? (
-          <>
-            <Muted style={{ flexBasis: '100%' }}>{BLOCK_COPY.blocked}</Muted>
-            <Button
-              title="Unblock"
-              kind="secondary"
-              disabled={blockBusy}
-              onPress={() => void toggleBlock(false)}
+        </View>
+        {profile.bio ? <Muted style={{ color: colors.muted }}>{profile.bio}</Muted> : null}
+        {profile.featured_card ? (
+          <Pressable
+            accessibilityRole="link"
+            accessibilityLabel={`Featured card, ${profile.featured_card.title}`}
+            onPress={() =>
+              router.push({
+                pathname: '/sets/[slug]',
+                params: { slug: profile.featured_card!.set_slug },
+              })
+            }
+            style={({ pressed }) => [styles.featured, pressed && { opacity: 0.8 }]}
+          >
+            <CardPreview
+              width={44}
+              title={profile.featured_card.title}
+              rarity={profile.featured_card.rarity}
+              imageUrl={profile.featured_card.image?.url ?? null}
+              templateKey={profile.featured_card.template_key}
+              templateConfig={profile.featured_card.template_config}
+              code={cardCode(
+                profile.featured_card.printed_set_code,
+                profile.featured_card.position,
+                profile.featured_card.set_total,
+              )}
+              printedText={profile.featured_card.printed_text}
+              render={profile.featured_card.render}
             />
-          </>
-        ) : !profile.is_me && user ? (
-          <>
-            <Button
-              title={profile.is_following ? 'Following' : 'Follow'}
-              kind={profile.is_following ? 'secondary' : 'primary'}
-              disabled={followBusy}
-              onPress={() => void toggleFollow()}
-            />
-            <Button
-              title="Offer a trade"
-              kind="secondary"
-              onPress={() =>
-                router.push({ pathname: '/trades/new', params: { with: profile.username } })
-              }
-            />
-          </>
+            <View style={{ flex: 1, gap: 1 }}>
+              <Text style={styles.featuredLabel}>Featured card</Text>
+              <Text style={styles.featuredTitle} numberOfLines={1}>
+                {profile.featured_card.title}
+              </Text>
+              <Text style={styles.featuredSet} numberOfLines={1}>
+                {profile.featured_card.set_title}
+              </Text>
+            </View>
+          </Pressable>
         ) : null}
-        <ShareButton
-          path={profilePath(profile.username)}
-          title={`${profile.display_name || profile.username} on Miscellary`}
-        />
-        <MoreButton
-          title={`@${profile.username}`}
-          items={
-            profile.is_me
-              ? ownItems
-              : user
-                ? [
-                    {
-                      label: 'Report this collector',
-                      icon: 'flag',
-                      onSelect: () => setReporting(true),
-                    },
-                    ...(profile.is_blocked
-                      ? []
-                      : [
-                          {
-                            label: `Block @${profile.username}`,
-                            icon: 'slash' as const,
-                            onSelect: () =>
-                              confirmBlock(profile.username, () => void toggleBlock(true)),
-                          },
-                        ]),
-                  ]
-                : []
-          }
-        />
+        {profile.is_demo ? (
+          <Muted style={{ fontSize: 14 }}>
+            This collector is fictional and is here to demonstrate Miscellary. The photographs are
+            real work by the people credited on each card.
+          </Muted>
+        ) : null}
+        <View style={styles.counts}>
+          <Pressable
+            accessibilityRole="button"
+            hitSlop={6}
+            onPress={() => setPeople(people === 'followers' ? null : 'followers')}
+          >
+            <Text style={styles.countLink}>
+              {profile.follower_count} {profile.follower_count === 1 ? 'follower' : 'followers'}
+            </Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            hitSlop={6}
+            onPress={() => setPeople(people === 'following' ? null : 'following')}
+          >
+            <Text style={styles.countLink}>{profile.following_count} following</Text>
+          </Pressable>
+          <Muted style={styles.count}>
+            {profile.set_count} {profile.set_count === 1 ? 'set' : 'sets'}
+          </Muted>
+          <Muted style={styles.count}>
+            {profile.card_count} {profile.card_count === 1 ? 'card' : 'cards'}
+          </Muted>
+        </View>
+        {people ? (
+          <PeopleList
+            username={profile.username}
+            direction={people}
+            onClose={() => setPeople(null)}
+          />
+        ) : null}
+        <View style={styles.actions}>
+          {headerExtra}
+          {!profile.is_me && user && profile.is_blocked ? (
+            <>
+              <Muted style={{ flexBasis: '100%' }}>{BLOCK_COPY.blocked}</Muted>
+              <Button
+                title="Unblock"
+                kind="secondary"
+                disabled={blockBusy}
+                onPress={() => void toggleBlock(false)}
+              />
+            </>
+          ) : !profile.is_me && user ? (
+            <>
+              <Button
+                title={profile.is_following ? 'Following' : 'Follow'}
+                kind={profile.is_following ? 'secondary' : 'primary'}
+                disabled={followBusy}
+                onPress={() => void toggleFollow()}
+              />
+              <Button
+                title="Offer a trade"
+                kind="secondary"
+                onPress={() =>
+                  router.push({ pathname: '/trades/new', params: { with: profile.username } })
+                }
+              />
+            </>
+          ) : null}
+          <ShareButton
+            path={profilePath(profile.username)}
+            title={`${profile.display_name || profile.username} on Miscellary`}
+          />
+          <MoreButton
+            title={`@${profile.username}`}
+            items={
+              profile.is_me
+                ? ownItems
+                : user
+                  ? [
+                      {
+                        label: 'Report this collector',
+                        icon: 'flag',
+                        onSelect: () => setReporting(true),
+                      },
+                      ...(profile.is_blocked
+                        ? []
+                        : [
+                            {
+                              label: `Block @${profile.username}`,
+                              icon: 'slash' as const,
+                              onSelect: () =>
+                                confirmBlock(profile.username, () => void toggleBlock(true)),
+                            },
+                          ]),
+                    ]
+                  : []
+            }
+          />
+        </View>
       </View>
       <ReportSheet
         visible={reporting}
@@ -288,8 +291,8 @@ export default function ProfileView({
         <VerifyEmailNotice>Verify your email address to trade and publish sets.</VerifyEmailNotice>
       ) : null}
 
-      <Text style={styles.h2}>Binder</Text>
       <View style={styles.binder}>
+        <Text style={styles.panelTitle}>Binder</Text>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Open binder"
@@ -327,21 +330,17 @@ export default function ProfileView({
         />
       ) : null}
 
-      <Text style={styles.h2}>Sets by @{profile.username}</Text>
-      {profile.sets.length === 0 ? <Muted>No published sets.</Muted> : null}
-      {profile.sets.map((s) => (
-        <Link
-          key={s.id}
-          href={{ pathname: '/sets/[slug]', params: { slug: s.slug } }}
-          style={styles.setRow}
-        >
-          <Text style={{ color: colors.accent }}>{s.title}</Text>
-          <Text style={{ color: colors.faint, fontSize: 14 }}>
-            {'  '}
-            {s.card_count} cards · ♥ {s.like_count}
-          </Text>
-        </Link>
-      ))}
+      <View style={styles.binder}>
+        <Text style={styles.panelTitle}>Sets by @{profile.username}</Text>
+        {profile.sets.length === 0 ? <Muted>No published sets.</Muted> : null}
+        <View style={styles.setGrid}>
+          {profile.sets.map((s) => (
+            <View key={s.id} style={styles.setCell}>
+              <SetTile set={s} />
+            </View>
+          ))}
+        </View>
+      </View>
       {selected ? (
         <InspectorModal open onClose={() => setSelected(null)}>
           <View style={styles.inspector}>
@@ -373,6 +372,18 @@ const useStyles = createThemedStyles((colors) => ({
     backgroundColor: colors.sur,
   },
   binderPreview: { borderRadius: 10, overflow: 'hidden' },
+  hero: {
+    gap: 12,
+    padding: 16,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.bdr,
+    borderBottomWidth: 2,
+    backgroundColor: colors.sur,
+  },
+  panelTitle: { color: colors.text, fontFamily: fonts.display, fontSize: 24 },
+  setGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  setCell: { width: '47%', flexGrow: 1 },
   featured: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -397,14 +408,7 @@ const useStyles = createThemedStyles((colors) => ({
     rowGap: 4,
   },
   count: { fontSize: 14 },
-  countLink: { color: colors.pageAccent, fontSize: 14 },
+  countLink: { color: colors.accentInk, fontSize: 14 },
   h2: { color: colors.pageText, fontSize: 16, fontWeight: '700', marginTop: 8 },
   inspector: { flex: 1, backgroundColor: '#241d16' },
-  setRow: {
-    backgroundColor: colors.sur,
-    borderColor: colors.bdr2,
-    borderWidth: 1,
-    borderRadius: 6,
-    padding: 10,
-  },
 }));

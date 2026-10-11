@@ -17,7 +17,7 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import CardPreview from '@/components/CardPreview';
 import SetTile from '@/components/SetTile';
-import { Button, Chip, ErrorText, Input } from '@/components/ui';
+import { Button, ErrorText, Input, Segmented } from '@/components/ui';
 import { getPublicSet } from '@/lib/endpoints';
 import { useDiscovery } from '@/lib/discovery';
 import { readPublicCache, writePublicCache } from '@/lib/publicCache';
@@ -221,11 +221,15 @@ export default function BrowseScreen() {
               </View>
             </View>
             <View style={styles.filters}>
-              <Chip label="Newest" active={sort === 'new'} onPress={() => pickSort('new')} />
-              <Chip
-                label="Popular"
-                active={sort === 'popular'}
-                onPress={() => pickSort('popular')}
+              <Segmented
+                label="Sort sets"
+                options={[
+                  { value: 'top', label: 'Top' },
+                  { value: 'new', label: 'New' },
+                  { value: 'hot', label: 'Hot' },
+                ]}
+                value={sort}
+                onChange={pickSort}
               />
             </View>
             <View style={styles.filterGap} />
@@ -389,10 +393,7 @@ const useStyles = createThemedStyles((colors) => ({
   filterGap: { height: 14 },
   row: { gap: 20 },
   item: {
-    paddingBottom: 20,
-    marginBottom: 21,
-    borderBottomWidth: 2,
-    borderBottomColor: colors.bdr2,
+    marginBottom: 16,
   },
   loading: { paddingVertical: 56, alignItems: 'center', gap: 14 },
   empty: {
