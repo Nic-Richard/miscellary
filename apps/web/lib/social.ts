@@ -83,6 +83,6 @@ export const sendReport = (body: {
   details: string;
 }) => apiFetch<{ id: string }>('/api/v1/reports/', { method: 'POST', body });
 export const search = (q: string) =>
-  apiFetch<SearchResults>(`/api/v1/search/?q=${encodeURIComponent(q)}`, { auth: false });
+  apiFetch<SearchResults>(`/api/v1/search/?q=${encodeURIComponent(q)}`);
 
 export { REPORT_REASONS } from '@miscellary/shared';

@@ -201,6 +201,16 @@ a.link:hover {
   .filters {
     display: flex;
     flex-wrap: wrap;
+    gap: 8px;
+  }
+  .filter {
+    padding: 7px 13px;
+    border: 1px solid var(--bdr2);
+    border-radius: 999px;
+  }
+  .filter[aria-pressed='true'] {
+    border-color: var(--accent);
+    box-shadow: none;
   }
 }
 @media (max-width: 620px) {

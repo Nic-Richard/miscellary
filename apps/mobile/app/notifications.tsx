@@ -4,10 +4,11 @@ import { router, Stack, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Image, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import LoginGate from '@/components/LoginGate';
-import { Button, ErrorText, Loading, Muted } from '@/components/ui';
+import Avatar from '@/components/Avatar';
+import SupporterEmblem from '@/components/SupporterEmblem';
+import { Button, Chip, ErrorText, Loading, Muted, Panel, PanelTitle } from '@/components/ui';
 import { getNotifications, markNotificationsRead } from '@/lib/endpoints';
 import { fonts, useColors, createThemedStyles } from '@/lib/theme';
-import SupporterEmblem from '@/components/SupporterEmblem';
 
 const ICONS: Record<Notification['kind'], React.ComponentProps<typeof Feather>['name']> = {
   set_like: 'heart',
@@ -72,12 +73,13 @@ function describe(n: Notification): { text: string; go: (() => void) | null } {
   }
 }
 
-function Row({ notification }: { notification: Notification }) {
+function Row({ notification, last }: { notification: Notification; last: boolean }) {
   const colors = useColors();
   const styles = useStyles();
   const { text, go } = describe(notification);
   const actor = notification.actor;
   const object = notification.card_image ?? notification.set_pack_image;
+  const quote = notification.comment_body || notification.lounge_reply_body;
 
   return (
     <Pressable
@@ -86,58 +88,67 @@ function Row({ notification }: { notification: Notification }) {
       onPress={go ?? undefined}
       style={({ pressed }) => [
         styles.row,
-        !notification.read && styles.unread,
+        !last && styles.rowRule,
         pressed && go ? { opacity: 0.75 } : null,
       ]}
     >
-      <View style={[styles.mark, !notification.read && styles.markUnread]}>
-        <Feather
-          name={ICONS[notification.kind]}
-          size={15}
-          color={notification.read ? colors.faint : colors.accent}
-        />
+      <View style={styles.who}>
+        <Avatar person={{ ...actor, deleted: false }} size={36} />
+        <View style={styles.kind}>
+          <Feather name={ICONS[notification.kind]} size={10} color={colors.accentText} />
+        </View>
       </View>
       <View style={styles.line}>
-        <View style={styles.said}>
+        <Text style={[styles.text, !notification.read && styles.textUnread]}>
           <Text style={styles.actor}>{actor.display_name || `@${actor.username}`}</Text>
-          <SupporterEmblem tier={actor.supporter_tier} />
-          <Text style={styles.text}> {text}</Text>
-        </View>
-        {notification.comment_body || notification.lounge_reply_body ? (
+          {actor.supporter_tier ? (
+            <SupporterEmblem tier={actor.supporter_tier} size={13} />
+          ) : null}{' '}
+          {text}
+        </Text>
+        {quote ? (
           <Text numberOfLines={2} style={styles.quote}>
-            “{notification.comment_body || notification.lounge_reply_body}”
+            “{quote}”
           </Text>
         ) : null}
-        <Text style={styles.when}>{when(notification.created_at)}</Text>
+        <View style={styles.whenRow}>
+          {!notification.read && <View accessibilityLabel="Unread" accessible style={styles.dot} />}
+          <Text style={styles.when}>{when(notification.created_at)}</Text>
+        </View>
       </View>
-      {object ? (
-        <Image
-          source={{ uri: object }}
-          resizeMode="contain"
-          accessibilityIgnoresInvertColors
-          style={notification.card_image ? styles.objectCard : styles.objectPack}
-        />
-      ) : null}
+      <View style={styles.object}>
+        {object ? (
+          <Image
+            source={{ uri: object }}
+            resizeMode="contain"
+            accessibilityIgnoresInvertColors
+            style={notification.card_image ? styles.objectCard : styles.objectPack}
+          />
+        ) : null}
+      </View>
     </Pressable>
   );
 }
 
-const FILTERS: { value: 'all' | Notification['kind']; label: string }[] = [
-  { value: 'all', label: 'All' },
-  { value: 'set_like', label: 'Set likes' },
-  { value: 'card_like', label: 'Card likes' },
-  { value: 'set_comment', label: 'Comments' },
-  { value: 'comment_reply', label: 'Replies' },
-  { value: 'follow', label: 'Followers' },
-  { value: 'lounge_reply', label: 'Lounge' },
-  { value: 'lounge_mention', label: 'Mentions' },
+type Filter = 'all' | 'likes' | 'comments' | 'lounge' | 'follow';
+
+const FILTERS: { value: Filter; label: string; kinds: Notification['kind'][] }[] = [
+  { value: 'all', label: 'All', kinds: [] },
+  { value: 'likes', label: 'Likes', kinds: ['set_like', 'card_like'] },
+  { value: 'comments', label: 'Comments', kinds: ['set_comment', 'comment_reply'] },
+  { value: 'lounge', label: 'Lounge', kinds: ['lounge_reply', 'lounge_mention'] },
+  { value: 'follow', label: 'Followers', kinds: ['follow'] },
 ];
+
+function matches(filter: Filter, n: Notification) {
+  return filter === 'all' || FILTERS.find((f) => f.value === filter)!.kinds.includes(n.kind);
+}
 
 function Notifications() {
   const colors = useColors();
   const styles = useStyles();
   const [rows, setRows] = useState<Notification[] | null>(null);
-  const [filter, setFilter] = useState<'all' | Notification['kind']>('all');
+  const [filter, setFilter] = useState<Filter>('all');
   const [unread, setUnread] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -191,9 +202,32 @@ function Notifications() {
     }
   }
 
-  if (rows === null) return error ? <ErrorText>{error}</ErrorText> : <Loading />;
+  const header = (
+    <Stack.Screen
+      options={{
+        headerRight: () =>
+          unread > 0 ? (
+            <Button title="Mark all read" kind="quiet" small onPress={() => void markAll()} />
+          ) : null,
+      }}
+    />
+  );
 
-  const shown = filter === 'all' ? rows : rows.filter((r) => r.kind === filter);
+  if (rows === null)
+    return (
+      <>
+        {header}
+        {error ? <ErrorText>{error}</ErrorText> : <Loading />}
+      </>
+    );
+
+  const shown = rows.filter((r) => matches(filter, r));
+  const days: { label: string; rows: Notification[] }[] = [];
+  for (const n of shown) {
+    const label = dayGroup(n.created_at);
+    if (days.at(-1)?.label === label) days.at(-1)!.rows.push(n);
+    else days.push({ label, rows: [n] });
+  }
 
   return (
     <ScrollView
@@ -212,77 +246,58 @@ function Notifications() {
         />
       }
     >
-      <View style={styles.head}>
-        <Text accessibilityRole="header" style={styles.heading}>
-          {unread > 0 ? `${unread} unread` : 'All caught up'}
-        </Text>
-        {unread > 0 ? (
-          <Button title="Mark all read" kind="secondary" onPress={() => void markAll()} />
-        ) : null}
-      </View>
+      {header}
       <ErrorText>{error}</ErrorText>
 
       {rows.length ? (
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          style={styles.filters}
-          contentContainerStyle={styles.filtersRow}
+          contentContainerStyle={styles.filters}
         >
-          {FILTERS.filter((f) => f.value === 'all' || rows.some((r) => r.kind === f.value)).map(
-            (f) => (
-              <Pressable
+          {FILTERS.map((f) => ({ ...f, count: rows.filter((r) => matches(f.value, r)).length }))
+            .filter((f) => f.value === 'all' || f.count > 0)
+            .map((f) => (
+              <Chip
                 key={f.value}
-                accessibilityRole="button"
-                accessibilityState={{ selected: filter === f.value }}
+                label={f.label}
+                count={f.count}
+                active={filter === f.value}
                 onPress={() => setFilter(f.value)}
-                style={[styles.filter, filter === f.value && styles.filterOn]}
-              >
-                <Text style={[styles.filterText, filter === f.value && styles.filterTextOn]}>
-                  {f.label}
-                </Text>
-              </Pressable>
-            ),
-          )}
+              />
+            ))}
         </ScrollView>
       ) : null}
 
       {shown.length === 0 ? (
-        <View style={styles.empty}>
-          <Feather name="bell" size={28} color={colors.cloth} />
-          <Text style={styles.emptyTitle}>Nothing yet</Text>
+        <Panel>
+          <PanelTitle>Nothing yet</PanelTitle>
           <Muted>
             You will hear when someone likes or comments on a set of yours, follows you, or replies
             to or mentions you.
           </Muted>
-        </View>
+        </Panel>
       ) : (
-        shown.map((n, index) => {
-          const group = dayGroup(n.created_at);
-          const first = index === 0 || dayGroup(shown[index - 1]!.created_at) !== group;
-          return (
-            <View key={n.id} style={{ gap: 8 }}>
-              {first && (
-                <Text accessibilityRole="header" style={styles.day}>
-                  {group}
-                </Text>
-              )}
-              <Row notification={n} />
-            </View>
-          );
-        })
+        days.map((day) => (
+          <View key={day.label} style={styles.dayGroup}>
+            <Text accessibilityRole="header" style={styles.day}>
+              {day.label}
+            </Text>
+            <Panel plain style={styles.dayPanel}>
+              {day.rows.map((n, index) => (
+                <Row key={n.id} notification={n} last={index === day.rows.length - 1} />
+              ))}
+            </Panel>
+          </View>
+        ))
       )}
       {more ? (
-        <Pressable
-          accessibilityRole="button"
+        <Button
+          title={busy ? 'Loading…' : `Show older (${total - rows.length} further back)`}
+          kind="secondary"
           disabled={busy}
           onPress={() => void loadMore()}
-          style={({ pressed }) => [styles.more, pressed && { opacity: 0.7 }]}
-        >
-          <Text style={styles.moreText}>
-            {busy ? 'Loading…' : `Show older (${total - (rows?.length ?? 0)} further back)`}
-          </Text>
-        </Pressable>
+        />
       ) : null}
     </ScrollView>
   );
@@ -300,68 +315,36 @@ export default function NotificationsScreen() {
 }
 
 const useStyles = createThemedStyles((colors) => ({
-  content: { padding: 16, paddingBottom: 40, gap: 8 },
-  head: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    flexWrap: 'wrap',
-    gap: 10,
-    marginBottom: 6,
-  },
-  heading: { color: colors.pageText, fontFamily: fonts.display, fontSize: 30 },
-  day: {
-    marginTop: 10,
-    color: colors.pageMuted,
-    fontFamily: fonts.medium,
-    fontSize: 13,
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-  },
-  row: {
-    flexDirection: 'row',
-    gap: 12,
-    padding: 12,
-    backgroundColor: colors.sur,
-    borderWidth: 1,
-    borderColor: colors.bdr,
-    borderRadius: 8,
-  },
-  unread: { borderLeftWidth: 3, borderLeftColor: colors.accent },
-  mark: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    borderWidth: 1,
-    borderColor: colors.bdr2,
+  content: { padding: 14, paddingBottom: 40, gap: 14 },
+  filters: { gap: 8, paddingVertical: 2 },
+  dayGroup: { gap: 6 },
+  day: { paddingLeft: 4, color: colors.pageMuted, fontFamily: fonts.medium, fontSize: 14 },
+  dayPanel: { paddingVertical: 6, gap: 0 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 72, paddingVertical: 10 },
+  rowRule: { borderBottomWidth: 1, borderBottomColor: colors.bdr },
+  who: { width: 40 },
+  kind: {
+    position: 'absolute',
+    right: -2,
+    bottom: -2,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: colors.accent,
+    borderWidth: 2,
+    borderColor: colors.sur,
   },
-  markUnread: { borderColor: colors.accent },
   line: { flex: 1, minWidth: 0, gap: 3 },
-  said: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 5 },
-  actor: { color: colors.text, fontFamily: fonts.medium, fontSize: 15 },
-  text: { color: colors.text, fontFamily: fonts.body, fontSize: 15 },
+  actor: { fontFamily: fonts.medium },
+  text: { color: colors.muted, fontFamily: fonts.body, fontSize: 15, lineHeight: 20 },
+  textUnread: { color: colors.text },
   quote: { color: colors.muted, fontFamily: fonts.body, fontSize: 14, fontStyle: 'italic' },
+  whenRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  dot: { width: 7, height: 7, borderRadius: 4, backgroundColor: colors.accent },
   when: { color: colors.faint, fontFamily: fonts.body, fontSize: 13 },
-  more: {
-    alignItems: 'center',
-    marginTop: 14,
-    paddingVertical: 12,
-    borderWidth: 1,
-    borderColor: colors.bdr2,
-    borderRadius: 7,
-  },
-  moreText: { color: colors.accent, fontFamily: fonts.medium, fontSize: 14 },
-  empty: {
-    padding: 24,
-    gap: 12,
-    backgroundColor: colors.sur,
-    borderWidth: 1,
-    borderColor: colors.bdr,
-    borderRadius: 8,
-  },
-  emptyTitle: { color: colors.text, fontFamily: fonts.display, fontSize: 26 },
+  object: { width: 40, alignItems: 'center' },
   objectCard: {
     width: 38,
     aspectRatio: 5 / 7,
@@ -370,16 +353,4 @@ const useStyles = createThemedStyles((colors) => ({
     borderColor: colors.bdr2,
   },
   objectPack: { width: 34, aspectRatio: 0.8 },
-  filters: { marginBottom: 4 },
-  filtersRow: { gap: 8, paddingVertical: 2 },
-  filter: {
-    borderWidth: 1,
-    borderColor: colors.bdr2,
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-  },
-  filterOn: { borderColor: colors.accent, backgroundColor: colors.sur2 },
-  filterText: { color: colors.muted, fontFamily: fonts.body, fontSize: 14 },
-  filterTextOn: { color: colors.accent, fontFamily: fonts.medium },
 }));

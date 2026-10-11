@@ -20,7 +20,7 @@ import LoginGate from '@/components/LoginGate';
 import PointGain from '@/components/PointGain';
 import { listAllMyCards, listMyPoints, recycleCard, recycleDuplicates } from '@/lib/endpoints';
 import { fonts, rarityColors, useColors, createThemedStyles } from '@/lib/theme';
-import { ErrorText, Loading, Muted } from '@/components/ui';
+import { Button, ErrorText, Loading, Muted, Panel } from '@/components/ui';
 
 function Collection() {
   const colors = useColors();
@@ -133,14 +133,11 @@ function Collection() {
   if (!loaded) return error ? <ErrorText>{error}</ErrorText> : <Loading />;
 
   return (
-    <ScrollView
-      style={{ backgroundColor: colors.bg }}
-      contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
-    >
+    <ScrollView style={{ backgroundColor: colors.bg }} contentContainerStyle={styles.content}>
       <ErrorText>{error}</ErrorText>
 
       {cards.length ? (
-        <View style={styles.summary}>
+        <Panel>
           <View style={styles.summaryRow}>
             <View style={styles.figure}>
               <Text style={styles.figureValue}>{stackedCards.length}</Text>
@@ -182,13 +179,12 @@ function Collection() {
               );
             })}
           </View>
-        </View>
+        </Panel>
       ) : null}
       {cards.length === 0 ? <Muted>Nothing yet. Open a pack from any published set.</Muted> : null}
 
       {stackedCards.length > 1 ? (
         <FilterField
-          style={styles.filter}
           value={filter}
           onChange={setFilter}
           placeholder="Filter by card or set"
@@ -200,15 +196,17 @@ function Collection() {
       ) : null}
 
       {[...groups.entries()].map(([slug, list]) => (
-        <View key={slug} style={styles.group}>
+        <Panel plain key={slug}>
           <View style={styles.groupHeader}>
-            <Link href={{ pathname: '/sets/[slug]', params: { slug } }}>
-              <Text style={{ color: colors.pageText, fontWeight: '600' }}>
-                {list[0]?.set_title}
-              </Text>
+            <Link href={{ pathname: '/sets/[slug]', params: { slug } }} style={styles.groupTitle}>
+              {list[0]?.set_title}
             </Link>
-            <Muted style={{ fontSize: 14 }}>
-              {countOf(list.length, 'card')} ·{' '}
+            <Muted style={styles.small}>
+              {list.length} of {list[0]?.card.set_total}
+            </Muted>
+          </View>
+          <View style={styles.groupMeta}>
+            <Muted style={styles.small}>
               {countOf(
                 list.reduce((total, card) => total + card.copies, 0),
                 'copy',
@@ -218,23 +216,6 @@ function Collection() {
             </Muted>
             {bulkGain?.slug === slug ? (
               <PointGain key={bulkGain.key} amount={bulkGain.amount} />
-            ) : null}
-            {spareCount(cards.filter((copy) => copy.set_slug === slug)) > 0 ? (
-              <Pressable
-                accessibilityRole="button"
-                disabled={recycling !== null}
-                onPress={() => void recycleAll(slug, list[0]?.set_title ?? '')}
-                style={({ pressed }) => [
-                  styles.recycle,
-                  (pressed || recycling === `set:${slug}`) && { opacity: 0.55 },
-                ]}
-              >
-                <Text style={{ color: colors.muted, fontSize: 13 }}>
-                  {recycling === `set:${slug}`
-                    ? 'Recycling…'
-                    : `Recycle all spares (${spareCount(cards.filter((copy) => copy.set_slug === slug))})`}
-                </Text>
-              </Pressable>
             ) : null}
           </View>
           <View style={styles.grid}>
@@ -295,7 +276,21 @@ function Collection() {
               </View>
             ))}
           </View>
-        </View>
+          {spareCount(cards.filter((copy) => copy.set_slug === slug)) > 0 ? (
+            <Button
+              kind="secondary"
+              small
+              style={styles.recycleAll}
+              disabled={recycling !== null}
+              onPress={() => void recycleAll(slug, list[0]?.set_title ?? '')}
+              title={
+                recycling === `set:${slug}`
+                  ? 'Recycling…'
+                  : `Recycle all spares (${spareCount(cards.filter((copy) => copy.set_slug === slug))})`
+              }
+            />
+          ) : null}
+        </Panel>
       ))}
       {selected ? (
         <InspectorModal open onClose={() => setSelected(null)}>
@@ -323,15 +318,7 @@ export default function CollectionScreen() {
 }
 
 const useStyles = createThemedStyles((colors) => ({
-  summary: {
-    gap: 14,
-    padding: 14,
-    marginBottom: 18,
-    backgroundColor: colors.sur,
-    borderWidth: 1,
-    borderColor: colors.bdr,
-    borderRadius: 10,
-  },
+  content: { padding: 14, gap: 14, paddingBottom: 40 },
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between' },
   figure: { alignItems: 'center', gap: 2 },
   figureValue: { color: colors.text, fontFamily: fonts.display, fontSize: 26 },
@@ -356,20 +343,23 @@ const useStyles = createThemedStyles((colors) => ({
     fontFamily: fonts.display,
     fontSize: 15,
   },
-  filter: { marginTop: 18, marginBottom: 4 },
-  group: { marginTop: 16 },
   groupHeader: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    columnGap: 10,
-    rowGap: 6,
     justifyContent: 'space-between',
     alignItems: 'baseline',
-    borderBottomColor: colors.bdr,
-    borderBottomWidth: 1,
-    paddingBottom: 6,
-    marginBottom: 10,
+    gap: 10,
   },
+  groupTitle: {
+    flexShrink: 1,
+    color: colors.text,
+    fontFamily: fonts.display,
+    fontSize: 24,
+    letterSpacing: 0.4,
+    textTransform: 'uppercase',
+  },
+  groupMeta: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: -6 },
+  small: { fontSize: 14 },
+  recycleAll: { alignSelf: 'flex-start' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, justifyContent: 'center' },
   recycle: {
     borderWidth: 1,

@@ -5,14 +5,14 @@ import { router, useFocusEffect } from 'expo-router';
 import { Pressable, Switch, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import type { BadgeColour, BadgeFinish, Membership } from '@miscellary/shared';
-import { starAmount } from '@miscellary/shared';
+import { publishingSummary, starAmount } from '@miscellary/shared';
 import { ApiRequestError, apiFetch } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { createThemedStyles, fonts, useColors } from '@/lib/theme';
 import { STAR_PATH } from './Avatar';
 import BadgePicker from './BadgePicker';
 import { usePlayStore } from '@/lib/play';
-import { Button, ErrorText, Muted } from './ui';
+import { Button, ErrorText, Muted, Panel } from './ui';
 
 export default function MembershipPanel() {
   const colors = useColors();
@@ -80,23 +80,24 @@ export default function MembershipPanel() {
 
   if (error && !membership)
     return (
-      <View style={styles.panel}>
+      <Panel>
         <ErrorText>{error}</ErrorText>
         <Button title="Try again" kind="secondary" onPress={() => setRetry((value) => value + 1)} />
-      </View>
+      </Panel>
     );
   if (!membership)
     return refreshing && user ? (
-      <View style={styles.panel}>
+      <Panel>
         <Muted>Loading membership…</Muted>
-      </View>
+      </Panel>
     ) : null;
-  if (!membership.enabled) return null;
+  // While payments are off everything still shows, switched off, so the page can be checked.
+  const closed = !membership.enabled;
   const sub = membership.subscription;
   const publications = membership.publishing;
   const subPrice = store.prices[membership.play?.subscription_id ?? ''];
   // Local preview shows the tickets with website prices, switched off, like the website does.
-  const sample = !store.ready && Boolean(membership.preview);
+  const sample = closed || (!store.ready && Boolean(membership.preview));
   const stubs = sample
     ? membership.bundles
     : membership.bundles.filter((bundle) => store.prices[bundle.id]);
@@ -154,7 +155,7 @@ export default function MembershipPanel() {
           Local preview. Purchases are switched off and these are sample benefits.
         </Text>
       )}
-      <View style={styles.panel}>
+      <Panel>
         <View style={styles.member}>
           <View style={styles.sleeve} importantForAccessibility="no-hide-descendants">
             <LinearGradient
@@ -296,6 +297,8 @@ export default function MembershipPanel() {
           ) : sub.provider === 'web' ? (
             <Muted style={styles.small}>You joined on the website, so it’s managed there.</Muted>
           ) : null
+        ) : closed ? (
+          <Button title="Joining opens soon" disabled />
         ) : store.ready && subPrice ? (
           <Button
             title={
@@ -313,9 +316,9 @@ export default function MembershipPanel() {
               : 'Joining in the app isn’t available yet.'}
           </Muted>
         )}
-      </View>
+      </Panel>
 
-      <View style={styles.panel}>
+      <Panel>
         <View style={styles.walletHead}>
           <Text accessibilityRole="header" style={styles.title}>
             Tickets
@@ -340,7 +343,7 @@ export default function MembershipPanel() {
               {stubs.map((bundle) => (
                 <TicketStub
                   key={bundle.id}
-                  stars={bundle.total_stars}
+                  base={bundle.base_stars}
                   bonus={bundle.bonus_stars}
                   price={
                     sample
@@ -362,26 +365,19 @@ export default function MembershipPanel() {
         )}
         {store.notice && <Text style={styles.notice}>{store.notice}</Text>}
         <ErrorText>{store.error}</ErrorText>
-      </View>
+      </Panel>
 
-      <View style={styles.panel}>
+      <Panel>
         <View style={styles.walletHead}>
           <View style={{ flex: 1 }}>
             <Text accessibilityRole="header" style={styles.subtitle}>
               Publishing this month
             </Text>
-            <Muted>
-              {publications.used} of {publications.limit} sets published. Resets{' '}
-              {new Date(publications.resets_at).toLocaleDateString(undefined, {
-                timeZone: 'UTC',
-                dateStyle: 'long',
-              })}
-              .
-            </Muted>
+            <Muted>{publishingSummary(publications)}</Muted>
           </View>
           <Button title="Your sets" kind="secondary" onPress={() => router.push('/studio')} />
         </View>
-      </View>
+      </Panel>
       <ErrorText>{error}</ErrorText>
       <Button
         title={refreshing ? 'Refreshing…' : 'Refresh'}
@@ -406,13 +402,13 @@ function ticketPath(w: number, h: number, r = 10, notch = 9, cut = 0.64): string
 }
 
 function TicketStub({
-  stars,
+  base,
   bonus,
   price,
   disabled,
   onPress,
 }: {
-  stars: number;
+  base: number;
   bonus: number;
   price: string;
   disabled: boolean;
@@ -426,7 +422,7 @@ function TicketStub({
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${stars} tickets for ${price}`}
+      accessibilityLabel={`${base + bonus} tickets for ${price}`}
       disabled={disabled}
       onPress={onPress}
       onLayout={(event) => setWidth(event.nativeEvent.layout.width)}
@@ -450,9 +446,9 @@ function TicketStub({
       )}
       <View style={[styles.stubTop, { height: perforation }]}>
         <Text style={styles.stubStars}>
-          {stars.toLocaleString()} <Text style={styles.stubUnit}>tickets</Text>
+          {base.toLocaleString()} <Text style={styles.stubUnit}>tickets</Text>
         </Text>
-        <Text style={styles.stubBonus}>{bonus > 0 ? `Includes ${bonus} bonus` : 'Starter'}</Text>
+        {bonus > 0 && <Text style={styles.stubBonus}>+ {bonus.toLocaleString()} bonus</Text>}
       </View>
       <Text style={styles.stubPrice}>{price}</Text>
     </Pressable>
@@ -483,14 +479,6 @@ function price(cents: number, currency: string): string {
 
 const useStyles = createThemedStyles((colors) => ({
   wrap: { gap: 12 },
-  panel: {
-    padding: 16,
-    gap: 12,
-    backgroundColor: colors.sur,
-    borderWidth: 1,
-    borderColor: colors.bdr,
-    borderRadius: 12,
-  },
   notice: {
     padding: 12,
     borderRadius: 8,

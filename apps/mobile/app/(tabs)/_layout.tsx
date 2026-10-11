@@ -39,13 +39,16 @@ export default function TabsLayout() {
         headerShadowVisible: false,
         headerRight: () => <StatusPill />,
         tabBarStyle: {
-          backgroundColor: colors.sur,
-          borderTopColor: colors.bdr2,
-          height: 62 + Math.max(insets.bottom, 8),
-          paddingTop: 8,
+          backgroundColor: colors.nav,
+          borderTopColor: colors.navBorder,
+          height: 66 + Math.max(insets.bottom, 8),
+          paddingTop: 7,
+          paddingHorizontal: 4,
           paddingBottom: Math.max(insets.bottom, 8),
           elevation: 0,
         },
+        tabBarItemStyle: { marginHorizontal: 2, borderRadius: 10 },
+        tabBarActiveBackgroundColor: colors.navActive,
         // Six labels share the bar, so they grow with the system text size only a little.
         tabBarLabel: ({ color, children }) => (
           <Text
@@ -56,8 +59,8 @@ export default function TabsLayout() {
             {children}
           </Text>
         ),
-        tabBarActiveTintColor: colors.accentInk,
-        tabBarInactiveTintColor: colors.muted,
+        tabBarActiveTintColor: colors.navInk,
+        tabBarInactiveTintColor: colors.navMuted,
         tabBarHideOnKeyboard: true,
         sceneStyle: { backgroundColor: colors.bg },
       }}
@@ -88,19 +91,20 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="lounge"
+        options={{
+          title: 'Lounge',
+          tabBarAccessibilityLabel: 'Lounge',
+          href: process.env.EXPO_PUBLIC_LOUNGE_ENABLED === 'true' ? undefined : null,
+          tabBarIcon: icon('message-square'),
+        }}
+      />
+      <Tabs.Screen
         name="studio"
         options={{
           title: 'Studio',
           tabBarAccessibilityLabel: 'Studio',
           tabBarIcon: icon('edit-3'),
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: 'Profile',
-          tabBarAccessibilityLabel: 'Profile',
-          tabBarIcon: icon('user'),
         }}
       />
     </Tabs>

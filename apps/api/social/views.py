@@ -5,7 +5,7 @@ from typing import Any
 from django.conf import settings
 from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
 from django.db import IntegrityError, transaction
-from django.db.models import Count, Max, Q
+from django.db.models import Count, Exists, Max, OuterRef, Q, Value
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import permissions, status
@@ -483,11 +483,17 @@ class SearchView(APIView):
             .distinct()
             .order_by("-rank")[:10]
         )
+        followed = (
+            Exists(Follow.objects.filter(follower=request.user, following=OuterRef("pk")))
+            if request.user.is_authenticated
+            else Value(False)
+        )
         users = (
             User.objects.filter(is_active=True)
             .filter(Q(username__icontains=q) | Q(profile__display_name__icontains=q))
             .select_related("profile")
-            .order_by("username")[:10]
+            .annotate(followed=followed)
+            .order_by("-followed", "username")[:10]
         )
         found = list(cards)
         card_data = CardSerializer(found, many=True).data
@@ -759,12 +765,7 @@ class StatusView(APIView):
                 opened_on=timezone.now().date(),
             ).values_list("card_set_id", flat=True)
             free_packs = len(followed - set(used))
-        tickets = None
-        if settings.MONETIZATION_ENABLED:
-            units = (
-                StarBalance.objects.filter(user=user).values_list("units", flat=True).first() or 0
-            )
-            tickets = units // CREDIT_UNITS_PER_CREDIT
+        units = StarBalance.objects.filter(user=user).values_list("units", flat=True).first() or 0
         return Response(
             {
                 "unread": unread_count(user),
@@ -772,7 +773,7 @@ class StatusView(APIView):
                 "offers": TradeOffer.objects.filter(
                     recipient=user, status=TradeOffer.Status.PENDING
                 ).count(),
-                "tickets": tickets,
+                "tickets": units // CREDIT_UNITS_PER_CREDIT,
                 "supporter_tier": supporter_tier(user),
                 "ring_style": ring_style(user),
             }

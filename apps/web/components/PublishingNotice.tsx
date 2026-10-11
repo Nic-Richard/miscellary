@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { PublishingAllowance } from '@miscellary/shared';
+import { publishingSummary } from '@miscellary/shared';
 import ui from './ui.module.css';
 
 export default function PublishingNotice({ allowance }: { allowance: PublishingAllowance }) {
@@ -7,11 +8,7 @@ export default function PublishingNotice({ allowance }: { allowance: PublishingA
   return (
     <div>
       <p>
-        <b>
-          {allowance.used} of {allowance.limit} sets published this month.
-        </b>{' '}
-        Resets {new Date(allowance.resets_at).toLocaleDateString(undefined, { timeZone: 'UTC' })}{' '}
-        (UTC).
+        <b>{publishingSummary(allowance)}</b>
       </p>
       <p className={ui.muted}>
         Creators earn {allowance.creator_reward_percent}% of the tickets spent on their packs. Free

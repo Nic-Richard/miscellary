@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
 import { ActivityIndicator, View } from 'react-native';
 import { contrast } from '@miscellary/shared';
+import StatusPill from '@/components/StatusPill';
 import SurfaceWarmup from '@/components/SurfaceWarmup';
 import { AuthProvider } from '@/lib/auth';
 import { colors, fonts, useColors } from '@/lib/theme';
@@ -75,19 +76,33 @@ function Navigation() {
           headerTintColor: colors.pageText,
           headerTitleStyle: { fontFamily: fonts.display, fontSize: 24 },
           headerShadowVisible: false,
+          headerRight: () => <StatusPill />,
           contentStyle: { backgroundColor: colors.bg },
         }}
       >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="(auth)/login" options={{ title: '' }} />
-        <Stack.Screen name="(auth)/register" options={{ title: '' }} />
-        <Stack.Screen name="(auth)/forgot-password" options={{ title: 'Reset password' }} />
+        <Stack.Screen name="(auth)/login" options={{ title: '', headerRight: undefined }} />
+        <Stack.Screen name="(auth)/register" options={{ title: '', headerRight: undefined }} />
+        <Stack.Screen
+          name="(auth)/forgot-password"
+          options={{ title: 'Reset password', headerRight: undefined }}
+        />
         <Stack.Screen name="sets/[slug]" options={{ title: '' }} />
         <Stack.Screen name="users/[username]" options={{ title: 'Profile' }} />
-        <Stack.Screen name="studio/[id]" options={{ title: 'Edit set' }} />
-        <Stack.Screen name="studio/card" options={{ title: 'Card', presentation: 'modal' }} />
-        <Stack.Screen name="trades/new" options={{ title: 'New offer' }} />
-        <Stack.Screen name="search" options={{ title: 'Search' }} />
+        <Stack.Screen name="studio/[id]" options={{ title: 'Edit set', headerRight: undefined }} />
+        <Stack.Screen
+          name="studio/card"
+          options={{ title: 'Card', presentation: 'modal', headerRight: undefined }}
+        />
+        <Stack.Screen name="trades/new" options={{ title: 'New offer', headerRight: undefined }} />
+        <Stack.Screen name="search" options={{ title: 'Search', headerRight: undefined }} />
+        <Stack.Screen
+          name="notifications"
+          options={{ title: 'Notifications', headerRight: undefined }}
+        />
+        <Stack.Screen name="appearance" options={{ title: 'Appearance', headerRight: undefined }} />
+        <Stack.Screen name="settings" options={{ title: 'Account', headerRight: undefined }} />
+        <Stack.Screen name="profile" options={{ title: 'Profile' }} />
         <Stack.Screen name="membership" options={{ title: 'Membership' }} />
       </Stack>
       <StatusBarScrim />

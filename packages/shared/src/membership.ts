@@ -8,6 +8,17 @@ export interface PublishingAllowance {
   creator_reward_percent: number;
 }
 
+export function publishingSummary(allowance: PublishingAllowance): string {
+  const resets = new Date(allowance.resets_at).toLocaleDateString(undefined, {
+    timeZone: 'UTC',
+    dateStyle: 'long',
+  });
+  const plural = allowance.used === 1 ? 'set' : 'sets';
+  return allowance.limit === null
+    ? `${allowance.used} ${plural} published this month.`
+    : `${allowance.used} of ${allowance.limit} sets published. Resets ${resets}.`;
+}
+
 export interface PublishCheck {
   problems: string[];
   publishing: PublishingAllowance;

@@ -170,11 +170,9 @@ def test_status_counts_what_is_waiting(api_client, user, published, fan, setting
         "unread": 0,
         "free_packs": 1,
         "offers": 0,
-        "tickets": None,
+        "tickets": 0,
         "supporter_tier": None,
         "ring_style": None,
     }
     api_client.force_authenticate(user)
     assert api_client.get(route).data["unread"] == 1
-    settings.MONETIZATION_ENABLED = True
-    assert api_client.get(route).data["tickets"] == 0

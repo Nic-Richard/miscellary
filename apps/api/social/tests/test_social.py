@@ -147,6 +147,14 @@ def test_reports(auth_client, user, published):
     assert response.status_code == 400
 
 
+def test_search_lists_followed_collectors_first(auth_client, user):
+    make_user(username="gardener")
+    zinnia = make_user(username="zgardener")
+    Follow.objects.create(follower=user, following=zinnia)
+    body = auth_client.get(reverse("social:search"), {"q": "garden"}).json()
+    assert [u["username"] for u in body["users"]] == ["zgardener", "gardener"]
+
+
 def test_search(api_client, user, published):
     draft = make_set(user, title="Garden Gnomes")  # never published, must not appear
     make_user(username="gardener")

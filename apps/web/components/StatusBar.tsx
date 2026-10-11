@@ -82,18 +82,14 @@ export default function StatusBar() {
   return (
     <div className={styles.dock}>
       <nav className={styles.bar} aria-label="Your status" ref={root}>
-        {status.tickets !== null && (
-          <Link
-            href="/membership"
-            className={`${styles.chip} ${styles.tickets} ${status.tickets < 0 ? styles.owed : ''}`}
-          >
-            <Icon name="ticket" />
-            <b>{status.tickets}</b>
-            <small>
-              {status.tickets < 0 ? 'owed' : status.tickets === 1 ? 'ticket' : 'tickets'}
-            </small>
-          </Link>
-        )}
+        <Link
+          href="/membership"
+          className={`${styles.chip} ${styles.tickets} ${status.tickets < 0 ? styles.owed : ''}`}
+        >
+          <Icon name="ticket" />
+          <b>{status.tickets}</b>
+          <small>{status.tickets < 0 ? 'owed' : status.tickets === 1 ? 'ticket' : 'tickets'}</small>
+        </Link>
         {status.free_packs > 0 && (
           <Link href="/packs" className={styles.chip}>
             <Icon name="pack" />

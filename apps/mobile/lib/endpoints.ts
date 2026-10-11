@@ -49,7 +49,7 @@ export const getPublicSet = (slug: string, auth = true) =>
   apiFetch<CardSetDetail>(`/api/v1/sets/${slug}/`, { auth });
 export const listTemplates = () => apiFetch<CardTemplate[]>('/api/v1/templates/', { auth: false });
 export const search = (q: string) =>
-  apiFetch<SearchResults>(`/api/v1/search/?q=${encodeURIComponent(q)}`, { auth: false });
+  apiFetch<SearchResults>(`/api/v1/search/?q=${encodeURIComponent(q)}`);
 
 export const listMySets = () => apiFetch<CardSetSummary[]>('/api/v1/me/sets/');
 export const createSet = (body: { title: string; description: string }) =>

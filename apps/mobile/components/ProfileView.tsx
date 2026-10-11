@@ -2,40 +2,36 @@ import { BLOCK_COPY, cardCode, profilePath, SHOWCASE_SLOTS } from '@miscellary/s
 import type { OwnedCard, ProfilePage } from '@miscellary/shared';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
+import { Alert, Image, Pressable, ScrollView, Text, View } from 'react-native';
 import { useAuth } from '@/lib/auth';
 import { setBlocked, setFollow } from '@/lib/endpoints';
 import BinderViewer from './BinderViewer';
 import VerifyEmailNotice from './VerifyEmailNotice';
 import InspectorModal from './InspectorModal';
 import MoreButton from '@/components/MoreButton';
-import type { MoreItem } from '@/components/MoreButton';
 import ReportSheet from '@/components/ReportSheet';
 import ShareButton from '@/components/ShareButton';
 import PeopleList from './PeopleList';
-import { fonts, useColors, createThemedStyles } from '@/lib/theme';
+import { clothTexture, fonts, useColors, createThemedStyles } from '@/lib/theme';
 import CardInspector from './CardInspector';
-import Avatar from './Avatar';
 import CardPreview from './CardPreview';
 import { confirmBlock } from './BlockedPeople';
 import DemoBadge from './DemoBadge';
 import SupporterBadge from './SupporterBadge';
 import SharedSurface from './SharedSurface';
 import SetTile from './SetTile';
-import { Button, Muted } from './ui';
+import StatRows from './StatRows';
+import { Button, Muted, Panel } from './ui';
 import SupporterEmblem from '@/components/SupporterEmblem';
 
 export default function ProfileView({
   profile: initial,
   headerExtra,
   editBinder,
-  ownItems = [],
 }: {
   profile: ProfilePage;
   headerExtra?: React.ReactNode;
   editBinder?: { pick: (position: number) => void; remove: (position: number) => void };
-  /** Menu items for your own profile, where there is nothing to report. */
-  ownItems?: MoreItem[];
 }) {
   const colors = useColors();
   const styles = useStyles();
@@ -110,40 +106,45 @@ export default function ProfileView({
   }
 
   return (
-    <ScrollView
-      style={{ backgroundColor: colors.bg }}
-      contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 40 }}
-    >
-      <View style={styles.hero}>
+    <ScrollView style={{ backgroundColor: colors.bg }} contentContainerStyle={styles.content}>
+      <Panel style={styles.hero}>
         <View style={styles.header}>
-          <Avatar
-            person={{ ...profile, deleted: false }}
-            badge={
-              profile.subscriber_badge
-                ? profile.ring_style !== undefined
-                  ? profile.ring_style
-                  : (profile.badge_style ?? 'gold-foil')
-                : null
-            }
-            size={56}
-          />
-          <View style={{ flex: 1, gap: 4 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Text style={{ color: colors.text, fontSize: 22, fontWeight: '700' }}>
-                {profile.display_name || profile.username}
+          <View style={styles.idSleeve} accessible={false}>
+            <View style={styles.idCard}>
+              <Image source={clothTexture} resizeMode="repeat" style={styles.cloth} />
+              <View style={styles.idTint} />
+              <Text style={styles.idLabel}>
+                {profile.subscriber_badge ? 'SUPPORTER' : 'COLLECTOR'}
               </Text>
+              <View style={styles.monogram}>
+                <Text style={styles.monogramText}>{profile.username[0]?.toUpperCase()}</Text>
+              </View>
+              <Text numberOfLines={1} style={styles.idHandle}>
+                @{profile.username}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.identity}>
+            <View style={styles.nameRow}>
+              <Text style={styles.name}>{profile.display_name || profile.username}</Text>
               <SupporterEmblem
                 tier={profile.supporter_tier}
                 months={profile.supporter_months}
-                size={22}
+                size={20}
               />
             </View>
             {profile.subscriber_badge && <SupporterBadge badge={profile.badge_style} />}
             {profile.is_demo ? <DemoBadge /> : null}
-            <Muted style={{ color: colors.muted }}>@{profile.username}</Muted>
+            <Muted style={styles.small}>
+              @{profile.username}, collecting since{' '}
+              {new Date(profile.created_at).toLocaleDateString(undefined, {
+                month: 'long',
+                year: 'numeric',
+              })}
+            </Muted>
           </View>
         </View>
-        {profile.bio ? <Muted style={{ color: colors.muted }}>{profile.bio}</Muted> : null}
+        {profile.bio ? <Muted>{profile.bio}</Muted> : null}
         {profile.featured_card ? (
           <Pressable
             accessibilityRole="link"
@@ -183,41 +184,10 @@ export default function ProfileView({
           </Pressable>
         ) : null}
         {profile.is_demo ? (
-          <Muted style={{ fontSize: 14 }}>
+          <Muted style={styles.small}>
             This collector is fictional and is here to demonstrate Miscellary. The photographs are
             real work by the people credited on each card.
           </Muted>
-        ) : null}
-        <View style={styles.counts}>
-          <Pressable
-            accessibilityRole="button"
-            hitSlop={6}
-            onPress={() => setPeople(people === 'followers' ? null : 'followers')}
-          >
-            <Text style={styles.countLink}>
-              {profile.follower_count} {profile.follower_count === 1 ? 'follower' : 'followers'}
-            </Text>
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            hitSlop={6}
-            onPress={() => setPeople(people === 'following' ? null : 'following')}
-          >
-            <Text style={styles.countLink}>{profile.following_count} following</Text>
-          </Pressable>
-          <Muted style={styles.count}>
-            {profile.set_count} {profile.set_count === 1 ? 'set' : 'sets'}
-          </Muted>
-          <Muted style={styles.count}>
-            {profile.card_count} {profile.card_count === 1 ? 'card' : 'cards'}
-          </Muted>
-        </View>
-        {people ? (
-          <PeopleList
-            username={profile.username}
-            direction={people}
-            onClose={() => setPeople(null)}
-          />
         ) : null}
         <View style={styles.actions}>
           {headerExtra}
@@ -227,6 +197,7 @@ export default function ProfileView({
               <Button
                 title="Unblock"
                 kind="secondary"
+                small
                 disabled={blockBusy}
                 onPress={() => void toggleBlock(false)}
               />
@@ -236,12 +207,14 @@ export default function ProfileView({
               <Button
                 title={profile.is_following ? 'Following' : 'Follow'}
                 kind={profile.is_following ? 'secondary' : 'primary'}
+                small
                 disabled={followBusy}
                 onPress={() => void toggleFollow()}
               />
               <Button
                 title="Offer a trade"
                 kind="secondary"
+                small
                 onPress={() =>
                   router.push({ pathname: '/trades/new', params: { with: profile.username } })
                 }
@@ -256,7 +229,7 @@ export default function ProfileView({
             title={`@${profile.username}`}
             items={
               profile.is_me
-                ? ownItems
+                ? []
                 : user
                   ? [
                       {
@@ -279,7 +252,36 @@ export default function ProfileView({
             }
           />
         </View>
-      </View>
+        <View style={styles.stats}>
+          <StatRows
+            stats={[
+              {
+                icon: 'followers',
+                value: profile.follower_count,
+                label: 'Followers',
+                expanded: people === 'followers',
+                onPress: () => setPeople(people === 'followers' ? null : 'followers'),
+              },
+              {
+                icon: 'following',
+                value: profile.following_count,
+                label: 'Following',
+                expanded: people === 'following',
+                onPress: () => setPeople(people === 'following' ? null : 'following'),
+              },
+              { icon: 'sets', value: profile.set_count, label: 'Sets created' },
+              { icon: 'cards', value: profile.card_count, label: 'Cards collected' },
+            ]}
+          />
+        </View>
+        {people ? (
+          <PeopleList
+            username={profile.username}
+            direction={people}
+            onClose={() => setPeople(null)}
+          />
+        ) : null}
+      </Panel>
       <ReportSheet
         visible={reporting}
         subject={`@${profile.username}`}
@@ -291,8 +293,15 @@ export default function ProfileView({
         <VerifyEmailNotice>Verify your email address to trade and publish sets.</VerifyEmailNotice>
       ) : null}
 
-      <View style={styles.binder}>
-        <Text style={styles.panelTitle}>Binder</Text>
+      <Panel>
+        <View style={styles.binderHead}>
+          <Text style={styles.panelTitle}>
+            {profile.showcase_title?.trim() || 'The pride of the collection'}
+          </Text>
+          <Muted style={styles.small}>
+            {profile.showcase.length} of {capacity} sleeves filled
+          </Muted>
+        </View>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Open binder"
@@ -306,12 +315,8 @@ export default function ProfileView({
             passive
           />
         </Pressable>
-        <Muted>
-          {profile.showcase_title?.trim() || 'The pride of the collection'} ·{' '}
-          {profile.showcase.length} of {capacity} sleeves filled
-        </Muted>
-        <Button title="Open binder" onPress={() => setBinderOpen(true)} />
-      </View>
+        <Button title="Open the binder" kind="secondary" onPress={() => setBinderOpen(true)} />
+      </Panel>
       {binderOpen ? (
         <BinderViewer
           title={profile.showcase_title?.trim() || 'The pride of the collection'}
@@ -330,9 +335,25 @@ export default function ProfileView({
         />
       ) : null}
 
-      <View style={styles.binder}>
-        <Text style={styles.panelTitle}>Sets by @{profile.username}</Text>
-        {profile.sets.length === 0 ? <Muted>No published sets.</Muted> : null}
+      <Panel>
+        <Text style={styles.panelTitle}>
+          {profile.is_me ? 'Your sets' : `Sets by @${profile.username}`}
+        </Text>
+        {profile.sets.length === 0 ? (
+          profile.is_me ? (
+            <View style={styles.emptySets}>
+              <Muted>Nothing published yet.</Muted>
+              <Button
+                title="Open the studio"
+                kind="quiet"
+                small
+                onPress={() => router.push('/studio')}
+              />
+            </View>
+          ) : (
+            <Muted>No published sets.</Muted>
+          )
+        ) : null}
         <View style={styles.setGrid}>
           {profile.sets.map((s) => (
             <View key={s.id} style={styles.setCell}>
@@ -340,7 +361,7 @@ export default function ProfileView({
             </View>
           ))}
         </View>
-      </View>
+      </Panel>
       {selected ? (
         <InspectorModal open onClose={() => setSelected(null)}>
           <View style={styles.inspector}>
@@ -361,27 +382,78 @@ export default function ProfileView({
 }
 
 const useStyles = createThemedStyles((colors) => ({
-  header: { flexDirection: 'row', gap: 14, alignItems: 'center' },
-  actions: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
-  binder: {
-    gap: 10,
-    padding: 14,
-    borderRadius: 14,
+  content: { padding: 14, gap: 14, paddingBottom: 40 },
+  hero: { gap: 14 },
+  header: { flexDirection: 'row', gap: 16, alignItems: 'center' },
+  idSleeve: {
+    width: 104,
+    padding: 5,
+    borderRadius: 7,
     borderWidth: 1,
-    borderColor: colors.bdr,
-    backgroundColor: colors.sur,
+    borderColor: 'rgba(255,255,255,0.95)',
+    backgroundColor: 'rgba(255,255,255,0.5)',
+    boxShadow: '0 0 0 1px rgba(120,105,80,0.18), 0 8px 18px rgba(40,30,16,0.16)',
+    transform: [{ rotate: '-2deg' }],
   },
+  idCard: {
+    aspectRatio: 5 / 7,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 7,
+    padding: 8,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: '#6c948e',
+    overflow: 'hidden',
+    boxShadow: 'inset 0 0 0 3px rgba(246,240,228,0.9), inset 0 0 0 4px rgba(90,120,115,0.4)',
+  },
+  cloth: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
+  idTint: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    experimental_backgroundImage: 'linear-gradient(rgba(150,187,181,0.86), rgba(110,158,150,0.9))',
+  },
+  idLabel: { color: '#f6f0e4', fontFamily: fonts.medium, fontSize: 8, letterSpacing: 1.6 },
+  monogram: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#f6f0e4',
+    boxShadow: '0 0 0 2px #c9a24a, 0 0 0 4px rgba(246,240,228,0.5)',
+  },
+  monogramText: { color: '#2f6e67', fontFamily: fonts.display, fontSize: 28 },
+  idHandle: { color: '#f6f0e4', fontFamily: fonts.display, fontSize: 12, letterSpacing: 0.8 },
+  identity: { flex: 1, gap: 4 },
+  nameRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6 },
+  name: {
+    color: colors.text,
+    fontFamily: fonts.display,
+    fontSize: 30,
+    lineHeight: 32,
+    textTransform: 'uppercase',
+  },
+  small: { fontSize: 14 },
+  actions: { flexDirection: 'row', gap: 8, flexWrap: 'wrap', alignItems: 'center' },
+  stats: {
+    paddingTop: 14,
+    borderTopWidth: 1,
+    borderStyle: 'dashed',
+    borderTopColor: colors.bdr2,
+  },
+  binderHead: { gap: 2 },
   binderPreview: { borderRadius: 10, overflow: 'hidden' },
-  hero: {
-    gap: 12,
-    padding: 16,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: colors.bdr,
-    borderBottomWidth: 2,
-    backgroundColor: colors.sur,
+  panelTitle: {
+    color: colors.text,
+    fontFamily: fonts.display,
+    fontSize: 24,
+    textTransform: 'uppercase',
   },
-  panelTitle: { color: colors.text, fontFamily: fonts.display, fontSize: 24 },
+  emptySets: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 4 },
   setGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   setCell: { width: '47%', flexGrow: 1 },
   featured: {
@@ -395,20 +467,10 @@ const useStyles = createThemedStyles((colors) => ({
     borderRadius: 10,
     borderWidth: 1,
     borderColor: colors.bdr,
-    backgroundColor: colors.sur,
+    backgroundColor: colors.sur2,
   },
   featuredLabel: { color: colors.faint, fontSize: 12 },
   featuredTitle: { color: colors.text, fontSize: 15, fontWeight: '700' },
   featuredSet: { color: colors.accentInk, fontSize: 13 },
-  counts: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    columnGap: 14,
-    rowGap: 4,
-  },
-  count: { fontSize: 14 },
-  countLink: { color: colors.accentInk, fontSize: 14 },
-  h2: { color: colors.pageText, fontSize: 16, fontWeight: '700', marginTop: 8 },
   inspector: { flex: 1, backgroundColor: '#241d16' },
 }));

@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { router } from 'expo-router';
 import { Pressable, Text, View, useWindowDimensions } from 'react-native';
 import type { LoungeCard, LoungeReply, Paginated, ReplySort } from '@miscellary/shared';
 import { timeAgo } from '@miscellary/shared';
@@ -12,6 +11,7 @@ import { useAuth } from '@/lib/auth';
 import { editReply, voteReply } from '@/lib/lounge';
 import { createThemedStyles, fonts } from '@/lib/theme';
 import { confirmRemoval } from './actions';
+import AuthorSheet from './AuthorSheet';
 import Cards from './Cards';
 import ReplyComposer from './ReplyComposer';
 import RichText from './RichText';
@@ -68,6 +68,7 @@ export default function LoungeThread({
   const [focus, setFocus] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
   const [report, setReport] = useState<ReportTarget | null>(null);
+  const [profileOf, setProfileOf] = useState<string | null>(null);
 
   useEffect(() => {
     setRows([]);
@@ -153,7 +154,7 @@ export default function LoungeThread({
                 <Pressable
                   disabled={reply.author.deleted}
                   accessibilityRole="link"
-                  onPress={() => router.push(`/users/${reply.author!.username}`)}
+                  onPress={() => setProfileOf(reply.author!.username)}
                 >
                   <Text style={styles.name}>
                     {reply.author.display_name || reply.author.username}
@@ -281,6 +282,7 @@ export default function LoungeThread({
       {report && (
         <ReportSheet visible subject="reply" target={report} onClose={() => setReport(null)} />
       )}
+      <AuthorSheet username={profileOf} onClose={() => setProfileOf(null)} />
     </View>
   );
 }

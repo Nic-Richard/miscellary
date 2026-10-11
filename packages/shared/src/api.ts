@@ -215,8 +215,7 @@ export interface AccountStatus {
   unread: number;
   free_packs: number;
   offers: number;
-  /** Null while payments are switched off. */
-  tickets: number | null;
+  tickets: number;
   supporter_tier: SupporterTier | null;
   ring_style: string | null;
 }

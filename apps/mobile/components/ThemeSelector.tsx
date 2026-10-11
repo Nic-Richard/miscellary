@@ -1,30 +1,26 @@
 import { DEFAULT_THEME, THEMES, getTheme } from '@miscellary/shared';
 import Feather from '@expo/vector-icons/Feather';
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useAuth } from '@/lib/auth';
-import { useColors, fonts, createThemedStyles } from '@/lib/theme';
-import ChoiceSheet from './ChoiceSheet';
+import { createThemedStyles, fonts } from '@/lib/theme';
 import { ErrorText } from './ui';
 
+/** Every colour theme as a swatch, grouped like the website's theme menu. */
 export default function ThemeSelector() {
   const { user, updateTheme } = useAuth();
-  const colors = useColors();
   const styles = useStyles();
-  const theme = getTheme(user?.theme);
-  const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   if (!user) return null;
+  const current = getTheme(user.theme).id;
 
-  async function choose(theme: string) {
-    if (busy) return;
-    setOpen(false);
-    if (theme === getTheme(user?.theme).id) return;
+  async function choose(id: string) {
+    if (busy || id === current) return;
     setBusy(true);
     setError(null);
     try {
-      await updateTheme(theme);
+      await updateTheme(id);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not save your theme.');
     } finally {
@@ -33,72 +29,66 @@ export default function ThemeSelector() {
   }
 
   return (
-    <View style={{ gap: 10 }}>
-      <Text style={{ color: colors.text, fontFamily: fonts.body }}>Colour theme</Text>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={`Colour theme: ${theme.name}`}
-        accessibilityState={{ disabled: busy, expanded: open }}
-        disabled={busy}
-        style={({ pressed }) => [styles.trigger, pressed && { opacity: 0.7 }]}
-        onPress={() => setOpen(true)}
-      >
-        <View
-          style={styles.swatches}
-          accessibilityElementsHidden
-          importantForAccessibility="no-hide-descendants"
-        >
-          {[theme.bg, theme.sur, theme.accent].map((color, index) => (
-            <View key={index} style={{ backgroundColor: color, width: 12, height: 24 }} />
-          ))}
-        </View>
-        <Text style={styles.name}>{theme.name}</Text>
-        <Feather name="chevron-down" size={18} color={colors.muted} />
-      </Pressable>
-      {busy && (
-        <Text accessibilityRole="alert" style={{ color: colors.muted }}>
-          Saving…
-        </Text>
-      )}
+    <View style={styles.root} accessibilityRole="radiogroup" accessibilityLabel="Colour theme">
+      {THEMES.map((theme, index) => (
+        <Fragment key={theme.id}>
+          {theme.group !== THEMES[index - 1]?.group && (
+            <Text accessibilityRole="header" style={styles.group}>
+              {theme.group}
+            </Text>
+          )}
+          <Pressable
+            accessibilityRole="radio"
+            accessibilityLabel={theme.id === DEFAULT_THEME ? `${theme.name}, default` : theme.name}
+            accessibilityState={{ checked: theme.id === current, disabled: busy }}
+            disabled={busy}
+            onPress={() => void choose(theme.id)}
+            style={({ pressed }) => [
+              styles.swatch,
+              theme.id === current && styles.on,
+              pressed && { opacity: 0.8 },
+            ]}
+          >
+            <View style={styles.colours}>
+              <View style={[styles.colour, { flex: 3, backgroundColor: theme.bg }]} />
+              <View style={[styles.colour, { flex: 2, backgroundColor: theme.sur }]} />
+              <View style={[styles.colour, { flex: 1, backgroundColor: theme.accent }]} />
+            </View>
+            <View style={styles.label}>
+              <Text numberOfLines={2} style={styles.name}>
+                {theme.name}
+              </Text>
+              {theme.id === current && <Feather name="check" size={14} style={styles.check} />}
+            </View>
+          </Pressable>
+        </Fragment>
+      ))}
       <ErrorText>{error}</ErrorText>
-      <ChoiceSheet
-        visible={open}
-        title="Colour theme"
-        choices={THEMES.map((theme) => ({
-          label: theme.name,
-          value: theme.id,
-          group: theme.group,
-          swatches: [theme.bg, theme.sur, theme.accent],
-          selected: theme.id === getTheme(user.theme).id,
-          ...(theme.id === DEFAULT_THEME ? { note: 'Default' } : {}),
-          icon: theme.id === getTheme(user.theme).id ? 'check' : 'circle',
-        }))}
-        onClose={() => setOpen(false)}
-        onChoose={(value) => void choose(value)}
-      />
     </View>
   );
 }
 
 const useStyles = createThemedStyles((colors) => ({
-  trigger: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    minHeight: 44,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 6,
+  root: { flexDirection: 'row', flexWrap: 'wrap', gap: 9 },
+  group: {
+    width: '100%',
+    marginTop: 6,
+    color: colors.muted,
+    fontFamily: fonts.medium,
+    fontSize: 13,
+  },
+  swatch: {
+    width: '31.5%',
+    overflow: 'hidden',
+    borderRadius: 9,
     borderWidth: 1,
-    borderColor: colors.bdr2,
+    borderColor: colors.bdr,
     backgroundColor: colors.sur,
   },
-  swatches: {
-    flexDirection: 'row',
-    overflow: 'hidden',
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: colors.bdr2,
-  },
-  name: { flex: 1, color: colors.text, fontFamily: fonts.medium, fontSize: 16 },
+  on: { borderColor: colors.accent, borderWidth: 2 },
+  colours: { flexDirection: 'row', height: 40 },
+  colour: { height: '100%' },
+  label: { flexDirection: 'row', alignItems: 'center', gap: 4, padding: 7, minHeight: 40 },
+  name: { flex: 1, color: colors.text, fontFamily: fonts.medium, fontSize: 12 },
+  check: { color: colors.accentInk },
 }));

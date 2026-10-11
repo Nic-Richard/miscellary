@@ -1,14 +1,14 @@
 import type { Card, CardSetDetail } from '@miscellary/shared';
 import { useState } from 'react';
-import { Pressable, View, useWindowDimensions } from 'react-native';
-import { createThemedStyles } from '@/lib/theme';
+import { Pressable, Text, View, useWindowDimensions } from 'react-native';
+import { createThemedStyles, fonts } from '@/lib/theme';
 import InspectorModal from './InspectorModal';
 import SharedSurface from './SharedSurface';
 import BinderDetails from './BinderDetails';
 import BinderViewer from './BinderViewer';
 import CardInspector from './CardInspector';
 import InspectorActions from './InspectorActions';
-import { Button, Muted } from './ui';
+import { Button } from './ui';
 
 export default function BinderPages({
   cards,
@@ -25,8 +25,10 @@ export default function BinderPages({
   const { width, height } = useWindowDimensions();
   const rail = width > height && width >= 800;
   const [open, setOpen] = useState(false);
+  const [spread, setSpread] = useState(0);
   const [selected, setSelected] = useState<Card | null>(null);
   const pages = Math.max(2, Math.ceil(cards.length / 8) * 2);
+  const spreads = pages / 2;
   return (
     <View style={{ gap: 12 }}>
       <View style={{ flexDirection: rail ? 'row' : 'column', gap: 12 }}>
@@ -39,28 +41,47 @@ export default function BinderPages({
           >
             <SharedSurface
               mode="binder"
-              data={{ set: { ...set, cards }, page: 0, half: false }}
+              data={{ set: { ...set, cards }, page: spread * 2, half: false }}
               autoHeight
               passive
             />
           </Pressable>
-          <Muted>
-            {cards.length} cards across {pages} pages
-          </Muted>
-          <Button title="Open binder" onPress={() => setOpen(true)} />
+          <View style={styles.pager}>
+            <Button
+              title="Previous"
+              kind="quiet"
+              small
+              disabled={spread === 0}
+              onPress={() => setSpread(spread - 1)}
+            />
+            <Text style={styles.pageLabel}>
+              Pages {spread * 2 + 1} and {spread * 2 + 2} of {pages}
+            </Text>
+            <Button
+              title="Next"
+              kind="quiet"
+              small
+              disabled={spread >= spreads - 1}
+              onPress={() => setSpread(spread + 1)}
+            />
+          </View>
+          <Button title="Open binder" kind="secondary" onPress={() => setOpen(true)} />
         </View>
-        <View style={{ width: rail ? 240 : '100%' }}>
-          <BinderDetails
-            set={set}
-            inspect={(id) => setSelected(cards.find((card) => card.id === id) ?? null)}
-          />
-        </View>
+        {rail ? (
+          <View style={{ width: 240 }}>
+            <BinderDetails
+              set={set}
+              inspect={(id) => setSelected(cards.find((card) => card.id === id) ?? null)}
+            />
+          </View>
+        ) : null}
       </View>
       {open ? (
         <BinderViewer
           title={set.title}
           subtitle={`${cards.length} cards`}
-          spreads={pages / 2}
+          spreads={spreads}
+          start={spread}
           surface={(spread) => ({
             mode: 'binder',
             data: { set: { ...set, cards }, page: spread * 2, half: false, fill: true },
@@ -104,13 +125,8 @@ export default function BinderPages({
 }
 
 const useStyles = createThemedStyles((colors) => ({
-  cover: {
-    gap: 10,
-    padding: 14,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: colors.bdr,
-    backgroundColor: colors.sur,
-  },
+  cover: { gap: 10 },
   preview: { borderRadius: 10, overflow: 'hidden' },
+  pager: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6 },
+  pageLabel: { color: colors.muted, fontFamily: fonts.medium, fontSize: 14 },
 }));

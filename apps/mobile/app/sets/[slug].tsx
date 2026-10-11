@@ -2,6 +2,7 @@ import {
   cardCode,
   createCollectionRequests,
   personHandle,
+  personName,
   setPath,
   countOf,
   spareCount,
@@ -17,10 +18,10 @@ import type {
 } from '@miscellary/shared';
 import ExtraPackAction from '@/components/ExtraPackAction';
 import Feather from '@expo/vector-icons/Feather';
-import { Link, router, useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native';
+import { Alert, Image, Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native';
 import InspectorModal from '@/components/InspectorModal';
 import BinderPages from '@/components/BinderPages';
 import CardInspector from '@/components/CardInspector';
@@ -56,7 +57,18 @@ import {
 } from '@/lib/endpoints';
 import { readPublicCache, writePublicCache } from '@/lib/publicCache';
 import { fonts, useColors, createThemedStyles } from '@/lib/theme';
-import { Button, Chip, ErrorText, Loading, Muted, Tag, Title } from '@/components/ui';
+import {
+  Button,
+  ErrorText,
+  Loading,
+  Muted,
+  Panel,
+  PanelTitle,
+  Segmented,
+  Tag,
+} from '@/components/ui';
+import Avatar from '@/components/Avatar';
+import SupporterEmblem from '@/components/SupporterEmblem';
 
 const PACK_ACTION = 'pack';
 const FOLLOW_SET_ACTION = 'follow-set';
@@ -453,184 +465,227 @@ export default function BinderScreen() {
   );
   const collected = stackOwnedCards(owned ?? []);
 
+  const cover = set.cover?.url ?? set.cards[0]?.image.url ?? null;
+  const tabs = [
+    { value: 'binder' as const, label: 'Binder' },
+    { value: 'all' as const, label: 'All cards' },
+    ...(user ? [{ value: 'collected' as const, label: 'Collected' }] : []),
+  ];
+
   return (
     <ScrollView
       style={{ backgroundColor: colors.bg }}
       contentContainerStyle={{
-        padding: 16,
-        paddingTop: 4,
-        paddingLeft: 16 + insets.left,
-        paddingRight: 16 + insets.right,
+        padding: 14,
+        gap: 14,
+        paddingLeft: 14 + insets.left,
+        paddingRight: 14 + insets.right,
         paddingBottom: 40 + insets.bottom,
       }}
     >
-      {set.status === 'draft' ? (
-        <View style={styles.topline}>
-          <Tag>Draft preview</Tag>
-        </View>
-      ) : null}
-      <Title>{set.title}</Title>
-      <View style={styles.metaRow}>
-        {set.creator.deleted ? (
-          <Muted>{personHandle(set.creator)}</Muted>
-        ) : (
-          <Link
-            href={{ pathname: '/users/[username]', params: { username: set.creator.username } }}
-          >
-            <Text style={styles.creator}>@{set.creator.username}</Text>
-          </Link>
-        )}
-        {creatorFollowing !== null || (!user && !set.creator.deleted) ? (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={`${creatorFollowing ? 'Unfollow' : 'Follow'} @${set.creator.username}`}
-            onPress={toggleCreatorFollow}
-            style={({ pressed }) => [
-              styles.creatorFollow,
-              creatorFollowing && styles.creatorFollowing,
-              pressed && { opacity: 0.7 },
-            ]}
-          >
-            <Feather
-              name={creatorFollowing ? 'user-check' : 'user-plus'}
-              size={16}
-              color={creatorFollowing ? colors.accent : colors.muted}
-            />
-          </Pressable>
-        ) : null}
-      </View>
-      <Muted style={styles.counts}>
-        {countOf(set.card_count, 'card')} · {countOf(set.opening_count, 'pack')} opened
-      </Muted>
-      {set.description ? <Description text={set.description} /> : null}
-      {set.tags.length ? (
-        <View style={styles.tags}>
-          <TagChips tags={set.tags} label={`Tags on ${set.title}`} />
-        </View>
-      ) : null}
-
-      {set.status === 'published' ? (
-        <>
-          <View style={styles.social}>
-            <ActionChip
-              icon={set.following ? 'check' : 'package'}
-              label={set.following ? 'Following' : 'Follow set'}
-              count={set.follower_count || undefined}
-              tone={set.following ? 'on' : 'plain'}
-              onPress={() => void toggleSetFollow()}
-            />
-            <ActionChip
-              icon="heart"
-              count={set.like_count}
-              tone={set.liked ? 'liked' : 'plain'}
-              accessibilityLabel={`${set.liked ? 'Unlike' : 'Like'} ${set.title}`}
-              onPress={() => void toggleSetLike()}
-            />
-            <ShareButton path={setPath(set.slug)} title={set.title} />
-            <MoreButton
-              title={set.title}
-              items={
-                user && user.profile.username !== set.creator.username
-                  ? [{ label: 'Report this set', icon: 'flag', onSelect: () => setReporting(true) }]
-                  : []
-              }
-            />
+      <Panel>
+        <View style={styles.identity}>
+          <View style={styles.sleeve}>
+            {cover ? (
+              <Image source={{ uri: cover }} style={styles.coverImage} />
+            ) : (
+              <Text style={styles.coverLetter}>{set.title[0]}</Text>
+            )}
           </View>
-          <ReportSheet
-            visible={reporting}
-            subject="this set"
-            target={{ set_slug: set.slug }}
-            onClose={() => setReporting(false)}
-          />
-        </>
-      ) : null}
-      {set.status === 'published' && !set.following ? (
-        <Muted style={styles.followNote}>
-          Follow this set to get a free pack from it every day.
-        </Muted>
-      ) : null}
+          <View style={styles.identityText}>
+            {set.status === 'draft' ? (
+              <View style={styles.topline}>
+                <Tag>Draft preview</Tag>
+              </View>
+            ) : null}
+            <Text accessibilityRole="header" style={styles.setTitle}>
+              {set.title}
+            </Text>
+            <Muted style={styles.small}>
+              {countOf(set.card_count, 'card')} · {countOf(set.opening_count, 'pack')} opened
+            </Muted>
+            <View style={styles.metaRow}>
+              {set.creator.deleted ? (
+                <Muted>{personHandle(set.creator)}</Muted>
+              ) : (
+                <Pressable
+                  accessibilityRole="link"
+                  onPress={() =>
+                    router.push({
+                      pathname: '/users/[username]',
+                      params: { username: set.creator.username },
+                    })
+                  }
+                  style={styles.creatorLink}
+                >
+                  <Avatar person={set.creator} size={22} />
+                  <Text numberOfLines={1} style={styles.creator}>
+                    {personName(set.creator)}
+                  </Text>
+                  <SupporterEmblem tier={set.creator.supporter_tier} size={14} />
+                </Pressable>
+              )}
+              {creatorFollowing !== null || (!user && !set.creator.deleted) ? (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`${creatorFollowing ? 'Unfollow' : 'Follow'} @${set.creator.username}`}
+                  onPress={toggleCreatorFollow}
+                  style={({ pressed }) => [
+                    styles.creatorFollow,
+                    creatorFollowing && styles.creatorFollowing,
+                    pressed && { opacity: 0.7 },
+                  ]}
+                >
+                  <Feather
+                    name={creatorFollowing ? 'user-check' : 'user-plus'}
+                    size={15}
+                    color={creatorFollowing ? colors.accent : colors.muted}
+                  />
+                </Pressable>
+              ) : null}
+            </View>
+          </View>
+        </View>
+        {set.description ? <Description text={set.description} /> : null}
+        {set.tags.length ? <TagChips tags={set.tags} label={`Tags on ${set.title}`} /> : null}
+        {set.status === 'published' ? (
+          <>
+            <View style={styles.social}>
+              <ActionChip
+                icon={set.following ? 'check' : 'package'}
+                label={set.following ? 'Following' : 'Follow set'}
+                count={set.follower_count || undefined}
+                tone={set.following ? 'on' : 'plain'}
+                onPress={() => void toggleSetFollow()}
+              />
+              <ActionChip
+                icon="heart"
+                count={set.like_count}
+                tone={set.liked ? 'liked' : 'plain'}
+                accessibilityLabel={`${set.liked ? 'Unlike' : 'Like'} ${set.title}`}
+                onPress={() => void toggleSetLike()}
+              />
+              <ShareButton path={setPath(set.slug)} title={set.title} />
+              <MoreButton
+                title={set.title}
+                items={
+                  user && user.profile.username !== set.creator.username
+                    ? [
+                        {
+                          label: 'Report this set',
+                          icon: 'flag',
+                          onSelect: () => setReporting(true),
+                        },
+                      ]
+                    : []
+                }
+              />
+            </View>
+            {!set.following ? (
+              <Muted style={styles.small}>
+                Follow this set to get a free pack from it every day.
+              </Muted>
+            ) : null}
+            <ReportSheet
+              visible={reporting}
+              subject="this set"
+              target={{ set_slug: set.slug }}
+              onClose={() => setReporting(false)}
+            />
+          </>
+        ) : null}
+      </Panel>
 
       {set.status === 'published' ? (
-        <View style={styles.packs}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={`Open a ${set.title} pack`}
-            disabled={busy || (!!user && !status)}
-            onPress={openFromPack}
-            style={({ pressed }) => [styles.packPress, pressed && { opacity: 0.82 }]}
-          >
-            <View pointerEvents="none">
-              <PackPreview set={set} width={205} />
-            </View>
-          </Pressable>
-          {!user ? (
-            <Muted>Tap the pack to log in and open your daily pack.</Muted>
-          ) : status ? (
-            <>
-              <Button
-                title={
-                  status.free_available
-                    ? `Open today's free pack (${status.pack_size} cards)`
-                    : 'Free pack opened. Back tomorrow.'
-                }
-                disabled={busy || !status.free_available}
-                onPress={() => void open(false)}
-              />
-              <Button
-                title={`Extra pack for ${status.pack_cost} points (you have ${status.points})`}
-                kind="secondary"
-                disabled={busy || status.points < status.pack_cost}
-                onPress={() => void open(true)}
-              />
-              {status.monetization_enabled ? (
-                <ExtraPackAction
-                  slug={slug}
-                  points={status.points}
-                  packCost={status.pack_cost}
-                  busy={busy}
-                  onOpen={open}
+        <Panel plain>
+          <PanelTitle>Open a pack</PanelTitle>
+          <View style={styles.packRow}>
+            <View style={styles.packActions}>
+              <Muted style={styles.small}>
+                {countOf(status?.pack_size ?? set.pack_size, 'card')} per pack
+              </Muted>
+              {!user ? (
+                <Button
+                  title="Log in to open"
+                  onPress={() => router.push(loginRoute(`/sets/${slug}`, PACK_ACTION))}
                 />
+              ) : status ? (
+                <>
+                  {status.free_available ? (
+                    <Button
+                      title="Open free pack"
+                      disabled={busy}
+                      onPress={() => void open(false)}
+                    />
+                  ) : (
+                    <Muted style={styles.small}>Free pack opened. Back tomorrow.</Muted>
+                  )}
+                  {status.points >= status.pack_cost ? (
+                    <Button
+                      title={`Spend ${status.pack_cost} points`}
+                      kind="secondary"
+                      disabled={busy}
+                      onPress={() => void open(true)}
+                    />
+                  ) : null}
+                </>
               ) : null}
-            </>
+            </View>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Open a ${set.title} pack`}
+              disabled={busy || (!!user && !status)}
+              onPress={openFromPack}
+              style={({ pressed }) => [styles.packPress, pressed && { opacity: 0.82 }]}
+            >
+              <View pointerEvents="none">
+                <PackPreview set={set} width={112} />
+              </View>
+            </Pressable>
+          </View>
+          {status?.monetization_enabled ? (
+            <ExtraPackAction
+              slug={slug}
+              points={status.points}
+              packCost={status.pack_cost}
+              busy={busy}
+              onOpen={open}
+            />
+          ) : null}
+          {status ? (
+            <View style={styles.points}>
+              <Text style={styles.pointsText}>
+                {status.points >= status.pack_cost
+                  ? `${status.points} set points saved`
+                  : `${status.points}/${status.pack_cost} set points`}
+              </Text>
+              {bulkGain ? <PointGain key={bulkGain.key} amount={bulkGain.amount} /> : null}
+            </View>
           ) : null}
           <ErrorText>{error}</ErrorText>
-        </View>
+        </Panel>
       ) : null}
 
-      <View style={styles.tabs}>
-        <Chip label="Binder" active={tab === 'binder'} onPress={() => setTab('binder')} />
-        <Chip label="All cards" active={tab === 'all'} onPress={() => setTab('all')} />
-        {user ? (
-          <Chip
-            label="Collected"
-            active={tab === 'collected'}
-            onPress={() => setTab('collected')}
+      <Panel>
+        <Segmented fill options={tabs} value={tab} onChange={setTab} label="Show" />
+
+        {tab === 'binder' ? (
+          <BinderPages
+            key={set.id}
+            set={set}
+            cards={set.cards}
+            likedIds={set.liked_card_ids}
+            onLike={
+              user && set.status === 'published'
+                ? (id) => {
+                    void toggleCardLike(id).catch((e: Error) => setError(e.message));
+                  }
+                : undefined
+            }
           />
         ) : null}
-      </View>
 
-      {tab === 'binder' ? (
-        <BinderPages
-          key={set.id}
-          set={set}
-          cards={set.cards}
-          likedIds={set.liked_card_ids}
-          onLike={
-            user && set.status === 'published'
-              ? (id) => {
-                  void toggleCardLike(id).catch((e: Error) => setError(e.message));
-                }
-              : undefined
-          }
-        />
-      ) : null}
-
-      {tab === 'all' ? (
-        <View style={styles.cardSection}>
-          <View style={styles.sectionHead}>
-            <Text style={styles.sectionTitle}>All cards</Text>
-            <Muted style={{ fontSize: 14 }}>{set.card_count} in this set</Muted>
-          </View>
+        {tab === 'all' ? (
           <View style={styles.grid}>
             {set.cards.map((card) => (
               <Pressable
@@ -656,94 +711,91 @@ export default function BinderScreen() {
               </Pressable>
             ))}
           </View>
-        </View>
-      ) : null}
+        ) : null}
 
-      {tab === 'collected' ? (
-        <View style={styles.cardSection}>
-          <View style={styles.sectionHead}>
-            <Text style={styles.sectionTitle}>Collected</Text>
-            <Muted style={{ fontSize: 14 }}>
+        {tab === 'collected' ? (
+          <>
+            <Muted style={styles.small}>
               {owned === null
                 ? 'Loading'
                 : `${collected.length} of ${set.card_count} · ${countOf(owned.length, 'copy', 'copies')}`}
             </Muted>
-            {bulkGain ? <PointGain key={bulkGain.key} amount={bulkGain.amount} /> : null}
-          </View>
-          {owned && spareCount(owned) > 0 ? (
-            <Button
-              title={
-                recycling === 'all' ? 'Recycling…' : `Recycle all spares (${spareCount(owned)})`
-              }
-              kind="secondary"
-              style={{ marginBottom: 14 }}
-              disabled={recycling !== null}
-              onPress={() => void recycleAll()}
-            />
-          ) : null}
-          {owned === null ? (
-            <Loading />
-          ) : collected.length === 0 ? (
-            <Muted>Open a pack to start collecting this set.</Muted>
-          ) : (
-            <View style={styles.grid}>
-              {collected.map((copy) => (
-                <View key={copy.card.id} style={[styles.collectedCard, { width: cardWidth }]}>
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel={`Inspect ${copy.card.title}`}
-                    onPress={() => setSelected({ card: copy.card, copies: copy.copies })}
-                    style={({ pressed }) => ({ opacity: pressed ? 0.78 : 1 })}
-                  >
-                    <CardPreview
-                      width={cardWidth}
-                      title={copy.card.title}
-                      description={copy.card.description}
-                      printedText={copy.card.printed_text}
-                      mark={set.mark}
-                      rarity={copy.card.rarity}
-                      imageUrl={copy.card.image.url}
-                      templateKey={copy.card.template_key}
-                      templateConfig={copy.card.template_config}
-                      code={cardCode(
-                        copy.card.printed_set_code,
-                        copy.card.position,
-                        copy.card.set_total,
-                      )}
-                      render={copy.card.render}
-                    />
-                  </Pressable>
-                  <View style={styles.recycleRow}>
-                    <View style={styles.recycleAnchor}>
-                      <View style={styles.recycleControl}>
-                        {copy.held ? (
-                          <Muted style={{ fontSize: 13 }}>In a pending trade</Muted>
-                        ) : copy.copies > 1 ? (
-                          <Pressable
-                            disabled={recycling !== null}
-                            onPress={() => void recycle(copy)}
-                            style={({ pressed }) => [
-                              styles.recycle,
-                              (pressed || recycling === copy.id) && { opacity: 0.55 },
-                            ]}
-                          >
-                            <Text style={styles.recycleText}>Recycle (×{copy.copies})</Text>
-                          </Pressable>
-                        ) : null}
-                      </View>
-                      <View style={styles.gainSlot}>
-                        {gain?.cardId === copy.card.id ? (
-                          <PointGain key={gain.key} amount={gain.amount} />
-                        ) : null}
+            {owned && spareCount(owned) > 0 ? (
+              <Button
+                title={
+                  recycling === 'all' ? 'Recycling…' : `Recycle all spares (${spareCount(owned)})`
+                }
+                kind="secondary"
+                small
+                style={styles.recycleAll}
+                disabled={recycling !== null}
+                onPress={() => void recycleAll()}
+              />
+            ) : null}
+            {owned === null ? (
+              <Loading />
+            ) : collected.length === 0 ? (
+              <Muted>Open a pack to start collecting this set.</Muted>
+            ) : (
+              <View style={styles.grid}>
+                {collected.map((copy) => (
+                  <View key={copy.card.id} style={[styles.collectedCard, { width: cardWidth }]}>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={`Inspect ${copy.card.title}`}
+                      onPress={() => setSelected({ card: copy.card, copies: copy.copies })}
+                      style={({ pressed }) => ({ opacity: pressed ? 0.78 : 1 })}
+                    >
+                      <CardPreview
+                        width={cardWidth}
+                        title={copy.card.title}
+                        description={copy.card.description}
+                        printedText={copy.card.printed_text}
+                        mark={set.mark}
+                        rarity={copy.card.rarity}
+                        imageUrl={copy.card.image.url}
+                        templateKey={copy.card.template_key}
+                        templateConfig={copy.card.template_config}
+                        code={cardCode(
+                          copy.card.printed_set_code,
+                          copy.card.position,
+                          copy.card.set_total,
+                        )}
+                        render={copy.card.render}
+                      />
+                    </Pressable>
+                    <View style={styles.recycleRow}>
+                      <View style={styles.recycleAnchor}>
+                        <View style={styles.recycleControl}>
+                          {copy.held ? (
+                            <Muted style={{ fontSize: 13 }}>In a pending trade</Muted>
+                          ) : copy.copies > 1 ? (
+                            <Pressable
+                              disabled={recycling !== null}
+                              onPress={() => void recycle(copy)}
+                              style={({ pressed }) => [
+                                styles.recycle,
+                                (pressed || recycling === copy.id) && { opacity: 0.55 },
+                              ]}
+                            >
+                              <Text style={styles.recycleText}>Recycle (×{copy.copies})</Text>
+                            </Pressable>
+                          ) : null}
+                        </View>
+                        <View style={styles.gainSlot}>
+                          {gain?.cardId === copy.card.id ? (
+                            <PointGain key={gain.key} amount={gain.amount} />
+                          ) : null}
+                        </View>
                       </View>
                     </View>
                   </View>
-                </View>
-              ))}
-            </View>
-          )}
-        </View>
-      ) : null}
+                ))}
+              </View>
+            )}
+          </>
+        ) : null}
+      </Panel>
 
       {set.status === 'published' ? <Comments slug={set.slug} /> : null}
 
@@ -799,71 +851,51 @@ export default function BinderScreen() {
 }
 
 const useStyles = createThemedStyles((colors) => ({
-  tags: { marginTop: 10 },
-  creator: { color: colors.accent, fontFamily: fonts.medium, fontSize: 16 },
-  creatorFollow: {
-    width: 32,
-    height: 32,
+  small: { fontSize: 14 },
+  identity: { flexDirection: 'row', gap: 14 },
+  identityText: { flex: 1, gap: 4 },
+  sleeve: {
+    width: 84,
+    aspectRatio: 5 / 7,
+    padding: 3,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: colors.bdr2,
+    backgroundColor: colors.sur2,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colors.bdr2,
   },
-  creatorFollowing: { borderColor: colors.accent, backgroundColor: 'rgba(30,110,103,0.09)' },
-  counts: { marginBottom: 8 },
-  followNote: { fontSize: 14, marginTop: 6 },
-  topline: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 4 },
-  metaRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 4,
-  },
-  social: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    alignItems: 'center',
-    marginVertical: 10,
-  },
-  packs: {
-    backgroundColor: colors.sur,
-    borderColor: colors.bdr2,
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 12,
-    gap: 8,
-    marginBottom: 16,
-  },
-  packPress: { alignSelf: 'center', alignItems: 'center', marginBottom: 4 },
-  tabs: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 14 },
-  cardSection: {
-    backgroundColor: colors.sur,
-    borderColor: colors.bdr2,
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 10,
-  },
-  sectionHead: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'baseline',
-    justifyContent: 'space-between',
-    gap: 8,
-    borderBottomColor: colors.bdr,
-    borderBottomWidth: 1,
-    paddingBottom: 8,
-    marginBottom: 12,
-  },
-  sectionTitle: {
+  coverImage: { width: '100%', height: '100%', borderRadius: 4 },
+  coverLetter: { color: colors.muted, fontFamily: fonts.display, fontSize: 30 },
+  setTitle: {
     color: colors.text,
     fontFamily: fonts.display,
-    fontSize: 24,
-    letterSpacing: 1,
+    fontSize: 28,
+    lineHeight: 30,
+    letterSpacing: 0.4,
     textTransform: 'uppercase',
   },
+  topline: { flexDirection: 'row' },
+  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 },
+  creatorLink: { flexShrink: 1, flexDirection: 'row', alignItems: 'center', gap: 6 },
+  creator: { color: colors.accentInk, fontFamily: fonts.medium, fontSize: 15 },
+  creatorFollow: {
+    width: 30,
+    height: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: colors.bdr2,
+  },
+  creatorFollowing: { borderColor: colors.accent },
+  social: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'center' },
+  packRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  packActions: { flex: 1, gap: 10 },
+  packPress: { alignItems: 'center' },
+  points: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 12 },
+  pointsText: { color: colors.muted, fontFamily: fonts.medium, fontSize: 14 },
+  recycleAll: { alignSelf: 'flex-start' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, justifyContent: 'center' },
   collectedCard: { alignItems: 'center', gap: 5 },
   recycleRow: { minHeight: 29, alignItems: 'center', justifyContent: 'center' },

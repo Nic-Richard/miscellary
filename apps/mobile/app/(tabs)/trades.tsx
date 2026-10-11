@@ -1,24 +1,28 @@
-import type { OwnedCard, TradeOffer } from '@miscellary/shared';
+import type { Creator, OwnedCard, TradeOffer } from '@miscellary/shared';
+import { countOf, personName } from '@miscellary/shared';
 import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { Pressable, ScrollView, Text, View } from 'react-native';
+import Avatar from '@/components/Avatar';
 import InspectorModal from '@/components/InspectorModal';
 import CardInspector from '@/components/CardInspector';
+import FilterField from '@/components/FilterField';
 import LoginGate from '@/components/LoginGate';
 import OfferCard from '@/components/OfferCard';
+import SupporterEmblem from '@/components/SupporterEmblem';
 import { useAuth } from '@/lib/auth';
-import { actOnOffer, listOffers } from '@/lib/endpoints';
+import { actOnOffer, listOffers, search } from '@/lib/endpoints';
 import { fonts, useColors, createThemedStyles } from '@/lib/theme';
-import { Button, Chip, ErrorText, Input, Muted } from '@/components/ui';
+import { Button, ErrorText, Muted, Panel, PanelTitle, Segmented } from '@/components/ui';
 import VerifyEmailNotice from '@/components/VerifyEmailNotice';
 
 type Box = 'inbox' | 'outbox' | 'history';
 
-const BOX_LABELS: Record<Box, string> = {
-  inbox: 'Received',
-  outbox: 'Sent',
-  history: 'History',
-};
+const BOXES: { value: Box; label: string }[] = [
+  { value: 'inbox', label: 'Received' },
+  { value: 'outbox', label: 'Sent' },
+  { value: 'history', label: 'History' },
+];
 
 const NOTHING: Record<Box, string> = {
   inbox: 'Nothing on the table. When another collector offers you a trade, it lands here.',
@@ -31,25 +35,90 @@ function DealMat({ box }: { box: Box }) {
   return (
     <View style={styles.mat}>
       <View style={styles.matSides}>
-        <View style={styles.matSide}>
-          <Text style={styles.matLabel}>You give</Text>
-          <View style={styles.matSlots}>
-            {[0, 1, 2].map((i) => (
-              <View key={i} style={styles.matSlot} />
-            ))}
+        {['You give', 'They give'].map((label) => (
+          <View key={label} style={styles.matSide}>
+            <Text style={styles.matLabel}>{label}</Text>
+            <View style={styles.matSlots}>
+              {[0, 1, 2].map((i) => (
+                <View key={i} style={styles.matSlot} />
+              ))}
+            </View>
           </View>
-        </View>
-        <View style={styles.matSide}>
-          <Text style={styles.matLabel}>They give</Text>
-          <View style={styles.matSlots}>
-            {[0, 1, 2].map((i) => (
-              <View key={i} style={styles.matSlot} />
-            ))}
-          </View>
-        </View>
+        ))}
       </View>
       <Muted style={styles.matNote}>{NOTHING[box]}</Muted>
     </View>
+  );
+}
+
+/** Any collector by name, people you follow first, each one a tap from a new offer. */
+function FindCollector({ me }: { me: string }) {
+  const styles = useStyles();
+  const [query, setQuery] = useState('');
+  const [found, setFound] = useState<Creator[] | null>(null);
+
+  useEffect(() => {
+    const q = query.trim().replace(/^@/, '');
+    setFound(null);
+    if (q.length < 2) return;
+    let active = true;
+    const timer = setTimeout(() => {
+      search(q)
+        .then((results) => {
+          if (active) setFound(results.users.filter((u) => u.username !== me));
+        })
+        .catch(() => active && setFound([]));
+    }, 300);
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+  }, [query, me]);
+
+  return (
+    <Panel>
+      <PanelTitle>Start a trade</PanelTitle>
+      <FilterField
+        value={query}
+        onChange={setQuery}
+        placeholder="Find a collector"
+        label="Find a collector to trade with"
+      />
+      {found?.length === 0 ? <Muted style={styles.small}>No collectors match that.</Muted> : null}
+      {found?.map((person) => (
+        <View key={person.username} style={styles.result}>
+          <Pressable
+            accessibilityRole="link"
+            accessibilityLabel={`${personName(person)}'s profile`}
+            onPress={() =>
+              router.push({ pathname: '/users/[username]', params: { username: person.username } })
+            }
+            style={styles.who}
+          >
+            <Avatar person={person} size={34} />
+            <View style={styles.whoText}>
+              <View style={styles.nameRow}>
+                <Text numberOfLines={1} style={styles.name}>
+                  {personName(person)}
+                </Text>
+                <SupporterEmblem tier={person.supporter_tier} size={14} />
+              </View>
+              <Text numberOfLines={1} style={styles.handle}>
+                @{person.username}
+              </Text>
+            </View>
+          </Pressable>
+          <Button
+            title="Trade"
+            kind="secondary"
+            small
+            onPress={() =>
+              router.push({ pathname: '/trades/new', params: { with: person.username } })
+            }
+          />
+        </View>
+      ))}
+    </Panel>
   );
 }
 
@@ -57,9 +126,9 @@ function Trades() {
   const colors = useColors();
   const styles = useStyles();
   const { user } = useAuth();
+  const me = user?.profile.username ?? '';
   const [box, setBox] = useState<Box>('inbox');
   const [offers, setOffers] = useState<TradeOffer[]>([]);
-  const [partner, setPartner] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [selected, setSelected] = useState<OwnedCard | null>(null);
@@ -94,45 +163,31 @@ function Trades() {
   return (
     <ScrollView
       style={{ backgroundColor: colors.bg }}
-      contentContainerStyle={{ padding: 16, gap: 10, paddingBottom: 40 }}
+      contentContainerStyle={styles.content}
+      keyboardShouldPersistTaps="handled"
     >
-      <View style={styles.row}>
-        <Input
-          placeholder="Start a trade with @username"
-          autoCapitalize="none"
-          value={partner}
-          onChangeText={setPartner}
-          style={{ flex: 1 }}
-        />
-        <Button
-          title="Go"
-          disabled={!partner.trim()}
-          onPress={() =>
-            router.push({
-              pathname: '/trades/new',
-              params: { with: partner.trim().replace(/^@/, '') },
-            })
-          }
-        />
-      </View>
-      <View style={styles.row}>
-        {(['inbox', 'outbox', 'history'] as Box[]).map((b) => (
-          <Chip key={b} label={BOX_LABELS[b]} active={b === box} onPress={() => setBox(b)} />
-        ))}
-      </View>
-      <ErrorText>{error}</ErrorText>
       <VerifyEmailNotice>Verify your email address to send or accept offers.</VerifyEmailNotice>
-      {offers.length === 0 ? <DealMat box={box} /> : null}
-      {offers.map((o) => (
-        <OfferCard
-          key={o.id}
-          offer={o}
-          me={user?.profile.username ?? ''}
-          busy={busy}
-          onInspect={setSelected}
-          onAction={(a) => void act(o.id, a)}
-        />
-      ))}
+      <FindCollector me={me} />
+      <Panel>
+        <View style={styles.boxRow}>
+          <Segmented options={BOXES} value={box} onChange={setBox} label="Offers" />
+          {offers.length > 0 ? (
+            <Muted style={styles.small}>{countOf(offers.length, 'offer')}</Muted>
+          ) : null}
+        </View>
+        <ErrorText>{error}</ErrorText>
+        {offers.length === 0 ? <DealMat box={box} /> : null}
+        {offers.map((o) => (
+          <OfferCard
+            key={o.id}
+            offer={o}
+            me={me}
+            busy={busy}
+            onInspect={setSelected}
+            onAction={(a) => void act(o.id, a)}
+          />
+        ))}
+      </Panel>
       {selected ? (
         <InspectorModal open onClose={() => setSelected(null)}>
           <CardInspector
@@ -159,15 +214,21 @@ export default function TradesScreen() {
 }
 
 const useStyles = createThemedStyles((colors) => ({
-  mat: {
-    gap: 16,
-    paddingVertical: 26,
-    paddingHorizontal: 14,
-    backgroundColor: colors.sur,
-    borderWidth: 1,
-    borderColor: colors.bdr,
-    borderRadius: 10,
+  content: { padding: 14, gap: 14, paddingBottom: 40 },
+  small: { fontSize: 14 },
+  result: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  who: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
+  whoText: { flex: 1 },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  name: { flexShrink: 1, color: colors.text, fontFamily: fonts.medium, fontSize: 16 },
+  handle: { color: colors.muted, fontFamily: fonts.body, fontSize: 14 },
+  boxRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
   },
+  mat: { gap: 16, paddingVertical: 14 },
   matSides: { flexDirection: 'row', justifyContent: 'space-around', gap: 14 },
   matSide: { alignItems: 'center', gap: 8 },
   matLabel: { color: colors.muted, fontFamily: fonts.medium, fontSize: 15 },
@@ -181,5 +242,4 @@ const useStyles = createThemedStyles((colors) => ({
     borderStyle: 'dashed',
   },
   matNote: { fontSize: 14, lineHeight: 20, textAlign: 'center' },
-  row: { flexDirection: 'row', gap: 8, alignItems: 'center' },
 }));

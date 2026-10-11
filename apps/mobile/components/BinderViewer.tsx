@@ -15,6 +15,7 @@ export default function BinderViewer({
   title,
   subtitle,
   spreads,
+  start = 0,
   surface,
   spreadOf,
   onClose,
@@ -24,6 +25,7 @@ export default function BinderViewer({
   title: string;
   subtitle: string;
   spreads: number;
+  start?: number;
   surface: (spread: number, editing: boolean) => { mode: string; data: object };
   spreadOf: (page: number) => number;
   onClose: () => void;
@@ -33,7 +35,7 @@ export default function BinderViewer({
 }) {
   const insets = useSafeAreaInsets();
   const styles = useStyles();
-  const [spread, setSpread] = useState(0);
+  const [spread, setSpread] = useState(start);
   const [hint, setHint] = useState(false);
   const [editing, setEditing] = useState(false);
 

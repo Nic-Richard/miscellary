@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Feather from '@expo/vector-icons/Feather';
-import { Stack, router, useFocusEffect } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import {
   AppState,
-  FlatList,
   Pressable,
   RefreshControl,
   ScrollView,
+  StyleSheet,
   Text,
   View,
 } from 'react-native';
@@ -16,7 +16,7 @@ import Avatar from '@/components/Avatar';
 import CardPreview from '@/components/CardPreview';
 import FilterField from '@/components/FilterField';
 import MoreButton from '@/components/MoreButton';
-import { Button, Chip, ErrorText, Muted } from '@/components/ui';
+import { Board, Button, Chip, ErrorText, Muted, Segmented } from '@/components/ui';
 import { apiFetch } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { listFolders } from '@/lib/lounge';
@@ -27,10 +27,10 @@ import { lounge } from './store';
 import SupporterEmblem from '@/components/SupporterEmblem';
 
 type Sort = 'active' | 'new' | 'top';
-const SORTS: { id: Sort; label: string }[] = [
-  { id: 'active', label: 'Active' },
-  { id: 'new', label: 'New' },
-  { id: 'top', label: 'Top' },
+const SORTS: { value: Sort; label: string }[] = [
+  { value: 'active', label: 'Active' },
+  { value: 'new', label: 'New' },
+  { value: 'top', label: 'Top' },
 ];
 const WINDOWS = [
   ['today', 'Today'],
@@ -38,8 +38,13 @@ const WINDOWS = [
   ['month', 'This month'],
   ['all', 'All time'],
 ] as const;
-const TABS = [{ id: '' as const, label: 'All topics' }, ...LOUNGE_TOPICS];
+const TABS = [
+  { value: '' as const, label: 'All topics' },
+  ...LOUNGE_TOPICS.map((item) => ({ value: item.id, label: item.label })),
+];
 const NEW_CHECK_MS = 45_000;
+// How close to the bottom, in points, before the next page loads.
+const MORE_AHEAD = 600;
 
 type FeedView = 'all' | 'saved' | 'drafts';
 
@@ -47,7 +52,7 @@ export default function LoungeFeed() {
   const colors = useColors();
   const styles = useStyles();
   const { user } = useAuth();
-  const list = useRef<FlatList<LoungePost>>(null);
+  const list = useRef<ScrollView>(null);
   const [topic, setTopic] = useState<LoungeTopic | ''>('');
   const [sort, setSort] = useState<Sort>('active');
   const [timeWindow, setTimeWindow] = useState('week');
@@ -67,6 +72,8 @@ export default function LoungeFeed() {
   const [folder, setFolder] = useState('');
   const [folders, setFolders] = useState<SavedFolder[]>([]);
   const [subscriber, setSubscriber] = useState(Boolean(lounge.subscriber));
+  const tabsWidth = useRef(0);
+  const [tabEdges, setTabEdges] = useState({ start: false, end: false });
   const viewRef = useRef(view);
   viewRef.current = view;
 
@@ -177,7 +184,7 @@ export default function LoungeFeed() {
           );
         else if (viewRef.current === 'all' && !event.post.draft) {
           setRows((current) => [event.post, ...current.filter((row) => row.id !== event.post.id)]);
-          list.current?.scrollToOffset({ offset: 0, animated: false });
+          list.current?.scrollTo({ y: 0, animated: false });
         }
       }),
     [],
@@ -206,9 +213,54 @@ export default function LoungeFeed() {
     ...folders.map((item) => ({ value: String(item.id), label: item.name })),
   ];
 
+  const topicTabs = (
+    <View>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.tabs}
+        accessibilityRole="tablist"
+        accessibilityLabel="Topics"
+        scrollEventThrottle={32}
+        onScroll={({ nativeEvent: { contentOffset, contentSize, layoutMeasurement } }) =>
+          setTabEdges({
+            start: contentOffset.x > 4,
+            end: contentOffset.x + layoutMeasurement.width < contentSize.width - 4,
+          })
+        }
+        onContentSizeChange={(contentWidth) =>
+          setTabEdges((edges) => ({ ...edges, end: contentWidth > tabsWidth.current + 4 }))
+        }
+        onLayout={(event) => {
+          tabsWidth.current = event.nativeEvent.layout.width;
+        }}
+      >
+        {TABS.map((item) => {
+          const active = topic === item.value;
+          return (
+            <Pressable
+              key={item.value}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: active }}
+              onPress={() => {
+                setTopic(item.value);
+                setPage(1);
+              }}
+              style={[styles.tab, active && styles.tabActive]}
+            >
+              <Text style={[styles.tabText, active && styles.tabTextActive]}>{item.label}</Text>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+      {tabEdges.start && <View pointerEvents="none" style={[styles.fade, styles.fadeStart]} />}
+      {tabEdges.end && <View pointerEvents="none" style={[styles.fade, styles.fadeEnd]} />}
+    </View>
+  );
+
   const header =
     view !== 'all' ? (
-      <View style={[styles.header, styles.tools]}>
+      <View style={styles.tools}>
         <Pressable
           accessibilityRole="button"
           hitSlop={8}
@@ -242,98 +294,79 @@ export default function LoungeFeed() {
         )}
       </View>
     ) : (
-      <View style={styles.header}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.tabs}
-          accessibilityRole="tablist"
-        >
-          {TABS.map((item) => {
-            const active = topic === item.id;
-            return (
-              <Pressable
-                key={item.id}
-                accessibilityRole="tab"
-                accessibilityState={{ selected: active }}
-                onPress={() => {
-                  setTopic(item.id);
-                  setPage(1);
-                }}
-                style={[styles.tab, active && styles.tabActive]}
-              >
-                <Text style={[styles.tabText, active && styles.tabTextActive]}>{item.label}</Text>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
-        <View style={styles.tools}>
-          <View style={styles.searchRow}>
-            <FilterField
-              value={query}
-              onChange={setQuery}
-              label="Search the Lounge"
-              placeholder={topic ? `Search ${loungeTopicLabel(topic)}` : 'Search discussions'}
-              style={{ flex: 1 }}
+      <View style={styles.tools}>
+        <View style={styles.searchRow}>
+          <FilterField
+            value={query}
+            onChange={setQuery}
+            label="Search the Lounge"
+            placeholder={topic ? `Search ${loungeTopicLabel(topic)}` : 'Search discussions'}
+            style={{ flex: 1 }}
+          />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Start a discussion"
+            onPress={startDiscussion}
+            style={({ pressed }) => [styles.compose, pressed && { opacity: 0.8 }]}
+          >
+            <Feather name="edit-3" size={20} color={colors.accentText} />
+          </Pressable>
+          {user && (
+            <MoreButton
+              title="Lounge"
+              items={[
+                {
+                  label: 'Saved discussions',
+                  icon: 'bookmark',
+                  onSelect: () => showView('saved'),
+                },
+                ...(subscriber
+                  ? [
+                      {
+                        label: 'Drafts',
+                        icon: 'file-text' as const,
+                        onSelect: () => showView('drafts'),
+                      },
+                    ]
+                  : []),
+                {
+                  label: 'Blocked collectors',
+                  icon: 'slash',
+                  onSelect: () => router.push('/blocked'),
+                },
+                { label: 'Membership', icon: 'star', onSelect: () => router.push('/membership') },
+              ]}
             />
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Start a discussion"
-              onPress={startDiscussion}
-              style={({ pressed }) => [styles.compose, pressed && { opacity: 0.8 }]}
-            >
-              <Feather name="edit-3" size={20} color={colors.accentText} />
-            </Pressable>
-          </View>
-          <View style={styles.sorts} accessibilityRole="radiogroup">
-            {SORTS.map((item) => {
-              const active = sort === item.id;
-              return (
-                <Pressable
-                  key={item.id}
-                  accessibilityRole="radio"
-                  accessibilityState={{ selected: active }}
-                  onPress={() => {
-                    setSort(item.id);
-                    setPage(1);
-                  }}
-                  style={[styles.sort, active && styles.sortActive]}
-                >
-                  <Text style={[styles.sortText, active && styles.sortTextActive]}>
-                    {item.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-          {sort === 'top' && (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.windows}
-            >
-              {WINDOWS.map(([value, label]) => {
-                const active = timeWindow === value;
-                return (
-                  <Pressable
-                    key={value}
-                    accessibilityRole="radio"
-                    accessibilityState={{ selected: active }}
-                    onPress={() => {
-                      setTimeWindow(value);
-                      setPage(1);
-                    }}
-                    style={[styles.window, active && styles.windowActive]}
-                  >
-                    <Text style={[styles.windowText, active && styles.windowTextActive]}>
-                      {label}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </ScrollView>
           )}
         </View>
+        <Segmented
+          options={SORTS}
+          value={sort}
+          label="Sort discussions"
+          onChange={(next) => {
+            setSort(next);
+            setPage(1);
+          }}
+        />
+        {sort === 'top' && (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.windows}
+          >
+            {WINDOWS.map(([value, label]) => (
+              <Chip
+                key={value}
+                label={label}
+                active={timeWindow === value}
+                onPress={() => {
+                  setTimeWindow(value);
+                  setPage(1);
+                }}
+              />
+            ))}
+          </ScrollView>
+        )}
       </View>
     );
 
@@ -360,85 +393,17 @@ export default function LoungeFeed() {
 
   return (
     <View style={styles.screen}>
-      <Stack.Screen
-        options={{
-          title: 'Lounge',
-          headerRight: () =>
-            user ? (
-              <MoreButton
-                title="Lounge"
-                items={[
-                  {
-                    label: 'Saved discussions',
-                    icon: 'bookmark',
-                    onSelect: () => showView('saved'),
-                  },
-                  ...(subscriber
-                    ? [
-                        {
-                          label: 'Drafts',
-                          icon: 'file-text' as const,
-                          onSelect: () => showView('drafts'),
-                        },
-                      ]
-                    : []),
-                  {
-                    label: 'Membership',
-                    icon: 'star',
-                    onSelect: () => router.push('/membership'),
-                  },
-                  {
-                    label: 'Blocked collectors',
-                    icon: 'slash',
-                    onSelect: () => router.push('/blocked'),
-                  },
-                ]}
-              />
-            ) : (
-              <Pressable
-                accessibilityRole="link"
-                hitSlop={8}
-                onPress={() =>
-                  router.push(`/login?${RETURN_PARAM}=${encodeURIComponent('/lounge')}`)
-                }
-              >
-                <Text style={styles.headerLink}>Log in</Text>
-              </Pressable>
-            ),
-        }}
-      />
       {!enabled ? (
         <Muted style={styles.noteText}>The Lounge is not open yet.</Muted>
       ) : (
-        <FlatList
+        <ScrollView
           ref={list}
-          data={rows}
-          keyExtractor={(post) => post.id}
-          renderItem={({ item }) => <Row post={item} showTopic={!topic || view !== 'all'} />}
-          ListHeaderComponent={header}
-          ListEmptyComponent={empty}
-          ListFooterComponent={
-            rows.length > 0 && (loading || error) ? (
-              <View style={styles.note}>
-                {error ? (
-                  <>
-                    <ErrorText>{error}</ErrorText>
-                    <Button
-                      kind="secondary"
-                      title="Try again"
-                      onPress={() => setVersion((value) => value + 1)}
-                    />
-                  </>
-                ) : (
-                  <Muted style={styles.noteText}>Loading more…</Muted>
-                )}
-              </View>
-            ) : null
-          }
-          onEndReached={() => {
-            if (hasNext && !loading && !error) setPage((value) => value + 1);
+          scrollEventThrottle={200}
+          onScroll={({ nativeEvent: { layoutMeasurement, contentOffset, contentSize } }) => {
+            const near =
+              layoutMeasurement.height + contentOffset.y >= contentSize.height - MORE_AHEAD;
+            if (near && hasNext && !loading && !error) setPage((value) => value + 1);
           }}
-          onEndReachedThreshold={0.6}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -453,14 +418,43 @@ export default function LoungeFeed() {
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
           contentContainerStyle={styles.content}
-        />
+        >
+          <Board style={styles.board}>
+            {view === 'all' && topicTabs}
+            {header}
+            <View style={styles.rows}>
+              <View style={styles.inner} />
+              {rows.length === 0
+                ? empty
+                : rows.map((post) => (
+                    <Row key={post.id} post={post} showTopic={!topic || view !== 'all'} />
+                  ))}
+              {rows.length > 0 && (loading || error) ? (
+                <View style={styles.note}>
+                  {error ? (
+                    <>
+                      <ErrorText>{error}</ErrorText>
+                      <Button
+                        kind="secondary"
+                        title="Try again"
+                        onPress={() => setVersion((value) => value + 1)}
+                      />
+                    </>
+                  ) : (
+                    <Muted style={styles.noteText}>Loading more…</Muted>
+                  )}
+                </View>
+              ) : null}
+            </View>
+          </Board>
+        </ScrollView>
       )}
       {newCount > 0 && view === 'all' && (
         <View style={styles.pillWrap} pointerEvents="box-none">
           <Pressable
             accessibilityRole="button"
             onPress={() => {
-              list.current?.scrollToOffset({ offset: 0, animated: true });
+              list.current?.scrollTo({ y: 0, animated: true });
               reload();
             }}
             style={({ pressed }) => [styles.pill, pressed && { opacity: 0.85 }]}
@@ -601,28 +595,37 @@ function Fan({ post }: { post: LoungePost }) {
 
 const useStyles = createThemedStyles((colors) => ({
   screen: { flex: 1, backgroundColor: colors.bg },
-  content: { paddingBottom: 40, flexGrow: 1 },
-  header: { backgroundColor: colors.bg },
-  headerLink: { color: colors.pageAccent, fontFamily: fonts.medium, fontSize: 16 },
+  content: { padding: 14, paddingBottom: 40 },
+  board: { borderTopLeftRadius: 14 },
   tabs: {
-    paddingHorizontal: 12,
+    paddingHorizontal: 8,
     gap: 4,
     borderBottomWidth: 1,
     borderBottomColor: colors.bdr,
     minWidth: '100%',
   },
   tab: {
-    minHeight: 44,
+    minHeight: 46,
     justifyContent: 'center',
     paddingHorizontal: 8,
     borderBottomWidth: 2,
     borderBottomColor: 'transparent',
     marginBottom: -1,
   },
-  tabActive: { borderBottomColor: colors.pageAccent },
-  tabText: { color: colors.pageMuted, fontFamily: fonts.medium, fontSize: 15 },
-  tabTextActive: { color: colors.pageText },
-  tools: { padding: 16, paddingBottom: 8, gap: 10 },
+  tabActive: { borderBottomColor: colors.accent },
+  fade: { position: 'absolute', top: 0, bottom: 1, width: 44 },
+  fadeStart: {
+    left: 0,
+    experimental_backgroundImage: `linear-gradient(to left, transparent, ${colors.sur})`,
+  },
+  fadeEnd: {
+    right: 0,
+    experimental_backgroundImage: `linear-gradient(to right, transparent, ${colors.sur})`,
+  },
+  tabText: { color: colors.muted, fontFamily: fonts.medium, fontSize: 15 },
+  tabTextActive: { color: colors.text },
+  headerLink: { color: colors.accentInk, fontFamily: fonts.medium, fontSize: 16 },
+  tools: { padding: 12, gap: 10 },
   searchRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   compose: {
     width: 46,
@@ -632,36 +635,14 @@ const useStyles = createThemedStyles((colors) => ({
     justifyContent: 'center',
     backgroundColor: colors.accent,
   },
-  sorts: {
-    flexDirection: 'row',
-    alignSelf: 'flex-start',
-    padding: 3,
-    borderRadius: 8,
-    backgroundColor: colors.sur2,
-    borderWidth: 1,
-    borderColor: colors.bdr,
-  },
-  sort: { minHeight: 34, paddingHorizontal: 14, justifyContent: 'center', borderRadius: 6 },
-  sortActive: { backgroundColor: colors.sur },
-  sortText: { color: colors.muted, fontFamily: fonts.medium, fontSize: 14 },
-  sortTextActive: { color: colors.text },
   windows: { gap: 6 },
-  window: {
-    minHeight: 32,
-    paddingHorizontal: 11,
-    justifyContent: 'center',
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: colors.bdr2,
-  },
-  windowActive: { borderColor: colors.accent, backgroundColor: colors.accent },
-  windowText: { color: colors.pageMuted, fontFamily: fonts.medium, fontSize: 13 },
-  windowTextActive: { color: colors.accentText },
+  rows: { paddingTop: 12, paddingBottom: 4, minHeight: 200 },
+  inner: { ...StyleSheet.absoluteFillObject, backgroundColor: colors.sur2, opacity: 0.45 },
   row: {
     flexDirection: 'row',
     alignItems: 'stretch',
-    marginHorizontal: 12,
-    marginBottom: 16,
+    marginHorizontal: 10,
+    marginBottom: 12,
     paddingRight: 10,
   },
   stub: {
@@ -686,7 +667,7 @@ const useStyles = createThemedStyles((colors) => ({
     overflow: 'hidden',
   },
   back: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start' },
-  viewTitle: { color: colors.pageText, fontFamily: fonts.display, fontSize: 28 },
+  viewTitle: { color: colors.text, fontFamily: fonts.display, fontSize: 28 },
   rowTitle: { color: colors.text, fontFamily: fonts.medium, fontSize: 17, lineHeight: 21 },
   meta: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 12, rowGap: 4 },
   who: { flexDirection: 'row', alignItems: 'center', gap: 6, maxWidth: '60%' },
@@ -701,18 +682,8 @@ const useStyles = createThemedStyles((colors) => ({
     overflow: 'hidden',
     elevation: 2,
   },
-  fanText: {
-    width: 44,
-    height: 44,
-    margin: 6,
-    borderRadius: 22,
-    borderWidth: 1,
-    borderColor: colors.bdr2,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   note: { padding: 16, gap: 10 },
-  noteText: { padding: 16, color: colors.pageMuted },
+  noteText: { padding: 16, color: colors.muted },
   pillWrap: { position: 'absolute', top: 12, left: 0, right: 0, alignItems: 'center' },
   pill: {
     flexDirection: 'row',

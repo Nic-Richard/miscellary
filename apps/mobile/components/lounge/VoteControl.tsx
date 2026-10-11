@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import Feather from '@expo/vector-icons/Feather';
 import { router } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 import type { Vote } from '@miscellary/shared';
 import { useAuth } from '@/lib/auth';
 import { createThemedStyles, fonts, useColors } from '@/lib/theme';
@@ -66,11 +66,12 @@ export default function VoteControl({
           pressed && { opacity: 0.7 },
         ]}
       >
-        <Feather
-          name={value === 1 ? 'arrow-up' : 'arrow-down'}
-          size={compact ? 16 : 19}
-          color={on ? colors.accentInk : colors.faint}
-        />
+        <Svg width={compact ? 16 : 19} height={compact ? 16 : 19} viewBox="0 0 24 24">
+          <Path
+            d={value === 1 ? 'M12 4 4 14h5v6h6v-6h5Z' : 'M12 20 4 10h5V4h6v6h5Z'}
+            fill={on ? colors.accentInk : colors.faint}
+          />
+        </Svg>
       </Pressable>
     );
   };
@@ -96,9 +97,9 @@ const useStyles = createThemedStyles((colors) => ({
   score: {
     color: colors.text,
     fontFamily: fonts.medium,
-    fontSize: 16,
+    fontSize: 17,
     minWidth: 20,
     textAlign: 'center',
   },
-  scoreCompact: { fontSize: 14 },
+  scoreCompact: { fontSize: 15 },
 }));

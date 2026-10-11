@@ -18,7 +18,7 @@ import type {
   LoungeTopic,
   UserSummary,
 } from '@miscellary/shared';
-import { LOUNGE_TOPICS, loungeTopicLabel, timeAgo } from '@miscellary/shared';
+import { LOUNGE_TOPICS, countOf, loungeTopicLabel, timeAgo } from '@miscellary/shared';
 import Avatar from '@/components/Avatar';
 import CardInspector from '@/components/CardInspector';
 import { confirmBlock } from '@/components/BlockedPeople';
@@ -28,7 +28,7 @@ import type { MoreItem } from '@/components/MoreButton';
 import ReportSheet from '@/components/ReportSheet';
 import ShareButton from '@/components/ShareButton';
 import SharedSurface from '@/components/SharedSurface';
-import { Button, Chip, ErrorText, Input, Loading, Muted } from '@/components/ui';
+import { Button, Chip, ErrorText, Input, Loading, Muted, Panel } from '@/components/ui';
 import { apiFetch } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { setBlocked, setFollow } from '@/lib/endpoints';
@@ -37,6 +37,7 @@ import { useMembership } from '@/lib/membership';
 import { RETURN_PARAM } from '@/lib/returnTo';
 import { createThemedStyles, fonts } from '@/lib/theme';
 import { confirmRemoval } from './actions';
+import AuthorSheet from './AuthorSheet';
 import Cards from './Cards';
 import LoungeThread from './LoungeThread';
 import ReplyComposer from './ReplyComposer';
@@ -73,6 +74,7 @@ export default function Discussion({ postId }: { postId: string }) {
   const [report, setReport] = useState(false);
   const [inspect, setInspect] = useState<LoungeCard | null>(null);
   const [typing, setTyping] = useState(false);
+  const [profileOf, setProfileOf] = useState<string | null>(null);
 
   useEffect(() => {
     const shown = Keyboard.addListener('keyboardDidShow', () => setTyping(true));
@@ -136,7 +138,7 @@ export default function Discussion({ postId }: { postId: string }) {
   if (!post)
     return (
       <View style={styles.screen}>
-        <Stack.Screen options={{ title: 'Discussion' }} />
+        <Stack.Screen options={{ title: '' }} />
         {error ? (
           <View style={styles.padded}>
             <ErrorText>{error}</ErrorText>
@@ -151,7 +153,8 @@ export default function Discussion({ postId }: { postId: string }) {
   const current = post;
   const name = current.author?.display_name || current.author?.username || 'Deleted collector';
   const own = Boolean(user && current.author?.username === user.profile.username);
-  const cardWidth = Math.min(120, (width - 24 - 32 - 2 * 10) / 3);
+  // Screen and panel padding, the vote column, and the gaps between three cards.
+  const cardWidth = Math.min(120, (width - 28 - 32 - 48 - 2 * 10) / 3);
 
   const publish = () =>
     run(async () => {
@@ -229,89 +232,23 @@ export default function Discussion({ postId }: { postId: string }) {
       behavior="padding"
       keyboardVerticalOffset={insets.top + 56}
     >
-      <Stack.Screen
-        options={{ title: current.draft ? 'Draft' : loungeTopicLabel(current.topic) }}
-      />
+      <Stack.Screen options={{ title: '' }} />
       <ScrollView
         ref={scroll}
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="interactive"
       >
-        <View style={styles.post}>
+        <Panel style={styles.post}>
           {current.draft && (
             <View style={styles.draft}>
               <Text style={styles.draftText}>Draft. Only you can see it until you publish.</Text>
               <Button title="Publish" disabled={busy} onPress={() => void publish()} />
             </View>
           )}
-          <View style={styles.by}>
-            <Avatar person={current.author} badge={current.author_badge} size={34} />
-            <View style={{ flex: 1 }}>
-              <View style={styles.nameRow}>
-                <Pressable
-                  disabled={!current.author || current.author.deleted}
-                  accessibilityRole="link"
-                  onPress={() => current.author && router.push(`/users/${current.author.username}`)}
-                >
-                  <Text style={styles.name}>{name}</Text>
-                </Pressable>
-                <SupporterEmblem tier={current.author?.supporter_tier} />
-                {author && !author.is_me && !author.is_following && !author.is_blocked && (
-                  <Pressable
-                    accessibilityRole="button"
-                    hitSlop={8}
-                    disabled={busy}
-                    onPress={() => void follow()}
-                  >
-                    <Text style={styles.follow}>Follow</Text>
-                  </Pressable>
-                )}
-              </View>
-              <Text style={styles.when}>
-                {timeAgo(current.created_at)}
-                {current.edited ? ', edited' : ''}
-              </Text>
-            </View>
-          </View>
-          {editing ? (
-            <PostEditor
-              post={current}
-              onCancel={() => setEditing(false)}
-              onSaved={(saved) => {
-                patch(saved);
-                setEditing(false);
-              }}
-            />
-          ) : (
-            <>
-              <Text accessibilityRole="header" style={styles.title}>
-                {current.title}
-              </Text>
-              {current.removed ? (
-                <Muted>This discussion was removed. Its replies stay readable.</Muted>
-              ) : (
-                <RichText text={current.body} style={styles.body} />
-              )}
-            </>
-          )}
-          {current.style === 'binder' && current.cards.length > 0 ? (
-            <SharedSurface
-              mode="lounge-showcase"
-              data={{ cards: current.cards, style: current.style }}
-              autoHeight
-              onEvent={(type, id) => {
-                if (type === 'inspect')
-                  setInspect(current.cards.find((card) => card?.id === id) ?? null);
-              }}
-            />
-          ) : (
-            <Cards cards={current.cards} width={cardWidth} onInspect={setInspect} />
-          )}
-          <View style={styles.actions}>
+          <View style={styles.vpost}>
             {!current.draft && !current.removed && (
               <VoteControl
-                compact
                 score={current.score}
                 vote={current.my_vote}
                 label={current.title}
@@ -322,32 +259,111 @@ export default function Discussion({ postId }: { postId: string }) {
                 }}
               />
             )}
-            {user && !current.removed && !current.draft && (
-              <SaveButton
-                postId={current.id}
-                saved={current.saved}
-                folderId={current.saved_folder}
-                supporter={supporter}
-                onChange={(saved, folder) => patch({ saved, saved_folder: folder })}
-              />
-            )}
-            {!current.draft && <ShareButton path={`/lounge/${current.id}`} title={current.title} />}
-            {user && !current.removed && <MoreButton title={current.title} items={more} />}
+            <View style={styles.main}>
+              <View style={styles.by}>
+                <Avatar person={current.author} badge={current.author_badge} size={34} />
+                <View style={{ flex: 1 }}>
+                  <View style={styles.nameRow}>
+                    <Pressable
+                      disabled={!current.author || current.author.deleted}
+                      accessibilityRole="link"
+                      onPress={() => current.author && setProfileOf(current.author.username)}
+                    >
+                      <Text style={styles.name}>{name}</Text>
+                    </Pressable>
+                    <SupporterEmblem tier={current.author?.supporter_tier} />
+                    {author && !author.is_me && !author.is_following && !author.is_blocked && (
+                      <Pressable
+                        accessibilityRole="button"
+                        hitSlop={8}
+                        disabled={busy}
+                        onPress={() => void follow()}
+                      >
+                        <Text style={styles.follow}>Follow</Text>
+                      </Pressable>
+                    )}
+                  </View>
+                  <View style={styles.whenRow}>
+                    <Text style={styles.when}>
+                      {timeAgo(current.created_at)}
+                      {current.edited ? ', edited' : ''}
+                    </Text>
+                    <Text style={styles.topic}>
+                      {current.draft ? 'Draft' : loungeTopicLabel(current.topic)}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+              {editing ? (
+                <PostEditor
+                  post={current}
+                  onCancel={() => setEditing(false)}
+                  onSaved={(saved) => {
+                    patch(saved);
+                    setEditing(false);
+                  }}
+                />
+              ) : (
+                <>
+                  <Text accessibilityRole="header" style={styles.title}>
+                    {current.title}
+                  </Text>
+                  {current.removed ? (
+                    <Muted>This discussion was removed. Its replies stay readable.</Muted>
+                  ) : (
+                    <RichText text={current.body} style={styles.body} />
+                  )}
+                </>
+              )}
+              {current.style === 'binder' && current.cards.length > 0 ? (
+                <SharedSurface
+                  mode="lounge-showcase"
+                  data={{ cards: current.cards, style: current.style }}
+                  autoHeight
+                  onEvent={(type, id) => {
+                    if (type === 'inspect')
+                      setInspect(current.cards.find((card) => card?.id === id) ?? null);
+                  }}
+                />
+              ) : (
+                <Cards cards={current.cards} width={cardWidth} onInspect={setInspect} />
+              )}
+              <View style={styles.actions}>
+                {!current.draft && (
+                  <Text style={styles.when}>
+                    {countOf(current.reply_count, 'reply', 'replies')}
+                  </Text>
+                )}
+                {user && !current.removed && !current.draft && (
+                  <SaveButton
+                    postId={current.id}
+                    saved={current.saved}
+                    folderId={current.saved_folder}
+                    supporter={supporter}
+                    onChange={(saved, folder) => patch({ saved, saved_folder: folder })}
+                  />
+                )}
+                {!current.draft && (
+                  <ShareButton path={`/lounge/${current.id}`} title={current.title} />
+                )}
+                {user && !current.removed && <MoreButton title={current.title} items={more} />}
+              </View>
+            </View>
           </View>
           <ErrorText>{error}</ErrorText>
-        </View>
-        {!current.draft && (
-          <View style={styles.replies}>
-            <LoungeThread
-              postId={current.id}
-              removed={current.removed}
-              supporter={supporter}
-              added={added}
-              onInspect={setInspect}
-              onCountChange={countChange}
-            />
-          </View>
-        )}
+          {!current.draft && (
+            <View style={styles.replies}>
+              <LoungeThread
+                postId={current.id}
+                removed={current.removed}
+                supporter={supporter}
+                added={added}
+                onInspect={setInspect}
+                onCountChange={countChange}
+              />
+            </View>
+          )}
+        </Panel>
       </ScrollView>
       {!current.draft && (
         <View style={[styles.replyBar, { paddingBottom: 10 + (typing ? 0 : insets.bottom) }]}>
@@ -382,6 +398,11 @@ export default function Discussion({ postId }: { postId: string }) {
           onClose={() => setReport(false)}
         />
       )}
+      <AuthorSheet
+        username={profileOf}
+        onClose={() => setProfileOf(null)}
+        onFollowChange={setAuthor}
+      />
       <InspectorModal open={inspect !== null} onClose={() => setInspect(null)}>
         {inspect && (
           <CardInspector
@@ -463,16 +484,10 @@ function PostEditor({
 const useStyles = createThemedStyles((colors) => ({
   screen: { flex: 1, backgroundColor: colors.bg },
   padded: { padding: 16, gap: 10 },
-  content: { paddingBottom: 24 },
-  post: {
-    margin: 12,
-    padding: 16,
-    gap: 14,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.bdr,
-    backgroundColor: colors.sur,
-  },
+  content: { padding: 14, gap: 14, paddingBottom: 24 },
+  post: { gap: 14 },
+  vpost: { flexDirection: 'row', gap: 6 },
+  main: { flex: 1, gap: 14 },
   draft: {
     gap: 10,
     padding: 12,
@@ -483,22 +498,37 @@ const useStyles = createThemedStyles((colors) => ({
     backgroundColor: colors.sur2,
   },
   draftText: { color: colors.text, fontFamily: fonts.body, fontSize: 15 },
-  title: { color: colors.text, fontFamily: fonts.display, fontSize: 32, lineHeight: 34 },
+  title: {
+    color: colors.text,
+    fontFamily: fonts.display,
+    fontSize: 30,
+    lineHeight: 32,
+    textTransform: 'uppercase',
+  },
   by: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   nameRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 10 },
   name: { color: colors.text, fontFamily: fonts.medium, fontSize: 15 },
   follow: { color: colors.accentInk, fontFamily: fonts.medium, fontSize: 14 },
   when: { color: colors.faint, fontFamily: fonts.body, fontSize: 13 },
+  whenRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  topic: {
+    color: colors.muted,
+    fontFamily: fonts.medium,
+    fontSize: 12,
+    paddingHorizontal: 7,
+    paddingVertical: 1,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: colors.bdr2,
+  },
   body: { color: colors.text, fontFamily: fonts.body, fontSize: 17, lineHeight: 25 },
   actions: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
   replies: {
-    marginHorizontal: 12,
-    padding: 16,
     gap: 14,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.bdr,
-    backgroundColor: colors.sur,
+    paddingTop: 14,
+    borderTopWidth: 1,
+    borderStyle: 'dashed',
+    borderTopColor: colors.bdr2,
   },
   replyBar: {
     paddingHorizontal: 12,

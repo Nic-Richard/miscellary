@@ -17,7 +17,7 @@ import PointGain from '@/components/PointGain';
 import StartShelf from '@/components/StartShelf';
 import { askForPackReminder, syncPackReminder } from '@/lib/packReminder';
 import TagChips from '@/components/TagChips';
-import { Button, ErrorText, Loading, Muted } from '@/components/ui';
+import { Button, ErrorText, Loading, Muted, Panel } from '@/components/ui';
 import {
   followSet,
   getMyPacks,
@@ -39,16 +39,18 @@ function Progress({ owned, total }: { owned: number; total: number }) {
   const colors = useColors();
   const styles = useStyles();
   const done = total > 0 && owned >= total;
-  const percent = total ? Math.min(100, (owned / total) * 100) : 0;
   return (
     <View style={styles.progress}>
       <View style={styles.track}>
-        <View
-          style={[
-            styles.fill,
-            { width: `${percent}%`, backgroundColor: done ? colors.gold : colors.cloth },
-          ]}
-        />
+        {Array.from({ length: total }, (_, index) => (
+          <View
+            key={index}
+            style={[
+              styles.tick,
+              index < owned && { backgroundColor: done ? colors.gold : colors.accent },
+            ]}
+          />
+        ))}
       </View>
       <Text style={styles.count}>{done ? 'Complete' : `${owned}/${total}`}</Text>
     </View>
@@ -102,7 +104,7 @@ function Post({
   const open = () => router.push({ pathname: '/sets/[slug]', params: { slug: set.slug } });
 
   return (
-    <View style={[styles.post, entry.free_available && styles.ready]}>
+    <Panel plain>
       <View style={styles.byline}>
         <Pressable
           accessibilityRole="link"
@@ -176,6 +178,38 @@ function Post({
       </View>
 
       <View style={styles.actions}>
+        <View style={styles.actionRow}>
+          {entry.free_available ? (
+            <Button
+              title="Open today's pack"
+              disabled={busy}
+              onPress={() => onOpen(false)}
+              style={styles.action}
+            />
+          ) : affordable ? (
+            <Button
+              title={`Spend ${entry.pack_cost} points`}
+              kind="secondary"
+              disabled={busy}
+              onPress={() => onOpen(true)}
+              style={styles.action}
+            />
+          ) : (
+            <View style={[styles.waiting, styles.action]}>
+              <Text style={styles.clock}>{countdown(entry.resets_at, now)}</Text>
+              <Text style={styles.waitingLabel}>until the next free pack</Text>
+            </View>
+          )}
+          {(entry.recyclable_count ?? 0) > 0 && (
+            <Button
+              title={recycling ? 'Recycling…' : `Recycle spares (${entry.recyclable_count})`}
+              kind="secondary"
+              disabled={busy}
+              onPress={onRecycle}
+              style={styles.action}
+            />
+          )}
+        </View>
         {entry.monetization_enabled ? (
           <ExtraPackAction
             slug={set.slug}
@@ -185,37 +219,16 @@ function Post({
             onOpen={onOpen}
           />
         ) : null}
-        {entry.free_available ? (
-          <Button title="Open today's pack" disabled={busy} onPress={() => onOpen(false)} />
-        ) : affordable ? (
-          <Button
-            title={`Spend ${entry.pack_cost} points`}
-            kind="secondary"
-            disabled={busy}
-            onPress={() => onOpen(true)}
-          />
-        ) : (
-          <View style={styles.waiting}>
-            <Text style={styles.clock}>{countdown(entry.resets_at, now)}</Text>
-            <Text style={styles.waitingLabel}>until the next free pack</Text>
-          </View>
-        )}
-        <View style={styles.points}>
-          {entry.points > 0 ? (
+        {entry.points > 0 || gain ? (
+          <View style={styles.points}>
             <Text style={styles.pointsText}>
-              {affordable ? `${entry.points} pts saved` : `${entry.points}/${entry.pack_cost} pts`}
+              {affordable
+                ? `${entry.points} set points saved`
+                : `${entry.points}/${entry.pack_cost} set points`}
             </Text>
-          ) : null}
-          {(entry.recyclable_count ?? 0) > 0 ? (
-            <Button
-              title={recycling ? 'Recycling…' : `Recycle spares (${entry.recyclable_count})`}
-              kind="secondary"
-              disabled={busy}
-              onPress={onRecycle}
-            />
-          ) : null}
-          {gain ? <PointGain key={gain.key} amount={gain.amount} /> : null}
-        </View>
+            {gain ? <PointGain key={gain.key} amount={gain.amount} /> : null}
+          </View>
+        ) : null}
       </View>
 
       <View style={styles.pulls}>
@@ -285,7 +298,7 @@ function Post({
           </View>
         </InspectorModal>
       ) : null}
-    </View>
+    </Panel>
   );
 }
 
@@ -441,28 +454,28 @@ function Packs() {
           />
         }
       >
-        <Text accessibilityRole="header" style={styles.heading}>
-          {freeCount > 0
-            ? `${freeCount} free ${freeCount === 1 ? 'pack' : 'packs'} waiting`
-            : 'Sets you follow'}
-        </Text>
-        {entries.length ? (
-          <Text style={styles.standing}>
-            {collected} of {total} cards collected across {entries.length}{' '}
-            {entries.length === 1 ? 'set' : 'sets'}
+        <Panel>
+          <Text accessibilityRole="header" style={styles.heading}>
+            {freeCount > 0
+              ? `${freeCount} free ${freeCount === 1 ? 'pack' : 'packs'} waiting`
+              : 'Sets you follow'}
           </Text>
-        ) : null}
+          {entries.length ? (
+            <Text style={styles.standing}>
+              {collected} of {total} cards collected across {entries.length}{' '}
+              {entries.length === 1 ? 'set' : 'sets'}
+            </Text>
+          ) : null}
+          {entries.length > 1 ? (
+            <FilterField
+              value={filter}
+              onChange={setFilter}
+              placeholder="Filter by set or creator"
+              label="Filter the sets you follow"
+            />
+          ) : null}
+        </Panel>
         <ErrorText>{error}</ErrorText>
-
-        {entries.length > 1 ? (
-          <FilterField
-            style={styles.filter}
-            value={filter}
-            onChange={setFilter}
-            placeholder="Filter by set or creator"
-            label="Filter the sets you follow"
-          />
-        ) : null}
 
         {entries.length > 0 && shown.length === 0 ? (
           <View style={styles.empty}>
@@ -548,17 +561,7 @@ const useStyles = createThemedStyles((colors) => ({
     borderTopColor: colors.bdr,
   },
   heading: { color: colors.text, fontFamily: fonts.medium, fontSize: 18 },
-  filter: { marginTop: 14 },
-  standing: { color: colors.muted, fontFamily: fonts.body, fontSize: 14, marginTop: -8 },
-
-  post: {
-    padding: 14,
-    backgroundColor: colors.sur,
-    borderWidth: 1,
-    borderColor: colors.bdr,
-    borderRadius: 12,
-  },
-  ready: { borderLeftWidth: 3, borderLeftColor: colors.accent },
+  standing: { color: colors.muted, fontFamily: fonts.body, fontSize: 14 },
 
   byline: {
     flexDirection: 'row',
@@ -584,7 +587,7 @@ const useStyles = createThemedStyles((colors) => ({
   bylineStrong: { color: colors.text, fontFamily: fonts.medium, fontSize: 15 },
   bylineHandle: { color: colors.faint, fontFamily: fonts.body, fontSize: 14 },
 
-  body: { flexDirection: 'row', gap: 14, paddingTop: 14 },
+  body: { flexDirection: 'row', gap: 14 },
   packPress: { position: 'relative' },
   seal: {
     position: 'absolute',
@@ -610,14 +613,16 @@ const useStyles = createThemedStyles((colors) => ({
   progress: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   track: {
     flex: 1,
+    flexDirection: 'row',
+    gap: 1,
     height: 9,
-    borderRadius: 3,
+    padding: 1,
+    borderRadius: 2,
     borderWidth: 1,
     borderColor: colors.bdr2,
-    backgroundColor: colors.sur2,
-    overflow: 'hidden',
+    backgroundColor: colors.bdr2,
   },
-  fill: { height: '100%' },
+  tick: { flex: 1, backgroundColor: colors.sur2 },
   count: { color: colors.muted, fontFamily: fonts.medium, fontSize: 14 },
 
   stats: { flexDirection: 'row', flexWrap: 'wrap', columnGap: 12, rowGap: 4 },
@@ -625,14 +630,16 @@ const useStyles = createThemedStyles((colors) => ({
   statValue: { color: colors.text, fontFamily: fonts.display, fontSize: 15 },
   statLabel: { color: colors.faint, fontFamily: fonts.body, fontSize: 13 },
 
-  actions: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 12, marginTop: 14 },
-  waiting: { flexDirection: 'row', alignItems: 'baseline', gap: 8 },
+  actions: { gap: 10, marginTop: 4 },
+  actionRow: { flexDirection: 'row', gap: 10 },
+  action: { flex: 1 },
+  waiting: { justifyContent: 'center' },
   clock: { color: colors.muted, fontFamily: fonts.display, fontSize: 22 },
   waitingLabel: { color: colors.faint, fontFamily: fonts.body, fontSize: 13 },
   points: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 12 },
   pointsText: { color: colors.muted, fontFamily: fonts.medium, fontSize: 14 },
 
-  pulls: { marginTop: 14, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.bdr },
+  pulls: { paddingTop: 12, borderTopWidth: 1, borderStyle: 'dashed', borderTopColor: colors.bdr2 },
   pullsLabel: { color: colors.muted, fontFamily: fonts.medium, fontSize: 15 },
   pullsRow: { marginTop: 10 },
   pull: { marginRight: 8 },

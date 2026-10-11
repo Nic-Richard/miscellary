@@ -205,6 +205,7 @@ export const THEMES = palettes.map((palette) => {
   const pageText = ink(bg, text);
   const pageMuted = ink(bg, mix(pageText, bg, 0.16));
   const navHover = mix(nav, navInk, 0.1);
+  const light = luminance(bg) > 0.18;
   const navActive = mix(nav, navInk, 0.16);
   const colors = {
     bg,
@@ -220,6 +221,7 @@ export const THEMES = palettes.map((palette) => {
     bdr2: mix(sur, text, 0.37),
     accent,
     accentDeep: palette.number === 2 ? accent : mix(accent, '#10191c', 0.18),
+    accentSoft: mix(accent, '#ffffff', 0.14),
     accentText,
     accentInk: readable(sur, accent),
     revealBg: mix(accent, '#10191c', 0.7),
@@ -234,6 +236,10 @@ export const THEMES = palettes.map((palette) => {
     navBorder: mix(nav, navInk, 0.24),
     navHover,
     navActive,
+    // Shadows and top-edge highlights read differently on light and dark grounds.
+    shadowRgb: light ? '40, 34, 26' : '0, 0, 0',
+    shadowBoost: light ? 1 : 1.9,
+    edgeLight: light ? 'rgba(255, 255, 255, 0.5)' : 'rgba(255, 255, 255, 0.06)',
   };
   const css = {
     '--bg': bg,
@@ -257,10 +263,9 @@ export const THEMES = palettes.map((palette) => {
     '--accent-deep': colors.accentDeep,
     '--accent-text': accentText,
     '--accent-rgb': channels(accent).join(', '),
-    // Shadows and top-edge highlights read differently on light and dark grounds.
-    '--shadow-rgb': luminance(bg) > 0.18 ? '40, 34, 26' : '0, 0, 0',
-    '--shadow-boost': luminance(bg) > 0.18 ? '1' : '1.9',
-    '--edge-light': luminance(bg) > 0.18 ? 'rgba(255, 255, 255, 0.5)' : 'rgba(255, 255, 255, 0.06)',
+    '--shadow-rgb': colors.shadowRgb,
+    '--shadow-boost': String(colors.shadowBoost),
+    '--edge-light': colors.edgeLight,
     '--reveal-bg': colors.revealBg,
     '--cloth': colors.clothSoft,
     '--cloth-deep': accent,

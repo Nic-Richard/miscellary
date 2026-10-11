@@ -1,7 +1,7 @@
 import { cardCode, SHOWCASE_SLOTS } from '@miscellary/shared';
 import type { OwnedCard, ProfilePage } from '@miscellary/shared';
 import Feather from '@expo/vector-icons/Feather';
-import { router, useFocusEffect, useNavigation } from 'expo-router';
+import { useFocusEffect, useNavigation } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Alert,
@@ -27,7 +27,7 @@ import { Button, ErrorText, Input, Loading, Muted } from '@/components/ui';
 function Me() {
   const colors = useColors();
   const styles = useStyles();
-  const { user, logout, refreshUser } = useAuth();
+  const { user, refreshUser } = useAuth();
   const [profile, setProfile] = useState<ProfilePage | null>(null);
   const [editing, setEditing] = useState(false);
   const [displayName, setDisplayName] = useState('');
@@ -219,12 +219,8 @@ function Me() {
             void persistSlots(slots.map((slot, index) => (index === position ? null : slot))),
         }}
         headerExtra={
-          <Button title="Edit profile" kind="secondary" onPress={() => setEditing(true)} />
+          <Button title="Edit profile" kind="secondary" small onPress={() => setEditing(true)} />
         }
-        ownItems={[
-          { label: 'Account settings', icon: 'settings', onSelect: () => router.push('/settings') },
-          { label: 'Log out', icon: 'log-out', onSelect: () => void logout() },
-        ]}
       />
       <Modal
         visible={picking !== null}

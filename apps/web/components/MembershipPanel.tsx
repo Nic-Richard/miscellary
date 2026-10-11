@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import type { Membership } from '@miscellary/shared';
-import { starAmount } from '@miscellary/shared';
+import { publishingSummary, starAmount } from '@miscellary/shared';
 import type { BadgeColour, BadgeFinish } from '@miscellary/shared';
 import BadgePicker from './BadgePicker';
 import { ApiRequestError, apiFetch } from '@/lib/api';
@@ -147,14 +147,15 @@ export default function MembershipPanel() {
         Loading membership…
       </p>
     ) : null;
-  if (!membership.enabled) return null;
+  // While payments are off everything still shows, switched off, so the page can be checked.
+  const closed = !membership.enabled;
+  const sample = closed || Boolean(membership.preview);
   const sub = membership.subscription;
   const publications = membership.publishing;
   const name = user?.profile.display_name || user?.profile.username || '';
   const regionBlocked = Boolean(country && membership.blocked_countries?.includes(country));
   const canBuy =
-    !regionBlocked &&
-    (membership.preview || membership.bundles.some((bundle) => bundle.checkout_available));
+    !regionBlocked && (sample || membership.bundles.some((bundle) => bundle.checkout_available));
   const perks: { count: string; title: string; note?: string; link?: [string, string] }[] = [
     {
       count: String(sub.monthly_bonus_packs),
@@ -323,16 +324,18 @@ export default function MembershipPanel() {
             />
           )}
           <div className={styles.actions}>
-            {!sub.active && !regionBlocked && (sub.checkout_available || membership.preview) && (
+            {!sub.active && !regionBlocked && (sub.checkout_available || sample) && (
               <button
                 type="button"
                 className={ui.btnPrimary}
                 disabled={busy !== null || !sub.checkout_available}
                 onClick={() => void checkout('subscription')}
               >
-                {busy === 'subscription'
-                  ? 'Opening checkout…'
-                  : `Subscribe for ${price(sub.price_cents, sub.currency)} a month`}
+                {closed
+                  ? 'Joining opens soon'
+                  : busy === 'subscription'
+                    ? 'Opening checkout…'
+                    : `Subscribe for ${price(sub.price_cents, sub.currency)} a month`}
               </button>
             )}
             {sub.management_available && (
@@ -373,7 +376,7 @@ export default function MembershipPanel() {
           <>
             <div className={styles.stubs}>
               {membership.bundles
-                .filter((bundle) => bundle.checkout_available || membership.preview)
+                .filter((bundle) => bundle.checkout_available || sample)
                 .map((bundle) => (
                   <button
                     key={bundle.id}
@@ -383,10 +386,12 @@ export default function MembershipPanel() {
                     onClick={() => void checkout(bundle.id)}
                   >
                     <span className={styles.stubStars}>
-                      {bundle.total_stars.toLocaleString()} <small>tickets</small>
+                      {bundle.base_stars.toLocaleString()} <small>tickets</small>
                     </span>
                     <span className={styles.stubBonus}>
-                      {bundle.bonus_stars > 0 ? `Includes ${bundle.bonus_stars} bonus` : 'Starter'}
+                      {bundle.bonus_stars > 0
+                        ? `+ ${bundle.bonus_stars.toLocaleString()} bonus`
+                        : null}
                     </span>
                     <span className={styles.stubPrice}>
                       {busy === bundle.id
@@ -414,14 +419,7 @@ export default function MembershipPanel() {
       <section className={styles.row}>
         <div>
           <h2>Publishing this month</h2>
-          <p className={styles.note}>
-            {publications.used} of {publications.limit} sets published. Resets{' '}
-            {new Date(publications.resets_at).toLocaleDateString(undefined, {
-              timeZone: 'UTC',
-              dateStyle: 'long',
-            })}
-            .
-          </p>
+          <p className={styles.note}>{publishingSummary(publications)}</p>
         </div>
         <Link href="/studio" className={ui.btnQuiet}>
           Your sets

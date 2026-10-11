@@ -7,7 +7,7 @@ import { Alert, Pressable, Text, View } from 'react-native';
 import { useAuth } from '@/lib/auth';
 import { deleteComment, getComments, postComment } from '@/lib/endpoints';
 import { fonts, useColors, createThemedStyles } from '@/lib/theme';
-import { Button, ErrorText, Input, Muted } from './ui';
+import { Button, ErrorText, Input, Muted, Panel, PanelTitle } from './ui';
 import SupporterEmblem from '@/components/SupporterEmblem';
 
 const MAX = 1000;
@@ -202,8 +202,8 @@ export default function Comments({ slug }: { slug: string }) {
   }
 
   return (
-    <View style={styles.root}>
-      <Text style={styles.title}>Comments{count > 0 ? ` · ${count}` : ''}</Text>
+    <Panel plain>
+      <PanelTitle>Comments{count > 0 ? ` · ${count}` : ''}</PanelTitle>
       <ErrorText>{error}</ErrorText>
 
       {user ? (
@@ -248,13 +248,11 @@ export default function Comments({ slug }: { slug: string }) {
           </View>
         ))
       )}
-    </View>
+    </Panel>
   );
 }
 
 const useStyles = createThemedStyles((colors) => ({
-  root: { gap: 10, marginTop: 20 },
-  title: { color: colors.text, fontFamily: fonts.display, fontSize: 26 },
   composer: { gap: 8 },
   compact: { flexDirection: 'row', alignItems: 'flex-end', gap: 8 },
   compactInput: { flex: 1, minHeight: 44, maxHeight: 120, paddingVertical: 10 },

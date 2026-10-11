@@ -1,11 +1,9 @@
 import { Stack, router as appRouter, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text } from 'react-native';
 import LoginGate from '@/components/LoginGate';
 import GoogleButton from '@/components/GoogleButton';
-import ThemeSelector from '@/components/ThemeSelector';
-import MembershipPanel from '@/components/MembershipPanel';
-import { Button, ErrorText, Input, Muted, PasswordInput } from '@/components/ui';
+import { Button, ErrorText, Input, Muted, Panel, PanelTitle, PasswordInput } from '@/components/ui';
 import { ApiRequestError, apiFetch } from '@/lib/api';
 import { confirmGoogle, googleAvailable, googleProof } from '@/lib/google';
 import { useAuth } from '@/lib/auth';
@@ -33,11 +31,11 @@ function Card({
 }) {
   const styles = useStyles();
   return (
-    <View style={styles.card}>
-      <Text style={styles.cardTitle}>{title}</Text>
+    <Panel>
+      <PanelTitle>{title}</PanelTitle>
       {note ? <Muted style={styles.note}>{note}</Muted> : null}
       {children}
-    </View>
+    </Panel>
   );
 }
 
@@ -176,13 +174,6 @@ function Account() {
 
   return (
     <ScrollView style={{ backgroundColor: colors.bg }} contentContainerStyle={styles.content}>
-      <MembershipPanel />
-      <Card
-        title="Appearance"
-        note="Your colour theme is saved to your account, on web and mobile."
-      >
-        <ThemeSelector />
-      </Card>
       <Card
         title="Username"
         note={
@@ -382,15 +373,6 @@ export default function SettingsScreen() {
 
 const useStyles = createThemedStyles((colors) => ({
   content: { padding: 16, paddingBottom: 40, gap: 14 },
-  card: {
-    gap: 10,
-    padding: 16,
-    backgroundColor: colors.sur,
-    borderWidth: 1,
-    borderColor: colors.bdr,
-    borderRadius: 8,
-  },
-  cardTitle: { color: colors.text, fontFamily: fonts.display, fontSize: 24 },
   note: { fontSize: 14, lineHeight: 19 },
   value: { color: colors.text, fontFamily: fonts.body, fontSize: 16 },
   verified: { color: colors.accent, fontFamily: fonts.medium, fontSize: 15 },

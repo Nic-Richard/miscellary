@@ -1,9 +1,10 @@
-import { cardCode, offerSides, personHandle } from '@miscellary/shared';
+import { cardCode, offerSides, personName, timeAgo } from '@miscellary/shared';
 import type { OwnedCard, TradeOffer } from '@miscellary/shared';
 import { router } from 'expo-router';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { fonts, useColors, createThemedStyles } from '@/lib/theme';
+import Avatar from './Avatar';
 import CardPreview from './CardPreview';
 import { Button, Muted } from './ui';
 
@@ -90,22 +91,17 @@ export default function OfferCard({ offer, me, busy, onAction, onInspect }: Offe
   return (
     <View style={styles.root}>
       <View style={styles.header}>
-        <Text style={{ color: colors.muted, fontFamily: fonts.body, fontSize: 16, flexShrink: 1 }}>
-          {incoming ? 'From' : 'To'}{' '}
-          <Text style={{ color: colors.text, fontWeight: '700' }}>{personHandle(other)}</Text>
-          {offer.counter_of ? <Text style={{ color: colors.gold }}> · counter</Text> : null}
-        </Text>
-        <Text
-          style={{
-            color: statusColor,
-            fontSize: 13,
-            fontFamily: fonts.medium,
-            backgroundColor: colors.sur2,
-            paddingHorizontal: 8,
-            paddingVertical: 5,
-            borderRadius: 4,
-          }}
-        >
+        <Avatar person={other} size={34} />
+        <View style={styles.who}>
+          <Text numberOfLines={1} style={styles.name}>
+            {personName(other)}
+          </Text>
+          <Text style={styles.when}>
+            {incoming ? 'Offered you' : 'You offered'} · {timeAgo(offer.created_at)}
+            {offer.counter_of ? <Text style={{ color: colors.gold }}> · counter</Text> : null}
+          </Text>
+        </View>
+        <Text style={[styles.status, { color: statusColor }]}>
           {STATUS_WORD[offer.status] ?? offer.status}
         </Text>
       </View>
@@ -123,26 +119,36 @@ export default function OfferCard({ offer, me, busy, onAction, onInspect }: Offe
         </Muted>
       ) : null}
       <View style={styles.sides}>
-        <Side label="You get" cards={sides.youGet} onInspect={onInspect} />
-        <Feather name="repeat" color={colors.accent} size={18} style={{ alignSelf: 'center' }} />
         <Side label="You give" cards={sides.youGive} onInspect={onInspect} />
+        <Feather name="repeat" color={colors.accent} size={18} style={{ alignSelf: 'center' }} />
+        <Side label="They give" cards={sides.youGet} onInspect={onInspect} />
       </View>
       {offer.status === 'pending' ? (
         <View style={styles.actions}>
           {incoming ? (
             <>
-              <Button title="Accept" disabled={busy} onPress={() => onAction('accept')} />
+              <Button
+                title="Accept"
+                small
+                style={styles.action}
+                disabled={busy}
+                onPress={() => onAction('accept')}
+              />
               <Button
                 title="Counter"
                 kind="secondary"
+                small
+                style={styles.action}
                 disabled={busy}
                 onPress={() =>
                   router.push({ pathname: '/trades/new', params: { counter: offer.id } })
                 }
               />
               <Button
-                title="Reject"
-                kind="danger"
+                title="Decline"
+                kind="quiet"
+                small
+                style={styles.action}
                 disabled={busy}
                 onPress={() => onAction('reject')}
               />
@@ -151,6 +157,8 @@ export default function OfferCard({ offer, me, busy, onAction, onInspect }: Offe
             <Button
               title="Cancel offer"
               kind="danger"
+              small
+              style={styles.action}
               disabled={busy}
               onPress={() => onAction('cancel')}
             />
@@ -163,21 +171,24 @@ export default function OfferCard({ offer, me, busy, onAction, onInspect }: Offe
 
 const useStyles = createThemedStyles((colors) => ({
   root: {
-    backgroundColor: colors.sur,
-    borderColor: colors.bdr2,
+    backgroundColor: colors.sur2,
+    borderColor: colors.bdr,
     borderWidth: 1,
-    borderRadius: 6,
-    borderTopWidth: 3,
-    borderTopColor: colors.accent,
-    padding: 16,
-    gap: 16,
+    borderRadius: 10,
+    padding: 12,
+    gap: 12,
   },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  who: { flex: 1 },
+  name: { color: colors.text, fontFamily: fonts.medium, fontSize: 16 },
+  when: { color: colors.muted, fontFamily: fonts.body, fontSize: 13 },
+  status: { fontFamily: fonts.medium, fontSize: 13 },
   sideLabel: {
     fontSize: 14,
     fontFamily: fonts.medium,
   },
   sides: { flexDirection: 'row', gap: 8 },
   cards: { gap: 8, paddingBottom: 8 },
-  actions: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
+  actions: { flexDirection: 'row', gap: 8 },
+  action: { flex: 1 },
 }));
