@@ -86,10 +86,25 @@ the keystore in EAS credential storage and in a separate encrypted backup. EAS k
 and raises it for every production build; change `version` in `app.json` for user-visible releases.
 
 `android/` is generated and not committed. Recreate it with `npx expo prebuild --clean` after
-changing `app.json` or native dependencies instead of editing it. On Windows, local Gradle release
-builds cannot bundle in this monorepo (React Native passes Windows a relative entry path, which
-Metro resolves from the workspace root), so build locally only for development and take release
-APKs from the preview profile.
+changing `app.json` or native dependencies instead of editing it.
+
+Test APKs are built locally so they don't use EAS build credits; keep EAS for release builds.
+`scripts/build-apk.ps1` (Windows PowerShell) runs prebuild with the preview profile's public
+settings, uses JDK 21, copies the current EAS `versionCode` so the APK installs over EAS builds,
+and signs with the EAS keystore. Import that keystore once: run
+`pnpm dlx eas-cli credentials -p android` in a normal terminal, download it, then
+`.\scripts\build-apk.ps1 -Import path\to\credentials.json` and delete the downloaded files. The
+key is stored outside the repo in `..\..\..\keys`, encrypted for your Windows user. After that:
+
+```powershell
+cd apps/mobile
+.\scripts\build-apk.ps1
+```
+
+It works around two Windows problems: Gradle passes Metro an entry path relative to this folder
+while Metro serves from the workspace root (the script sets `EXPO_NO_METRO_WORKSPACE_ROOT`, and
+`metro.config.cjs` keeps the workspace watched), and Gradle runs `hermesc` without quotes, which
+breaks on the spaces in the repo path (the script copies it under `%LOCALAPPDATA%`).
 
 Windows native builds also exceed 260-character paths. Enable Windows long paths, install CMake
 3.31 (`sdkmanager "cmake;3.31.6"`, whose ninja supports them) and point the build at it in
