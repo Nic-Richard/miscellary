@@ -8,6 +8,7 @@ from .models import (
     COMMENT_MAX,
     SUPPORTER_SHOWCASE_SLOTS,
     Comment,
+    Feedback,
     Notification,
     Report,
     ShowcaseSlot,
@@ -109,6 +110,13 @@ class CommentSerializer(serializers.ModelSerializer):
 class CommentWriteSerializer(serializers.Serializer):
     body = serializers.CharField(max_length=COMMENT_MAX, trim_whitespace=True)
     parent_id = serializers.UUIDField(required=False, allow_null=True)
+
+
+class FeedbackWriteSerializer(serializers.Serializer):
+    kind = serializers.ChoiceField(choices=Feedback.Kind.choices)
+    message = serializers.CharField(min_length=10, max_length=2000, trim_whitespace=True)
+    page = serializers.CharField(required=False, allow_blank=True, default="", max_length=300)
+    client = serializers.CharField(required=False, allow_blank=True, default="", max_length=100)
 
 
 class ReportWriteSerializer(serializers.Serializer):

@@ -102,6 +102,10 @@ function Navigation() {
         />
         <Stack.Screen name="appearance" options={{ title: 'Appearance', headerRight: undefined }} />
         <Stack.Screen name="settings" options={{ title: 'Account', headerRight: undefined }} />
+        <Stack.Screen
+          name="feedback"
+          options={{ title: 'Send feedback', headerRight: undefined }}
+        />
         <Stack.Screen name="profile" options={{ title: 'Profile' }} />
         <Stack.Screen name="membership" options={{ title: 'Membership' }} />
       </Stack>

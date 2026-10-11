@@ -7,6 +7,7 @@ import type { FormEvent } from 'react';
 import { useAuth } from '@/lib/auth';
 import { loginHref, registerHref, swapAuthHref } from '@/lib/returnTo';
 import BrandMark from './BrandMark';
+import FeedbackDialog from './FeedbackDialog';
 import { useMembership } from '@/lib/membership';
 import ThemeSelector from './ThemeSelector';
 import styles from './Nav.module.css';
@@ -58,6 +59,7 @@ export default function Nav() {
   const pathname = usePathname();
   const [q, setQ] = useState('');
   const [menu, setMenu] = useState(false);
+  const [feedback, setFeedback] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => setMenu(false), [pathname]);
@@ -188,12 +190,25 @@ export default function Nav() {
                   <Link role="menuitem" href="/account">
                     Account settings
                   </Link>
+                  <button
+                    role="menuitem"
+                    type="button"
+                    onClick={() => {
+                      setMenu(false);
+                      setFeedback(true);
+                    }}
+                  >
+                    Send feedback
+                  </button>
                   <button role="menuitem" type="button" onClick={() => void logout()}>
                     Log out
                   </button>
                 </div>
               ) : null}
             </div>
+            {feedback ? (
+              <FeedbackDialog page={pathname} onClose={() => setFeedback(false)} />
+            ) : null}
           </>
         ) : (
           <div className={styles.auth}>

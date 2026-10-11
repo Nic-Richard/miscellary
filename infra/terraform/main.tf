@@ -610,10 +610,11 @@ resource "aws_ecs_task_definition" "api" {
       { name = "AWS_STORAGE_BUCKET_NAME", value = aws_s3_bucket.media.id },
       { name = "MEDIA_PUBLIC_URL", value = local.media_url },
       { name = "LOUNGE_ENABLED", value = tostring(var.lounge_enabled) },
+      { name = "ALERTS_URL", value = var.alerts_url },
       { name = "WEB_CONCURRENCY", value = "2" },
       { name = "WEB_TIMEOUT", value = "30" }
     ]
-    secrets = [
+    secrets = concat([
       { name = "SECRET_KEY", valueFrom = "${aws_secretsmanager_secret.app.arn}:secret_key::" },
       { name = "INITIAL_ADMIN_EMAIL", valueFrom = "${aws_secretsmanager_secret.app.arn}:initial_admin_email::" },
       { name = "INITIAL_ADMIN_USERNAME", valueFrom = "${aws_secretsmanager_secret.app.arn}:initial_admin_username::" },
@@ -621,7 +622,9 @@ resource "aws_ecs_task_definition" "api" {
       { name = "DB_PASSWORD", valueFrom = "${aws_db_instance.main.master_user_secret[0].secret_arn}:password::" },
       { name = "EMAIL_HOST_USER", valueFrom = "${aws_secretsmanager_secret.ses.arn}:username::" },
       { name = "EMAIL_HOST_PASSWORD", valueFrom = "${aws_secretsmanager_secret.ses.arn}:password::" }
-    ]
+      ], var.alerts_url == "" ? [] : [
+      { name = "ALERTS_SECRET", valueFrom = "${aws_secretsmanager_secret.app.arn}:alerts_secret::" }
+    ])
     healthCheck = {
       command     = ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health/')\" || exit 1"]
       interval    = 30

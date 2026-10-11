@@ -8,6 +8,7 @@ import type {
   CommentThread,
   Creator,
   CurrentUser,
+  FeedbackKind,
   GoogleConfirmation,
   NotificationList,
   OwnedCard,
@@ -196,6 +197,12 @@ export const postComment = (slug: string, body: string, parentId?: string) =>
   });
 export const deleteComment = (id: string) =>
   apiFetch<void>(`/api/v1/comments/${id}/`, { method: 'DELETE' });
+export const sendFeedback = (body: {
+  kind: FeedbackKind;
+  message: string;
+  page: string;
+  client: string;
+}) => apiFetch<{ id: string }>('/api/v1/feedback/', { method: 'POST', body });
 export const sendReport = (body: {
   lounge_post_id?: string;
   lounge_reply_id?: string;

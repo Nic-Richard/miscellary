@@ -7,7 +7,7 @@ export default function PrivacyPage() {
   return (
     <article className={styles.page}>
       <h1>Privacy</h1>
-      <p className={styles.updated}>Effective October 10, 2026</p>
+      <p className={styles.updated}>Effective October 11, 2026</p>
       <p>Miscellary is operated by Nic Richard in New Brunswick, Canada.</p>
 
       <section>
@@ -103,8 +103,10 @@ export default function PrivacyPage() {
         <h2>Service providers</h2>
         <p>
           Miscellary uses service providers to host the website, API, database, uploaded media,
-          logs, and transactional email. Those providers process information only to supply their
-          services to Miscellary and may operate in countries other than your own.
+          logs, and transactional email. Reports, feedback, payment events and error details are
+          also sent to a private Discord channel that only Miscellary's operator reads. Those
+          providers process information only to supply their services to Miscellary and may operate
+          in countries other than your own.
         </p>
       </section>
 

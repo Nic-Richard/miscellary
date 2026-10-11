@@ -22,6 +22,7 @@ from cards import tags as tagging
 from cards.models import CardDefinition, CardSet, Tag
 from cards.serializers import CardSerializer, CardSetSerializer, CreatorSerializer
 from cards.views import with_counts
+from common import alerts
 from packs import actions
 from packs.models import OwnedCard, PackOpening, SetPoints
 from packs.views import with_copies
@@ -32,6 +33,7 @@ from .models import (
     SUPPORTER_SHOWCASE_SLOTS,
     Block,
     Comment,
+    Feedback,
     Follow,
     Notification,
     Reaction,
@@ -43,6 +45,7 @@ from .notifications import notify, unread_count, withdraw
 from .serializers import (
     CommentSerializer,
     CommentWriteSerializer,
+    FeedbackWriteSerializer,
     NotificationSerializer,
     PackEntrySerializer,
     ProfilePageSerializer,
@@ -437,7 +440,62 @@ class ReportView(APIView):
         else:
             report.reported_user = public_user(data["username"])
         report.save()
+        alert_report(report)
         return Response({"id": str(report.id)}, status=status.HTTP_201_CREATED)
+
+
+def alert_report(report: Report) -> None:
+    if report.card_set:
+        what, text, path = f"Set: {report.card_set.title}", "", f"/sets/{report.card_set.slug}"
+    elif report.card:
+        what, text = f"Card: {report.card.title}", ""
+        path = f"/sets/{report.card.card_set.slug}"
+    elif report.comment:
+        what, text = f"Comment by @{report.comment.author.username}", report.comment.body
+        path = f"/sets/{report.comment.card_set.slug}"
+    elif report.lounge_post:
+        what = f"Lounge post by @{report.lounge_post.author.username}"
+        text = f"**{report.lounge_post.title}**\n{report.lounge_post.body}"
+        path = f"/lounge/{report.lounge_post.pk}"
+    elif report.lounge_reply:
+        what = f"Lounge reply by @{report.lounge_reply.author.username}"
+        text, path = report.lounge_reply.body, f"/lounge/{report.lounge_reply.post_id}"
+    else:
+        assert report.reported_user is not None
+        what, text = f"User: @{report.reported_user.username}", ""
+        path = f"/users/{report.reported_user.username}"
+    alerts.send(
+        "reports",
+        f"{report.get_reason_display()}: {what}",
+        description="\n\n".join(
+            part for part in (f"> {text[:1500]}" if text else "", report.details) if part
+        ),
+        url=alerts.web_url(path),
+        fields={"Reporter": f"@{report.reporter.username}", "Report": str(report.id)},
+    )
+
+
+class FeedbackView(APIView):
+    throttle_scope = "feedback"
+
+    def post(self, request: Request) -> Response:
+        serializer = FeedbackWriteSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = me(request)
+        feedback = Feedback.objects.create(user=user, **serializer.validated_data)
+        alerts.send(
+            "bugs",
+            feedback.get_kind_display(),
+            description=feedback.message,
+            url=alerts.web_url(feedback.page) if feedback.page.startswith("/") else "",
+            fields={
+                "From": f"@{user.username}",
+                "Client": feedback.client,
+                "Page": feedback.page,
+                "Feedback": str(feedback.id),
+            },
+        )
+        return Response({"id": str(feedback.id)}, status=status.HTTP_201_CREATED)
 
 
 class SearchView(APIView):

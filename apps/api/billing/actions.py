@@ -6,6 +6,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from accounts.models import Profile, User
+from common import alerts
 from common.monetization import (
     CREATOR_REWARD_PERCENT,
     CREDIT_BUNDLES,
@@ -13,6 +14,7 @@ from common.monetization import (
     FREE_MONTHLY_PUBLICATIONS,
     SUBSCRIBER_MONTHLY_PUBLICATIONS,
     SUBSCRIPTION_BONUS_CREDITS,
+    SUBSCRIPTION_PRICE_CENTS,
 )
 
 from .models import (
@@ -102,6 +104,9 @@ def grant_bundle(user: User, provider: str, reference: str, product: str) -> Sta
         return grant
     balance, _ = StarBalance.objects.get_or_create(user=locked)
     record_entry(balance, StarEntry.Kind.GRANT, grant.units, grant=grant)
+    _alert_payment(
+        locked, provider, f"{bundle.total_credits} tickets bought", bundle.price_cents, reference
+    )
     return grant
 
 
@@ -176,7 +181,28 @@ def grant_subscription_period(
     balance, _ = StarBalance.objects.get_or_create(user=locked)
     record_entry(balance, StarEntry.Kind.GRANT, grant.units, grant=grant)
     sync_supporter(locked.pk)
+    _alert_payment(
+        locked,
+        provider,
+        "Membership started" if current is None else "Membership renewed",
+        SUBSCRIPTION_PRICE_CENTS,
+        reference,
+    )
     return period
+
+
+def _alert_payment(user: User, provider: str, title: str, cents: int, reference: str) -> None:
+    alerts.send(
+        "billing",
+        title,
+        url=alerts.web_url(f"/users/{user.username}"),
+        fields={
+            "Collector": f"@{user.username}",
+            "Price": f"${cents / 100:.2f}",
+            "Provider": provider,
+            "Reference": reference,
+        },
+    )
 
 
 @transaction.atomic
@@ -201,6 +227,17 @@ def reverse_grant(grant: StarGrant, refunded: int, paid: int, *, restore: bool =
     if change:
         balance, _ = StarBalance.objects.get_or_create(user_id=grant.user_id)
         record_entry(balance, StarEntry.Kind.REFUND, -change, grant=grant)
+        alerts.send(
+            "billing",
+            "Refund" if change > 0 else "Dispute won, tickets restored",
+            fields={
+                "Collector": f"@{grant.user.username}",
+                "Refunded": f"${refunded / 100:.2f} of ${paid / 100:.2f}",
+                "Tickets": f"{-change / CREDIT_UNITS_PER_CREDIT:+g}",
+                "Provider": grant.provider,
+                "Reference": grant.reference,
+            },
+        )
     if target == grant.units and hasattr(grant, "period"):
         # A fully refunded month ends now and loses its remaining bonus packs.
         period = grant.period
@@ -310,5 +347,11 @@ def set_auto_renewal(user: User, provider: str, reference: str, auto_renews: boo
     ).first()
     if subscription is None:
         raise BillingError("Subscription not found.")
+    if subscription.auto_renews and not auto_renews:
+        alerts.send(
+            "billing",
+            "Membership set not to renew",
+            fields={"Collector": f"@{user.username}", "Provider": provider},
+        )
     subscription.auto_renews = auto_renews
     subscription.save(update_fields=["auto_renews"])

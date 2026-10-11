@@ -547,6 +547,15 @@ export const REPORT_REASONS: { value: ReportReason; label: string }[] = [
   { value: 'other', label: 'Something else' },
 ];
 
+export type FeedbackKind = 'bug' | 'idea' | 'account' | 'other';
+
+export const FEEDBACK_KINDS: { value: FeedbackKind; label: string }[] = [
+  { value: 'bug', label: "Something isn't working" },
+  { value: 'idea', label: 'An idea or suggestion' },
+  { value: 'account', label: 'My account or tickets' },
+  { value: 'other', label: 'Something else' },
+];
+
 export interface SearchResults {
   query: string;
   users: Creator[];

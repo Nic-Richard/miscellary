@@ -162,12 +162,15 @@ export default function StatusPill() {
           },
           { value: 'account', label: 'Account', icon: 'settings' },
           { value: 'blocked', label: 'Blocked collectors', icon: 'slash' },
+          { value: 'feedback', label: 'Send feedback', icon: 'message-square' },
           { value: 'logout', label: 'Log out', icon: 'log-out' },
         ]}
         onClose={() => setMenu(false)}
         onChoose={(value) => {
           setMenu(false);
           if (value === 'logout') void logout();
+          else if (value === 'feedback')
+            router.push({ pathname: '/feedback', params: { from: pathname } });
           else router.push(MENU[value as keyof typeof MENU]);
         }}
       />

@@ -138,6 +138,7 @@ REST_FRAMEWORK = {
         "uploads": "60/min",
         "packs": "30/min",
         "reports": "10/hour",
+        "feedback": "10/hour",
         "comments": "20/hour",
         "billing": "10/min",
         "lounge.post": "10/hour",
@@ -188,11 +189,18 @@ EMAIL_VERIFICATION_MAX_AGE = timedelta(days=2)
 PASSWORD_RESET_TIMEOUT = int(timedelta(hours=2).total_seconds())
 GOOGLE_CLIENT_IDS: list[str] = env.list("GOOGLE_CLIENT_IDS", default=[])
 
+# Reports, billing events and errors go to the Discord alerts relay; empty means off.
+ALERTS_URL = env.str("ALERTS_URL", default="")
+ALERTS_SECRET = env.str("ALERTS_SECRET", default="")
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
-    "handlers": {"console": {"class": "logging.StreamHandler"}},
-    "root": {"handlers": ["console"], "level": "INFO"},
+    "handlers": {
+        "console": {"class": "logging.StreamHandler"},
+        "alerts": {"class": "common.alerts.AlertHandler", "level": "ERROR"},
+    },
+    "root": {"handlers": ["console", "alerts"], "level": "INFO"},
 }
 
 # Object storage: MinIO locally, S3 in production. Uploads go straight from the

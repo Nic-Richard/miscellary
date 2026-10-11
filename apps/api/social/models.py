@@ -203,6 +203,33 @@ class Report(models.Model):
         return f"{self.reason} report by {self.reporter}"
 
 
+class Feedback(models.Model):
+    """A bug report or suggestion about Miscellary itself, rather than someone's content."""
+
+    class Kind(models.TextChoices):
+        BUG = "bug", "Something isn't working"
+        IDEA = "idea", "An idea or suggestion"
+        ACCOUNT = "account", "My account or tickets"
+        OTHER = "other", "Something else"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, related_name="feedback"
+    )
+    kind = models.CharField(max_length=10, choices=Kind.choices)
+    message = models.TextField(max_length=2000)
+    page = models.CharField(max_length=300, blank=True)
+    client = models.CharField(max_length=100, blank=True)
+    resolved = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self) -> str:
+        return f"{self.kind} feedback from {self.user}"
+
+
 class Notification(models.Model):
     """Something another collector did to your work, or to you.
 

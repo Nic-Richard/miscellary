@@ -26,5 +26,6 @@ urlpatterns = [
     path("comments/<uuid:comment_id>/", views.CommentView.as_view(), name="comment"),
     path("cards/<uuid:card_id>/like/", views.LikeCardView.as_view(), name="like-card"),
     path("reports/", views.ReportView.as_view(), name="report"),
+    path("feedback/", views.FeedbackView.as_view(), name="feedback"),
     path("search/", views.SearchView.as_view(), name="search"),
 ]

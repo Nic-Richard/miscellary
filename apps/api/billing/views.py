@@ -10,6 +10,7 @@ from rest_framework.views import APIView
 
 from accounts.cookies import MOBILE, client_platform
 from accounts.models import User
+from common import alerts
 from common.monetization import (
     CREDIT_BUNDLES,
     CREDIT_UNITS_PER_CREDIT,
@@ -163,6 +164,12 @@ class StripeWebhookView(APIView):
         try:
             event = payments.verify_event(payload, request.headers.get("Stripe-Signature", ""))
         except (ValueError, stripe.SignatureVerificationError):
+            alerts.send(
+                "billing",
+                "Stripe webhook refused: bad signature",
+                description="Check STRIPE_WEBHOOK_SECRET against the endpoint's signing secret.",
+                key="stripe-signature",
+            )
             return Response(status=400)
         except BillingError:
             return Response(status=503)
@@ -213,6 +220,12 @@ class PlayNotificationView(APIView):
         try:
             play.verify_push(request.headers.get("Authorization", ""))
         except jwt.PyJWTError:
+            alerts.send(
+                "billing",
+                "Google Play notification refused: bad token",
+                description="Check PLAY_RTDN_AUDIENCE and PLAY_RTDN_SERVICE_ACCOUNT.",
+                key="play-push-token",
+            )
             return Response(status=401)
         if not play.configured():
             return Response(status=503)

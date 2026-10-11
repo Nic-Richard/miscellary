@@ -3,6 +3,7 @@ import uuid
 from django.conf import settings
 from django.db import models
 
+from common import alerts
 from common.monetization import SUBSCRIPTION_BONUS_PACKS
 
 
@@ -206,3 +207,18 @@ class BillingReview(models.Model):
 
     def __str__(self) -> str:
         return f"BillingReview<{self.event_id or self.payment_reference}>"
+
+    def save(self, *args, **kwargs) -> None:
+        created = self._state.adding
+        super().save(*args, **kwargs)
+        if created:
+            alerts.send(
+                "billing",
+                "Payment needs a review",
+                description="Check it in the admin under Billing reviews.",
+                fields={
+                    "Reason": self.reason,
+                    "Provider": self.provider,
+                    "Reference": self.payment_reference,
+                },
+            )

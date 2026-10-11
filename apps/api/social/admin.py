@@ -3,6 +3,7 @@ from django.contrib import admin
 from .models import (
     Block,
     Comment,
+    Feedback,
     Follow,
     Notification,
     Reaction,
@@ -28,6 +29,14 @@ class ReportAdmin(admin.ModelAdmin):
     ]
     list_filter = ["status", "reason"]
     list_editable = ["status"]
+
+
+@admin.register(Feedback)
+class FeedbackAdmin(admin.ModelAdmin):
+    list_display = ["kind", "user", "page", "client", "resolved", "created_at"]
+    list_filter = ["resolved", "kind"]
+    list_editable = ["resolved"]
+    search_fields = ["message"]
 
 
 @admin.register(Comment)

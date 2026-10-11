@@ -2,6 +2,7 @@ import type {
   Comment,
   CommentThread,
   Creator,
+  FeedbackKind,
   NotificationList,
   Paginated,
   PacksPage,
@@ -82,7 +83,13 @@ export const sendReport = (body: {
   reason: ReportReason;
   details: string;
 }) => apiFetch<{ id: string }>('/api/v1/reports/', { method: 'POST', body });
+export const sendFeedback = (body: {
+  kind: FeedbackKind;
+  message: string;
+  page: string;
+  client: string;
+}) => apiFetch<{ id: string }>('/api/v1/feedback/', { method: 'POST', body });
 export const search = (q: string) =>
   apiFetch<SearchResults>(`/api/v1/search/?q=${encodeURIComponent(q)}`);
 
-export { REPORT_REASONS } from '@miscellary/shared';
+export { FEEDBACK_KINDS, REPORT_REASONS } from '@miscellary/shared';

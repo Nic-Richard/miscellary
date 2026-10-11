@@ -73,6 +73,12 @@ variable "db_instance_class" {
   default = "db.t4g.micro"
 }
 
+variable "alerts_url" {
+  description = "The Discord alerts relay. Empty turns alerts off; otherwise miscellary/app needs alerts_secret."
+  type        = string
+  default     = ""
+}
+
 variable "lounge_enabled" {
   description = "Opens the Lounge on the API. The web nav also needs NEXT_PUBLIC_LOUNGE_ENABLED on Vercel."
   type        = bool

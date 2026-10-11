@@ -7,6 +7,7 @@ import type { AccountStatus } from '@miscellary/shared';
 import { apiFetch } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import Avatar from './Avatar';
+import FeedbackDialog from './FeedbackDialog';
 import { NOTICE_EVENT } from './Nav';
 import SupporterEmblem from './SupporterEmblem';
 import styles from './StatusBar.module.css';
@@ -34,6 +35,7 @@ export default function StatusBar() {
   const pathname = usePathname();
   const [status, setStatus] = useState<AccountStatus | null>(null);
   const [menu, setMenu] = useState(false);
+  const [feedback, setFeedback] = useState(false);
   const root = useRef<HTMLDivElement>(null);
 
   const load = useCallback(() => {
@@ -137,12 +139,23 @@ export default function StatusBar() {
             <Link role="menuitem" href="/account">
               Account settings
             </Link>
+            <button
+              role="menuitem"
+              type="button"
+              onClick={() => {
+                setMenu(false);
+                setFeedback(true);
+              }}
+            >
+              Send feedback
+            </button>
             <button role="menuitem" type="button" onClick={() => void logout()}>
               Log out
             </button>
           </div>
         )}
       </nav>
+      {feedback && <FeedbackDialog page={pathname} onClose={() => setFeedback(false)} />}
     </div>
   );
 }

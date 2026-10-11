@@ -169,9 +169,13 @@ Store application settings in `miscellary/app`:
   "secret_key": "a long random Django secret",
   "initial_admin_email": "your email",
   "initial_admin_username": "your username",
-  "initial_admin_password": "a unique temporary password"
+  "initial_admin_password": "a unique temporary password",
+  "alerts_secret": "the ALERTS_SECRET from the alerts relay"
 }
 ```
+
+`alerts_secret` is only read when `alerts_url` is set (`https://alerts.nicrichard.dev/alert`). Add it
+to the secret before applying, or new API tasks will fail to start.
 
 Use the Secrets Manager console or `aws secretsmanager put-secret-value` with a local ignored JSON
 file. Do not place these values in Terraform variables, shell history, GitHub variables, or the
