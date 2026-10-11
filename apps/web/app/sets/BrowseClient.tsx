@@ -14,12 +14,11 @@ import wide from '@/components/pageWide.module.css';
 import { apiFetch } from '@/lib/api';
 import styles from './page.module.css';
 
-type Sort = 'top' | 'new' | 'hot' | 'recent';
+type Sort = 'top' | 'new' | 'hot';
 const SORTS: { id: Sort; label: string }[] = [
   { id: 'top', label: 'Top' },
   { id: 'new', label: 'New' },
   { id: 'hot', label: 'Hot' },
-  { id: 'recent', label: 'Most recent' },
 ];
 
 export default function BrowseClient({
