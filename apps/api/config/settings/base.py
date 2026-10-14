@@ -201,6 +201,10 @@ LOGGING = {
         "alerts": {"class": "common.alerts.AlertHandler", "level": "ERROR"},
     },
     "root": {"handlers": ["console", "alerts"], "level": "INFO"},
+    "loggers": {
+        # Bots probing the load balancer's raw IP trip this constantly; Django already answers 400.
+        "django.security.DisallowedHost": {"handlers": ["console"], "propagate": False},
+    },
 }
 
 # Object storage: MinIO locally, S3 in production. Uploads go straight from the

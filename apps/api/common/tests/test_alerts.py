@@ -82,3 +82,9 @@ def test_nothing_is_sent_when_alerts_are_off(auth_client, monkeypatch):
         format="json",
     )
     assert payloads == []
+
+
+def test_requests_for_unknown_hosts_are_not_alerted(client, sent):
+    response = client.get("/", HTTP_HOST="52.87.74.21")
+    assert response.status_code == 400
+    assert sent == []
