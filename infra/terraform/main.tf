@@ -545,8 +545,7 @@ resource "aws_iam_role_policy" "execution_secrets" {
       Action = ["secretsmanager:GetSecretValue"]
       Resource = [
         aws_secretsmanager_secret.app.arn,
-        aws_secretsmanager_secret.ses.arn,
-        aws_db_instance.main.master_user_secret[0].secret_arn
+        aws_secretsmanager_secret.ses.arn
       ]
     }]
   })
@@ -605,7 +604,9 @@ resource "aws_ecs_task_definition" "api" {
       { name = "DB_HOST", value = aws_db_instance.main.address },
       { name = "DB_PORT", value = tostring(aws_db_instance.main.port) },
       { name = "DB_NAME", value = aws_db_instance.main.db_name },
-      { name = "DB_USER", value = aws_db_instance.main.username },
+      # AWS rotates the master password weekly and a running task only reads secrets at start, so the app
+      # connects as its own user with a fixed password.
+      { name = "DB_USER", value = "miscellary_app" },
       { name = "AWS_S3_REGION", value = var.aws_region },
       { name = "AWS_STORAGE_BUCKET_NAME", value = aws_s3_bucket.media.id },
       { name = "MEDIA_PUBLIC_URL", value = local.media_url },
@@ -619,7 +620,7 @@ resource "aws_ecs_task_definition" "api" {
       { name = "INITIAL_ADMIN_EMAIL", valueFrom = "${aws_secretsmanager_secret.app.arn}:initial_admin_email::" },
       { name = "INITIAL_ADMIN_USERNAME", valueFrom = "${aws_secretsmanager_secret.app.arn}:initial_admin_username::" },
       { name = "INITIAL_ADMIN_PASSWORD", valueFrom = "${aws_secretsmanager_secret.app.arn}:initial_admin_password::" },
-      { name = "DB_PASSWORD", valueFrom = "${aws_db_instance.main.master_user_secret[0].secret_arn}:password::" },
+      { name = "DB_PASSWORD", valueFrom = "${aws_secretsmanager_secret.app.arn}:db_password::" },
       { name = "EMAIL_HOST_USER", valueFrom = "${aws_secretsmanager_secret.ses.arn}:username::" },
       { name = "EMAIL_HOST_PASSWORD", valueFrom = "${aws_secretsmanager_secret.ses.arn}:password::" }
       ], var.alerts_url == "" ? [] : [

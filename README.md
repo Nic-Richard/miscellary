@@ -145,7 +145,7 @@ Each app includes a committed `.env.example`. Real environment files are ignored
 | `DJANGO_SETTINGS_MODULE`                                             | Optional explicit settings override; management commands default to development and pytest selects test settings |
 | `SECRET_KEY`                                                         | Django secret key, required in production                                                                        |
 | `DATABASE_URL`                                                       | PostgreSQL connection URL; the VPS-compatible production path                                                    |
-| `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`            | Split PostgreSQL settings used with RDS-managed credentials on ECS                                               |
+| `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`            | Split PostgreSQL settings on ECS: app user `miscellary_app`, password `db_password` in `miscellary/app`          |
 | `ALLOWED_HOSTS`                                                      | Comma-separated API hostnames                                                                                    |
 | `CORS_ALLOWED_ORIGINS`                                               | Browser origins allowed to call the API with credentials                                                         |
 | `CSRF_TRUSTED_ORIGINS`                                               | Trusted browser origins for cookie-authenticated requests                                                        |
