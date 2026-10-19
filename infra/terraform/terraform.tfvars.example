@@ -31,3 +31,10 @@ alert_email           = "you@example.com"
 # monetization_enabled = false
 # stripe_checkout_enabled = false
 # stripe_live_approved = false
+
+# Add server-only play_service_account JSON to miscellary/app first.
+# play_configured = true
+# play_rtdn_audience = "https://api.miscellary.com/api/v1/billing/play/notify/"
+# play_rtdn_service_account = "your-push-identity@miscellary.iam.gserviceaccount.com"
+# play_billing_enabled = false
+# play_live_approved = false

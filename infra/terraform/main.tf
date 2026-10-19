@@ -618,6 +618,12 @@ resource "aws_ecs_task_definition" "api" {
       { name = "STRIPE_PORTAL_CONFIGURATION", value = var.stripe_portal_configuration },
       { name = "STRIPE_RETURN_URL", value = "${local.web_origin}/account" },
       { name = "STRIPE_MANAGED_PAYMENTS", value = "true" },
+      { name = "PLAY_BILLING_ENABLED", value = tostring(var.play_billing_enabled) },
+      { name = "PLAY_LIVE_APPROVED", value = tostring(var.play_live_approved) },
+      { name = "PLAY_PACKAGE_NAME", value = "com.miscellary.app" },
+      { name = "PLAY_SUBSCRIPTION_ID", value = "supporter" },
+      { name = "PLAY_RTDN_AUDIENCE", value = var.play_rtdn_audience },
+      { name = "PLAY_RTDN_SERVICE_ACCOUNT", value = var.play_rtdn_service_account },
       { name = "ALERTS_URL", value = var.alerts_url },
       { name = "WEB_CONCURRENCY", value = "2" },
       { name = "WEB_TIMEOUT", value = "30" }
@@ -635,6 +641,8 @@ resource "aws_ecs_task_definition" "api" {
       ], var.stripe_configured ? [
       { name = "STRIPE_SECRET_KEY", valueFrom = "${aws_secretsmanager_secret.app.arn}:stripe_secret_key::" },
       { name = "STRIPE_WEBHOOK_SECRET", valueFrom = "${aws_secretsmanager_secret.app.arn}:stripe_webhook_secret::" }
+      ] : [], var.play_configured ? [
+      { name = "PLAY_SERVICE_ACCOUNT", valueFrom = "${aws_secretsmanager_secret.app.arn}:play_service_account::" }
     ] : [])
     healthCheck = {
       command     = ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health/')\" || exit 1"]

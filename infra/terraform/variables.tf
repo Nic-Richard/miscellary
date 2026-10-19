@@ -120,3 +120,33 @@ variable "stripe_portal_configuration" {
   type        = string
   default     = ""
 }
+
+variable "play_configured" {
+  description = "Injects the server-only play_service_account JSON from miscellary/app."
+  type        = bool
+  default     = false
+}
+
+variable "play_billing_enabled" {
+  description = "Shows Play purchases after notification and license-testing setup."
+  type        = bool
+  default     = false
+}
+
+variable "play_live_approved" {
+  description = "Accepts non-tester Play purchases after release checks and approval."
+  type        = bool
+  default     = false
+}
+
+variable "play_rtdn_audience" {
+  description = "Expected audience of authenticated Pub/Sub purchase notifications."
+  type        = string
+  default     = ""
+}
+
+variable "play_rtdn_service_account" {
+  description = "Service account email used to authenticate Pub/Sub pushes."
+  type        = string
+  default     = ""
+}
