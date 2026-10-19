@@ -64,13 +64,13 @@ The approved rebalance applies to free, points, tickets and membership packs ali
 Each pull uses the same rarity odds; missing tiers fall back to the next lower tier,
 and the purchase quote discloses the effective set and per-card odds.
 
-| Rarity | Per-pull odds | Recycle points per duplicate |
-| --- | --- | --- |
-| Common | 68% | 1 |
-| Uncommon | 22% | 2 |
-| Rare | 7% | 5 |
-| Epic | 2.25% | 10 |
-| Legendary | 0.75% | 20 |
+| Rarity    | Per-pull odds | Recycle points per duplicate |
+| --------- | ------------- | ---------------------------- |
+| Common    | 68%           | 1                            |
+| Uncommon  | 22%           | 2                            |
+| Rare      | 7%            | 5                            |
+| Epic      | 2.25%         | 10                           |
+| Legendary | 0.75%         | 20                           |
 
 Extra packs still cost 50 points/tickets, with existing mixed-payment rules. Pack
 sizes, card rarities, owned cards and existing points balances are unchanged.
