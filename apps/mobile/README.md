@@ -66,7 +66,7 @@ pnpm --filter mobile build
 ```
 
 The Android export checks bundling; it does not install or validate the app on a device. Release
-binaries use EAS Build from this application directory. The preview profile produces a signed APK
+binaries can build locally or with EAS from this application directory. The EAS preview profile produces a signed APK
 against the production API for direct installation:
 
 ```sh
@@ -82,16 +82,18 @@ pnpm dlx eas-cli build --platform android --profile production
 ```
 
 The first EAS build links the Expo project and creates or selects Android signing credentials. Keep
-the keystore in EAS credential storage and in a separate encrypted backup. EAS keeps `versionCode`
-and raises it for every production build; change `version` in `app.json` for user-visible releases.
+the keystore in EAS credential storage and in a separate encrypted backup. `android.versionCode`
+in `app.json` is the version source for local builds; increase it before each new Play upload.
+EAS production builds also use local versioning and auto-increment that value. Retain the resulting
+config change before the next local build. Change `version` for user-visible releases.
 
 `android/` is generated and not committed. Recreate it with `npx expo prebuild --clean` after
 changing `app.json` or native dependencies instead of editing it.
 
-Test APKs are built locally so they don't use EAS build credits; keep EAS for release builds.
-`scripts/build-apk.ps1` (Windows PowerShell) runs prebuild with the preview profile's public
-settings, uses JDK 21, copies the current EAS `versionCode` so the APK installs over EAS builds,
-and signs with the EAS keystore. Import that keystore once: run
+Signed APKs and AABs can build locally without EAS credits. `scripts/build-apk.ps1`
+(Windows PowerShell) uses the preview profile's public settings for an APK and the production
+profile for `-AppBundle`. It runs prebuild with JDK 21, reads `android.versionCode` from
+`app.json`, rebuilds shared surfaces and signs with the existing upload key. Import that key once: run
 `pnpm dlx eas-cli credentials -p android` in a normal terminal, download it, then
 `.\scripts\build-apk.ps1 -Import path\to\credentials.json` and delete the downloaded files. The
 key is stored outside the repo in `..\..\..\keys`, encrypted for your Windows user. After that:
@@ -99,7 +101,13 @@ key is stored outside the repo in `..\..\..\keys`, encrypted for your Windows us
 ```powershell
 cd apps/mobile
 .\scripts\build-apk.ps1
+.\scripts\build-apk.ps1 -AppBundle
 ```
+
+The AAB is `android/app/build/outputs/bundle/release/app-release.aab`; the APK is
+`android/app/build/outputs/apk/release/app-release.apk`. Validate the AAB and verify its
+signer against the upload key before uploading it to Play Console. EAS remains an optional
+fallback and still requires approval before starting a cloud build.
 
 It works around two Windows problems: Gradle passes Metro an entry path relative to this folder
 while Metro serves from the workspace root (the script sets `EXPO_NO_METRO_WORKSPACE_ROOT`, and

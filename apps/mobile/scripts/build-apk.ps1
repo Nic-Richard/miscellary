@@ -1,9 +1,10 @@
-# Builds a test APK on this PC instead of using an EAS build credit.
+# Builds a signed APK locally; add -AppBundle for a Play AAB.
 # One-time setup: download the EAS keystore (credentials.json), then run
 #   .\scripts\build-apk.ps1 -Import path\to\credentials.json
 param(
     [string]$Import,
-    [string]$KeyDirectory = (Join-Path $PSScriptRoot '..\..\..\..\keys')
+    [string]$KeyDirectory = (Join-Path $PSScriptRoot '..\..\..\..\keys'),
+    [switch]$AppBundle
 )
 
 $ErrorActionPreference = 'Stop'
@@ -48,8 +49,8 @@ try {
     Set-BuildEnv 'JAVA_HOME' $jdk.FullName
     # Gradle passes Metro an entry path relative to apps/mobile; serve from here, not the workspace root.
     Set-BuildEnv 'EXPO_NO_METRO_WORKSPACE_ROOT' '1'
-    # Same public settings as the EAS preview profile.
-    $easEnv = (Get-Content 'eas.json' -Raw -ErrorAction Stop | ConvertFrom-Json).build.preview.env
+    $profile = if ($AppBundle) { 'production' } else { 'preview' }
+    $easEnv = (Get-Content 'eas.json' -Raw -ErrorAction Stop | ConvertFrom-Json).build.$profile.env
     foreach ($property in $easEnv.PSObject.Properties) {
         if ($property.Name -like 'EXPO_PUBLIC_*') { Set-BuildEnv $property.Name $property.Value }
     }
@@ -66,16 +67,22 @@ try {
     if (Test-Path -LiteralPath $cmake) { $properties += "cmake.dir=$($cmake -replace '\\', '/' -replace ':', '\:')" }
     Set-Content -LiteralPath 'android\local.properties' -Value $properties -Encoding ascii
 
-    # Match the last EAS build so a test APK installs over it.
-    $versionCode = (& pnpm.cmd dlx eas-cli build:version:get -p android --non-interactive 2>$null |
-        Select-String 'versionCode - (\d+)').Matches.Groups[1].Value
-    if (-not $versionCode) { throw 'Could not read the Android versionCode from EAS.' }
+    $versionCode = (Get-Content 'app.json' -Raw -ErrorAction Stop | ConvertFrom-Json).expo.android.versionCode
+    if ($versionCode -isnot [int] -or $versionCode -lt 1) { throw 'Set android.versionCode in app.json before building.' }
     $gradleFile = 'android\app\build.gradle'
     $gradle = (Get-Content $gradleFile -Raw) -replace 'versionCode \d+', "versionCode $versionCode"
 
     # Gradle runs hermesc through cmd without quotes, which breaks on the spaces in "Collector TC App".
     $reactNative = Split-Path -Parent (& node --print "require.resolve('react-native/package.json')")
     $hermesc = Join-Path $env:LOCALAPPDATA 'miscellary-build\hermesc'
+    if (Test-Path -LiteralPath $hermesc) {
+        $resolvedHermesc = (Resolve-Path -LiteralPath $hermesc).Path
+        $buildRoot = [IO.Path]::GetFullPath((Join-Path $env:LOCALAPPDATA 'miscellary-build')) + [IO.Path]::DirectorySeparatorChar
+        if (-not $resolvedHermesc.StartsWith($buildRoot, [StringComparison]::OrdinalIgnoreCase) -or
+            ((Get-Item -LiteralPath $hermesc).Attributes -band [IO.FileAttributes]::ReparsePoint)) {
+            throw 'Unexpected hermesc cleanup path.'
+        }
+    }
     Remove-Item -LiteralPath $hermesc -Recurse -Force -ErrorAction SilentlyContinue
     Copy-Item -LiteralPath (Join-Path $reactNative 'sdks\hermesc') -Destination $hermesc -Recurse
     if ($hermesc -match ' ') { throw "hermesc needs a path without spaces: $hermesc" }
@@ -92,12 +99,14 @@ try {
     Push-Location 'android'
     try {
         # Shared web code and generated JSON are outside Gradle's default JavaScript inputs.
-        & .\gradlew.bat --no-daemon :app:createBundleReleaseJsAndAssets --rerun assembleRelease
+        $task = if ($AppBundle) { 'bundleRelease' } else { 'assembleRelease' }
+        & .\gradlew.bat --no-daemon :app:createBundleReleaseJsAndAssets --rerun $task
         if ($LASTEXITCODE -ne 0) { throw 'Gradle release build failed.' }
     } finally {
         Pop-Location
     }
-    Write-Host "APK: $(Resolve-Path 'android\app\build\outputs\apk\release\app-release.apk')"
+    $output = if ($AppBundle) { 'android\app\build\outputs\bundle\release\app-release.aab' } else { 'android\app\build\outputs\apk\release\app-release.apk' }
+    Write-Host "Build: $(Resolve-Path -LiteralPath $output)"
 } finally {
     foreach ($name in $saved.Keys) { [Environment]::SetEnvironmentVariable($name, $saved[$name]) }
     $secret = $null
