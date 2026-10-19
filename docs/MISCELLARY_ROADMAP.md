@@ -23,14 +23,16 @@ Remaining, mostly outside the code:
 
 - Stripe: sandbox purchase/grant/refund/cancellation checks pass. Live products,
   portal, API connection and webhook are configured; real HTTP redelivery passes.
-  The approved pack economy is deployed. Verify automatic renewal and complete
-  the remaining release checks before enabling sales. Nic confirms separate
+  Automatic Managed Payments renewal and duplicate paid-invoice delivery pass with
+  a disposable sandbox clock. Website ticket and membership sales are enabled with
+  Nic's approval. A completed live purchase remains untested. Nic confirms separate
   written approval is not required.
 - Play Console: products, service account, notifications, BE/BR availability, listing,
   Data safety, content rating, reviewer account, internal-testing build and real purchase tests.
 - Real-phone QA of the new build (Google sign-in, purchases, Lounge, blocking).
 - Production checklist items in `docs/RELEASE_CHECKLIST.md`.
-- Push, deploy, then switch on `MONETIZATION_ENABLED`, checkout, Play billing and the Lounge.
+- Complete Play setup/testing before enabling its purchase switches; website sales
+  and the Lounge are already enabled.
 
 ## Current follow-up: theme polish and Google QA (Oct 9, in progress)
 

@@ -25,8 +25,11 @@
 
 ## Every release
 
-- [ ] Before enabling monetization: complete the `docs/BILLING.md` release gates (Stripe
-      connection and delivery checks, Play Console setup, real purchase, refund and cancellation tests).
+- [x] Website sales: Stripe connection, HTTP delivery, sandbox checkout, automatic renewal,
+      refund, cancellation and closure checks pass; Nic approves enabling sales. See
+      `docs/BILLING.md` for the remaining live-purchase and paid-invoice delivery limits.
+- [ ] Android purchases: complete Play Console setup and licence-tester purchase,
+      refund and cancellation checks before enabling Play Billing.
 - [ ] Play Store: complete `docs/PLAY_STORE.md` (listing, Data safety, content rating, app
       access, products unavailable in BE/BR, internal testing).
 - [ ] Someone checks the report queue in Django admin daily once the Lounge is on.

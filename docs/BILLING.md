@@ -1,10 +1,10 @@
 # Billing
 
-The billing implementation is deployed with sales disabled. Stripe is the selected
-website provider, with Xsolla as the fallback; Android needs Google Play Billing.
+Website sales are enabled. Stripe is the selected website provider, with Xsolla as
+the fallback; Android needs Google Play Billing.
 Our own accounts, ticket ledger and paid-period benefits remain authoritative.
 
-## Before enabling sales
+## Launch status and remaining Android checks
 
 - Nic confirms separate written Stripe approval is not a launch requirement. Confirm
   the selected account's Managed Payments availability, or settle the ordinary Stripe
@@ -12,17 +12,20 @@ Our own accounts, ticket ledger and paid-period benefits remain authoritative.
 - Set up Google Play products, the service account and notifications (below), make the
   products unavailable in Belgium and Brazil, then test with licence testers on an
   internal-testing build.
-- Run real Stripe sandbox checkout, tax, renewal, cancellation, refund and closure tests,
-  including that Checkout returns the billing country. Offline tests do not establish that
-  the Stripe account or products are eligible.
+- Stripe sandbox checkout, tax, renewal, cancellation, refund and closure checks pass,
+  including Checkout billing-country data. Automatic Managed Payments renewal grants
+  another 100 tickets and 10 bonus packs for the next contiguous paid month; duplicate
+  initial and renewal invoice events do not repeat grants. These checks do not establish
+  ongoing product eligibility.
 - Read the updated terms and privacy pages and set their effective date at launch.
 - Approve costs, configuration and deployment separately.
 
 Current configuration: Miscellary's separate live Stripe account has its five
 products/prices and customer portal. Its API key and webhook signing secret are in
 the existing AWS `miscellary/app` secret and the ignored `.env.deploy` file. The
-production API now has the new configuration and pack economy. New sales remain
-off. Do not reuse TraceTray's key.
+production API now has the new configuration and pack economy. Nic approves enabling
+website sales after the renewal check. Do not reuse TraceTray's key. Google Play purchases
+remain disabled until their separate setup and licence-tester checks pass.
 
 The live webhook is registered at `/api/v1/billing/stripe/webhook/`, with snapshot
 API version `2026-09-30.endive` matching the Python SDK. It is enabled: a real
@@ -44,8 +47,14 @@ A sandbox ticket refund reverses its grant, and period-end cancellation retains
 paid benefits while stopping renewal. App closure cancels the sandbox subscription.
 These events are retrieved and processed locally, not delivered through a public
 webhook. Actual HTTP delivery is subsequently verified with the harmless live
-expired-checkout event above. Automatic renewal and a completed live purchase
-remain untested. The sandbox used streamed video-game tax codes during
+expired-checkout event above. A subsequent disposable test-clock subscription uses
+the real Managed Payments Checkout and automatically pays its next monthly invoice.
+Both actual paid-invoice events pass through the local Django webhook HTTP handler
+with valid test signatures, including duplicate delivery. The two paid periods are
+contiguous, each has 10 bonus packs, the balance totals 200 tickets, and no billing
+review is created. The simulation and local test account are removed afterwards.
+Public HTTP delivery of a paid invoice and a completed live purchase remain untested.
+The sandbox used streamed video-game tax codes during
 these checks; the live products use the general digital-service classification above.
 
 The API accepts standard (`sk_`) and restricted (`rk_`) secret keys. Both live key
@@ -56,8 +65,8 @@ Terraform now supports `stripe_configured`, `stripe_price_ids` and
 `stripe_secret_key` and `stripe_webhook_secret` to the existing `miscellary/app`
 JSON secret without replacing its other fields. Terraform references the keys;
 it does not store their values in configuration or state. The deployed settings
-set `stripe_configured` and `stripe_live_approved` true for live callbacks, with
-`monetization_enabled` and `stripe_checkout_enabled` false to keep sales closed.
+set `stripe_configured`, `stripe_live_approved`, `monetization_enabled` and
+`stripe_checkout_enabled` true. Play Billing remains off.
 The API service allows 120 seconds for workers to start before enforcing load
 balancer health checks.
 
