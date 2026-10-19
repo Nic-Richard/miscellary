@@ -21,12 +21,13 @@ Our own accounts, ticket ledger and paid-period benefits remain authoritative.
 Current configuration: Miscellary's separate live Stripe account has its five
 products/prices and customer portal. Its API key and webhook signing secret are in
 the existing AWS `miscellary/app` secret and the ignored `.env.deploy` file. The
-production ECS task still needs the new configuration and API release. Keep new
-sales off while the pack economy changes roll out. Do not reuse TraceTray's key.
+production API now has the new configuration and pack economy. New sales remain
+off. Do not reuse TraceTray's key.
 
 The live webhook is registered at `/api/v1/billing/stripe/webhook/`, with snapshot
-API version `2026-09-30.endive` matching the Python SDK. It is disabled until the
-API rollout. Both live ticket and membership Managed Payments validation sessions
+API version `2026-09-30.endive` matching the Python SDK. It is enabled: a real
+expired-checkout event redelivered by Stripe returns 204 and creates one receipt.
+Both live ticket and membership Managed Payments validation sessions
 are accepted and immediately expired without payment. Products use
 `txcd_10000000` (General - Electronically Supplied Services), rather than claiming
 the virtual tickets have an expiry. This is one of Stripe's supported digital
@@ -42,8 +43,9 @@ tickets, 100 membership tickets and 10 bonus packs. Replays do not duplicate gra
 A sandbox ticket refund reverses its grant, and period-end cancellation retains
 paid benefits while stopping renewal. App closure cancels the sandbox subscription.
 These events are retrieved and processed locally, not delivered through a public
-webhook. Automatic renewal, actual HTTP webhook delivery and a completed live
-purchase remain untested. The sandbox used streamed video-game tax codes during
+webhook. Actual HTTP delivery is subsequently verified with the harmless live
+expired-checkout event above. Automatic renewal and a completed live purchase
+remain untested. The sandbox used streamed video-game tax codes during
 these checks; the live products use the general digital-service classification above.
 
 The API accepts standard (`sk_`) and restricted (`rk_`) secret keys. Both live key
@@ -53,10 +55,11 @@ Terraform now supports `stripe_configured`, `stripe_price_ids` and
 `stripe_portal_configuration`. Before enabling `stripe_configured`, add
 `stripe_secret_key` and `stripe_webhook_secret` to the existing `miscellary/app`
 JSON secret without replacing its other fields. Terraform references the keys;
-it does not store their values in configuration or state. The private Terraform
-settings prepare `stripe_configured` and `stripe_live_approved` as true for live
-callbacks, with `monetization_enabled` and `stripe_checkout_enabled` false to keep
-sales closed. No Terraform apply has run yet.
+it does not store their values in configuration or state. The deployed settings
+set `stripe_configured` and `stripe_live_approved` true for live callbacks, with
+`monetization_enabled` and `stripe_checkout_enabled` false to keep sales closed.
+The API service allows 120 seconds for workers to start before enforcing load
+balancer health checks.
 
 ## Pack economy
 

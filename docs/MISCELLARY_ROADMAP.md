@@ -22,9 +22,10 @@ and privacy pages, Play Console answers in `docs/PLAY_STORE.md`, app version 1.0
 Remaining, mostly outside the code:
 
 - Stripe: sandbox purchase/grant/refund/cancellation checks pass. Live products,
-  portal and disabled webhook are configured; credentials are in AWS. Deploy the
-  API connection, verify HTTP delivery and renewal, then enable sales after the
-  pack economy is settled. Nic confirms separate written approval is not required.
+  portal, API connection and webhook are configured; real HTTP redelivery passes.
+  The approved pack economy is deployed. Verify automatic renewal and complete
+  the remaining release checks before enabling sales. Nic confirms separate
+  written approval is not required.
 - Play Console: products, service account, notifications, BE/BR availability, listing,
   Data safety, content rating, reviewer account, internal-testing build and real purchase tests.
 - Real-phone QA of the new build (Google sign-in, purchases, Lounge, blocking).
