@@ -611,6 +611,13 @@ resource "aws_ecs_task_definition" "api" {
       { name = "AWS_STORAGE_BUCKET_NAME", value = aws_s3_bucket.media.id },
       { name = "MEDIA_PUBLIC_URL", value = local.media_url },
       { name = "LOUNGE_ENABLED", value = tostring(var.lounge_enabled) },
+      { name = "MONETIZATION_ENABLED", value = tostring(var.monetization_enabled) },
+      { name = "STRIPE_CHECKOUT_ENABLED", value = tostring(var.stripe_checkout_enabled) },
+      { name = "STRIPE_LIVE_APPROVED", value = tostring(var.stripe_live_approved) },
+      { name = "STRIPE_PRICE_IDS", value = jsonencode(var.stripe_price_ids) },
+      { name = "STRIPE_PORTAL_CONFIGURATION", value = var.stripe_portal_configuration },
+      { name = "STRIPE_RETURN_URL", value = "${local.web_origin}/account" },
+      { name = "STRIPE_MANAGED_PAYMENTS", value = "true" },
       { name = "ALERTS_URL", value = var.alerts_url },
       { name = "WEB_CONCURRENCY", value = "2" },
       { name = "WEB_TIMEOUT", value = "30" }
@@ -625,7 +632,10 @@ resource "aws_ecs_task_definition" "api" {
       { name = "EMAIL_HOST_PASSWORD", valueFrom = "${aws_secretsmanager_secret.ses.arn}:password::" }
       ], var.alerts_url == "" ? [] : [
       { name = "ALERTS_SECRET", valueFrom = "${aws_secretsmanager_secret.app.arn}:alerts_secret::" }
-    ])
+      ], var.stripe_configured ? [
+      { name = "STRIPE_SECRET_KEY", valueFrom = "${aws_secretsmanager_secret.app.arn}:stripe_secret_key::" },
+      { name = "STRIPE_WEBHOOK_SECRET", valueFrom = "${aws_secretsmanager_secret.app.arn}:stripe_webhook_secret::" }
+    ] : [])
     healthCheck = {
       command     = ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health/')\" || exit 1"]
       interval    = 30

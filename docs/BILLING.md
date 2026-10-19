@@ -1,13 +1,14 @@
 # Billing
 
-Local implementation only. Sales are disabled by default. Stripe is the selected
+The billing implementation is deployed with sales disabled. Stripe is the selected
 website provider, with Xsolla as the fallback; Android needs Google Play Billing.
 Our own accounts, ticket ledger and paid-period benefits remain authoritative.
 
 ## Before enabling sales
 
-- Obtain Stripe's written acceptance of random digital packs, user-created sets, card
-  trading and closed-loop creator rewards. Managed Payments eligibility is still unconfirmed.
+- Nic confirms separate written Stripe approval is not a launch requirement. Confirm
+  the selected account's Managed Payments availability, or settle the ordinary Stripe
+  tax setup before changing the integration mode.
 - Set up Google Play products, the service account and notifications (below), make the
   products unavailable in Belgium and Brazil, then test with licence testers on an
   internal-testing build.
@@ -16,6 +17,88 @@ Our own accounts, ticket ledger and paid-period benefits remain authoritative.
   the Stripe account or products are eligible.
 - Read the updated terms and privacy pages and set their effective date at launch.
 - Approve costs, configuration and deployment separately.
+
+Current configuration: Miscellary's separate live Stripe account has its five
+products/prices and customer portal. Its API key and webhook signing secret are in
+the existing AWS `miscellary/app` secret and the ignored `.env.deploy` file. The
+production ECS task still needs the new configuration and API release. Keep new
+sales off while the pack economy changes roll out. Do not reuse TraceTray's key.
+
+The live webhook is registered at `/api/v1/billing/stripe/webhook/`, with snapshot
+API version `2026-09-30.endive` matching the Python SDK. It is disabled until the
+API rollout. Both live ticket and membership Managed Payments validation sessions
+are accepted and immediately expired without payment. Products use
+`txcd_10000000` (General - Electronically Supplied Services), rather than claiming
+the virtual tickets have an expiry. This is one of Stripe's supported digital
+service classifications; API acceptance does not replace ongoing eligibility checks.
+
+The separate Miscellary sandbox is now connected through `apps/api/.env`. Its five
+products have the USD prices below, and its portal allows payment-detail updates,
+invoice history and cancellation at the paid-period end, with plan changes disabled.
+Sandbox Managed Payments Checkout creation succeeds through the actual application
+code for both tickets and membership. Nic completes both hosted sandbox payments;
+their actual provider events grant the disposable local account 125 purchased
+tickets, 100 membership tickets and 10 bonus packs. Replays do not duplicate grants.
+A sandbox ticket refund reverses its grant, and period-end cancellation retains
+paid benefits while stopping renewal. App closure cancels the sandbox subscription.
+These events are retrieved and processed locally, not delivered through a public
+webhook. Automatic renewal, actual HTTP webhook delivery and a completed live
+purchase remain untested. The sandbox used streamed video-game tax codes during
+these checks; the live products use the general digital-service classification above.
+
+The API accepts standard (`sk_`) and restricted (`rk_`) secret keys. Both live key
+types remain blocked until `STRIPE_LIVE_APPROVED` is enabled.
+
+Terraform now supports `stripe_configured`, `stripe_price_ids` and
+`stripe_portal_configuration`. Before enabling `stripe_configured`, add
+`stripe_secret_key` and `stripe_webhook_secret` to the existing `miscellary/app`
+JSON secret without replacing its other fields. Terraform references the keys;
+it does not store their values in configuration or state. The private Terraform
+settings prepare `stripe_configured` and `stripe_live_approved` as true for live
+callbacks, with `monetization_enabled` and `stripe_checkout_enabled` false to keep
+sales closed. No Terraform apply has run yet.
+
+## Pack economy
+
+The approved rebalance applies to free, points, tickets and membership packs alike.
+Each pull uses the same rarity odds; missing tiers fall back to the next lower tier,
+and the purchase quote discloses the effective set and per-card odds.
+
+| Rarity | Per-pull odds | Recycle points per duplicate |
+| --- | --- | --- |
+| Common | 68% | 1 |
+| Uncommon | 22% | 2 |
+| Rare | 7% | 5 |
+| Epic | 2.25% | 10 |
+| Legendary | 0.75% | 20 |
+
+Extra packs still cost 50 points/tickets, with existing mixed-payment rules. Pack
+sizes, card rarities, owned cards and existing points balances are unchanged.
+
+## Account closure and provider cleanup
+
+Web Account and Android Settings both require the current password or a fresh,
+account-bound Google confirmation. Closure cancels Stripe/Play billing before
+deactivating the account, revokes refresh sessions and removes private collections,
+drafts and feedback. Published cards, pack artwork and public threads remain under
+a deleted-user label.
+
+Migration `accounts.0011_account_cleanup` adds a durable queue for bot-alert and
+private-upload removal. The production entrypoint runs
+`python manage.py process_account_cleanup --watch` beside Gunicorn; one-off task
+overrides still run without starting either service. Local development can run
+`docker compose exec api uv run python manage.py process_account_cleanup`.
+Failures preserve progress and retry automatically. Completed cleanup identifiers
+expire after 30 days. Use stable account/report/payment references; never erase
+alerts by username alone, since names can be reused. Unidentifiable older messages
+need review rather than broad matching.
+
+Deploy the relay's authenticated `/erase` route first and verify Miscellary channel
+history permissions. Back up the production database, apply the migration and
+deploy the API and legal pages, then verify closure with a newly disposable account.
+Do not delete `nicqa`, a demo owner, a reviewer or a real collector as a test. Provider
+tests remain mocked until that deployment is approved. Confirm media-cache and
+backup retention as part of the live privacy check.
 
 Purchases are refused in `PURCHASE_BLOCKED_COUNTRIES` (Belgium and Brazil, in
 `common/monetization.py`). Play purchases from there are refunded through the Orders API;

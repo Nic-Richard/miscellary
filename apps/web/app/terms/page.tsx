@@ -7,7 +7,7 @@ export default function TermsPage() {
   return (
     <article className={styles.page}>
       <h1>Terms of use</h1>
-      <p className={styles.updated}>Effective October 10, 2026</p>
+      <p className={styles.updated}>Effective October 18, 2026</p>
       <p>Miscellary is operated by Nic Richard in New Brunswick, Canada.</p>
 
       <section>
@@ -133,6 +133,20 @@ export default function TermsPage() {
           responsible for indirect, incidental, or consequential losses, lost data, lost cards or
           collections, or service interruptions. Some laws give you rights that these terms cannot
           limit.
+        </p>
+      </section>
+
+      <section>
+        <h2>Closing your account</h2>
+        <p>
+          You can close your account from Account on the website or Settings in the Android app.
+          This removes your private collection, drafts, uploads, feedback and unused tickets,
+          cancels any membership and anonymizes your public identity. Published sets and public
+          comments or posts remain under a deleted-user label. Matching account-linked bot alerts
+          are removed, with automatic retries if a provider is unavailable. See the{' '}
+          <a href="/privacy#delete-account">privacy policy</a> for retained records. Cancelling a
+          membership alone keeps your account. Closing an account does not automatically refund
+          earlier purchases or affect refund rights provided by law; contact support to request one.
         </p>
       </section>
 

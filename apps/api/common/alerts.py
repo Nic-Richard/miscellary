@@ -55,12 +55,23 @@ def send(
     url: str = "",
     fields: dict | None = None,
     key: str = "",
+    account_id: str | None = None,
 ) -> None:
     """Post to the alerts relay once the current transaction commits, off the request thread."""
     if not configured():
         return
-    payload = _payload(kind, title, description, url, fields or {}, key)
-    transaction.on_commit(lambda: _dispatch(payload))
+    data = {"Account": account_id, **(fields or {})} if account_id else fields or {}
+    payload = _payload(kind, title, description, url, data, key)
+
+    def dispatch():
+        if account_id:
+            from accounts.models import User
+
+            if not User.objects.filter(pk=account_id, is_active=True, deleted_at=None).exists():
+                return
+        _dispatch(payload)
+
+    transaction.on_commit(dispatch)
 
 
 def web_url(path: str) -> str:

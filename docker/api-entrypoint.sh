@@ -11,8 +11,14 @@ if [ "$#" -gt 0 ]; then
 fi
 
 python manage.py check
-exec gunicorn config.wsgi:application \
+python manage.py process_account_cleanup --watch &
+cleanup_pid=$!
+trap 'kill "$cleanup_pid" "${web_pid:-}" 2>/dev/null || true' EXIT
+trap 'exit 0' INT TERM
+gunicorn config.wsgi:application \
   --bind 0.0.0.0:8000 \
   --workers "${WEB_CONCURRENCY:-2}" \
   --timeout "${WEB_TIMEOUT:-30}" \
-  --access-logfile -
+  --access-logfile - &
+web_pid=$!
+wait "$web_pid"

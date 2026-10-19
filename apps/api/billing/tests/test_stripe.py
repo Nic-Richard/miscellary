@@ -89,6 +89,19 @@ def settled(checkout, **overrides):
     )
 
 
+@pytest.mark.parametrize("prefix", ["sk", "rk"])
+def test_restricted_and_standard_keys_keep_live_gate(settings, prefix):
+    settings.STRIPE_WEBHOOK_SECRET = "whsec_offline"
+    settings.STRIPE_SECRET_KEY = f"{prefix}_test_offline"
+    assert payments.configured()
+    settings.STRIPE_SECRET_KEY = f"{prefix}_live_offline"
+    assert not payments.configured()
+    settings.STRIPE_LIVE_APPROVED = True
+    assert payments.configured()
+    settings.STRIPE_WEBHOOK_SECRET = ""
+    assert not payments.configured()
+
+
 def test_checkout_gates_and_server_owned_offer(user, auth_client, provider, settings):
     key = uuid4()
     settings.STRIPE_SECRET_KEY = "sk_live_not_approved"

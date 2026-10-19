@@ -84,3 +84,39 @@ variable "lounge_enabled" {
   type        = bool
   default     = false
 }
+
+variable "monetization_enabled" {
+  description = "Enables ticket spending and membership benefits; does not enable purchases by itself."
+  type        = bool
+  default     = false
+}
+
+variable "stripe_configured" {
+  description = "Injects stripe_secret_key and stripe_webhook_secret from miscellary/app."
+  type        = bool
+  default     = false
+}
+
+variable "stripe_checkout_enabled" {
+  description = "Allows new website purchases after provider testing and launch approval."
+  type        = bool
+  default     = false
+}
+
+variable "stripe_live_approved" {
+  description = "Accepts live Stripe keys and events after release checks pass."
+  type        = bool
+  default     = false
+}
+
+variable "stripe_price_ids" {
+  description = "Stripe price IDs keyed by credits_125, credits_275, credits_600, credits_1500 and subscription."
+  type        = map(string)
+  default     = {}
+}
+
+variable "stripe_portal_configuration" {
+  description = "Stripe customer portal configuration with cancellation at the paid-period end."
+  type        = string
+  default     = ""
+}

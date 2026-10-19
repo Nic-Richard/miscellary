@@ -467,6 +467,7 @@ def alert_report(report: Report) -> None:
     alerts.send(
         "reports",
         f"{report.get_reason_display()}: {what}",
+        account_id=str(report.reporter_id),
         description="\n\n".join(
             part for part in (f"> {text[:1500]}" if text else "", report.details) if part
         ),
@@ -486,6 +487,7 @@ class FeedbackView(APIView):
         alerts.send(
             "bugs",
             feedback.get_kind_display(),
+            account_id=str(user.pk),
             description=feedback.message,
             url=alerts.web_url(feedback.page) if feedback.page.startswith("/") else "",
             fields={

@@ -195,6 +195,7 @@ def _alert_payment(user: User, provider: str, title: str, cents: int, reference:
     alerts.send(
         "billing",
         title,
+        account_id=str(user.pk),
         url=alerts.web_url(f"/users/{user.username}"),
         fields={
             "Collector": f"@{user.username}",
@@ -230,6 +231,7 @@ def reverse_grant(grant: StarGrant, refunded: int, paid: int, *, restore: bool =
         alerts.send(
             "billing",
             "Refund" if change > 0 else "Dispute won, tickets restored",
+            account_id=str(grant.user_id),
             fields={
                 "Collector": f"@{grant.user.username}",
                 "Refunded": f"${refunded / 100:.2f} of ${paid / 100:.2f}",
@@ -351,6 +353,7 @@ def set_auto_renewal(user: User, provider: str, reference: str, auto_renews: boo
         alerts.send(
             "billing",
             "Membership set not to renew",
+            account_id=str(user.pk),
             fields={"Collector": f"@{user.username}", "Provider": provider},
         )
     subscription.auto_renews = auto_renews

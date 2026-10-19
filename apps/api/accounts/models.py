@@ -4,6 +4,7 @@ from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
 from django.core.validators import RegexValidator
 from django.db import models
+from django.utils import timezone
 
 from cards.identity import BINDER_COLOUR_CHOICES
 
@@ -85,6 +86,21 @@ class Profile(models.Model):
     @property
     def avatar_url(self) -> str | None:
         return None
+
+
+class AccountCleanup(models.Model):
+    user_id = models.UUIDField(unique=True)
+    references = models.JSONField(default=list)
+    storage_keys = models.JSONField(default=list)
+    cursor = models.JSONField(default=dict)
+    alerts_complete = models.BooleanField(default=False)
+    next_attempt_at = models.DateTimeField(default=timezone.now)
+    lease_until = models.DateTimeField(null=True)
+    completed_at = models.DateTimeField(null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self) -> str:
+        return f"Account cleanup {self.pk}"
 
 
 class GoogleIdentity(models.Model):

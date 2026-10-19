@@ -21,7 +21,10 @@ and privacy pages, Play Console answers in `docs/PLAY_STORE.md`, app version 1.0
 
 Remaining, mostly outside the code:
 
-- Stripe written approval; Stripe sandbox tests.
+- Stripe: sandbox purchase/grant/refund/cancellation checks pass. Live products,
+  portal and disabled webhook are configured; credentials are in AWS. Deploy the
+  API connection, verify HTTP delivery and renewal, then enable sales after the
+  pack economy is settled. Nic confirms separate written approval is not required.
 - Play Console: products, service account, notifications, BE/BR availability, listing,
   Data safety, content rating, reviewer account, internal-testing build and real purchase tests.
 - Real-phone QA of the new build (Google sign-in, purchases, Lounge, blocking).
@@ -57,8 +60,8 @@ without payments. Google Play billing and moderation operations/scope review rem
 The follow-up self-audit keeps post/reply mutations in place, adds searchable thumbnail
 selection and reuses the same binder renderer on native. Headless preview checks do not
 replace native-device QA or clear the billing release gates.
-Nic selected Stripe first, Xsolla as backup; Managed Payments eligibility still needs
-written approval. Nothing committed yet. See docs/BILLING.md for setup and release gates.
+Nic selected Stripe first, Xsolla as backup. Separate written approval is not a
+requirement per Nic; current provider setup and remaining checks are in docs/BILLING.md.
 No live sales or new Android build. Provider setup/costs, refund adjustments, spent-ticket
 refund policy, real billing QA and legal/store disclosures remain release gates.
 

@@ -45,8 +45,8 @@ def configured() -> bool:
         key
         and settings.STRIPE_WEBHOOK_SECRET
         and (
-            key.startswith("sk_test_")
-            or (key.startswith("sk_live_") and settings.STRIPE_LIVE_APPROVED)
+            key.startswith(("sk_test_", "rk_test_"))
+            or (key.startswith(("sk_live_", "rk_live_")) and settings.STRIPE_LIVE_APPROVED)
         )
     )
 

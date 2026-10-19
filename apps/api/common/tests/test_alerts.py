@@ -34,6 +34,17 @@ def test_feedback_is_saved_and_sent_to_bugs(auth_client, user, sent):
     assert payload["description"] == "The binder won't turn."
     assert payload["url"].endswith("/sets/x")
     assert {"name": "From", "value": f"@{user.username}"} in payload["fields"]
+    assert {"name": "Account", "value": str(user.pk)} in payload["fields"]
+
+
+def test_account_alert_is_dropped_if_closure_commits_before_delivery(user, sent, monkeypatch):
+    callbacks = []
+    monkeypatch.setattr(alerts.transaction, "on_commit", callbacks.append)
+    alerts.send("billing", "Membership ended", account_id=str(user.pk))
+    user.is_active = False
+    user.save(update_fields=["is_active"])
+    callbacks[0]()
+    assert sent == []
 
 
 def test_feedback_needs_a_real_message(auth_client, sent):

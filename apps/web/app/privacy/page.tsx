@@ -7,7 +7,7 @@ export default function PrivacyPage() {
   return (
     <article className={styles.page}>
       <h1>Privacy</h1>
-      <p className={styles.updated}>Effective October 11, 2026</p>
+      <p className={styles.updated}>Effective October 18, 2026</p>
       <p>Miscellary is operated by Nic Richard in New Brunswick, Canada.</p>
 
       <section>
@@ -133,6 +133,15 @@ export default function PrivacyPage() {
           password, collection, trades, follows, likes, blocks and unused tickets, and cancels any
           membership. Published sets stay for the collectors who own their cards, and your comments
           and posts stay under a deleted-user label. Purchase records are kept as described above.
+        </p>
+        <p>
+          Private uploads, drafts and account-linked feedback are removed. Matching support and
+          billing messages posted by Miscellary&apos;s Discord bot are also removed. Provider and
+          upload cleanup runs in the background and retries after failures. Limited cleanup
+          identifiers are retained while requests are pending and for up to 30 days after
+          completion; backup copies expire under the backup retention policy. Published artwork and
+          text remain under the deleted-user label as described above. Contact us if retained
+          content contains personal information you want removed.
         </p>
       </section>
 
