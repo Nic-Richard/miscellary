@@ -112,19 +112,19 @@ def test_missing_rarity_falls_back_to_lower_tier(user):
 
 def test_recycle_duplicate_earns_points_and_buys_packs(user, published):
     card = published.cards.filter(rarity="rare").first()
-    copies = [OwnedCard.objects.create(owner=user, card=card) for _ in range(6)]
+    copies = [OwnedCard.objects.create(owner=user, card=card) for _ in range(11)]
 
     balance = actions.recycle_card(user, copies[0])
-    assert balance == 10
+    assert balance == 5
     assert not OwnedCard.objects.filter(pk=copies[0].pk).exists()
 
-    for copy in copies[1:5]:
+    for copy in copies[1:10]:
         balance = actions.recycle_card(user, copy)
     assert balance == 50
 
     # The last copy is no longer a duplicate.
     with pytest.raises(actions.PackError, match="duplicates"):
-        actions.recycle_card(user, copies[5])
+        actions.recycle_card(user, copies[10])
 
     opening = actions.open_pack_with_points(user, published)
     assert opening.kind == "points"
@@ -144,7 +144,7 @@ def test_recycle_duplicates_keeps_one_of_each_and_held_copies(user, published):
 
     recycled, earned, balance = actions.recycle_duplicates(user, published)
 
-    assert (recycled, earned, balance) == (1, 10, 10)
+    assert (recycled, earned, balance) == (1, 5, 5)
     assert set(OwnedCard.objects.filter(owner=user, card=rare)) == {rares[0], rares[1]}
     assert OwnedCard.objects.filter(owner=user, card=common).count() == 1
 

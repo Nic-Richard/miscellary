@@ -26,20 +26,20 @@ export const COMMON_MIN_SHARE = 0.4;
 
 // Per-card pull probability inside a pack. Must sum to 1.
 export const PULL_ODDS: Record<Rarity, number> = {
-  common: 0.6,
-  uncommon: 0.25,
-  rare: 0.1,
-  epic: 0.04,
-  legendary: 0.01,
+  common: 0.68,
+  uncommon: 0.22,
+  rare: 0.07,
+  epic: 0.0225,
+  legendary: 0.0075,
 };
 
 // Set-specific points granted when a duplicate of this rarity is recycled.
 export const RECYCLE_VALUE: Record<Rarity, number> = {
   common: 1,
-  uncommon: 3,
-  rare: 10,
-  epic: 30,
-  legendary: 100,
+  uncommon: 2,
+  rare: 5,
+  epic: 10,
+  legendary: 20,
 };
 
 export function isRarity(value: unknown): value is Rarity {

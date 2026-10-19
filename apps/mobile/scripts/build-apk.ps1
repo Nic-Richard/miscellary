@@ -91,7 +91,8 @@ try {
     Set-BuildEnv 'ORG_GRADLE_PROJECT_android.injected.signing.key.password' (& $plain $secret.keyPassword)
     Push-Location 'android'
     try {
-        & .\gradlew.bat --no-daemon assembleRelease
+        # Shared web code and generated JSON are outside Gradle's default JavaScript inputs.
+        & .\gradlew.bat --no-daemon :app:createBundleReleaseJsAndAssets --rerun assembleRelease
         if ($LASTEXITCODE -ne 0) { throw 'Gradle release build failed.' }
     } finally {
         Pop-Location

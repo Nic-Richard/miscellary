@@ -54,7 +54,6 @@ export default function BakedCard({
   templateConfig,
   size,
   lit,
-  previewThumbnail,
 }: {
   render: CardRenderAssets;
   title: string;
@@ -63,7 +62,6 @@ export default function BakedCard({
   templateConfig: TemplateConfig;
   size: 'small' | 'large';
   lit?: boolean | undefined;
-  previewThumbnail?: boolean | undefined;
 }) {
   const image = size === 'small' ? render.thumbnail : render.front;
   const material = resolveCardMaterial(templateKey, templateConfig, rarity);
@@ -71,25 +69,19 @@ export default function BakedCard({
   const full = material.spot?.area === 'full';
   const mask = size === 'small' ? render.mask_thumbnail : render.mask;
   const spot = material.spot;
+  const needsMask = Boolean(spot && !full);
   const layers = spot?.layers;
   const worked = spot ? SPOT_PATTERNS[spot.pattern] : null;
-  const preview =
-    size === 'large'
-      ? previewThumbnail
-        ? render.thumbnail
-        : (render.flat_thumbnail ?? render.thumbnail)
-      : null;
+  const preview = render.flat_thumbnail ?? render.thumbnail;
   const imageUrl = image?.url ?? '';
-  const maskUrl = mask?.url ?? null;
-  const hasSpot = Boolean(spot);
+  const maskUrl = needsMask ? (mask?.url ?? null) : null;
   const [loadedFront, setLoadedFront] = useState<string | null>(null);
   const [loadedMask, setLoadedMask] = useState<string | null>(null);
   const detailed =
-    size === 'small' ||
-    (loadedFront === imageUrl && (!hasSpot || !maskUrl || loadedMask === maskUrl));
+    loadedFront === imageUrl && (!needsMask || Boolean(maskUrl && loadedMask === maskUrl));
 
   useEffect(() => {
-    if (size !== 'large' || !hasSpot || !maskUrl) return;
+    if (!needsMask || !maskUrl) return;
     let live = true;
     const controller = new AbortController();
     // Chrome fetches a CSS mask image with CORS, and a no-CORS response cached
@@ -118,14 +110,13 @@ export default function BakedCard({
       }
       if (live) setLoadedMask(maskUrl);
     };
-    void load().catch(() => {
-      if (live) setLoadedMask(maskUrl);
-    });
+    // Keep the composited thumbnail when a partial-foil mask cannot load.
+    void load().catch(() => {});
     return () => {
       live = false;
       controller.abort();
     };
-  }, [hasSpot, maskUrl, size]);
+  }, [needsMask, maskUrl]);
 
   function frontLoaded(event: SyntheticEvent<HTMLImageElement>) {
     const loaded = event.currentTarget;
@@ -184,15 +175,15 @@ export default function BakedCard({
         />
       ) : null}
       <img
-        className={size === 'large' ? `${styles.detail} ${detailed ? styles.detailReady : ''}` : ''}
+        className={`${styles.detail} ${detailed ? styles.detailReady : ''}`}
         src={image.url}
         alt=""
         draggable={false}
         decoding="async"
-        onLoad={size === 'large' ? frontLoaded : undefined}
+        onLoad={frontLoaded}
       />
       {detailed ? <i className={styles.finish} aria-hidden="true" /> : null}
-      {detailed && spot && mask ? (
+      {detailed && spot && (!needsMask || mask) ? (
         <>
           <i className={styles.spotField} aria-hidden="true" />
           <i className={styles.spotBand} aria-hidden="true" />
