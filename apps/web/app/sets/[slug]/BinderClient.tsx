@@ -37,6 +37,7 @@ import { useAuth } from '@/lib/auth';
 import { loginHref } from '@/lib/returnTo';
 import { useContinuation } from '@/lib/useContinuation';
 import { getPublicSet } from '@/lib/sets';
+import { cardDescription, setDescription, SITE_URL } from '@/lib/seo';
 import { listAllMyCards, listMyPoints, recycleCard, recycleDuplicates } from '@/lib/packs';
 import ui from '@/components/ui.module.css';
 import wide from '@/components/pageWide.module.css';
@@ -188,6 +189,7 @@ export default function BinderClient({
   const [inspect, setInspect] = useState<Card | null>(
     () => initialSet?.cards.find((card) => card.position + 1 === initialCard) ?? null,
   );
+  const metadataPath = useRef(initialCard ? cardPath(slug, initialCard - 1) : setPath(slug));
   const [recycling, setRecycling] = useState<string | null>(null);
   const [gain, setGain] = useState<{ cardId: string; amount: number; key: number } | null>(null);
   const [bulkGain, setBulkGain] = useState<{ amount: number; key: number } | null>(null);
@@ -223,13 +225,51 @@ export default function BinderClient({
 
   // The address follows the open card, so whatever is copied from it opens the same view.
   useEffect(() => {
-    if (set?.status !== 'published') return;
+    if (!set || set.status !== 'published') return;
     const target = inspect ? cardPath(set.slug, inspect.position) : setPath(set.slug);
     if (window.location.pathname !== target) {
       window.history.replaceState(window.history.state, '', target + window.location.search);
     }
-    document.title = `${inspect ? `${inspect.title} from ${set.title}` : set.title} | Miscellary`;
-  }, [inspect, set?.slug, set?.title, set?.status]);
+    const title = inspect ? `${inspect.title} from ${set.title}` : set.title;
+    const description = inspect ? cardDescription(inspect, set.title) : setDescription(set);
+    const url = new URL(target, SITE_URL).href;
+    document.title = `${title} | Miscellary`;
+    // Keep streamed server metadata intact until the selected URL changes.
+    if (metadataPath.current === target) return;
+    metadataPath.current = target;
+    let canonical = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+    if (!canonical) {
+      canonical = document.createElement('link');
+      canonical.rel = 'canonical';
+      document.head.append(canonical);
+    }
+    canonical.href = url;
+    const tags = [
+      ['name', 'description', description],
+      ['property', 'og:title', title],
+      ['property', 'og:description', description],
+      ['property', 'og:url', url],
+      ['property', 'og:image', `${url}/opengraph-image`],
+      ['property', 'og:image:alt', inspect ? 'A Miscellary trading card' : 'A Miscellary card set'],
+      ['name', 'twitter:title', title],
+      ['name', 'twitter:description', description],
+      ['name', 'twitter:image', `${url}/opengraph-image`],
+      [
+        'name',
+        'twitter:image:alt',
+        inspect ? 'A Miscellary trading card' : 'A Miscellary card set',
+      ],
+    ] as const;
+    for (const [attribute, name, content] of tags) {
+      let meta = document.querySelector<HTMLMetaElement>(`meta[${attribute}="${name}"]`);
+      if (!meta) {
+        meta = document.createElement('meta');
+        meta.setAttribute(attribute, name);
+        document.head.append(meta);
+      }
+      meta.content = content;
+    }
+  }, [inspect, set]);
 
   useEffect(() => {
     if (!set || !user || set.creator.deleted || user.profile.username === set.creator.username)

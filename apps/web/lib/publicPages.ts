@@ -1,9 +1,9 @@
 import { cache } from 'react';
-import { personName } from '@miscellary/shared';
 import type { Card, CardSetDetail } from '@miscellary/shared';
 import { ApiRequestError } from './api';
-import { snippet } from './seo';
 import { getPublicSet } from './sets';
+
+export { setDescription } from './seo';
 
 export const loadSet = cache(async (slug: string): Promise<CardSetDetail | null> => {
   try {
@@ -13,11 +13,6 @@ export const loadSet = cache(async (slug: string): Promise<CardSetDetail | null>
     throw error;
   }
 });
-
-export function setDescription(set: CardSetDetail): string {
-  if (set.description) return snippet(set.description);
-  return `${set.card_count} cards by ${personName(set.creator)}. Open a free pack every day and collect the set.`;
-}
 
 export function findCard(set: CardSetDetail | null, number: string): Card | null {
   if (!set || set.status !== 'published') return null;

@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { cardCode, cardPath, RARITY_LABELS } from '@miscellary/shared';
+import { cardPath } from '@miscellary/shared';
 import BinderClient from '../../BinderClient';
 import { findCard, loadSet } from '@/lib/publicPages';
-import { snippet } from '@/lib/seo';
+import { cardDescription } from '@/lib/seo';
 
 export const revalidate = 300;
 
@@ -14,10 +14,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const set = await loadSet(slug);
   const card = findCard(set, number);
   if (!set || !card) return { title: 'Card not found', robots: { index: false } };
-  const code = cardCode(card.printed_set_code, card.position, card.set_total);
-  const description = card.description
-    ? snippet(card.description)
-    : `${RARITY_LABELS[card.rarity]} card ${code} from ${set.title}.`;
+  const description = cardDescription(card, set.title);
   const title = `${card.title} from ${set.title}`;
   return {
     title,
