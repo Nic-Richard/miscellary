@@ -105,6 +105,10 @@ export default function ReportDialog({
             value={details}
             onChange={(e) => setDetails(e.target.value)}
           />
+          <p className={styles.note}>
+            Your report, the reported content and account details are saved by Miscellary and sent
+            to its private staff channel on Discord for review.
+          </p>
           {error ? <p className={ui.error}>{error}</p> : null}
           <div className={styles.buttons}>
             <button type="button" className={ui.btnQuiet} onClick={close}>

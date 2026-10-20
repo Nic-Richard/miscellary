@@ -17,6 +17,7 @@ const ICONS: Record<ReportReason, keyof typeof Feather.glyphMap> = {
 export type ReportTarget =
   | { set_slug: string }
   | { card_id: string }
+  | { comment_id: string }
   | { username: string }
   | { lounge_post_id: string }
   | { lounge_reply_id: string };
@@ -36,6 +37,7 @@ export default function ReportSheet({
     <ChoiceSheet
       visible={visible}
       title={`Report ${subject}`}
+      description="Your report, the reported content and account details are saved by Miscellary and sent to its private staff channel on Discord for review."
       choices={REPORT_REASONS.map((r) => ({
         value: r.value,
         label: r.label,

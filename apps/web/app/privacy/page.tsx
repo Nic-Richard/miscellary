@@ -7,7 +7,7 @@ export default function PrivacyPage() {
   return (
     <article className={styles.page}>
       <h1>Privacy</h1>
-      <p className={styles.updated}>Effective October 18, 2026</p>
+      <p className={styles.updated}>Effective October 20, 2026</p>
       <p>Miscellary is operated by Nic Richard in New Brunswick, Canada.</p>
 
       <section>
@@ -92,9 +92,12 @@ export default function PrivacyPage() {
         </p>
         <p>
           We use TraceTray to understand how people use the website. It records things like cursor
-          movement, clicks, scrolling, and which pages are visited, and stores a random visitor ID
-          in your browser so visits can be grouped together. It doesn’t record what you type, form
-          entries, passwords, or payment details, and it isn’t used for advertising. See{' '}
+          movement, clicks, scrolling, and which pages are visited. The server creates a daily
+          visitor identifier from a rotating random value, the website key, IP address and browser
+          details. The raw IP address is not stored in the analytics data, and identifiers cannot
+          link visits across days. The tracker does not store a visitor ID in your browser. It does
+          not record what you type, form entries, passwords or payment details, and it is not used
+          for advertising. The packaged Android app does not include this website tracker. See{' '}
           <a href="https://tracetray.com/privacy.html">TraceTray’s privacy policy</a> for details.
         </p>
       </section>

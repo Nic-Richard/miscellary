@@ -91,6 +91,10 @@ export default function FeedbackDialog({ page, onClose }: { page: string; onClos
             value={message}
             onChange={(e) => setMessage(e.target.value)}
           />
+          <p className={styles.note}>
+            Your message and account details are saved by Miscellary and sent to its private staff
+            channel on Discord. Avoid including passwords or other sensitive information.
+          </p>
           {error ? <p className={ui.error}>{error}</p> : null}
           <div className={styles.buttons}>
             <button type="button" className={ui.btnQuiet} onClick={close}>

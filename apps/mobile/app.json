@@ -18,7 +18,7 @@
     "android": {
       "edgeToEdgeEnabled": true,
       "package": "com.miscellary.app",
-      "versionCode": 6,
+      "versionCode": 7,
       "permissions": ["android.permission.CAMERA"],
       "blockedPermissions": [
         "android.permission.RECORD_AUDIO",

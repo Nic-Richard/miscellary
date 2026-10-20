@@ -9,6 +9,7 @@ import { deleteComment, getComments, postComment } from '@/lib/endpoints';
 import { fonts, useColors, createThemedStyles } from '@/lib/theme';
 import { Button, ErrorText, Input, Muted, Panel, PanelTitle } from './ui';
 import SupporterEmblem from '@/components/SupporterEmblem';
+import ReportSheet from '@/components/ReportSheet';
 
 const MAX = 1000;
 
@@ -122,6 +123,7 @@ function Entry({
   const styles = useStyles();
   const { user } = useAuth();
   const author = comment.author;
+  const [reporting, setReporting] = useState(false);
 
   function confirmRemove() {
     Alert.alert(COMMENT_COPY.removePrompt, undefined, [
@@ -158,6 +160,11 @@ function Entry({
                 <Text style={styles.action}>Reply</Text>
               </Pressable>
             ) : null}
+            {user && author.username !== user.profile.username ? (
+              <Pressable accessibilityRole="button" hitSlop={6} onPress={() => setReporting(true)}>
+                <Text style={styles.action}>Report</Text>
+              </Pressable>
+            ) : null}
             {comment.can_delete ? (
               <Pressable hitSlop={6} onPress={confirmRemove}>
                 <Text style={[styles.action, { color: colors.danger }]}>Remove</Text>
@@ -166,6 +173,12 @@ function Entry({
           </View>
         </>
       )}
+      <ReportSheet
+        visible={reporting}
+        subject="comment"
+        target={{ comment_id: comment.id }}
+        onClose={() => setReporting(false)}
+      />
       {comment.replies.map((r) => (
         <Entry key={r.id} comment={r} depth={depth + 1} onReply={onReply} onRemove={onRemove} />
       ))}

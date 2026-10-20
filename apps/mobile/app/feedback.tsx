@@ -69,6 +69,10 @@ export default function FeedbackScreen() {
             style={styles.message}
             textAlignVertical="top"
           />
+          <Muted>
+            Your message and account details are saved by Miscellary and sent to its private staff
+            channel on Discord. Avoid including passwords or other sensitive information.
+          </Muted>
           <ErrorText>{error}</ErrorText>
           <Button
             title={sending ? 'Sending…' : 'Send feedback'}

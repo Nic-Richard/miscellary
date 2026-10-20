@@ -21,11 +21,13 @@ export default function ChoiceSheet<T extends string>({
   onChoose,
   onClose,
   header,
+  description,
 }: {
   visible: boolean;
   title: string;
   /** Shown above the choices in place of the title. */
   header?: React.ReactNode;
+  description?: string;
   choices: SheetChoice<T>[];
   onChoose: (value: T) => void;
   onClose: () => void;
@@ -48,6 +50,7 @@ export default function ChoiceSheet<T extends string>({
         </Pressable>
       }
     >
+      {description ? <Text style={styles.description}>{description}</Text> : null}
       {choices.map((choice, index) => (
         <Fragment key={choice.value}>
           {choice.group && choice.group !== choices[index - 1]?.group && (
@@ -97,6 +100,7 @@ export default function ChoiceSheet<T extends string>({
 }
 
 const useStyles = createThemedStyles((colors) => ({
+  description: { color: colors.muted, fontFamily: fonts.body, fontSize: 14, lineHeight: 21 },
   group: { color: colors.pageMuted, fontFamily: fonts.medium, fontSize: 14, marginTop: 8 },
   swatches: {
     flexDirection: 'row',

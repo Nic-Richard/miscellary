@@ -204,6 +204,7 @@ export const sendFeedback = (body: {
   client: string;
 }) => apiFetch<{ id: string }>('/api/v1/feedback/', { method: 'POST', body });
 export const sendReport = (body: {
+  comment_id?: string;
   lounge_post_id?: string;
   lounge_reply_id?: string;
   set_slug?: string;
