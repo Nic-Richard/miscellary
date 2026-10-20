@@ -82,6 +82,7 @@ export const metadata: Metadata = {
   title: { default: 'Miscellary', template: '%s | Miscellary' },
   description: DESCRIPTION,
   applicationName: 'Miscellary',
+  verification: { google: '90v7zL_An3RApY2myqonaQrfzlOshV5ZgGoppBVljkQ' },
   openGraph: { siteName: 'Miscellary', type: 'website', locale: 'en', description: DESCRIPTION },
   twitter: { card: 'summary_large_image' },
 };
