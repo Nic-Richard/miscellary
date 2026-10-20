@@ -291,3 +291,47 @@ remain under the same anonymized account treatment as existing public comments.
 - [Eligibility](https://docs.stripe.com/payments/managed-payments/eligibility)
 - [Subscription events](https://docs.stripe.com/billing/subscriptions/webhooks)
 - [Webhook verification](https://docs.stripe.com/webhooks)
+
+## Complimentary Supporter and ticket grants
+
+Staff with the corresponding Billing add/view permissions can use Django admin:
+
+- **Ticket grants -> Add:** select a collector, enter whole tickets and a reason.
+  The UUID identifies this grant. Retrying its command reference cannot add it twice.
+- **Complimentary supporters -> Add:** select a collector and reason. Leave expiry
+  empty for ongoing access, or choose a future date. The list action **Revoke
+  complimentary Supporter access** ends the entitlement and records the operator.
+  Already granted tickets remain. Closed accounts cannot receive either benefit.
+
+Grant records cannot be edited/deleted through admin. Ticket credits use the existing
+locked balance/ledger with kind `gift`, without a payment receipt, purchase alert or
+fake Stripe/Google order. Actor is recorded for staff grants; trusted management
+commands and automatic monthly benefits have no staff actor.
+
+Complimentary Supporter provides the normal features and, on first use each UTC
+calendar month, the usual 100 monthly tickets and 10 bonus packs. Only the current
+month is credited; missed months are not backfilled. Existing paid periods take
+precedence and remain managed by their actual provider. Complimentary periods have
+no payment grant and do not add paid-month emblem tiers. Public profile visibility
+is cached until the grant expires (the maximum date represents ongoing access).
+Web and Android show **Complimentary Supporter** without renewal/billing controls.
+
+From a trusted API environment, grant access and/or tickets atomically:
+
+```sh
+python manage.py grant_account_access play-review@miscellary.com \
+  --supporter --tickets 10000 \
+  --reference 30e7330a-e03b-4c1e-b8e6-141dc1323215 \
+  --reason "Google Play reviewer access"
+```
+
+Keep that reference when retrying this reviewer grant. Use a new UUID for an
+intentional additional ticket grant; `--supporter` is unnecessary for a top-up.
+`--actor STAFF_USERNAME` records an active staff operator when applicable. The
+reference is bound to the recipient/amount/reason and does not reactivate a revoked
+grant. There is no public client grant endpoint.
+
+Apply migration `billing.0008_complimentary_grants` via the normal GitHub API
+deployment before running this command. Back up the target account's balance,
+existing grants and Supporter state before a production data change. A Fargate
+management task is a separate one-time operation, not an API deployment shortcut.

@@ -31,7 +31,14 @@ from .actions import (
     publishing_summary,
     sync_supporter,
 )
-from .models import BillingReview, Checkout, MembershipSettings, StarBalance, StripeCustomer
+from .models import (
+    BillingReview,
+    Checkout,
+    MembershipSettings,
+    StarBalance,
+    StripeCustomer,
+    Subscription,
+)
 from .serializers import CheckoutSerializer, MembershipSettingsSerializer, PlayPurchaseSerializer
 from .stats import creator_stats
 
@@ -40,6 +47,7 @@ class MembershipView(APIView):
     def get(self, request: Request) -> Response:
         assert isinstance(request.user, User)
         period = active_period(request.user) if settings.MONETIZATION_ENABLED else None
+        complimentary = bool(period and period.subscription.provider == Subscription.COMPLIMENTARY)
         options = MembershipSettings.objects.filter(
             user=request.user
         ).first() or MembershipSettings(user=request.user)
@@ -67,11 +75,13 @@ class MembershipView(APIView):
                     "checkout_available": payments.checkout_ready("subscription")
                     and period is None,
                     "management_available": payments.configured()
+                    and not complimentary
                     and bool(settings.STRIPE_PORTAL_CONFIGURATION)
                     and StripeCustomer.objects.filter(user=request.user).exists(),
                     "active": period is not None,
+                    "complimentary": complimentary,
                     "provider": period.subscription.provider if period else None,
-                    "paid_through": period.ends_at if period else None,
+                    "paid_through": period.ends_at if period and not complimentary else None,
                     "auto_renews": period.subscription.auto_renews if period else False,
                     "bonus_packs_remaining": period.bonus_packs_remaining if period else 0,
                     "price_cents": SUBSCRIPTION_PRICE_CENTS,

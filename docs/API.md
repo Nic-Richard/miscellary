@@ -154,15 +154,15 @@ Profiles include `is_blocked` (whether you blocked them). Registration requires 
 
 Disabled by default. See [billing setup and release gates](BILLING.md).
 
-| Method    | Path                       | Auth                       | Notes                                                                                                                                                                                   |
-| --------- | -------------------------- | -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| GET/PATCH | `/me/membership/`          | bearer                     | Balance, product catalogue, paid-period/publishing usage, available website purchase controls and pending checkout keys. PATCH only accepts `{show_badge}`.                             |
-| GET       | `/me/creator-stats/`       | bearer                     | Own aggregate counts; paid subscribers also receive per-set counts, opening types, daily activity and ticket rewards. No collector identities or another creator's private statistics.  |
-| POST      | `/me/billing/checkout/`    | bearer, web                | `{product, request_key}`; fixed server price, verified email and account-bound hosted checkout. No client amount or return URL.                                                         |
-| POST      | `/me/billing/portal/`      | bearer, web                | Own website purchase management URL.                                                                                                                                                    |
-| POST      | `/billing/stripe/webhook/` | Stripe signature           | Raw-body signature/timestamp verification, event deduplication and provider-verified fulfillment. No client balance grant.                                                              |
-| POST      | `/me/billing/play/`        | bearer, mobile             | `{product, purchase_token}`; checks the purchase with Google Play, matches the account code, grants and acknowledges. Returns `granted`, `pending` or `unavailable` (refunded country). |
-| POST      | `/billing/play/notify/`    | Google-signed Pub/Sub push | Real-time developer notifications; re-reads state from Google for renewals and refunds.                                                                                                 |
+| Method    | Path                       | Auth                       | Notes                                                                                                                                                                                                   |
+| --------- | -------------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GET/PATCH | `/me/membership/`          | bearer                     | Balance, product catalogue, Supporter/publishing usage, available website purchase controls and pending checkout keys. PATCH accepts badge/ring visibility, colour and finish; never client grants.     |
+| GET       | `/me/creator-stats/`       | bearer                     | Own aggregate counts; paid and complimentary supporters also receive per-set counts, opening types, daily activity and ticket rewards. No collector identities or another creator's private statistics. |
+| POST      | `/me/billing/checkout/`    | bearer, web                | `{product, request_key}`; fixed server price, verified email and account-bound hosted checkout. No client amount or return URL.                                                                         |
+| POST      | `/me/billing/portal/`      | bearer, web                | Own website purchase management URL.                                                                                                                                                                    |
+| POST      | `/billing/stripe/webhook/` | Stripe signature           | Raw-body signature/timestamp verification, event deduplication and provider-verified fulfillment. No client balance grant.                                                                              |
+| POST      | `/me/billing/play/`        | bearer, mobile             | `{product, purchase_token}`; checks the purchase with Google Play, matches the account code, grants and acknowledges. Returns `granted`, `pending` or `unavailable` (refunded country).                 |
+| POST      | `/billing/play/notify/`    | Google-signed Pub/Sub push | Real-time developer notifications; re-reads state from Google for renewals and refunds.                                                                                                                 |
 
 Pack status adds `monetization_enabled` and `paid_quote` (null while disabled).
 Quotes include points/tickets split, balance, monthly bonus packs and effective rarity/
@@ -172,7 +172,10 @@ An explicit request key makes retries reuse the opening. Ticket requests require
 confirmed maximum; the server never exceeds it. Creator rewards apply only to the
 ticket portion, not free, recycled-point or subscription bonus packs.
 
-Profiles add `subscriber_badge`, true only during a paid period with visibility enabled.
+Profiles add `subscriber_badge`, true during paid or complimentary Supporter access with visibility enabled.
+Membership includes `subscription.complimentary`; complimentary access has provider
+`complimentary`, no `paid_through` date or renewal, and no billing-management controls.
+Staff ticket/Supporter grants are admin/management operations, with no public grant route.
 
 Creator stats include monthly publication usage. Subscriber details add current collection
 holders, complete binders and average completion per set (unique cards, not duplicate copies),

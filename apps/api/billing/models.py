@@ -2,6 +2,7 @@ import uuid
 
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 
 from common import alerts
 from common.monetization import SUBSCRIPTION_BONUS_PACKS
@@ -52,8 +53,12 @@ class StarGrant(models.Model):
 
 
 class Subscription(models.Model):
+    COMPLIMENTARY = "complimentary"
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    provider = models.CharField(max_length=10, choices=Provider.choices)
+    provider = models.CharField(
+        max_length=20, choices=[*Provider.choices, (COMPLIMENTARY, "Complimentary")]
+    )
     reference = models.CharField(max_length=255)
     auto_renews = models.BooleanField(default=True)
 
@@ -70,7 +75,9 @@ class Subscription(models.Model):
 
 class SubscriptionPeriod(models.Model):
     subscription = models.ForeignKey(Subscription, on_delete=models.CASCADE, related_name="periods")
-    grant = models.OneToOneField(StarGrant, on_delete=models.CASCADE, related_name="period")
+    grant = models.OneToOneField(
+        StarGrant, null=True, blank=True, on_delete=models.CASCADE, related_name="period"
+    )
     starts_at = models.DateTimeField()
     ends_at = models.DateTimeField()
     bonus_packs_remaining = models.PositiveSmallIntegerField(default=SUBSCRIPTION_BONUS_PACKS)
@@ -95,6 +102,7 @@ class SubscriptionPeriod(models.Model):
 class StarEntry(models.Model):
     class Kind(models.TextChoices):
         GRANT = "grant", "Verified payment grant"
+        GIFT = "gift", "Ticket grant"
         SPEND = "spend", "Pack opening"
         REWARD = "reward", "Creator reward"
         CLOSURE = "closure", "Account closed"
@@ -222,3 +230,34 @@ class BillingReview(models.Model):
                     "Reference": self.payment_reference,
                 },
             )
+
+
+class ComplimentarySupporter(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    subscription = models.OneToOneField(Subscription, on_delete=models.CASCADE)
+    reason = models.CharField(max_length=255)
+    granted_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
+    created_at = models.DateTimeField(default=timezone.now, editable=False)
+    expires_at = models.DateTimeField(null=True, blank=True)
+    revoked_at = models.DateTimeField(null=True, blank=True, editable=False)
+
+    def __str__(self) -> str:
+        return f"Complimentary Supporter<{self.user_id}>"
+
+
+class TicketGrant(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    tickets = models.PositiveIntegerField()
+    reason = models.CharField(max_length=255)
+    granted_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
+    entry = models.OneToOneField(StarEntry, null=True, on_delete=models.SET_NULL)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self) -> str:
+        return f"Ticket grant<{self.user_id}: {self.tickets}>"

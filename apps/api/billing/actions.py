@@ -2,7 +2,7 @@ from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
 from django.conf import settings
-from django.db import transaction
+from django.db import models, transaction
 from django.utils import timezone
 
 from accounts.models import Profile, User
@@ -18,6 +18,7 @@ from common.monetization import (
 )
 
 from .models import (
+    ComplimentarySupporter,
     MembershipSettings,
     Provider,
     StarBalance,
@@ -137,7 +138,10 @@ def grant_subscription_period(
             raise PaymentMismatch("That payment has different subscription details.")
         return period
     if SubscriptionPeriod.objects.filter(
-        subscription__user=locked, starts_at__lt=ends_at, ends_at__gt=starts_at
+        subscription__user=locked,
+        subscription__provider__in=Provider.values,
+        starts_at__lt=ends_at,
+        ends_at__gt=starts_at,
     ).exists():
         raise PaymentMismatch("You already have a subscription for that period.")
     if (
@@ -152,7 +156,9 @@ def grant_subscription_period(
     if (
         current is None
         and SubscriptionPeriod.objects.filter(
-            subscription__user=locked, ends_at__gt=timezone.now()
+            subscription__user=locked,
+            subscription__provider__in=Provider.values,
+            ends_at__gt=timezone.now(),
         ).exists()
     ):
         raise PaymentMismatch("You already have a subscription for that period.")
@@ -252,9 +258,11 @@ def reverse_grant(grant: StarGrant, refunded: int, paid: int, *, restore: bool =
 
 
 def sync_supporter(user_id: UUID) -> None:
-    """Copy a collector's paid months and badge setting onto their profile."""
+    """Cache Supporter visibility without counting complimentary months as payments."""
     periods = list(
-        SubscriptionPeriod.objects.filter(subscription__user_id=user_id).select_related("grant")
+        SubscriptionPeriod.objects.filter(subscription__user_id=user_id).select_related(
+            "grant", "subscription"
+        )
     )
     refunds: dict[int, int] = {}
     for grant_id, units in StarEntry.objects.filter(
@@ -262,11 +270,17 @@ def sync_supporter(user_id: UUID) -> None:
     ).values_list("grant_id", "units"):
         refunds[grant_id] = refunds.get(grant_id, 0) - units
     # A fully refunded month doesn't count towards the emblem.
-    paid = [p for p in periods if refunds.get(p.grant_id, 0) < p.grant.units]
+    paid = [p for p in periods if p.grant and refunds.get(p.grant.pk, 0) < p.grant.units]
+    now = timezone.now()
+    gifts = ComplimentarySupporter.objects.filter(
+        user_id=user_id, revoked_at__isnull=True, created_at__lte=now
+    ).filter(models.Q(expires_at__isnull=True) | models.Q(expires_at__gt=now))
+    ends = [p.ends_at for p in periods if p.subscription.provider != Subscription.COMPLIMENTARY]
+    ends.extend(g.expires_at or datetime.max.replace(tzinfo=UTC) for g in gifts)
     shown = not MembershipSettings.objects.filter(user_id=user_id, show_badge=False).exists()
     Profile.objects.filter(user_id=user_id).update(
         supporter_months=len(paid),
-        supporter_until=max((p.ends_at for p in periods), default=None),
+        supporter_until=max(ends, default=None),
         supporter_shown=shown,
     )
 
@@ -278,9 +292,10 @@ def trade_restricted(user: User) -> bool:
 
 def active_period(user: User, at: datetime | None = None):
     at = at or timezone.now()
-    return (
+    period = (
         SubscriptionPeriod.objects.filter(
             subscription__user=user,
+            subscription__provider__in=Provider.values,
             subscription__user__is_active=True,
             starts_at__lte=at,
             ends_at__gt=at,
@@ -288,6 +303,11 @@ def active_period(user: User, at: datetime | None = None):
         .select_related("subscription")
         .first()
     )
+    if period or not settings.MONETIZATION_ENABLED:
+        return period
+    from .grants import complimentary_period
+
+    return complimentary_period(user, at)
 
 
 def visible_badge(user: User) -> bool:

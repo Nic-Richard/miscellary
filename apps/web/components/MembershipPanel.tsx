@@ -223,16 +223,26 @@ export default function MembershipPanel() {
         </div>
         <div className={styles.detail}>
           <div className={styles.status}>
-            <h2 id="membership-title">{sub.active ? 'Supporter' : 'Become a supporter'}</h2>
+            <h2 id="membership-title">
+              {sub.complimentary
+                ? 'Complimentary Supporter'
+                : sub.active
+                  ? 'Supporter'
+                  : 'Become a supporter'}
+            </h2>
             {sub.active && (
-              <span className={styles.state}>{sub.auto_renews ? 'Active' : 'Ending'}</span>
+              <span className={styles.state}>
+                {sub.complimentary ? 'Complimentary' : sub.auto_renews ? 'Active' : 'Ending'}
+              </span>
             )}
           </div>
           <p className={styles.lead}>
             {sub.active
-              ? sub.auto_renews
-                ? `Renews ${renewal} for ${price(sub.price_cents, sub.currency)}. Cancel anytime and keep it until then.`
-                : `Ends ${renewal}. You keep your tickets afterwards.`
+              ? sub.complimentary
+                ? 'Supporter access is provided at no charge. There is no subscription to renew.'
+                : sub.auto_renews
+                  ? `Renews ${renewal} for ${price(sub.price_cents, sub.currency)}. Cancel anytime and keep it until then.`
+                  : `Ends ${renewal}. You keep your tickets afterwards.`
               : `${price(sub.price_cents, sub.currency)} a month. A little extra for your collection, and a little support for Miscellary.`}
           </p>
           <ul className={styles.perks}>

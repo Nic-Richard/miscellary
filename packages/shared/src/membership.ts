@@ -39,7 +39,8 @@ export interface Membership {
     checkout_available?: boolean;
     management_available?: boolean;
     active: boolean;
-    provider?: 'web' | 'play' | null;
+    provider?: 'web' | 'play' | 'complimentary' | null;
+    complimentary?: boolean;
     paid_through: string | null;
     auto_renews: boolean;
     bonus_packs_remaining: number;

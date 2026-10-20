@@ -177,23 +177,31 @@ export default function MembershipPanel() {
           </View>
           <View style={styles.statusBlock}>
             <Text accessibilityRole="header" style={styles.title}>
-              {sub.active ? 'Supporter' : 'Become a supporter'}
+              {sub.complimentary
+                ? 'Complimentary Supporter'
+                : sub.active
+                  ? 'Supporter'
+                  : 'Become a supporter'}
             </Text>
             {sub.active && (
               <View style={styles.state}>
                 <View style={styles.dot} />
-                <Text style={styles.stateText}>{sub.auto_renews ? 'Active' : 'Ending'}</Text>
+                <Text style={styles.stateText}>
+                  {sub.complimentary ? 'Complimentary' : sub.auto_renews ? 'Active' : 'Ending'}
+                </Text>
               </View>
             )}
           </View>
         </View>
         <Muted>
           {sub.active
-            ? sub.auto_renews
-              ? sub.provider === 'play'
-                ? `Renews ${renewal}. Google Play shows your renewal price.`
-                : `Renews ${renewal} for ${price(sub.price_cents, sub.currency)}.`
-              : `Ends ${renewal}. You keep your tickets afterwards.`
+            ? sub.complimentary
+              ? 'Supporter access is provided at no charge. There is no subscription to renew.'
+              : sub.auto_renews
+                ? sub.provider === 'play'
+                  ? `Renews ${renewal}. Google Play shows your renewal price.`
+                  : `Renews ${renewal} for ${price(sub.price_cents, sub.currency)}.`
+                : `Ends ${renewal}. You keep your tickets afterwards.`
             : displayedPrice
               ? `${displayedPrice} a month. A little extra for your collection, and a little support for Miscellary.`
               : 'A little extra for your collection, and a little support for Miscellary.'}
