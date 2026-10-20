@@ -60,9 +60,11 @@ random items.
 
 ## Data safety
 
-Data is encrypted in transit. Users can ask for deletion (in-app and by email). No data is
-shared with third parties for their own use; Stripe, Google Play and hosting providers process
-it on Miscellary's behalf, which the form does not count as sharing.
+Data is encrypted in transit. Users can request deletion in-app or through
+https://miscellary.com/privacy#delete-account. Include actual Google sign-in,
+payment, hosting and alert-provider behavior. Apply Google's service-provider
+sharing exceptions only when their conditions are met; do not use a blanket
+"nothing is shared" answer.
 
 | Data type                                      | Collected | Purpose                               | Optional |
 | ---------------------------------------------- | --------- | ------------------------------------- | -------- |
@@ -73,9 +75,15 @@ it on Miscellary's behalf, which the form does not count as sharing.
 | Other user-generated content (posts, comments) | Yes       | App functionality                     | Yes      |
 | App interactions (likes, follows, trades)      | Yes       | App functionality                     | Yes      |
 
-Not collected by the app: location, contacts, device IDs, advertising ID, crash logs,
-financial account details (payment providers handle cards), health, messages. Pack reminders
-are local notifications, so no push token is collected.
+No app feature requests location, contacts, advertising ID, health or payment-card
+details. Pack reminders are local notifications; no remote push token is registered.
+Include security/request logs and optional report text, which can reach the private
+Alerts relay. Review the installed Google sign-in SDK's data disclosures too.
+
+Photo uploads use the system picker, without broad photo-library access. Camera
+permission stays available for taking card photos. Build 6 blocks broad image/video
+and legacy storage permissions, microphone access and screen overlays. Verify the
+signed manifest after rebuilding, not only the Expo configuration.
 
 ## Purchases by country
 
@@ -85,8 +93,16 @@ countries, and the app hides purchases when its Play Store country is one of the
 
 ## Release
 
-1. Build the production AAB with EAS and upload it to Internal testing.
-2. Create the products (see BILLING.md), add licence testers, test purchases, a refund and a
-   cancellation on a real phone.
-3. Promote to Closed or Production. New personal developer accounts must run a closed test
-   with at least 12 testers for 14 days before production access; check Play Console.
+1. Build locally from the repo root with
+   `powershell -ExecutionPolicy Bypass -File apps/mobile/scripts/build-apk.ps1 -AppBundle`.
+   Signing uses the existing upload key outside Git; no EAS credit is needed.
+2. Code 5 is completed on Internal testing. After approval, upload code 6 to replace
+   it. Production stays untouched.
+3. Four ticket products and `supporter/monthly` are already ACTIVE; do not recreate
+   them. Play prices still match the web. Nic wants Android prices reviewed to cover
+   the store fee; no replacement prices are approved yet.
+4. Use the Play-installed app and license-tester account for test-card purchase,
+   restore, renewal, refund and cancellation/expiry. Real Play payments stay disabled
+   until those checks pass and Nic approves them.
+5. Complete listing assets, review access, content rating, Data safety and the
+   closed test required by this account. Follow Console's production-access gate.
