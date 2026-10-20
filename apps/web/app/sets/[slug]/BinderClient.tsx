@@ -96,31 +96,54 @@ function SetCard({
   onInspect: (card: Card) => void;
   onLike: (card: Card, like: boolean) => Promise<{ liked: boolean; like_count: number }>;
 }) {
+  const preview = (
+    <CardPreview
+      size="small"
+      title={card.title}
+      rarity={card.rarity}
+      code={cardCode(detail.printed_set_code, card.position, card.set_total || detail.cards.length)}
+      printedText={card.printed_text}
+      imageUrl={card.image.url}
+      templateKey={card.template_key}
+      templateConfig={card.template_config}
+      mark={detail.mark}
+      render={card.render}
+    />
+  );
+
   return (
     <div className={styles.cardCell}>
-      <button
-        type="button"
-        className={styles.inspect}
-        onClick={() => onInspect(card)}
-        aria-label={`Inspect ${card.title}`}
-      >
-        <CardPreview
-          size="small"
-          title={card.title}
-          rarity={card.rarity}
-          code={cardCode(
-            detail.printed_set_code,
-            card.position,
-            card.set_total || detail.cards.length,
-          )}
-          printedText={card.printed_text}
-          imageUrl={card.image.url}
-          templateKey={card.template_key}
-          templateConfig={card.template_config}
-          mark={detail.mark}
-          render={card.render}
-        />
-      </button>
+      {published ? (
+        <Link
+          href={cardPath(detail.slug, card.position)}
+          prefetch={false}
+          className={styles.inspect}
+          onClick={(event) => {
+            if (
+              event.button !== 0 ||
+              event.metaKey ||
+              event.ctrlKey ||
+              event.shiftKey ||
+              event.altKey
+            )
+              return;
+            event.preventDefault();
+            onInspect(card);
+          }}
+          aria-label={`Inspect ${card.title}`}
+        >
+          {preview}
+        </Link>
+      ) : (
+        <button
+          type="button"
+          className={styles.inspect}
+          onClick={() => onInspect(card)}
+          aria-label={`Inspect ${card.title}`}
+        >
+          {preview}
+        </button>
+      )}
       {published ? (
         <div className={styles.cardSocial}>
           <LikeButton

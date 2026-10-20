@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import { cardCode, cardPath, RARITY_LABELS } from '@miscellary/shared';
 import BinderClient from '../../BinderClient';
 import { findCard, loadSet } from '@/lib/publicPages';
@@ -30,7 +31,6 @@ export default async function CardPage({ params }: { params: Params }) {
   const { slug, number } = await params;
   const set = await loadSet(slug);
   const card = findCard(set, number);
-  return (
-    <BinderClient slug={slug} initialSet={set} initialCard={card ? card.position + 1 : null} />
-  );
+  if (!set || !card) notFound();
+  return <BinderClient slug={slug} initialSet={set} initialCard={card.position + 1} />;
 }

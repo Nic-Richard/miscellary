@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { cardCode, cardPath, personHandle } from '@miscellary/shared';
 import SectionHeader from '@/components/SectionHeader';
@@ -13,6 +14,11 @@ import wide from '@/components/pageWide.module.css';
 import styles from './page.module.css';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: 'Search',
+  robots: { index: false, follow: true },
+};
 
 export default async function SearchPage({
   searchParams,
