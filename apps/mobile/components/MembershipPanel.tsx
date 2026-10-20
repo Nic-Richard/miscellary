@@ -96,6 +96,7 @@ export default function MembershipPanel() {
   const sub = membership.subscription;
   const publications = membership.publishing;
   const subPrice = store.prices[membership.play?.subscription_id ?? ''];
+  const displayedPrice = membership.preview ? price(sub.price_cents, sub.currency) : subPrice;
   // Local preview shows the tickets with website prices, switched off, like the website does.
   const sample = closed || (!store.ready && Boolean(membership.preview));
   const stubs = sample
@@ -189,9 +190,13 @@ export default function MembershipPanel() {
         <Muted>
           {sub.active
             ? sub.auto_renews
-              ? `Renews ${renewal} for ${price(sub.price_cents, sub.currency)}.`
+              ? sub.provider === 'play'
+                ? `Renews ${renewal}. Google Play shows your renewal price.`
+                : `Renews ${renewal} for ${price(sub.price_cents, sub.currency)}.`
               : `Ends ${renewal}. You keep your tickets afterwards.`
-            : `${price(sub.price_cents, sub.currency)} a month. A little extra for your collection, and a little support for Miscellary.`}
+            : displayedPrice
+              ? `${displayedPrice} a month. A little extra for your collection, and a little support for Miscellary.`
+              : 'A little extra for your collection, and a little support for Miscellary.'}
         </Muted>
         <View>
           {perks.map((perk) => (
