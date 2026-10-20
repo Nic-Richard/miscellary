@@ -17,7 +17,7 @@ Items are ordered roughly by current priority. The order can change as dependenc
 Built locally and committed in one batch for a single push: Lounge rebuild (web and app),
 refund handling, Google Play billing, tickets (renamed from Stars), app-wide blocking,
 required terms acceptance at sign-up, purchases refused in Belgium and Brazil, updated terms
-and privacy pages, Play Console answers in `docs/PLAY_STORE.md`, app version 1.0.0.
+and privacy pages, app version 1.0.0.
 
 Remaining, mostly outside the code:
 
