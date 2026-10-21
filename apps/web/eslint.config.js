@@ -4,6 +4,18 @@ import next from '@next/eslint-plugin-next';
 export default [
   ...base,
   {
+    files: ['public/app-prompt.js'],
+    languageOptions: {
+      globals: Object.fromEntries(
+        ['document', 'navigator', 'matchMedia', 'window', 'URL', 'localStorage'].map((name) => [
+          name,
+          'readonly',
+        ]),
+      ),
+    },
+    rules: { 'no-empty': ['error', { allowEmptyCatch: true }] },
+  },
+  {
     plugins: { '@next/next': next },
     rules: {
       ...next.configs.recommended.rules,

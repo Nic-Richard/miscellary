@@ -129,6 +129,12 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           }
         `}</Script>
         <EmblemSprite />
+        <Script
+          src="/app-prompt.js"
+          strategy="afterInteractive"
+          data-app-name="Miscellary"
+          data-play-url=""
+        />
       </body>
     </html>
   );
