@@ -637,7 +637,8 @@ resource "aws_ecs_task_definition" "api" {
       { name = "EMAIL_HOST_USER", valueFrom = "${aws_secretsmanager_secret.ses.arn}:username::" },
       { name = "EMAIL_HOST_PASSWORD", valueFrom = "${aws_secretsmanager_secret.ses.arn}:password::" }
       ], var.alerts_url == "" ? [] : [
-      { name = "ALERTS_SECRET", valueFrom = "${aws_secretsmanager_secret.app.arn}:alerts_secret::" }
+      { name = "ALERTS_SECRET", valueFrom = "${aws_secretsmanager_secret.app.arn}:alerts_secret::" },
+      { name = "ALERTS_ACTION_SECRET", valueFrom = "${aws_secretsmanager_secret.app.arn}:alerts_action_secret::" }
       ], var.stripe_configured ? [
       { name = "STRIPE_SECRET_KEY", valueFrom = "${aws_secretsmanager_secret.app.arn}:stripe_secret_key::" },
       { name = "STRIPE_WEBHOOK_SECRET", valueFrom = "${aws_secretsmanager_secret.app.arn}:stripe_webhook_secret::" }
