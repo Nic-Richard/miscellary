@@ -195,6 +195,7 @@ class Report(models.Model):
     details = models.TextField(max_length=1000, blank=True)
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.OPEN)
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ["-created_at"]
@@ -222,6 +223,7 @@ class Feedback(models.Model):
     client = models.CharField(max_length=100, blank=True)
     resolved = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ["-created_at"]

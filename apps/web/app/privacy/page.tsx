@@ -107,9 +107,9 @@ export default function PrivacyPage() {
         <p>
           Miscellary uses service providers to host the website, API, database, uploaded media,
           logs, and transactional email. Reports, feedback, payment events and error details are
-          also sent to a private Discord channel that only Miscellary's operator reads. Those
-          providers process information only to supply their services to Miscellary and may operate
-          in countries other than your own.
+          also sent to a private Discord channel that Miscellary's operator and authorized
+          moderators can read. Those providers process information only to supply their services to
+          Miscellary and may operate in countries other than your own.
         </p>
       </section>
 

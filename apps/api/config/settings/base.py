@@ -192,6 +192,7 @@ GOOGLE_CLIENT_IDS: list[str] = env.list("GOOGLE_CLIENT_IDS", default=[])
 # Reports, billing events and errors go to the Discord alerts relay; empty means off.
 ALERTS_URL = env.str("ALERTS_URL", default="")
 ALERTS_SECRET = env.str("ALERTS_SECRET", default="")
+ALERTS_ACTION_SECRET = env.str("ALERTS_ACTION_SECRET", default="")
 
 LOGGING = {
     "version": 1,

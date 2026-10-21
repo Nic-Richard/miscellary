@@ -2,10 +2,12 @@ from django.contrib import admin
 from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
+from common.moderation import discord_action
 from common.views import health
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("api/v1/moderation/discord/", discord_action, name="discord-moderation"),
     path("api/v1/health/", health, name="health"),
     path("api/v1/auth/", include("accounts.urls")),
     path("api/v1/uploads/", include("uploads.urls")),

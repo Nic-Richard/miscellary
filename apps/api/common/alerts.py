@@ -1,6 +1,9 @@
+import hashlib
+import hmac
 import json
 import logging
 import threading
+import time
 import traceback
 import urllib.request
 
@@ -15,13 +18,22 @@ def configured() -> bool:
 
 
 def _deliver(payload: dict) -> None:
+    raw = json.dumps(payload).encode()
+    headers = {
+        "Authorization": f"Bearer {settings.ALERTS_SECRET}",
+        "Content-Type": "application/json",
+    }
+    secret = getattr(settings, "ALERTS_ACTION_SECRET", "")
+    if secret:
+        timestamp = str(int(time.time()))
+        headers["X-Alert-Timestamp"] = timestamp
+        headers["X-Alert-Signature"] = hmac.new(
+            secret.encode(), timestamp.encode() + b"." + raw, hashlib.sha256
+        ).hexdigest()
     request = urllib.request.Request(
         settings.ALERTS_URL,
-        data=json.dumps(payload).encode(),
-        headers={
-            "Authorization": f"Bearer {settings.ALERTS_SECRET}",
-            "Content-Type": "application/json",
-        },
+        data=raw,
+        headers=headers,
         method="POST",
     )
     try:
