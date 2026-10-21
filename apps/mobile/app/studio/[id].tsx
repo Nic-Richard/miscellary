@@ -34,6 +34,7 @@ const STATUS_LABELS: Record<CardSetDetail['status'], string> = {
   published: 'Published set',
   deleted: 'Deleted set',
   removed: 'Removed set',
+  hidden: 'Hidden for review',
 };
 
 export default function SetEditorScreen() {

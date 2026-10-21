@@ -208,7 +208,7 @@ export interface TagSummary extends Tag {
   set_count: number;
 }
 
-export type SetStatus = 'draft' | 'published' | 'deleted' | 'removed';
+export type SetStatus = 'draft' | 'published' | 'deleted' | 'removed' | 'hidden';
 
 /** Everything waiting for the signed-in collector, for the status bar. */
 export interface AccountStatus {

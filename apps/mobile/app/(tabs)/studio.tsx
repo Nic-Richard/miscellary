@@ -102,7 +102,11 @@ function Studio() {
                 s.status === 'published' && { color: colors.green, borderColor: colors.green },
               ]}
             >
-              {s.status === 'published' ? 'Published' : 'Draft'}
+              {s.status === 'published'
+                ? 'Published'
+                : s.status === 'hidden'
+                  ? 'Hidden for review'
+                  : 'Draft'}
             </Text>
           </Pressable>
         </Link>

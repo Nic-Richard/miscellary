@@ -44,6 +44,7 @@ class CardSet(models.Model):
         PUBLISHED = "published", "Published"
         DELETED = "deleted", "Deleted by creator"
         REMOVED = "removed", "Removed by platform"
+        HIDDEN = "hidden", "Hidden for review"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     creator = models.ForeignKey(
@@ -112,6 +113,13 @@ class CardSet(models.Model):
                     self.Status.PUBLISHED: {
                         self.Status.PUBLISHED,
                         self.Status.DELETED,
+                        self.Status.REMOVED,
+                        self.Status.HIDDEN,
+                    },
+                    # Only moderators restore a hidden set; creators can't delete it during review.
+                    self.Status.HIDDEN: {
+                        self.Status.HIDDEN,
+                        self.Status.PUBLISHED,
                         self.Status.REMOVED,
                     },
                     self.Status.DELETED: {self.Status.DELETED, self.Status.REMOVED},

@@ -1,0 +1,20 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<p>Closing an account follows the normal account deletion: email, password, collection, trades and unused tickets go, any membership is cancelled, and published sets and comments stay under a deleted-user label. This can't be undone. Staff and already closed accounts are skipped.</p>
+{% if accounts %}
+<ul>
+  {% for account in accounts %}<li>@{{ account.username }} ({{ account.email }})</li>{% endfor %}
+</ul>
+<form method="post">
+  {% csrf_token %}
+  {% for account in accounts %}<input type="hidden" name="{{ action_checkbox_name }}" value="{{ account.pk }}">{% endfor %}
+  <input type="hidden" name="action" value="close_accounts">
+  <input type="hidden" name="confirm" value="yes">
+  <input type="submit" value="Close {{ accounts|length }} account{{ accounts|length|pluralize }}">
+  <a href="{% url 'admin:accounts_user_changelist' %}">Cancel</a>
+</form>
+{% else %}
+<p>No selected accounts can be closed.</p>
+{% endif %}
+{% endblock %}

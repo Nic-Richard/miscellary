@@ -3,6 +3,7 @@ from django.core.management import call_command
 from django.core.management.base import CommandError
 
 from accounts.models import User
+from conftest import make_user
 
 pytestmark = pytest.mark.django_db
 
@@ -31,3 +32,26 @@ def test_bootstrap_admin_does_not_promote_an_existing_user(monkeypatch, user):
 
     user.refresh_from_db()
     assert not user.is_staff and not user.is_superuser
+
+
+@pytest.mark.django_db
+def test_admin_closes_banned_accounts_after_confirmation(client):
+    from django.contrib.admin import helpers
+
+    admin_user = make_user(is_staff=True, is_superuser=True)
+    banned = make_user(is_active=False)
+    staff = make_user(is_staff=True)
+    client.force_login(admin_user)
+    url = "/admin/accounts/user/"
+    data = {"action": "close_accounts", helpers.ACTION_CHECKBOX_NAME: [banned.pk, staff.pk]}
+    page = client.post(url, data)
+    assert page.status_code == 200
+    assert f"@{banned.username}" in page.content.decode()
+    assert f"@{staff.username}" not in page.content.decode()
+    banned.refresh_from_db()
+    assert banned.deleted_at is None
+    client.post(url, {**data, "confirm": "yes"})
+    banned.refresh_from_db()
+    staff.refresh_from_db()
+    assert banned.deleted_at is not None
+    assert staff.deleted_at is None

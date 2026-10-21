@@ -210,6 +210,8 @@ class MySetDetailView(APIView):
         card_set = my_set(request, set_id)
         if card_set.is_draft:
             card_set.delete()
+        elif card_set.status == CardSet.Status.HIDDEN:
+            raise ValidationError("This set is under review and can't be deleted right now.")
         else:
             # Collected copies stay in inventories (product plan §8).
             card_set.soft_delete()

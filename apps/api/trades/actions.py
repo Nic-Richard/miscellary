@@ -9,6 +9,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from billing.actions import trade_restricted
+from cards.models import CardSet
 from packs.models import OwnedCard
 from social.blocks import between
 
@@ -16,6 +17,7 @@ from .models import TradeOffer, TradeOfferItem
 
 MAX_CARDS_PER_SIDE = 20
 RESTRICTED = "Trading is paused until your ticket balance is back to zero after a refund."
+UNDER_REVIEW = "Cards from a set under review can't be traded right now."
 
 
 class TradeError(Exception):
@@ -34,7 +36,11 @@ def _lock_cards(give_ids, want_ids) -> dict:
     """Lock every card in the offer, in id order, so concurrent offers serialize."""
     ids = list(set(give_ids) | set(want_ids))
     return {
-        c.pk: c for c in OwnedCard.objects.select_for_update().filter(id__in=ids).order_by("pk")
+        c.pk: c
+        for c in OwnedCard.objects.select_for_update(of=("self",))
+        .select_related("card__card_set")
+        .filter(id__in=ids)
+        .order_by("pk")
     }
 
 
@@ -46,6 +52,8 @@ def _check_side(cards: dict, owner, card_ids, label: str) -> list[OwnedCard]:
         raise TradeError(f"Some of the cards {label} aren't available.")
     if held_card_ids(card_ids):
         raise TradeError(f"Some of the cards {label} are already in a pending trade.")
+    if any(c is not None and c.card.card_set.status == CardSet.Status.HIDDEN for c in picked):
+        raise TradeError(UNDER_REVIEW)
     return [c for c in picked if c is not None]
 
 
@@ -102,10 +110,13 @@ def accept_offer(user, offer: TradeOffer) -> TradeOffer:
         # Lock cards in a fixed order so two trades touching the same cards can't deadlock.
         cards = {
             c.pk: c
-            for c in OwnedCard.objects.select_for_update()
+            for c in OwnedCard.objects.select_for_update(of=("self",))
+            .select_related("card__card_set")
             .filter(pk__in=[i.owned_card_id for i in items])
             .order_by("pk")
         }
+        if any(c.card.card_set.status == CardSet.Status.HIDDEN for c in cards.values()):
+            raise TradeError(UNDER_REVIEW)
         for item in items:
             card = cards.get(item.owned_card_id)
             expected_owner = offer.sender_id if item.side == "give" else offer.recipient_id

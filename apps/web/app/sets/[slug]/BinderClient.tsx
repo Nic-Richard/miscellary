@@ -474,7 +474,11 @@ export default function BinderClient({
               <circle cx="12" cy="12" r="9" />
               <path d="m8 12 3 3 5-6" />
             </svg>
-            {isPublished ? 'Published set' : 'Draft preview'}
+            {isPublished
+              ? 'Published set'
+              : set.status === 'hidden'
+                ? 'Hidden for review'
+                : 'Draft preview'}
           </p>
           <h1 className={ui.title}>{set.title}</h1>
           <p className={ui.subtitle}>

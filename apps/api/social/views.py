@@ -74,11 +74,15 @@ def showcase_limit(user) -> int:
 
 def showcase_for(user, limit: int | None = None):
     # Only slots whose card the user still owns (trades move cards, recycling deletes them).
-    return ShowcaseSlot.objects.filter(
-        user=user,
-        owned_card__owner=user,
-        position__lt=showcase_limit(user) if limit is None else limit,
-    ).select_related("owned_card")
+    return (
+        ShowcaseSlot.objects.filter(
+            user=user,
+            owned_card__owner=user,
+            position__lt=showcase_limit(user) if limit is None else limit,
+        )
+        .exclude(owned_card__card__card_set__status=CardSet.Status.HIDDEN)
+        .select_related("owned_card")
+    )
 
 
 def featured_card(user) -> dict | None:

@@ -74,24 +74,28 @@ def test_callback_rejects_unsigned_nonmoderator_and_stale_decisions(call, api_cl
     report.details = "New evidence"
     report.save()
     assert call(report, "resolve", expectedVersion=version).status_code == 409
-    assert call(report, "remove", expectedVersion=call(report).json()["version"]).status_code == 409
+    assert call(report, "hide", expectedVersion=call(report).json()["version"]).status_code == 409
     assert ModerationAction.objects.count() == 0
 
 
-def test_set_removal_uses_global_removal_and_wipes_collected_copies(call, user):
+def test_set_hiding_keeps_copies_and_can_be_undone(call, user):
     card_set = published_set(user)
     card = card_set.cards.first()
     OwnedCard.objects.create(owner=user, card=card)
     OwnedCard.objects.create(owner=make_user(), card=card)
     report = Report.objects.create(reporter=user, card=card, reason="explicit")
     state = call(report).json()
-    assert "entire set" in state["confirmation"]
-    assert "every collected copy" in state["confirmation"]
-    response = call(report, "remove", expectedVersion=state["version"])
-    assert response.status_code == 200
+    assert "hide" in state["actions"] and "remove" not in state["actions"]
+    hidden = call(report, "hide", expectedVersion=state["version"])
+    assert hidden.status_code == 200
+    assert hidden.json()["actions"] == ["reopen", "unhide"]
     card_set.refresh_from_db()
-    assert card_set.status == "removed"
-    assert not OwnedCard.objects.filter(card__card_set=card_set).exists()
+    assert card_set.status == "hidden"
+    assert OwnedCard.objects.filter(card__card_set=card_set).count() == 2
+    restored = call(report, "unhide", expectedVersion=hidden.json()["version"])
+    assert restored.status_code == 200
+    card_set.refresh_from_db()
+    assert card_set.is_published
 
 
 def test_comment_removal_tombstones_only_the_reported_item(call, user):
@@ -126,26 +130,50 @@ def test_reusing_operation_for_a_different_target_is_rejected(call, user):
     assert not two.resolved
 
 
-def test_reopening_preserves_receipts_and_does_not_restore_removed_content(call, user):
+def test_reopening_preserves_receipts_and_keeps_a_set_hidden(call, user):
     card_set = published_set(user)
     card = card_set.cards.first()
     OwnedCard.objects.create(owner=user, card=card)
     report = Report.objects.create(reporter=user, card_set=card_set, reason="explicit")
     initial = call(report).json()
     operation = str(uuid4())
-    removed = call(report, "remove", expectedVersion=initial["version"], requestId=operation).json()
-    reopened = call(report, "reopen", expectedVersion=removed["version"])
+    hidden = call(report, "hide", expectedVersion=initial["version"], requestId=operation).json()
+    reopened = call(report, "reopen", expectedVersion=hidden["version"])
     assert reopened.status_code == 200
     assert reopened.json()["status"] == "open"
-    assert "remove" not in reopened.json()["actions"]
+    assert "hide" not in reopened.json()["actions"]
+    assert "unhide" in reopened.json()["actions"]
     assert (
-        call(report, "remove", expectedVersion=initial["version"], requestId=operation).json()
-        == removed
+        call(report, "hide", expectedVersion=initial["version"], requestId=operation).json()
+        == hidden
     )
     assert call(report, "resolve", expectedVersion=initial["version"]).status_code == 409
     card_set.refresh_from_db()
-    assert card_set.status == "removed"
-    assert not OwnedCard.objects.filter(card__card_set=card_set).exists()
+    assert card_set.status == "hidden"
+    assert OwnedCard.objects.filter(card__card_set=card_set).exists()
+
+
+def test_hidden_sets_stay_private_and_untradeable(api_client, user):
+    from cards.models import CardSet
+    from trades.actions import TradeError, create_offer
+
+    creator, other = make_user(), make_user()
+    card_set = published_set(creator)
+    mine = OwnedCard.objects.create(owner=user, card=card_set.cards.first())
+    OwnedCard.objects.create(owner=other, card=card_set.cards.first())
+    card_set.status = CardSet.Status.HIDDEN
+    card_set.save(update_fields=["status"])
+
+    assert api_client.get(f"/api/v1/sets/{card_set.slug}/").status_code == 404
+    assert api_client.get(f"/api/v1/users/{user.username}/cards/").json()["count"] == 0
+    api_client.force_authenticate(user)
+    assert api_client.get("/api/v1/me/cards/").json()["count"] == 1
+    with pytest.raises(TradeError, match="under review"):
+        create_offer(user, other, [mine.pk], [])
+    api_client.force_authenticate(creator)
+    assert api_client.delete(f"/api/v1/me/sets/{card_set.id}/").status_code == 400
+    card_set.refresh_from_db()
+    assert card_set.status == "hidden"
 
 
 def test_user_ban_and_unban_preserve_account_data_and_reject_staff_or_deleted_users(

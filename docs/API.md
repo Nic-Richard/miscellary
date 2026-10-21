@@ -139,7 +139,9 @@ moved in the meantime the offer is cancelled instead.
 | GET         | `/search/?q=`                                 | –        | `{users, sets, cards, tags}`; full-text for sets/cards, name match for people, tags both as results and as a way in                       |
 
 Platform removal of a set (admin action) wipes every distributed copy and cancels pending trades
-that included them. A creator's own delete keeps collectors' copies.
+that included them. A creator's own delete keeps collectors' copies. Moderators can instead hide
+a reported set from Discord: it leaves public pages, packs and other people's collections, owners
+keep their copies but can't trade them, the creator can't delete it, and unhiding restores it.
 
 ## Blocking
 

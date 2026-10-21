@@ -12,7 +12,7 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
-from cards.removal import remove_set
+from cards.models import CardSet
 from social.models import Feedback, Report
 
 from .models import ModerationAction
@@ -56,6 +56,8 @@ def parse_action(raw: bytes, headers) -> dict:
             "resolve",
             "dismiss",
             "remove",
+            "hide",
+            "unhide",
             "reopen",
             "ban",
             "unban",
@@ -88,7 +90,9 @@ def _state(target, kind: str) -> dict:
     references = [str(target.pk)]
     actions = ["resolve", "dismiss"]
     fingerprint = ""
-    confirmations = {"reopen": "Reopen this report for review. Removed content is not restored."}
+    confirmations = {
+        "reopen": "Reopen this report for review. Removed or hidden content stays that way."
+    }
     if kind == "feedback":
         status = "resolved" if target.resolved else "open"
         title, summary = target.get_kind_display(), target.message
@@ -120,16 +124,19 @@ def _state(target, kind: str) -> dict:
             fingerprint = (
                 str(card_set.updated_at) if hasattr(card_set, "updated_at") else str(card_set)
             )
-            fingerprint += str(card_set.is_published)
+            fingerprint += card_set.status
             if target.card:
                 fingerprint += str(target.card.image_id)
             title += f": {card_set.title}"
             confirmation = (
-                f"Remove the entire set {card_set.title} and wipe every collected copy. "
-                "This cannot be undone."
+                f"Hide the set {card_set.title} from everyone except collectors who own it. "
+                "Copies are kept and can't be traded while hidden. This can be undone."
             )
+            confirmations["unhide"] = f"Publish {card_set.title} again for everyone."
             if card_set.is_published:
-                actions.append("remove")
+                actions.append("hide")
+            elif card_set.status == CardSet.Status.HIDDEN:
+                actions.append("unhide")
         elif removable:
             references.append(str(removable.author_id))
             fingerprint = str(removable.deleted_at)
@@ -161,7 +168,7 @@ def _state(target, kind: str) -> dict:
         "summary": summary[:1500],
         "actions": actions
         if status == "open"
-        else ["reopen", *[a for a in actions if a in {"ban", "unban"}]],
+        else ["reopen", *[a for a in actions if a in {"ban", "unban", "hide", "unhide"}]],
         "confirmations": confirmations,
         "confirmation": confirmation,
         "references": references,
@@ -209,21 +216,24 @@ def moderate(data: dict) -> dict:
     state = _state(target, kind)
     if data["action"] == "inspect":
         return state
-    if state["status"] != "open" and data["action"] in {"resolve", "dismiss", "remove"}:
+    if state["status"] != "open" and data["action"] in {"resolve", "dismiss", "remove", "hide"}:
         return {**state, "changed": False, "summary": "This report was already handled in the app"}
     if data["expectedVersion"] != state["version"] or data["action"] not in state["actions"]:
         raise ActionError("Report changed; review it again")
+    if data["action"] in {"hide", "unhide"}:
+        assert isinstance(target, Report)
+        card_set = target.card_set or (target.card.card_set if target.card else None)
+        assert card_set is not None
+        card_set.status = (
+            CardSet.Status.HIDDEN if data["action"] == "hide" else CardSet.Status.PUBLISHED
+        )
+        card_set.save(update_fields=["status"])
     if data["action"] == "remove":
         assert isinstance(target, Report)
-        if target.card_set or target.card:
-            card_set = target.card_set or (target.card.card_set if target.card else None)
-            assert card_set is not None
-            remove_set(card_set)
-        else:
-            item = target.comment or target.lounge_post or target.lounge_reply
-            assert item is not None
-            item.deleted_at = timezone.now()
-            item.save(update_fields=["deleted_at"])
+        item = target.comment or target.lounge_post or target.lounge_reply
+        assert item is not None
+        item.deleted_at = timezone.now()
+        item.save(update_fields=["deleted_at"])
     if data["action"] in {"ban", "unban"}:
         assert isinstance(target, Report) and target.reported_user is not None
         target.reported_user.is_active = data["action"] == "unban"
@@ -243,6 +253,8 @@ def moderate(data: dict) -> dict:
         target.save(update_fields=["resolved", "updated_at"])
     summary = {
         "remove": "Reported content removed and report resolved",
+        "hide": "Set hidden; report resolved",
+        "unhide": "Set published again",
         "ban": "User banned; report resolved",
         "unban": "User unbanned; report resolved",
         "reopen": "Report reopened",

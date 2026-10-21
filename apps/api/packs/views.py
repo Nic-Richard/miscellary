@@ -104,7 +104,10 @@ class CollectionPagination(PageNumberPagination):
 
 
 def collection_response(request: Request, owner_id) -> Response:
-    queryset = with_copies(OwnedCard.objects.filter(owner_id=owner_id)).order_by(
+    queryset = OwnedCard.objects.filter(owner_id=owner_id)
+    if owner_id != request.user.id:
+        queryset = queryset.exclude(card__card_set__status=CardSet.Status.HIDDEN)
+    queryset = with_copies(queryset).order_by(
         "card__card_set__title",
         "card__card_set_id",
         "card__position",
