@@ -28,12 +28,19 @@
   }
 }
 
+/* Older Chromium (Android WebView 124) makes container-type a stacking context, which trapped each
+   menu under the next section, so the section with a menu open is lifted above its neighbours. */
 .section {
   container-type: inline-size;
+  position: relative;
+  z-index: 0;
   max-width: 620px;
   border: 1px solid var(--bdr);
   border-radius: var(--radius-md, 10px);
   background: rgba(255, 255, 255, 0.34);
+}
+.section:has([aria-haspopup][aria-expanded='true']) {
+  z-index: 1;
 }
 .sectionHead {
   display: flex;

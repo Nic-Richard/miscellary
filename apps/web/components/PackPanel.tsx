@@ -92,7 +92,7 @@ export default function PackPanel({
     Boolean(user && status?.free_available && !busy),
   );
 
-  const packSize = status?.pack_size ?? 10;
+  const packSize = status?.pack_size ?? identity.pack_size;
   const pouch = (
     <div className={styles.pouch}>
       <PackPouch title={identity.title} identity={identity} />
