@@ -236,7 +236,8 @@ Setup in Play Console (no cost for the API; Pub/Sub's free tier covers this volu
    publish rights, and set it under Monetization setup > Real-time developer notifications.
    Add a push subscription to `https://<api>/api/v1/billing/play/notify/` with authentication
    enabled; use its audience and service account for the two RTDN settings above.
-4. Schedule `python manage.py sync_play_refunds` daily as a backstop for missed notifications.
+4. The API container runs `python manage.py sync_play_refunds --watch` beside Gunicorn, checking
+   the last three days once a day as a backstop for missed notifications.
 5. Add licence testers and test on an internal-testing build before setting `PLAY_LIVE_APPROVED`.
 
 ## Local preview
