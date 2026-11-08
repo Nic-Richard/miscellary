@@ -38,7 +38,7 @@ packages/config/   Shared TypeScript and ESLint configuration
 docker/            Application container definitions
 infra/             Terraform for ECS, RDS, S3, SES, IAM, networking, and monitoring
 scripts/           Local development and deployment helpers
-docs/              Product rules, API reference, design system, ADRs, and release checks
+docs/              API reference and architecture decisions
 ```
 
 ## Local development
@@ -204,7 +204,6 @@ S3-compatible storage through presigned URLs.
 The production target is Vercel for the web client and one AWS ECS Fargate task behind an HTTPS
 load balancer, with RDS PostgreSQL, S3, and SES for supporting services. Terraform owns the AWS
 resources and GitHub Actions deploys through OIDC. The same production images and environment
-contract remain available for the Ubuntu VPS fallback. See [`infra/README.md`](infra/README.md) for
-setup and deployment details.
+contract remain available for the Ubuntu VPS fallback.
 
 Additional project documentation is indexed in [`docs/README.md`](docs/README.md).

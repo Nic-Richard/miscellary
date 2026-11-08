@@ -125,5 +125,3 @@ cmake.dir=C\:/Users/<you>/AppData/Local/Android/Sdk/cmake/3.31.6
 Keep Docker serving web/API while Metro runs. Avoid simultaneous host web builds/dev servers
 sharing `apps/web/.next`.
 
-The detailed Android plan is [MOBILE_BUILDOUT_PLAN.md](../../docs/MOBILE_BUILDOUT_PLAN.md).
-The overall source of truth is [MISCELLARY_ROADMAP.md](../../docs/MISCELLARY_ROADMAP.md).

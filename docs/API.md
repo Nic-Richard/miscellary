@@ -154,7 +154,7 @@ Profiles include `is_blocked` (whether you blocked them). Registration requires 
 
 ## Tickets and membership
 
-Disabled by default. See [billing setup and release gates](BILLING.md).
+Disabled by default.
 
 | Method    | Path                       | Auth                       | Notes                                                                                                                                                                                                   |
 | --------- | -------------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
