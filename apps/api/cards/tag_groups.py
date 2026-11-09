@@ -8,6 +8,8 @@ from django.db import transaction
 from django.db.models import Count, OuterRef, Q, QuerySet, Subquery, Value
 from django.db.models.functions import Coalesce
 from django.utils import timezone
+from pgvector import HalfVector
+from pgvector.django import CosineDistance
 
 from .models import CardSet, SetTag, Tag, TagMergeSuggestion
 
@@ -57,3 +59,50 @@ def merge(tag: Tag, into: Tag) -> Tag:
         Q(tag=tag, into=into) | Q(tag=into, into=tag), status=TagMergeSuggestion.Status.PENDING
     ).update(status=TagMergeSuggestion.Status.MERGED, decided_at=timezone.now())
     return main
+
+
+# Tags this close in meaning are worth a person's look; related-but-different pairs
+# such as "summer" and "winter" also score high, which is why merges need approval.
+MERGE_MIN = 0.85
+SUGGEST_MIN = 0.5
+NEIGHBOURS = 6
+
+
+def nearest_main_tags(
+    vector: list[float], *, exclude: list[int], minimum: float, limit: int
+) -> list:
+    """Main tags closest in meaning to the vector, as (tag, similarity), best first."""
+    rows = (
+        Tag.objects.filter(canonical__isnull=True, embedding__isnull=False)
+        .exclude(pk__in=exclude)
+        .annotate(distance=CosineDistance("embedding", HalfVector(vector)))
+        .order_by("distance")[:limit]
+    )
+    return [(tag, 1 - tag.distance) for tag in rows if 1 - tag.distance >= minimum]
+
+
+def suggest_merges() -> int:
+    """Queue pairs of main tags whose meanings look the same. Pairs already decided
+    either way are never suggested again. Returns how many were queued."""
+    known = set(TagMergeSuggestion.objects.values_list("tag_id", "into_id"))
+    counts = dict(
+        with_group_counts(Tag.objects.filter(canonical__isnull=True)).values_list("pk", "set_count")
+    )
+    queued = 0
+    mains = Tag.objects.filter(canonical__isnull=True, embedding__isnull=False).only(
+        "pk", "embedding"
+    )
+    for tag in mains.iterator(chunk_size=500):
+        if tag.embedding is None:
+            continue
+        for other, similarity in nearest_main_tags(
+            list(tag.embedding), exclude=[tag.pk], minimum=MERGE_MIN, limit=NEIGHBOURS
+        ):
+            # The less used tag joins the more used one, so most sets keep their tag as main.
+            small, big = sorted((tag, other), key=lambda t: (counts.get(t.pk, 0), -t.pk))
+            if (small.pk, big.pk) in known or (big.pk, small.pk) in known:
+                continue
+            TagMergeSuggestion.objects.create(tag=small, into=big, similarity=similarity)
+            known.add((small.pk, big.pk))
+            queued += 1
+    return queued

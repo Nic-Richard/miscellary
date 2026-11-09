@@ -16,6 +16,7 @@ dependencies = [
   "boto3>=1.38",
   "whitenoise>=6.9",
   "stripe>=16,<17",
+  "pgvector>=0.4",
 ]
 
 [dependency-groups]

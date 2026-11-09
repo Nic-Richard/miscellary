@@ -15,7 +15,9 @@ python manage.py process_account_cleanup --watch &
 cleanup_pid=$!
 python manage.py sync_play_refunds --watch &
 refunds_pid=$!
-trap 'kill "$cleanup_pid" "$refunds_pid" "${web_pid:-}" 2>/dev/null || true' EXIT
+python manage.py refresh_search --watch &
+search_pid=$!
+trap 'kill "$cleanup_pid" "$refunds_pid" "$search_pid" "${web_pid:-}" 2>/dev/null || true' EXIT
 trap 'exit 0' INT TERM
 gunicorn config.wsgi:application \
   --bind 0.0.0.0:8000 \

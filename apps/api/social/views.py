@@ -17,7 +17,7 @@ from rest_framework.views import APIView
 from accounts.models import User
 from accounts.supporter import supporter_tier
 from billing.actions import badge_style, ring_style, visible_badge
-from cards import search, tag_groups
+from cards import embeddings, search, tag_groups
 from cards import tags as tagging
 from cards.models import CardDefinition, CardSet
 from cards.serializers import CardSerializer, CardSetSerializer, CreatorSerializer
@@ -521,12 +521,13 @@ class SearchView(APIView):
         )[:10]
         tag_slugs = tag_groups.group_slugs([t.slug for t in tags])
 
-        set_scores = search.sets(q, tag_slugs)
+        vector = embeddings.query_vector(q)
+        set_scores = search.sets(q, tag_slugs, vector)
         sets = sorted(
             with_counts(CardSet.objects.filter(pk__in=search.best(set_scores, 10)), request.user),
             key=lambda s: (-set_scores[s.pk], -s.like_count),
         )
-        card_scores = search.cards(q, tag_slugs)
+        card_scores = search.cards(q, tag_slugs, vector)
         cards = sorted(
             CardDefinition.objects.filter(pk__in=search.best(card_scores, 10))
             .select_related("image", "card_set")

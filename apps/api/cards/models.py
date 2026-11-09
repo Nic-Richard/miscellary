@@ -10,6 +10,7 @@ from django.db import models
 from django.db.models.functions import Upper
 from django.utils import timezone
 from django.utils.text import slugify
+from pgvector.django import HalfVectorField, HnswIndex
 
 from uploads.models import Image
 
@@ -39,6 +40,15 @@ from .tags import TAG_LABEL_MAX, TAG_SLUG_MAX
 
 class PublishedCardError(ValidationError):
     """Raised when anything tries to change a card in a published set."""
+
+
+EMBEDDING_DIMENSIONS = 512
+
+
+def embedding_index(name: str) -> HnswIndex:
+    return HnswIndex(
+        name=name, fields=["embedding"], m=16, ef_construction=64, opclasses=["halfvec_cosine_ops"]
+    )
 
 
 class CardSet(models.Model):
@@ -97,10 +107,14 @@ class CardSet(models.Model):
         output_field=SearchVectorField(),
         db_persist=True,
     )
+    # Meaning vectors for search, only on rows people can find; empty otherwise.
+    embedding = HalfVectorField(dimensions=EMBEDDING_DIMENSIONS, null=True, blank=True)
+    embedding_hash = models.CharField(max_length=64, blank=True)
 
     class Meta:
         ordering = ["-created_at"]
         indexes = [
+            embedding_index("cardset_embedding_idx"),
             GinIndex(fields=["search_vector"], name="cardset_search_idx"),
             # Django's icontains compares UPPER(title), so the trigram index is on that.
             GinIndex(OpClass(Upper("title"), name="gin_trgm_ops"), name="cardset_title_trgm_idx"),
@@ -228,10 +242,13 @@ class CardDefinition(models.Model):
         output_field=SearchVectorField(),
         db_persist=True,
     )
+    embedding = HalfVectorField(dimensions=EMBEDDING_DIMENSIONS, null=True, blank=True)
+    embedding_hash = models.CharField(max_length=64, blank=True)
 
     class Meta:
         ordering = ["position", "created_at"]
         indexes = [
+            embedding_index("carddef_embedding_idx"),
             GinIndex(fields=["search_vector"], name="carddef_search_idx"),
             GinIndex(OpClass(Upper("title"), name="gin_trgm_ops"), name="carddef_title_trgm_idx"),
         ]
@@ -282,10 +299,13 @@ class Tag(models.Model):
     canonical = models.ForeignKey(
         "self", null=True, blank=True, on_delete=models.SET_NULL, related_name="synonyms"
     )
+    embedding = HalfVectorField(dimensions=EMBEDDING_DIMENSIONS, null=True, blank=True)
+    embedding_hash = models.CharField(max_length=64, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ["slug"]
+        indexes = [embedding_index("tag_embedding_idx")]
 
     def __str__(self) -> str:
         return self.slug

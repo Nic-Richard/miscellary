@@ -23,7 +23,7 @@ from rest_framework.views import APIView
 from accounts.permissions import EmailVerified
 from billing.actions import publishing_summary
 
-from . import tag_groups, templates
+from . import embeddings, tag_groups, templates
 from . import tags as tagging
 from .models import CardDefinition, CardSet, CardTag, SetTag, Tag
 from .publishing import publish_problems, publish_set
@@ -336,6 +336,10 @@ def apply_tags(owner, labels: list[str], limit: int) -> None:
                 SetTag.objects.create(card_set=owner, tag=tag, position=position)
             else:
                 CardTag.objects.create(card=owner, tag=tag, position=position)
+        if is_set:
+            embeddings.mark_stale(card_set=owner)
+        else:
+            embeddings.mark_stale(card=owner)
 
 
 def tag_labels(request: Request) -> list[str]:
@@ -356,7 +360,24 @@ class TagListView(APIView):
         else:
             queryset = tag_groups.with_group_counts(Tag.objects.filter(canonical__isnull=True))
             queryset = queryset.filter(set_count__gt=0)
-        rows = queryset.order_by("-set_count", "slug")[:20]
+        rows = list(queryset.order_by("-set_count", "slug")[:20])
+        vector = embeddings.query_vector(q) if q and len(rows) < 20 else None
+        if vector is not None:
+            # Tags that mean the same thing come after the spelling matches, so "seaside"
+            # also offers "beach" and creators reuse it instead of starting a near-duplicate.
+            near = tag_groups.nearest_main_tags(
+                vector,
+                exclude=[t.pk for t in rows],
+                minimum=tag_groups.SUGGEST_MIN,
+                limit=20 - len(rows),
+            )
+            counted = {
+                t.pk: t
+                for t in tag_groups.with_group_counts(
+                    Tag.objects.filter(pk__in=[tag.pk for tag, _ in near])
+                )
+            }
+            rows += [counted[tag.pk] for tag, _ in near if counted[tag.pk].set_count > 0]
         return Response(
             [{"slug": t.slug, "label": t.label, "set_count": t.set_count} for t in rows]
         )

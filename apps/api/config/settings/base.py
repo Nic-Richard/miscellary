@@ -60,6 +60,8 @@ PLAY_SERVICE_ACCOUNT = env.str("PLAY_SERVICE_ACCOUNT", default="")
 PLAY_SUBSCRIPTION_ID = env.str("PLAY_SUBSCRIPTION_ID", default="supporter")
 PLAY_RTDN_AUDIENCE = env.str("PLAY_RTDN_AUDIENCE", default="")
 PLAY_RTDN_SERVICE_ACCOUNT = env.str("PLAY_RTDN_SERVICE_ACCOUNT", default="")
+VOYAGE_API_KEY = env.str("VOYAGE_API_KEY", default="")
+EMBEDDING_MODEL = env.str("EMBEDDING_MODEL", default="voyage-4-lite")
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
