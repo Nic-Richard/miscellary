@@ -10,6 +10,7 @@ skip rows that haven't changed.
 import hashlib
 import json
 import logging
+import time
 import urllib.error
 import urllib.request
 from functools import lru_cache
@@ -23,6 +24,8 @@ log = logging.getLogger(__name__)
 
 URL = "https://api.voyageai.com/v1/embeddings"
 BATCH = 128
+RETRIES = 8
+RETRY_SECONDS = 25
 
 
 class EmbeddingError(Exception):
@@ -33,7 +36,7 @@ def enabled() -> bool:
     return bool(settings.VOYAGE_API_KEY)
 
 
-def embed(texts: list[str], input_type: str) -> list[list[float]]:
+def embed(texts: list[str], input_type: str, *, patient: bool | None = None) -> list[list[float]]:
     """One vector per text, in order. input_type is "document" for stored rows and
     "query" for what someone typed, which Voyage encodes slightly differently."""
     vectors: list[list[float]] = []
@@ -55,13 +58,25 @@ def embed(texts: list[str], input_type: str) -> list[list[float]]:
                 "Content-Type": "application/json",
             },
         )
-        try:
-            with urllib.request.urlopen(request, timeout=20) as response:
-                data = json.loads(response.read())
-        except (urllib.error.URLError, TimeoutError, ValueError) as exc:
-            raise EmbeddingError(str(exc)) from exc
+        data = _send(request, patient=input_type == "document" if patient is None else patient)
         vectors.extend(row["embedding"] for row in sorted(data["data"], key=lambda r: r["index"]))
     return vectors
+
+
+def _send(request: urllib.request.Request, *, patient: bool) -> dict:
+    """Stored rows wait out Voyage's rate limit and retry; a search never waits, it just
+    goes without meaning."""
+    for attempt in range(RETRIES if patient else 1):
+        try:
+            with urllib.request.urlopen(request, timeout=20) as response:
+                return json.loads(response.read())
+        except urllib.error.HTTPError as exc:
+            if exc.code != 429 or not patient or attempt == RETRIES - 1:
+                raise EmbeddingError(str(exc)) from exc
+            time.sleep(float(exc.headers.get("Retry-After") or RETRY_SECONDS))
+        except (urllib.error.URLError, TimeoutError, ValueError) as exc:
+            raise EmbeddingError(str(exc)) from exc
+    raise EmbeddingError("rate limited")
 
 
 @lru_cache(maxsize=2048)

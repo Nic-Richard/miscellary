@@ -43,12 +43,24 @@ class Command(BaseCommand):
         modes = [("words, titles and tags", False)]
         if embeddings.enabled():
             modes.append(("plus meaning", True))
+        # One patient request for every query, so a low rate limit can't quietly turn meaning off.
+        vectors = (
+            dict(
+                zip(
+                    cases,
+                    embeddings.embed([q for q, _ in cases], "query", patient=True),
+                    strict=True,
+                )
+            )
+            if embeddings.enabled()
+            else {}
+        )
         for label, with_meaning in modes:
             hits, reciprocal = 0, 0.0
             lines = []
             for q, want in cases:
                 tags = tag_groups.main_tags_matching(q, tagging.slugify_tag(q))[:10]
-                vector = embeddings.query_vector(q) if with_meaning else None
+                vector = vectors[(q, want)] if with_meaning else None
                 scores = search.sets(q, tag_groups.group_slugs([t.slug for t in tags]), vector)
                 ranked = [titles[pk] for pk in search.best(scores, 10)]
                 rank = ranked.index(want) + 1 if want in ranked else None

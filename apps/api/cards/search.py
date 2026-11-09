@@ -14,8 +14,9 @@ CANDIDATES = 200
 TITLE_WEIGHT = 1.0
 TAG_WEIGHT = 0.5
 MEANING_WEIGHT = 1.0
-# Cosine similarity below this is noise rather than a related subject.
-MEANING_MIN = 0.35
+# Measured on voyage-4-lite: the right set scored 0.53-0.60, loosely related ones about 0.40-0.44,
+# and searches with no matching set at most 0.36.
+MEANING_MIN = 0.40
 
 
 def _blend(scores: dict, ids, weight: float) -> None:
