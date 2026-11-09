@@ -7,6 +7,7 @@ from uuid import uuid4
 import pytest
 
 from accounts.tests.test_lifecycle import published_set
+from cards.models import Tag, TagMergeSuggestion
 from common.models import ModerationAction
 from conftest import make_user
 from packs.models import OwnedCard
@@ -25,7 +26,11 @@ def call(api_client, settings):
         data = {
             "requestId": str(uuid4()),
             "target": {
-                "kind": "feedback" if isinstance(target, Feedback) else "report",
+                "kind": "tag-merge"
+                if isinstance(target, TagMergeSuggestion)
+                else "feedback"
+                if isinstance(target, Feedback)
+                else "report",
                 "id": str(target.pk),
             },
             "action": action,
@@ -216,3 +221,43 @@ def test_user_ban_and_unban_preserve_account_data_and_reject_staff_or_deleted_us
     account.is_staff = True
     account.save()
     assert "unban" not in call(report).json()["actions"]
+
+
+def test_tag_merge_suggestions_are_decided_and_undone_from_discord(call):
+    beach = Tag.objects.create(slug="beach", label="Beach")
+    seaside = Tag.objects.create(slug="seaside", label="Seaside")
+    suggestion = TagMergeSuggestion.objects.create(tag=seaside, into=beach, similarity=0.91)
+
+    state = call(suggestion).json()
+    assert (state["status"], state["actions"]) == ("open", ["merge", "dismiss"])
+    assert state["title"] == "Merge #seaside into #beach?"
+
+    merged = call(suggestion, "merge", expectedVersion=state["version"]).json()
+    assert (merged["status"], merged["actions"]) == ("merged", ["unmerge"])
+    seaside.refresh_from_db()
+    assert seaside.canonical == beach
+    assert call(suggestion, "merge", expectedVersion=state["version"]).json()["changed"] is False
+
+    undone = call(suggestion, "unmerge", expectedVersion=merged["version"]).json()
+    assert (undone["status"], undone["actions"]) == ("open", ["merge", "dismiss"])
+    seaside.refresh_from_db()
+    assert seaside.canonical is None
+
+    dismissed = call(suggestion, "dismiss", expectedVersion=undone["version"]).json()
+    assert dismissed["status"] == "dismissed"
+    reopened = call(suggestion, "reopen", expectedVersion=dismissed["version"]).json()
+    assert reopened["status"] == "open"
+    assert ModerationAction.objects.filter(target_kind="tag-merge").count() == 4
+
+
+def test_tag_merge_decisions_need_a_moderator(call):
+    suggestion = TagMergeSuggestion.objects.create(
+        tag=Tag.objects.create(slug="a", label="A"),
+        into=Tag.objects.create(slug="b", label="B"),
+        similarity=0.9,
+    )
+    version = call(suggestion).json()["version"]
+    response = call(
+        suggestion, "merge", expectedVersion=version, actor={**ACTOR, "permissions": "0"}
+    )
+    assert response.status_code == 403

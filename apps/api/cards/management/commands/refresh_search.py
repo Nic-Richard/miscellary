@@ -3,7 +3,7 @@ import time
 from django.core.management.base import BaseCommand
 from django.db import close_old_connections
 
-from cards import embeddings, tag_groups
+from cards import embeddings, tag_groups, tag_review
 
 PAUSE_SECONDS = 5 * 60
 SWEEP_SECONDS = 24 * 60 * 60
@@ -41,3 +41,4 @@ class Command(BaseCommand):
             queued = tag_groups.suggest_merges()
             if queued:
                 self.stdout.write(f"Queued {queued} tag merge suggestion(s).")
+        tag_review.send_alerts()

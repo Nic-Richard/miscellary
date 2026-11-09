@@ -12,7 +12,8 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
-from cards.models import CardSet
+from cards import tag_review
+from cards.models import CardSet, TagMergeSuggestion
 from social.models import Feedback, Report
 
 from .models import ModerationAction
@@ -50,7 +51,11 @@ def parse_action(raw: bytes, headers) -> dict:
         ):
             raise ValueError
         UUID(data["requestId"])
-        UUID(data["target"]["id"])
+        if data["target"].get("kind") == tag_review.KIND:
+            if not re.fullmatch(r"\d{1,18}", data["target"]["id"]):
+                raise ValueError
+        else:
+            UUID(data["target"]["id"])
         if data["action"] not in {
             "inspect",
             "resolve",
@@ -61,6 +66,8 @@ def parse_action(raw: bytes, headers) -> dict:
             "reopen",
             "ban",
             "unban",
+            "merge",
+            "unmerge",
         }:
             raise ValueError
     except (ValueError, TypeError, KeyError):
@@ -176,9 +183,80 @@ def _state(target, kind: str) -> dict:
     }
 
 
+def _receipt(data: dict, kind: str, target_id: str, result: dict) -> ModerationAction:
+    return ModerationAction.objects.create(
+        request_id=data["requestId"],
+        target_kind=kind,
+        target_id=target_id,
+        action=data["action"],
+        actor_id=data["actor"]["id"],
+        actor_name=data["actor"]["name"],
+        result=result,
+    )
+
+
+def _moderate_tag_merge(data: dict) -> dict:
+    suggestion = (
+        TagMergeSuggestion.objects.select_for_update(of=("self",))
+        .select_related("tag", "into__canonical")
+        .filter(pk=int(data["target"]["id"]))
+        .first()
+    )
+    if suggestion is None:
+        raise ActionError("Suggestion is no longer available", 404)
+    target_id = str(suggestion.pk)
+    previous = ModerationAction.objects.filter(pk=data["requestId"]).first()
+    if previous:
+        if (previous.target_kind, previous.target_id, previous.action) != (
+            tag_review.KIND,
+            target_id,
+            data["action"],
+        ):
+            raise ActionError("That request belongs to another action")
+        return previous.result
+
+    def current() -> dict:
+        latest = (
+            ModerationAction.objects.filter(target_kind=tag_review.KIND, target_id=target_id)
+            .order_by("-created_at")
+            .first()
+        )
+        found = tag_review.state(suggestion, str(latest.pk) if latest else None)
+        decided = latest is not None and found["status"] != "open"
+        found["actor"] = latest.result.get("actor") if latest and decided else None
+        return found
+
+    state = current()
+    if data["action"] == "inspect":
+        return state
+    if state["status"] != "open" and data["action"] in {"merge", "dismiss"}:
+        return {**state, "changed": False, "summary": "This suggestion was already decided"}
+    if data["expectedVersion"] != state["version"] or data["action"] not in state["actions"]:
+        raise ActionError("Suggestion changed; review it again")
+    status, summary = tag_review.decide(suggestion, data["action"])
+    result = {
+        "ok": True,
+        "changed": True,
+        "status": status,
+        "summary": summary,
+        "actor": data["actor"],
+        "requestId": data["requestId"],
+        "at": int(time.time() * 1000),
+    }
+    receipt = _receipt(data, tag_review.KIND, target_id, result)
+    suggestion.refresh_from_db()
+    after = current()
+    result.update({key: after[key] for key in ("version", "actions", "confirmations")})
+    receipt.result = result
+    receipt.save(update_fields=["result"])
+    return result
+
+
 @transaction.atomic
 def moderate(data: dict) -> dict:
     kind = data["target"].get("kind")
+    if kind == tag_review.KIND:
+        return _moderate_tag_merge(data)
     target: Report | Feedback | None
     if kind == "report":
         target = Report.objects.select_for_update().filter(pk=data["target"]["id"]).first()
@@ -268,15 +346,7 @@ def moderate(data: dict) -> dict:
         "requestId": data["requestId"],
         "at": int(time.time() * 1000),
     }
-    receipt = ModerationAction.objects.create(
-        request_id=data["requestId"],
-        target_kind=kind,
-        target_id=str(target.pk),
-        action=data["action"],
-        actor_id=data["actor"]["id"],
-        actor_name=data["actor"]["name"],
-        result=result,
-    )
+    receipt = _receipt(data, kind, str(target.pk), result)
     current = _state(target, kind)
     result.update({key: current[key] for key in ("version", "actions", "confirmations")})
     receipt.result = result

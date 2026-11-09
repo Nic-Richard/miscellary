@@ -325,6 +325,7 @@ class TagMergeSuggestion(models.Model):
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING)
     created_at = models.DateTimeField(auto_now_add=True)
     decided_at = models.DateTimeField(null=True, blank=True)
+    alerted_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         ordering = ["-similarity"]

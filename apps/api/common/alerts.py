@@ -47,8 +47,16 @@ def _dispatch(payload: dict) -> None:
     threading.Thread(target=_deliver, args=(payload,), daemon=True).start()
 
 
-def _payload(kind: str, title: str, description: str, url: str, fields: dict, key: str) -> dict:
-    return {
+def _payload(
+    kind: str,
+    title: str,
+    description: str,
+    url: str,
+    fields: dict,
+    key: str,
+    target: dict | None = None,
+) -> dict:
+    payload: dict = {
         "app": "miscellary",
         "type": kind,
         "title": title,
@@ -57,6 +65,9 @@ def _payload(kind: str, title: str, description: str, url: str, fields: dict, ke
         "fields": [{"name": k, "value": str(v)} for k, v in fields.items() if v not in (None, "")],
         "key": key,
     }
+    if target:
+        payload["target"] = target
+    return payload
 
 
 def send(
@@ -68,12 +79,14 @@ def send(
     fields: dict | None = None,
     key: str = "",
     account_id: str | None = None,
+    target: dict | None = None,
 ) -> None:
-    """Post to the alerts relay once the current transaction commits, off the request thread."""
+    """Post to the alerts relay once the current transaction commits, off the request thread.
+    A target lets moderators act on it from Discord through the moderation endpoint."""
     if not configured():
         return
     data = {"Account": account_id, **(fields or {})} if account_id else fields or {}
-    payload = _payload(kind, title, description, url, data, key)
+    payload = _payload(kind, title, description, url, data, key, target)
 
     def dispatch():
         if account_id:

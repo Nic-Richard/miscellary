@@ -5,6 +5,8 @@ from django.urls import reverse
 
 from billing import actions
 from billing.models import BillingReview
+from cards import tag_review
+from cards.models import Tag, TagMergeSuggestion
 from common import alerts
 from conftest import make_user
 from social.models import Feedback
@@ -99,3 +101,22 @@ def test_requests_for_unknown_hosts_are_not_alerted(client, sent):
     response = client.get("/", HTTP_HOST="52.87.74.21")
     assert response.status_code == 400
     assert sent == []
+
+
+def test_pending_tag_merge_suggestions_are_posted_once(db, sent):
+    beach = Tag.objects.create(slug="beach", label="Beach")
+    seaside = Tag.objects.create(slug="seaside", label="Seaside")
+    suggestion = TagMergeSuggestion.objects.create(tag=seaside, into=beach, similarity=0.9)
+    TagMergeSuggestion.objects.create(
+        tag=Tag.objects.create(slug="shore", label="Shore"),
+        into=beach,
+        similarity=0.9,
+        status=TagMergeSuggestion.Status.DISMISSED,
+    )
+
+    assert tag_review.send_alerts() == 1
+    assert tag_review.send_alerts() == 0
+    [payload] = sent
+    assert payload["type"] == "tags"
+    assert payload["title"] == "Merge #seaside into #beach?"
+    assert payload["target"] == {"kind": "tag-merge", "id": str(suggestion.pk)}
