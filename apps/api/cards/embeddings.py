@@ -68,7 +68,7 @@ def _send(request: urllib.request.Request, *, patient: bool) -> dict:
     goes without meaning."""
     for attempt in range(RETRIES if patient else 1):
         try:
-            with urllib.request.urlopen(request, timeout=20) as response:
+            with urllib.request.urlopen(request, timeout=20 if patient else 3) as response:
                 return json.loads(response.read())
         except urllib.error.HTTPError as exc:
             if exc.code != 429 or not patient or attempt == RETRIES - 1:

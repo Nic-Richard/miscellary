@@ -652,7 +652,7 @@ resource "aws_ecs_task_definition" "api" {
       interval    = 30
       timeout     = 5
       retries     = 3
-      startPeriod = 30
+      startPeriod = 120
     }
     logConfiguration = {
       logDriver = "awslogs"

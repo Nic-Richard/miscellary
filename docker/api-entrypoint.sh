@@ -15,7 +15,9 @@ python manage.py process_account_cleanup --watch &
 cleanup_pid=$!
 python manage.py sync_play_refunds --watch &
 refunds_pid=$!
-python manage.py refresh_search --watch &
+# Starts after the web server has warmed up, at low priority, so embedding never slows it enough
+# to fail health checks on a small task.
+(sleep 120 && exec nice -n 10 python manage.py refresh_search --watch) &
 search_pid=$!
 trap 'kill "$cleanup_pid" "$refunds_pid" "$search_pid" "${web_pid:-}" 2>/dev/null || true' EXIT
 trap 'exit 0' INT TERM

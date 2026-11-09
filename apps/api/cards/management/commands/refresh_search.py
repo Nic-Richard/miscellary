@@ -20,10 +20,10 @@ class Command(BaseCommand):
         if not options["watch"]:
             self._run(sweep=options["sweep"])
             return
-        last_sweep = 0.0
+        last_sweep = None
         while True:
             try:
-                sweep = time.monotonic() - last_sweep > SWEEP_SECONDS
+                sweep = last_sweep is None or time.monotonic() - last_sweep > SWEEP_SECONDS
                 self._run(sweep=sweep)
                 if sweep:
                     last_sweep = time.monotonic()

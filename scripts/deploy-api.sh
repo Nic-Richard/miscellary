@@ -141,6 +141,18 @@ aws ecs wait services-stable \
   --cluster "$ECS_CLUSTER" \
   --services "$ECS_SERVICE"
 
+# A failed rollout rolls back and still settles as stable, with the old tasks answering health checks.
+RUNNING_DEFINITION="$(aws ecs describe-services \
+  --region "$AWS_REGION" \
+  --cluster "$ECS_CLUSTER" \
+  --services "$ECS_SERVICE" \
+  --query 'services[0].deployments[?status==`PRIMARY`].taskDefinition | [0]' \
+  --output text)"
+if [[ "$RUNNING_DEFINITION" != "$TASK_DEFINITION" ]]; then
+  echo "ECS rolled back to $RUNNING_DEFINITION instead of running $TASK_DEFINITION." >&2
+  exit 1
+fi
+
 : "${SERVICE_HEALTH_URL:?Set SERVICE_HEALTH_URL in .env.deploy or the environment}"
 HEALTH_URL="${SERVICE_HEALTH_URL%/}/api/v1/health/"
 curl --fail --silent --show-error --retry 6 --retry-delay 5 "$HEALTH_URL" >/dev/null
