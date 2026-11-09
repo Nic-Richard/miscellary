@@ -150,3 +150,42 @@ def test_concurrent_tag_writes_do_not_collide():
     assert failures == []
     slugs = set(Tag.objects.filter(set_tags__card_set=card_set).values_list("slug", flat=True))
     assert slugs in ({"beetles", "garden"}, {"beetles", "macro"})
+
+
+def test_synonyms_find_each_others_sets_and_count_as_one_tag(
+    auth_client, api_client, user, published
+):
+    from cards.tag_groups import merge
+
+    other = make_set(user, title="Backyard Rocks")
+    fill_publishable(other)
+    publish_set(other)
+    auth_client.put(
+        reverse("cards:my-set-tags", args=[published.id]), {"tags": ["Vintage"]}, format="json"
+    )
+    auth_client.put(
+        reverse("cards:my-set-tags", args=[other.id]), {"tags": ["Retro"]}, format="json"
+    )
+    merge(Tag.objects.get(slug="retro"), Tag.objects.get(slug="vintage"))
+
+    for tag in ("retro", "vintage"):
+        listed = api_client.get(reverse("cards:public-sets"), {"tag": tag}).json()
+        assert {s["slug"] for s in listed["results"]} == {published.slug, other.slug}
+
+    found = api_client.get(reverse("social:search"), {"q": "retro"}).json()
+    assert found["tags"] == [{"slug": "vintage", "label": "Vintage", "set_count": 2}]
+    assert {s["slug"] for s in found["sets"]} == {published.slug, other.slug}
+
+    catalogue = api_client.get(reverse("cards:tags")).json()
+    assert catalogue == [{"slug": "vintage", "label": "Vintage", "set_count": 2}]
+
+
+def test_merging_keeps_groups_one_level_deep():
+    from cards.tag_groups import merge
+
+    a, b, c = (Tag.objects.create(slug=s, label=s) for s in ("old", "retro", "vintage"))
+    merge(a, b)
+    merge(b, c)
+    a.refresh_from_db()
+    b.refresh_from_db()
+    assert a.canonical == c and b.canonical == c and c.canonical is None

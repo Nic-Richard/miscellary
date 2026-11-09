@@ -3,7 +3,6 @@ from datetime import timedelta
 from typing import Any
 
 from django.conf import settings
-from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
 from django.db import IntegrityError, transaction
 from django.db.models import Count, Exists, Max, OuterRef, Q, Value
 from django.shortcuts import get_object_or_404
@@ -18,8 +17,9 @@ from rest_framework.views import APIView
 from accounts.models import User
 from accounts.supporter import supporter_tier
 from billing.actions import badge_style, ring_style, visible_badge
+from cards import search, tag_groups
 from cards import tags as tagging
-from cards.models import CardDefinition, CardSet, Tag
+from cards.models import CardDefinition, CardSet
 from cards.serializers import CardSerializer, CardSetSerializer, CreatorSerializer
 from cards.views import with_counts
 from common import alerts
@@ -505,9 +505,9 @@ class FeedbackView(APIView):
 
 
 class SearchView(APIView):
-    """One box, four result lists. Postgres full-text for sets and cards, a plain
-    match for usernames, and tags, which match either way: a tag is a result in
-    its own right and it also pulls in the sets and cards carrying it."""
+    """One box, four result lists. Sets and cards are ranked by cards.search, usernames
+    are a plain match, and tags match either way: a tag is a result in its own right and
+    it also pulls in the sets and cards carrying it or any tag in its group."""
 
     permission_classes = [permissions.AllowAny]
 
@@ -516,36 +516,22 @@ class SearchView(APIView):
         if len(q) < 2:
             return Response({"query": q, "users": [], "sets": [], "cards": [], "tags": []})
 
-        slug = tagging.slugify_tag(q)
-        tags = (
-            Tag.objects.filter(Q(slug__icontains=slug or q) | Q(label__icontains=q))
-            .annotate(
-                set_count=Count(
-                    "set_tags", filter=Q(set_tags__card_set__status=CardSet.Status.PUBLISHED)
-                )
-            )
-            .order_by("-set_count", "slug")[:10]
-        )
-        tag_slugs = [t.slug for t in tags]
+        tags = tag_groups.main_tags_matching(q, tagging.slugify_tag(q)).order_by(
+            "-set_count", "slug"
+        )[:10]
+        tag_slugs = tag_groups.group_slugs([t.slug for t in tags])
 
-        query = SearchQuery(q, search_type="websearch")
-        set_vector = SearchVector("title", weight="A") + SearchVector("description", weight="B")
-        sets = (
-            with_counts(CardSet.objects.filter(status=CardSet.Status.PUBLISHED), request.user)
-            .annotate(rank=SearchRank(set_vector, query))
-            .filter(Q(rank__gt=0) | Q(title__icontains=q) | Q(set_tags__tag__slug__in=tag_slugs))
-            .distinct()
-            .order_by("-rank", "-like_count")[:10]
+        set_scores = search.sets(q, tag_slugs)
+        sets = sorted(
+            with_counts(CardSet.objects.filter(pk__in=search.best(set_scores, 10)), request.user),
+            key=lambda s: (-set_scores[s.pk], -s.like_count),
         )
-        card_vector = SearchVector("title", weight="A") + SearchVector("description", weight="B")
-        cards = (
-            CardDefinition.objects.filter(card_set__status=CardSet.Status.PUBLISHED)
+        card_scores = search.cards(q, tag_slugs)
+        cards = sorted(
+            CardDefinition.objects.filter(pk__in=search.best(card_scores, 10))
             .select_related("image", "card_set")
-            .prefetch_related("card_tags__tag")
-            .annotate(rank=SearchRank(card_vector, query))
-            .filter(Q(rank__gt=0) | Q(title__icontains=q) | Q(card_tags__tag__slug__in=tag_slugs))
-            .distinct()
-            .order_by("-rank")[:10]
+            .prefetch_related("card_tags__tag"),
+            key=lambda c: -card_scores[c.pk],
         )
         followed = (
             Exists(Follow.objects.filter(follower=request.user, following=OuterRef("pk")))

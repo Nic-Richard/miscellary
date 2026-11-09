@@ -212,3 +212,15 @@ def test_follower_lists_are_paged(auth_client, user):
     assert second["next"] is None
     seen = {u["username"] for u in first["results"]} | {u["username"] for u in second["results"]}
     assert len(seen) == 60
+
+
+def test_search_ranks_title_matches_above_description_matches(api_client, user):
+    mention = make_set(
+        user, title="Garden Visitors", description="Mostly moths and one lighthouse keeper"
+    )
+    named = make_set(user, title="Lighthouses of the Coast")
+    for card_set in (mention, named):
+        fill_publishable(card_set)
+        publish_set(card_set)
+    found = api_client.get(reverse("social:search"), {"q": "lighthouse"}).json()
+    assert [s["title"] for s in found["sets"]] == ["Lighthouses of the Coast", "Garden Visitors"]

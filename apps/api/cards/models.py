@@ -2,9 +2,12 @@ import secrets
 import uuid
 
 from django.conf import settings
+from django.contrib.postgres.indexes import GinIndex, OpClass
+from django.contrib.postgres.search import SearchVector, SearchVectorField
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.db.models.functions import Upper
 from django.utils import timezone
 from django.utils.text import slugify
 
@@ -87,9 +90,21 @@ class CardSet(models.Model):
     render_back_key = models.CharField(max_length=255, blank=True)
     render_pack_signature = models.CharField(max_length=64, blank=True)
     render_pack_key = models.CharField(max_length=255, blank=True)
+    # Kept up to date by the database, so word search reads an index instead of every row.
+    search_vector = models.GeneratedField(
+        expression=SearchVector("title", weight="A", config="english")
+        + SearchVector("description", weight="B", config="english"),
+        output_field=SearchVectorField(),
+        db_persist=True,
+    )
 
     class Meta:
         ordering = ["-created_at"]
+        indexes = [
+            GinIndex(fields=["search_vector"], name="cardset_search_idx"),
+            # Django's icontains compares UPPER(title), so the trigram index is on that.
+            GinIndex(OpClass(Upper("title"), name="gin_trgm_ops"), name="cardset_title_trgm_idx"),
+        ]
         constraints = [
             models.UniqueConstraint(
                 fields=["set_code", "set_code_suffix"],
@@ -207,9 +222,19 @@ class CardDefinition(models.Model):
     render_flat_thumbnail_key = models.CharField(max_length=255, blank=True)
     render_mask_thumbnail_key = models.CharField(max_length=255, blank=True)
     render_mask_key = models.CharField(max_length=255, blank=True)
+    search_vector = models.GeneratedField(
+        expression=SearchVector("title", weight="A", config="english")
+        + SearchVector("description", weight="B", config="english"),
+        output_field=SearchVectorField(),
+        db_persist=True,
+    )
 
     class Meta:
         ordering = ["position", "created_at"]
+        indexes = [
+            GinIndex(fields=["search_vector"], name="carddef_search_idx"),
+            GinIndex(OpClass(Upper("title"), name="gin_trgm_ops"), name="carddef_title_trgm_idx"),
+        ]
 
     def __str__(self) -> str:
         return f"{self.title} ({self.rarity})"
@@ -254,6 +279,9 @@ class Tag(models.Model):
 
     slug = models.SlugField(max_length=TAG_SLUG_MAX, unique=True)
     label = models.CharField(max_length=TAG_LABEL_MAX)
+    canonical = models.ForeignKey(
+        "self", null=True, blank=True, on_delete=models.SET_NULL, related_name="synonyms"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -261,6 +289,31 @@ class Tag(models.Model):
 
     def __str__(self) -> str:
         return self.slug
+
+
+class TagMergeSuggestion(models.Model):
+    """Two tags whose meanings look the same, waiting for a person to merge or dismiss them."""
+
+    class Status(models.TextChoices):
+        PENDING = "pending", "Pending"
+        MERGED = "merged", "Merged"
+        DISMISSED = "dismissed", "Dismissed"
+
+    tag = models.ForeignKey(Tag, on_delete=models.CASCADE, related_name="+")
+    into = models.ForeignKey(Tag, on_delete=models.CASCADE, related_name="+")
+    similarity = models.FloatField()
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING)
+    created_at = models.DateTimeField(auto_now_add=True)
+    decided_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-similarity"]
+        constraints = [
+            models.UniqueConstraint(fields=["tag", "into"], name="one_suggestion_per_pair")
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.tag} → {self.into}"
 
 
 class SetTag(models.Model):

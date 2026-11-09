@@ -7,7 +7,6 @@ from django.db.models import (
     IntegerField,
     OuterRef,
     Prefetch,
-    Q,
     Subquery,
     Value,
 )
@@ -24,8 +23,8 @@ from rest_framework.views import APIView
 from accounts.permissions import EmailVerified
 from billing.actions import publishing_summary
 
+from . import tag_groups, templates
 from . import tags as tagging
-from . import templates
 from .models import CardDefinition, CardSet, CardTag, SetTag, Tag
 from .publishing import publish_problems, publish_set
 from .serializers import (
@@ -105,7 +104,9 @@ class PublicSetListView(APIView):
         )
         tag = tagging.slugify_tag(request.query_params.get("tag", ""))
         if tag:
-            queryset = queryset.filter(set_tags__tag__slug=tag)
+            queryset = queryset.filter(
+                set_tags__tag__slug__in=tag_groups.group_slugs([tag])
+            ).distinct()
         from packs.models import PackOpening  # here, not at the top: import cycle
 
         sort = request.query_params.get("sort")
@@ -349,16 +350,11 @@ class TagListView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request: Request) -> Response:
-        queryset = Tag.objects.annotate(
-            set_count=Count(
-                "set_tags", filter=Q(set_tags__card_set__status=CardSet.Status.PUBLISHED)
-            )
-        )
         q = request.query_params.get("q", "").strip()[:40]
         if q:
-            slug = tagging.slugify_tag(q)
-            queryset = queryset.filter(Q(slug__icontains=slug or q) | Q(label__icontains=q))
+            queryset = tag_groups.main_tags_matching(q, tagging.slugify_tag(q))
         else:
+            queryset = tag_groups.with_group_counts(Tag.objects.filter(canonical__isnull=True))
             queryset = queryset.filter(set_count__gt=0)
         rows = queryset.order_by("-set_count", "slug")[:20]
         return Response(
