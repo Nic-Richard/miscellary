@@ -127,6 +127,12 @@ variable "play_configured" {
   default     = false
 }
 
+variable "embeddings_configured" {
+  description = "Injects voyage_api_key from miscellary/app, turning on search by meaning."
+  type        = bool
+  default     = false
+}
+
 variable "play_billing_enabled" {
   description = "Shows Play purchases after notification and license-testing setup."
   type        = bool

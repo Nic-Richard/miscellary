@@ -644,6 +644,8 @@ resource "aws_ecs_task_definition" "api" {
       { name = "STRIPE_WEBHOOK_SECRET", valueFrom = "${aws_secretsmanager_secret.app.arn}:stripe_webhook_secret::" }
       ] : [], var.play_configured ? [
       { name = "PLAY_SERVICE_ACCOUNT", valueFrom = "${aws_secretsmanager_secret.app.arn}:play_service_account::" }
+      ] : [], var.embeddings_configured ? [
+      { name = "VOYAGE_API_KEY", valueFrom = "${aws_secretsmanager_secret.app.arn}:voyage_api_key::" }
     ] : [])
     healthCheck = {
       command     = ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health/')\" || exit 1"]
